@@ -16,8 +16,9 @@ def test_from_rgba8_scales_like_fround():
 
 
 def test_to_rgba8_clamps_and_zeroes_nonfinite():
+    # Non-finite is checked FIRST in JS byteFromFloat, so inf -> 0 (not clamp-to-255).
     s = Surface(1, 1, np.array([1.5, -0.2, float("nan"), float("inf")], dtype=np.float32))
-    assert s.to_rgba8() == bytes([255, 0, 0, 255])
+    assert s.to_rgba8() == bytes([255, 0, 0, 0])
 
 
 def test_to_rgba8_rounds_ties_toward_positive():
