@@ -10,21 +10,14 @@ def run_pixel(ctx, out):
     _u_inputTex = T["inputTex"]
     _u_brightness = U["brightness"]
     _u_contrast = U["contrast"]
-    def cpu_ivec2__float(value):
-        return rt.construct(2, value)
-    def cpu_ivec2__vec2(value):
-        value = rt.copy(value)
-        return value
-    def cpu_ivec2__float_float(v0, v1):
-        return rt.construct(2, v0, v1)
     def main__void():
-        globalCoord = rt.binary("+", rt.swizzle(ctx.frag_coord, "xy"), _u_tileOffset, 2)
+        globalCoord = rt.binary("+", rt.swizzle(ctx.frag_coord, "xy"), _u_tileOffset, 2, "float")
         texSize = rt.texture_size(_u_inputTex)
-        uv = rt.binary("/", rt.swizzle(ctx.frag_coord, "xy"), rt.construct(2, texSize), 2)
+        uv = rt.binary("/", rt.swizzle(ctx.frag_coord, "xy"), rt.construct(2, texSize), 2, "float")
         color = rt.texture(_u_inputTex, uv)
-        color = rt.assign_swizzle(color, "rgb", rt.binary("*", rt.swizzle(color, "rgb"), _u_brightness, 3))
-        contrastFactor = rt.binary("*", _u_contrast, rt.f(2.0), 1)
-        color = rt.assign_swizzle(color, "rgb", rt.binary("+", rt.binary("*", rt.binary("-", rt.swizzle(color, "rgb"), rt.f(0.5), 3), contrastFactor, 3), rt.f(0.5), 3))
+        color = rt.assign_swizzle(color, "rgb", rt.binary("*", rt.swizzle(color, "rgb"), _u_brightness, 3, "float"))
+        contrastFactor = rt.binary("*", _u_contrast, rt.f(2.0), 1, "float")
+        color = rt.assign_swizzle(color, "rgb", rt.binary("+", rt.binary("*", rt.binary("-", rt.swizzle(color, "rgb"), rt.f(0.5), 3, "float"), contrastFactor, 3, "float"), rt.f(0.5), 3, "float"))
         g.fragColor = color
     main__void()
     _c = g.fragColor

@@ -7,21 +7,14 @@ def run_pixel(ctx, out):
     g = _G()
     _u_inputTex = T["inputTex"]
     _u_mode = U["mode"]
-    def cpu_ivec2__float(value):
-        return rt.construct(2, value)
-    def cpu_ivec2__vec2(value):
-        value = rt.copy(value)
-        return value
-    def cpu_ivec2__float_float(v0, v1):
-        return rt.construct(2, v0, v1)
     def main__void():
         texSize = rt.texture_size(_u_inputTex)
-        uv = rt.binary("/", rt.swizzle(ctx.frag_coord, "xy"), rt.construct(2, texSize), 2)
+        uv = rt.binary("/", rt.swizzle(ctx.frag_coord, "xy"), rt.construct(2, texSize), 2, "float")
         color = rt.texture(_u_inputTex, uv)
         if rt.binary("==", _u_mode, rt.i(1)):
-            color = rt.assign_swizzle(color, "rgb", rt.component_wise("min", rt.swizzle(color, "rgb"), rt.binary("-", rt.f(1.0), rt.swizzle(color, "rgb"), 3), width=3))
+            color = rt.assign_swizzle(color, "rgb", rt.component_wise("min", rt.swizzle(color, "rgb"), rt.binary("-", rt.f(1.0), rt.swizzle(color, "rgb"), 3, "float"), width=3))
         else:
-            color = rt.assign_swizzle(color, "rgb", rt.binary("-", rt.f(1.0), rt.swizzle(color, "rgb"), 3))
+            color = rt.assign_swizzle(color, "rgb", rt.binary("-", rt.f(1.0), rt.swizzle(color, "rgb"), 3, "float"))
         g.fragColor = color
     main__void()
     _c = g.fragColor

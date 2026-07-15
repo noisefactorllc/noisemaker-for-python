@@ -10,28 +10,21 @@ def run_pixel(ctx, out):
     _u_inputTex = T["inputTex"]
     _u_amount = U["amount"]
     _u_colorMode = U["colorMode"]
-    def cpu_ivec2__float(value):
-        return rt.construct(2, value)
-    def cpu_ivec2__vec2(value):
-        value = rt.copy(value)
-        return value
-    def cpu_ivec2__float_float(v0, v1):
-        return rt.construct(2, v0, v1)
     def normalized_sine__float(value):
-        return rt.binary("*", rt.binary("+", rt.component_wise("sin", value, width=1), rt.f(1.0), 1), rt.f(0.5), 1)
+        return rt.binary("*", rt.binary("+", rt.component_wise("sin", value, width=1), rt.f(1.0), 1, "float"), rt.f(0.5), 1, "float")
     def main__void():
-        globalCoord = rt.binary("+", rt.swizzle(ctx.frag_coord, "xy"), _u_tileOffset, 2)
+        globalCoord = rt.binary("+", rt.swizzle(ctx.frag_coord, "xy"), _u_tileOffset, 2, "float")
         texSize = rt.texture_size(_u_inputTex)
-        uv = rt.binary("/", rt.swizzle(ctx.frag_coord, "xy"), rt.construct(2, texSize), 2)
+        uv = rt.binary("/", rt.swizzle(ctx.frag_coord, "xy"), rt.construct(2, texSize), 2, "float")
         color = rt.texture(_u_inputTex, uv)
         use_rgb = rt.binary(">", _u_colorMode, rt.f(0.5))
         if use_rgb:
-            color = rt.assign_swizzle(color, "r", normalized_sine__float(rt.binary("*", rt.swizzle(color, "r"), _u_amount, 1)))
-            color = rt.assign_swizzle(color, "g", normalized_sine__float(rt.binary("*", rt.swizzle(color, "g"), _u_amount, 1)))
-            color = rt.assign_swizzle(color, "b", normalized_sine__float(rt.binary("*", rt.swizzle(color, "b"), _u_amount, 1)))
+            color = rt.assign_swizzle(color, "r", normalized_sine__float(rt.binary("*", rt.swizzle(color, "r"), _u_amount, 1, "float")))
+            color = rt.assign_swizzle(color, "g", normalized_sine__float(rt.binary("*", rt.swizzle(color, "g"), _u_amount, 1, "float")))
+            color = rt.assign_swizzle(color, "b", normalized_sine__float(rt.binary("*", rt.swizzle(color, "b"), _u_amount, 1, "float")))
         else:
-            lum = rt.binary("+", rt.binary("+", rt.binary("*", rt.f(0.299), rt.swizzle(color, "r"), 1), rt.binary("*", rt.f(0.587), rt.swizzle(color, "g"), 1), 1), rt.binary("*", rt.f(0.114), rt.swizzle(color, "b"), 1), 1)
-            result = normalized_sine__float(rt.binary("*", lum, _u_amount, 1))
+            lum = rt.binary("+", rt.binary("+", rt.binary("*", rt.f(0.299), rt.swizzle(color, "r"), 1, "float"), rt.binary("*", rt.f(0.587), rt.swizzle(color, "g"), 1, "float"), 1, "float"), rt.binary("*", rt.f(0.114), rt.swizzle(color, "b"), 1, "float"), 1, "float")
+            result = normalized_sine__float(rt.binary("*", lum, _u_amount, 1, "float"))
             color = rt.assign_swizzle(color, "rgb", rt.construct(3, result))
         g.fragColor = color
     main__void()

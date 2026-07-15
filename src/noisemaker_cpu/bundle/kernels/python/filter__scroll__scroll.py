@@ -17,16 +17,16 @@ def run_pixel(ctx, out):
     _u_wrap = U["wrap"]
     _u_inputTex = T["inputTex"]
     def main__void():
-        globalCoord = rt.binary("+", rt.swizzle(ctx.frag_coord, "xy"), _u_tileOffset, 2)
-        globalUV = rt.binary("/", globalCoord, _u_fullResolution, 2)
-        globalUV = rt.assign_swizzle(globalUV, "x", rt.binary("*", rt.swizzle(globalUV, "x"), _u_aspect, 1))
-        offset = rt.construct(2, rt.binary("+", rt.unary("-", _u_x), rt.binary("*", _u_time, rt.unary("-", _u_speedX), 1), 1), rt.binary("+", _u_y, rt.binary("*", _u_time, _u_speedY, 1), 1))
-        offset = rt.assign_swizzle(offset, "x", rt.binary("*", rt.swizzle(offset, "x"), _u_aspect, 1))
-        globalUV = rt.binary("+", globalUV, offset, 2)
-        globalUV = rt.assign_swizzle(globalUV, "x", rt.binary("/", rt.swizzle(globalUV, "x"), _u_aspect, 1))
-        localUV = rt.binary("/", rt.binary("-", rt.binary("*", globalUV, _u_fullResolution, 2), _u_tileOffset, 2), rt.construct(2, rt.texture_size(_u_inputTex)), 2)
+        globalCoord = rt.binary("+", rt.swizzle(ctx.frag_coord, "xy"), _u_tileOffset, 2, "float")
+        globalUV = rt.binary("/", globalCoord, _u_fullResolution, 2, "float")
+        globalUV = rt.assign_swizzle(globalUV, "x", rt.binary("*", rt.swizzle(globalUV, "x"), _u_aspect, 1, "float"))
+        offset = rt.construct(2, rt.binary("+", rt.unary("-", _u_x), rt.binary("*", _u_time, rt.unary("-", _u_speedX), 1, "float"), 1, "float"), rt.binary("+", _u_y, rt.binary("*", _u_time, _u_speedY, 1, "float"), 1, "float"))
+        offset = rt.assign_swizzle(offset, "x", rt.binary("*", rt.swizzle(offset, "x"), _u_aspect, 1, "float"))
+        globalUV = rt.binary("+", globalUV, offset, 2, "float")
+        globalUV = rt.assign_swizzle(globalUV, "x", rt.binary("/", rt.swizzle(globalUV, "x"), _u_aspect, 1, "float"))
+        localUV = rt.binary("/", rt.binary("-", rt.binary("*", globalUV, _u_fullResolution, 2, "float"), _u_tileOffset, 2, "float"), rt.construct(2, rt.texture_size(_u_inputTex)), 2, "float")
         if rt.binary("==", _u_wrap, rt.i(0)):
-            localUV = rt.component_wise("abs", rt.binary("-", rt.component_wise("mod", rt.binary("+", localUV, rt.f(1.0), 2), rt.f(2.0), width=2), rt.f(1.0), 2), width=2)
+            localUV = rt.component_wise("abs", rt.binary("-", rt.component_wise("mod", rt.binary("+", localUV, rt.f(1.0), 2, "float"), rt.f(2.0), width=2), rt.f(1.0), 2, "float"), width=2)
         else:
             if rt.binary("==", _u_wrap, rt.i(1)):
                 localUV = rt.component_wise("fract", localUV, width=2)

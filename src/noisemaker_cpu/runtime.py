@@ -14,12 +14,20 @@ from __future__ import annotations
 
 import numpy as np
 
+from . import uintmath
+
 F32 = np.float32
+_U32 = 0xFFFFFFFF
 
 
 def f32(x) -> float:
     """Round a Python/np scalar to float32 (matches JS Math.fround)."""
     return float(np.float32(x))
+
+
+def _s32(x) -> int:
+    """Wrap a Python int to signed 32-bit (GLSL int overflow semantics)."""
+    return ((int(x) + 0x80000000) & _U32) - 0x80000000
 
 
 _SWIZZLE = {"x": 0, "y": 1, "z": 2, "w": 3, "r": 0, "g": 1, "b": 2, "a": 3, "s": 0, "t": 1, "p": 2, "q": 3}
@@ -50,13 +58,27 @@ class Runtime:
         return int(x)
 
     # ---- construction ----
-    def construct(self, width: int, *comps):
+    def construct(self, width: int, *comps, base="float"):
         """Build a vecN (width>1) or scalar (width==1) from scalars/vectors.
 
         One scalar arg splats. Otherwise components are flattened in order and
-        truncated/consumed to exactly `width` components.
+        truncated/consumed to exactly `width` components. `base` int/uint builds
+        an integer array (values kept exact, not float32-rounded).
         """
         supplied = [c for c in comps if c is not None]
+        if base in ("int", "uint"):
+            if len(supplied) == 1 and _is_scalar(supplied[0]) and width > 1:
+                iv = int(supplied[0])
+                iv = (iv & _U32) if base == "uint" else _s32(iv)
+                return np.full(width, iv, dtype=np.int64)
+            ivals = []
+            for c in supplied:
+                if _is_scalar(c):
+                    ivals.append(int(c))
+                else:
+                    ivals.extend(int(x) for x in np.asarray(c).ravel())
+            ivals = [(v & _U32) if base == "uint" else _s32(v) for v in ivals]
+            return ivals[0] if width == 1 else np.array(ivals[:width], dtype=np.int64)
         if width == 1:
             c = supplied[0]
             return f32(c if _is_scalar(c) else np.asarray(c, dtype=F32).ravel()[0])
@@ -81,10 +103,10 @@ class Runtime:
     # ---- swizzles ----
     def swizzle(self, vec, sw: str):
         idx = [_SWIZZLE[c] for c in sw]
-        v = np.asarray(vec, dtype=F32)
+        v = np.asarray(vec)  # preserve dtype (int vectors must stay integer)
         if len(idx) == 1:
-            return float(v[idx[0]])
-        return v[idx].astype(F32)
+            return int(v[idx[0]]) if np.issubdtype(v.dtype, np.integer) else float(v[idx[0]])
+        return v[idx]
 
     def assign_swizzle(self, vec, sw: str, value):
         idx = [_SWIZZLE[c] for c in sw]
@@ -99,9 +121,11 @@ class Runtime:
         return vec
 
     # ---- operators ----
-    def binary(self, op, a, b, width=None):
+    def binary(self, op, a, b, width=None, base="float"):
         if op in ("==", "!=", "<", ">", "<=", ">=", "&&", "||"):
             return self._logical(op, a, b)
+        if base in ("int", "uint") or op in ("&", "|", "^", "<<", ">>"):
+            return self._int_binary(op, a, b, "uint" if base == "uint" else "int")
         av = a if _is_scalar(a) else np.asarray(a, dtype=F32)
         bv = b if _is_scalar(b) else np.asarray(b, dtype=F32)
         if op == "+":
@@ -112,11 +136,23 @@ class Runtime:
             r = np.multiply(av, bv)
         elif op == "/":
             r = np.divide(av, bv)
+        elif op == "%":
+            r = np.fmod(av, bv)
         else:
             raise ValueError(f"unsupported binary op {op!r}")
         if _is_scalar(av) and _is_scalar(bv):
             return f32(r)
         return np.asarray(r, dtype=F32)
+
+    def _int_binary(self, op, a, b, base):
+        if _is_scalar(a) and _is_scalar(b):
+            return _int_scalar(op, int(a), int(b), base)
+        # element-wise: uint uses uint64 (mul wraps mod 2^64 -> mask mod 2^32)
+        dt = np.uint64 if base == "uint" else np.int64
+        av = (np.asarray(a).astype(np.int64) & _U32).astype(dt) if base == "uint" else np.asarray(a).astype(np.int64)
+        bv = (np.asarray(b).astype(np.int64) & _U32).astype(dt) if base == "uint" else np.asarray(b).astype(np.int64)
+        r = _int_vec(op, av, bv, base)
+        return np.asarray(r, dtype=np.int64)
 
     @staticmethod
     def _logical(op, a, b):
@@ -154,6 +190,14 @@ class Runtime:
         if name == "atan" and len(args) == 2:  # atan(y, x) -> atan2
             r = np.arctan2(np.asarray(args[0], dtype=np.float64), np.asarray(args[1], dtype=np.float64))
             return f32(float(r)) if all(_is_scalar(a) for a in args) else np.asarray(r, dtype=F32)
+        if name in _RELATIONAL:  # lessThan/equal/... -> bvec
+            return _RELATIONAL[name](np.asarray(args[0], dtype=F32), np.asarray(args[1], dtype=F32))
+        if name == "any":
+            return bool(np.any(np.asarray(args[0])))
+        if name == "all":
+            return bool(np.all(np.asarray(args[0])))
+        if name == "not":
+            return np.logical_not(np.asarray(args[0]))
         arrs = [a if _is_scalar(a) else np.asarray(a, dtype=F32) for a in args]
         fn = _COMPONENT.get(name)
         if fn is None:
@@ -184,6 +228,37 @@ class Runtime:
         i = (ty * w + x) * 4
         d = sampler.data
         return np.array([d[i], d[i + 1], d[i + 2], d[i + 3]], dtype=F32)
+
+    # ---- uint32 / half-float primitives (delegate to bit-exact uintmath) ----
+    def pcg3d(self, v):
+        arr = np.asarray(v).astype(np.int64)
+        r = uintmath.pcg3d([int(arr[0]) & _U32, int(arr[1]) & _U32, int(arr[2]) & _U32])
+        return np.asarray(r, dtype=np.int64)
+
+    def hash_uint(self, x):
+        return uintmath.hash_uint32(int(x) & _U32)
+
+    def float_bits_to_uint(self, f):
+        return uintmath.float_bits_to_uint(float(f))
+
+    def uint_bits_to_float(self, u):
+        return f32(uintmath.uint_bits_to_float(int(u) & _U32))
+
+    def pack_half_2x16(self, v):
+        return uintmath.pack_half_2x16([float(v[0]), float(v[1])])
+
+    def unpack_half_2x16(self, u):
+        return np.asarray(uintmath.unpack_half_2x16(int(u) & _U32), dtype=F32)
+
+    def to_int(self, x):
+        if _is_scalar(x):
+            return _s32(int(x))  # GLSL int(float) truncates toward zero, then wraps
+        return np.asarray(x).astype(np.int64)
+
+    def to_uint(self, x):
+        if _is_scalar(x):
+            return int(x) & _U32
+        return np.asarray(x).astype(np.int64) & _U32
 
     # ---- vector geometry (accumulate float64, round to float32 once) ----
     def dot(self, a, b, width=None):
@@ -222,6 +297,129 @@ class Runtime:
             return np.zeros(iv.shape[0], dtype=F32)
         return (e * iv - (e * d + np.sqrt(k)) * nv).astype(F32)
 
+    # ---- matrices (flat, column-major: element [col*N + row]) ----
+    def matrix_mult(self, a, b, dim):
+        n = int(dim)
+        av = np.asarray(a, dtype=np.float64)
+        bv = np.asarray(b, dtype=np.float64)
+        a_mat = av.size == n * n
+        b_mat = bv.size == n * n
+        if a_mat and b_mat:  # GLSL A*B, both column-major -> (Bcm @ Acm)
+            r = (bv.reshape(n, n) @ av.reshape(n, n)).ravel()
+        elif a_mat:  # mat * vec
+            r = bv @ av.reshape(n, n)
+        else:  # vec * mat
+            r = bv.reshape(n, n) @ av
+        return np.asarray(r, dtype=F32)
+
+    def mat_col(self, mat, i, dim):
+        n = int(dim)
+        c = int(i)
+        return np.asarray(mat, dtype=F32)[c * n:(c + 1) * n].astype(F32)
+
+    # ---- arrays (GLSL fixed-size arrays -> Python lists) ----
+    @staticmethod
+    def new_array(n, width=1):
+        n = int(n)
+        if width <= 1:
+            return [0.0] * n
+        return [np.zeros(int(width), dtype=F32) for _ in range(n)]
+
+    @staticmethod
+    def array(elems):
+        return list(elems)
+
+    def bit_not(self, x):
+        if _is_scalar(x):
+            return _s32(~int(x))
+        return (~np.asarray(x).astype(np.int64))
+
+
+def _s32arr(x):
+    return (((x.astype(np.int64) + 0x80000000) & _U32) - 0x80000000).astype(np.int64)
+
+
+def _int_scalar(op, a, b, base):
+    if base == "uint":
+        a &= _U32
+        b &= _U32
+        table = {
+            "+": uintmath.uadd, "-": uintmath.usub, "*": uintmath.umul,
+            "&": uintmath.uand, "|": uintmath.uor, "^": uintmath.uxor,
+            "<<": uintmath.ushl, ">>": uintmath.ushr,
+            "/": lambda x, y: (x // y) if y else 0,
+            "%": lambda x, y: (x % y) if y else 0,
+        }
+        return table[op](a, b)
+    if op == "+":
+        return _s32(a + b)
+    if op == "-":
+        return _s32(a - b)
+    if op == "*":
+        return _s32(a * b)
+    if op == "&":
+        return _s32(a & b)
+    if op == "|":
+        return _s32(a | b)
+    if op == "^":
+        return _s32(a ^ b)
+    if op == "<<":
+        return _s32(a << (b & 31))
+    if op == ">>":
+        return a >> (b & 31)
+    if op == "/":
+        return _s32(int(a / b)) if b else 0
+    if op == "%":
+        return _s32(a - b * int(a / b)) if b else 0
+    raise ValueError(f"unsupported int op {op!r}")
+
+
+def _int_vec(op, av, bv, base):
+    if base == "uint":
+        m = np.uint64(_U32)
+        if op == "+":
+            return (av + bv) & m
+        if op == "-":
+            return (av - bv) & m
+        if op == "*":
+            return (av * bv) & m
+        if op == "&":
+            return av & bv
+        if op == "|":
+            return av | bv
+        if op == "^":
+            return av ^ bv
+        if op == "<<":
+            return (av << (bv & np.uint64(31))) & m
+        if op == ">>":
+            return av >> (bv & np.uint64(31))
+        if op == "/":
+            return np.where(bv == 0, 0, av // np.maximum(bv, np.uint64(1)))
+        if op == "%":
+            return np.where(bv == 0, 0, av % np.maximum(bv, np.uint64(1)))
+        raise ValueError(f"unsupported uint op {op!r}")
+    if op == "+":
+        return _s32arr(av + bv)
+    if op == "-":
+        return _s32arr(av - bv)
+    if op == "*":
+        return _s32arr(av * bv)
+    if op == "&":
+        return av & bv
+    if op == "|":
+        return av | bv
+    if op == "^":
+        return av ^ bv
+    if op == "<<":
+        return _s32arr(av << (bv & 31))
+    if op == ">>":
+        return av >> (bv & 31)
+    if op in ("/", "%"):
+        safe = np.where(bv == 0, 1, bv)
+        q = np.trunc(av / safe).astype(np.int64)
+        return np.where(bv == 0, 0, q if op == "/" else av - bv * q)
+    raise ValueError(f"unsupported int op {op!r}")
+
 
 def _clamp(x, lo, hi):
     return np.minimum(np.maximum(x, lo), hi)
@@ -237,6 +435,15 @@ def _smoothstep(e0, e1, x):
 
 
 _PI = 3.141592653589793
+
+_RELATIONAL = {
+    "lessThan": np.less,
+    "lessThanEqual": np.less_equal,
+    "greaterThan": np.greater,
+    "greaterThanEqual": np.greater_equal,
+    "equal": np.equal,
+    "notEqual": np.not_equal,
+}
 
 _COMPONENT = {
     "abs": np.abs,

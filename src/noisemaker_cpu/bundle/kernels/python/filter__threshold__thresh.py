@@ -11,11 +11,11 @@ def run_pixel(ctx, out):
     _u_level = U["level"]
     _u_sharpness = U["sharpness"]
     def main__void():
-        globalCoord = rt.binary("+", rt.swizzle(ctx.frag_coord, "xy"), _u_tileOffset, 2)
-        st = rt.binary("/", rt.swizzle(ctx.frag_coord, "xy"), rt.construct(2, rt.texture_size(_u_inputTex)), 2)
+        globalCoord = rt.binary("+", rt.swizzle(ctx.frag_coord, "xy"), _u_tileOffset, 2, "float")
+        st = rt.binary("/", rt.swizzle(ctx.frag_coord, "xy"), rt.construct(2, rt.texture_size(_u_inputTex)), 2, "float")
         c = rt.texture(_u_inputTex, st)
         l = rt.dot(rt.swizzle(c, "rgb"), rt.construct(3, rt.f(0.299), rt.f(0.587), rt.f(0.114)))
-        e = rt.component_wise("smoothstep", rt.binary("-", _u_level, _u_sharpness, 1), rt.binary("+", _u_level, _u_sharpness, 1), l, width=1)
+        e = rt.component_wise("smoothstep", rt.binary("-", _u_level, _u_sharpness, 1, "float"), rt.binary("+", _u_level, _u_sharpness, 1, "float"), l, width=1)
         g.fragColor = rt.construct(4, rt.construct(3, e), rt.f(1.0))
     main__void()
     _c = g.fragColor

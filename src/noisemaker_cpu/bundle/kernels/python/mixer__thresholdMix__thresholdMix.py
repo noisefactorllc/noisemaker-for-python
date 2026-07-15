@@ -27,20 +27,20 @@ def run_pixel(ctx, out):
     def quantizeValue__float_int(value, bands):
         if rt.binary("<=", bands, rt.i(0)):
             return value
-        numBands = bands
-        return rt.binary("/", rt.component_wise("floor", rt.binary("*", value, numBands, 1), width=1), numBands, 1)
+        numBands = rt.construct(1, bands)
+        return rt.binary("/", rt.component_wise("floor", rt.binary("*", value, numBands, 1, "float"), width=1), numBands, 1, "float")
     def calculateBlendFactor__float_float_float(mapValue, thresh, rng):
         if rt.binary("<=", rng, rt.f(0.0)):
             return rt.component_wise("step", thresh, mapValue, width=1)
         else:
             lower = thresh
-            upper = rt.binary("+", thresh, rng, 1)
+            upper = rt.binary("+", thresh, rng, 1, "float")
             return rt.component_wise("smoothstep", lower, upper, mapValue, width=1)
     def main__void():
-        globalCoord = rt.binary("+", rt.swizzle(ctx.frag_coord, "xy"), _u_tileOffset, 2)
-        uv = rt.binary("/", globalCoord, _u_fullResolution, 2)
-        colorA = rt.texture(_u_inputTex, rt.binary("/", rt.swizzle(ctx.frag_coord, "xy"), rt.construct(2, rt.texture_size(_u_inputTex)), 2))
-        colorB = rt.texture(_u_tex, rt.binary("/", rt.swizzle(ctx.frag_coord, "xy"), rt.construct(2, rt.texture_size(_u_tex)), 2))
+        globalCoord = rt.binary("+", rt.swizzle(ctx.frag_coord, "xy"), _u_tileOffset, 2, "float")
+        uv = rt.binary("/", globalCoord, _u_fullResolution, 2, "float")
+        colorA = rt.texture(_u_inputTex, rt.binary("/", rt.swizzle(ctx.frag_coord, "xy"), rt.construct(2, rt.texture_size(_u_inputTex)), 2, "float"))
+        colorB = rt.texture(_u_tex, rt.binary("/", rt.swizzle(ctx.frag_coord, "xy"), rt.construct(2, rt.texture_size(_u_tex)), 2, "float"))
         mapColor = rt.construct(3, 0.0)
         if rt.binary("==", _u_mapSource, rt.i(0)):
             mapColor = rt.swizzle(colorA, "rgb")
@@ -62,7 +62,7 @@ def run_pixel(ctx, out):
             result = rt.assign_swizzle(result, "r", rt.component_wise("mix", rt.swizzle(colorA, "r"), rt.swizzle(colorB, "r"), blendR, width=1))
             result = rt.assign_swizzle(result, "g", rt.component_wise("mix", rt.swizzle(colorA, "g"), rt.swizzle(colorB, "g"), blendG, width=1))
             result = rt.assign_swizzle(result, "b", rt.component_wise("mix", rt.swizzle(colorA, "b"), rt.swizzle(colorB, "b"), blendB, width=1))
-            result = rt.assign_swizzle(result, "a", rt.component_wise("mix", rt.swizzle(colorA, "a"), rt.swizzle(colorB, "a"), rt.binary("/", rt.binary("+", rt.binary("+", blendR, blendG, 1), blendB, 1), rt.f(3.0), 1), width=1))
+            result = rt.assign_swizzle(result, "a", rt.component_wise("mix", rt.swizzle(colorA, "a"), rt.swizzle(colorB, "a"), rt.binary("/", rt.binary("+", rt.binary("+", blendR, blendG, 1, "float"), blendB, 1, "float"), rt.f(3.0), 1, "float"), width=1))
         g.fragColor = result
     main__void()
     _c = g.fragColor

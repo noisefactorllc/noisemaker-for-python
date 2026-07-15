@@ -10,21 +10,14 @@ def run_pixel(ctx, out):
     _u_inputTex = T["inputTex"]
     _u_threshold = U["threshold"]
     _u_antialias = U["antialias"]
-    def cpu_ivec2__float(value):
-        return rt.construct(2, value)
-    def cpu_ivec2__vec2(value):
-        value = rt.copy(value)
-        return value
-    def cpu_ivec2__float_float(v0, v1):
-        return rt.construct(2, v0, v1)
     def main__void():
-        globalCoord = rt.binary("+", rt.swizzle(ctx.frag_coord, "xy"), _u_tileOffset, 2)
+        globalCoord = rt.binary("+", rt.swizzle(ctx.frag_coord, "xy"), _u_tileOffset, 2, "float")
         texSize = rt.texture_size(_u_inputTex)
-        uv = rt.binary("/", rt.swizzle(ctx.frag_coord, "xy"), rt.construct(2, texSize), 2)
+        uv = rt.binary("/", rt.swizzle(ctx.frag_coord, "xy"), rt.construct(2, texSize), 2, "float")
         color = rt.texture(_u_inputTex, uv)
         if _u_antialias:
             fw = rt.component_wise("fwidth", rt.swizzle(color, "rgb"), width=3)
-            color = rt.assign_swizzle(color, "rgb", rt.component_wise("smoothstep", rt.binary("-", _u_threshold, rt.binary("*", fw, rt.f(0.5), 3), 3), rt.binary("+", _u_threshold, rt.binary("*", fw, rt.f(0.5), 3), 3), rt.swizzle(color, "rgb"), width=3))
+            color = rt.assign_swizzle(color, "rgb", rt.component_wise("smoothstep", rt.binary("-", _u_threshold, rt.binary("*", fw, rt.f(0.5), 3, "float"), 3, "float"), rt.binary("+", _u_threshold, rt.binary("*", fw, rt.f(0.5), 3, "float"), 3, "float"), rt.swizzle(color, "rgb"), width=3))
         else:
             color = rt.assign_swizzle(color, "rgb", rt.component_wise("step", _u_threshold, rt.swizzle(color, "rgb"), width=3))
         g.fragColor = color

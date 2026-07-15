@@ -10,20 +10,13 @@ def run_pixel(ctx, out):
     _u_inputTex = T["inputTex"]
     _u_edgesTexture = T["edgesTexture"]
     _u_invert = U["invert"]
-    def cpu_ivec2__float(value):
-        return rt.construct(2, value)
-    def cpu_ivec2__vec2(value):
-        value = rt.copy(value)
-        return value
-    def cpu_ivec2__float_float(v0, v1):
-        return rt.construct(2, v0, v1)
     def main__void():
-        globalCoord = rt.binary("+", rt.swizzle(ctx.frag_coord, "xy"), _u_tileOffset, 2)
+        globalCoord = rt.binary("+", rt.swizzle(ctx.frag_coord, "xy"), _u_tileOffset, 2, "float")
         dimensions = rt.texture_size(_u_inputTex)
-        if rt.binary("||", rt.binary("==", rt.swizzle(dimensions, "x"), rt.i(0)), rt.binary("==", rt.swizzle(dimensions, "y"), rt.i(0))):
+        if (bool(rt.binary("==", rt.swizzle(dimensions, "x"), rt.i(0))) or bool(rt.binary("==", rt.swizzle(dimensions, "y"), rt.i(0)))):
             g.fragColor = rt.construct(4, rt.f(0.0))
             return
-        uv = rt.binary("/", rt.swizzle(ctx.frag_coord, "xy"), rt.construct(2, dimensions), 2)
+        uv = rt.binary("/", rt.swizzle(ctx.frag_coord, "xy"), rt.construct(2, dimensions), 2, "float")
         base = rt.texture(_u_inputTex, uv)
         edges = rt.texture(_u_edgesTexture, uv)
         strength = rt.component_wise("clamp", rt.swizzle(edges, "r"), rt.f(0.0), rt.f(1.0), width=1)

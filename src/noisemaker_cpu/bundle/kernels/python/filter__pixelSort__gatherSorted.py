@@ -8,23 +8,16 @@ def run_pixel(ctx, out):
     _u_preparedTex = T["preparedTex"]
     _u_rankTex = T["rankTex"]
     _u_brightestTex = T["brightestTex"]
-    def cpu_ivec2__float(value):
-        return rt.construct(2, value)
-    def cpu_ivec2__vec2(value):
-        value = rt.copy(value)
-        return value
-    def cpu_ivec2__float_float(v0, v1):
-        return rt.construct(2, v0, v1)
     def main__void():
-        coord = cpu_ivec2__vec2(rt.swizzle(ctx.frag_coord, "xy"))
+        coord = rt.construct(2, rt.swizzle(ctx.frag_coord, "xy"), base="int")
         size = rt.texture_size(_u_preparedTex)
         x = rt.swizzle(coord, "x")
         y = rt.swizzle(coord, "y")
         width = rt.swizzle(size, "x")
-        brightestXNorm = rt.swizzle(rt.texel_fetch(_u_brightestTex, cpu_ivec2__float_float(rt.i(0), y), rt.i(0)), "r")
-        brightestX = rt.construct(1, rt.component_wise("round", rt.binary("*", brightestXNorm, rt.construct(1, rt.binary("-", width, rt.i(1), 1)), 1), width=1))
-        sortedIndex = rt.binary("%", rt.binary("+", rt.binary("-", x, brightestX, 1), width, 1), width, 1)
-        targetRank = rt.binary("/", sortedIndex, rt.construct(1, rt.binary("-", width, rt.i(1), 1)), 1)
+        brightestXNorm = rt.swizzle(rt.texel_fetch(_u_brightestTex, rt.construct(2, rt.i(0), y, base="int"), rt.i(0)), "r")
+        brightestX = rt.construct(1, rt.component_wise("round", rt.binary("*", brightestXNorm, rt.construct(1, rt.binary("-", width, rt.i(1), 1, "int")), 1, "float"), width=1), base="int")
+        sortedIndex = rt.binary("%", rt.binary("+", rt.binary("-", x, brightestX, 1, "int"), width, 1, "int"), width, 1, "int")
+        targetRank = rt.binary("/", rt.construct(1, sortedIndex), rt.construct(1, rt.binary("-", width, rt.i(1), 1, "int")), 1, "float")
         NUM_SAMPLES = rt.i(64)
         bestDiff = rt.f(2.0)
         bestX = x
@@ -32,18 +25,18 @@ def run_pixel(ctx, out):
         _for0_first = True
         for _for0 in range(1048576):
             if not _for0_first:
-                s = rt.binary("+", s, rt.i(1), 1)
+                s = rt.binary("+", s, rt.i(1), 1, "int")
             _for0_first = False
             if not (rt.binary("<", s, NUM_SAMPLES)):
                 break
-            sampleX = rt.binary("/", rt.binary("*", s, width, 1), NUM_SAMPLES, 1)
-            rankData = rt.texel_fetch(_u_rankTex, cpu_ivec2__float_float(sampleX, y), rt.i(0))
+            sampleX = rt.binary("/", rt.binary("*", s, width, 1, "int"), NUM_SAMPLES, 1, "int")
+            rankData = rt.texel_fetch(_u_rankTex, rt.construct(2, sampleX, y, base="int"), rt.i(0))
             pixelRank = rt.swizzle(rankData, "r")
-            diff = rt.component_wise("abs", rt.binary("-", pixelRank, targetRank, 1), width=1)
+            diff = rt.component_wise("abs", rt.binary("-", pixelRank, targetRank, 1, "float"), width=1)
             if rt.binary("<", diff, bestDiff):
                 bestDiff = diff
                 bestX = sampleX
-        result = rt.texel_fetch(_u_preparedTex, cpu_ivec2__float_float(bestX, y), rt.i(0))
+        result = rt.texel_fetch(_u_preparedTex, rt.construct(2, bestX, y, base="int"), rt.i(0))
         g.fragColor = result
     main__void()
     _c = g.fragColor

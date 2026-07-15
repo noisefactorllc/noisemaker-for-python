@@ -5,300 +5,6 @@
     "base": "https://shaders.noisedeck.app"
   },
   "effects": {
-    "classicNoisedeck/bitEffects": {
-      "namespace": "classicNoisedeck",
-      "func": "bitEffects",
-      "kind": "generator",
-      "params": {
-        "mode": {
-          "type": "int",
-          "default": 1,
-          "define": "MODE",
-          "choices": {
-            "bitField": 0,
-            "bitMask": 1
-          },
-          "ui": {
-            "label": "mode",
-            "control": "dropdown"
-          }
-        },
-        "speed": {
-          "type": "float",
-          "default": 50,
-          "uniform": "speed",
-          "min": 0,
-          "max": 100,
-          "zero": 0,
-          "ui": {
-            "label": "speed",
-            "control": "slider"
-          }
-        },
-        "formula": {
-          "type": "int",
-          "default": 0,
-          "define": "FORMULA",
-          "choices": {
-            "alien": 0,
-            "sierpinski": 1
-          },
-          "ui": {
-            "label": "formula",
-            "control": "dropdown",
-            "category": "bit field",
-            "enabledBy": {
-              "param": "mode",
-              "eq": 0
-            }
-          }
-        },
-        "n": {
-          "type": "int",
-          "default": 1,
-          "uniform": "n",
-          "min": 1,
-          "max": 200,
-          "ui": {
-            "label": "mod",
-            "control": "slider",
-            "category": "bit field",
-            "enabledBy": {
-              "param": "mode",
-              "eq": 0
-            }
-          }
-        },
-        "scale": {
-          "type": "float",
-          "default": 75,
-          "uniform": "scale",
-          "min": 1,
-          "max": 100,
-          "ui": {
-            "label": "scale",
-            "control": "slider",
-            "category": "bit field",
-            "enabledBy": {
-              "param": "mode",
-              "eq": 0
-            }
-          }
-        },
-        "rotation": {
-          "type": "float",
-          "default": 0,
-          "uniform": "rotation",
-          "min": -180,
-          "max": 180,
-          "ui": {
-            "label": "rotate",
-            "control": "slider",
-            "category": "bit field",
-            "enabledBy": {
-              "param": "mode",
-              "eq": 0
-            }
-          }
-        },
-        "colorScheme": {
-          "type": "int",
-          "default": 20,
-          "define": "COLOR_SCHEME",
-          "choices": {
-            "blue": 0,
-            "cyan": 1,
-            "green": 2,
-            "magenta": 3,
-            "red": 4,
-            "white": 5,
-            "yellow": 6,
-            "blueAndGreen": 10,
-            "blueAndRed": 11,
-            "blueAndYellow": 12,
-            "greenAndMagenta": 13,
-            "greenAndRed": 14,
-            "redAndCyan": 15,
-            "redGreenAndBlue": 20
-          },
-          "ui": {
-            "label": "colors",
-            "control": "dropdown",
-            "category": "bit field",
-            "enabledBy": {
-              "param": "mode",
-              "eq": 0
-            }
-          }
-        },
-        "interp": {
-          "type": "int",
-          "default": 0,
-          "define": "INTERP",
-          "choices": {
-            "constant": 0,
-            "linear": 1
-          },
-          "ui": {
-            "label": "blend",
-            "control": "dropdown",
-            "category": "bit field",
-            "enabledBy": {
-              "param": "mode",
-              "eq": 0
-            }
-          }
-        },
-        "maskFormula": {
-          "type": "int",
-          "default": 10,
-          "define": "MASK_FORMULA",
-          "choices": {
-            "invaders": 10,
-            "wideInvaders": 11,
-            "glyphs": 20,
-            "areciboNumber": 30
-          },
-          "ui": {
-            "label": "formula",
-            "control": "dropdown",
-            "category": "bit mask",
-            "enabledBy": {
-              "param": "mode",
-              "eq": 1
-            }
-          }
-        },
-        "tiles": {
-          "type": "int",
-          "default": 5,
-          "uniform": "tiles",
-          "min": 1,
-          "max": 40,
-          "ui": {
-            "label": "tiles",
-            "control": "slider",
-            "category": "bit mask",
-            "enabledBy": {
-              "param": "mode",
-              "eq": 1
-            }
-          }
-        },
-        "complexity": {
-          "type": "float",
-          "default": 57,
-          "uniform": "complexity",
-          "min": 1,
-          "max": 100,
-          "ui": {
-            "label": "complexity",
-            "control": "slider",
-            "category": "bit mask",
-            "enabledBy": {
-              "param": "mode",
-              "eq": 1
-            }
-          }
-        },
-        "maskColorScheme": {
-          "type": "int",
-          "default": 1,
-          "define": "MASK_COLOR_SCHEME",
-          "choices": {
-            "blackWhite": 0,
-            "justHue": 3,
-            "hueSaturation": 2,
-            "hsv": 1
-          },
-          "ui": {
-            "label": "color space",
-            "control": "dropdown",
-            "category": "bit mask",
-            "enabledBy": {
-              "param": "mode",
-              "eq": 1
-            }
-          }
-        },
-        "baseHueRange": {
-          "type": "float",
-          "default": 50,
-          "uniform": "baseHueRange",
-          "min": 0,
-          "max": 100,
-          "ui": {
-            "label": "hue variants",
-            "control": "slider",
-            "category": "bit mask",
-            "enabledBy": {
-              "param": "mode",
-              "eq": 1
-            }
-          }
-        },
-        "hueRotation": {
-          "type": "float",
-          "default": 180,
-          "uniform": "hueRotation",
-          "min": 0,
-          "max": 360,
-          "ui": {
-            "label": "hue rotate",
-            "control": "slider",
-            "category": "bit mask",
-            "enabledBy": {
-              "param": "mode",
-              "eq": 1
-            }
-          }
-        },
-        "hueRange": {
-          "type": "float",
-          "default": 25,
-          "uniform": "hueRange",
-          "min": 0,
-          "max": 100,
-          "ui": {
-            "label": "hue range",
-            "control": "slider",
-            "category": "bit mask",
-            "enabledBy": {
-              "param": "mode",
-              "eq": 1
-            }
-          }
-        },
-        "seed": {
-          "type": "int",
-          "default": 63,
-          "uniform": "seed",
-          "min": 1,
-          "max": 100,
-          "ui": {
-            "label": "seed",
-            "control": "slider",
-            "category": "bit mask",
-            "enabledBy": {
-              "param": "mode",
-              "eq": 1
-            }
-          }
-        }
-      },
-      "textures": {},
-      "passes": [
-        {
-          "name": "render",
-          "program": "bitEffects",
-          "key": "classicNoisedeck/bitEffects:bitEffects",
-          "inputs": {},
-          "outputs": {
-            "fragColor": "outputTex"
-          }
-        }
-      ]
-    },
     "classicNoisedeck/coalesce": {
       "namespace": "classicNoisedeck",
       "func": "coalesce",
@@ -328,7 +34,7 @@
             "exclusion": 6,
             "glow": 7,
             "hardLight": 8,
-            "hueAB": 1000,
+            "hueAB": 1000.0,
             "hueBA": 1001,
             "lighten": 9,
             "mix": 10,
@@ -366,7 +72,7 @@
           "min": 0,
           "max": 100,
           "ui": {
-            "label": "refract a → b",
+            "label": "refract a \u2192 b",
             "control": "slider",
             "category": "refract"
           }
@@ -378,7 +84,7 @@
           "min": 0,
           "max": 100,
           "ui": {
-            "label": "refract b → a",
+            "label": "refract b \u2192 a",
             "control": "slider",
             "category": "refract"
           }
@@ -509,6 +215,140 @@
           "inputs": {
             "inputTex": "inputTex",
             "tex": "tex"
+          },
+          "outputs": {
+            "fragColor": "outputTex"
+          }
+        }
+      ]
+    },
+    "classicNoisedeck/glitch": {
+      "namespace": "classicNoisedeck",
+      "func": "glitch",
+      "kind": "filter",
+      "params": {
+        "glitchiness": {
+          "type": "float",
+          "default": 0,
+          "uniform": "glitchiness",
+          "min": 0,
+          "max": 100,
+          "ui": {
+            "label": "glitchiness",
+            "control": "slider"
+          }
+        },
+        "aberration": {
+          "type": "float",
+          "default": 0,
+          "uniform": "aberration",
+          "min": 0,
+          "max": 100,
+          "ui": {
+            "label": "aberration",
+            "control": "slider"
+          }
+        },
+        "xChonk": {
+          "type": "int",
+          "default": 1,
+          "uniform": "xChonk",
+          "min": 1,
+          "max": 100,
+          "ui": {
+            "label": "width",
+            "control": "slider"
+          }
+        },
+        "yChonk": {
+          "type": "int",
+          "default": 1,
+          "uniform": "yChonk",
+          "min": 1,
+          "max": 100,
+          "ui": {
+            "label": "height",
+            "control": "slider"
+          }
+        },
+        "seed": {
+          "type": "int",
+          "default": 1,
+          "uniform": "seed",
+          "min": 1,
+          "max": 100,
+          "ui": {
+            "label": "seed",
+            "control": "slider"
+          }
+        },
+        "scanlinesAmt": {
+          "type": "int",
+          "default": 0,
+          "uniform": "scanlinesAmt",
+          "min": 0,
+          "max": 100,
+          "ui": {
+            "label": "scanlines",
+            "control": "slider",
+            "category": "effects"
+          }
+        },
+        "snowAmt": {
+          "type": "float",
+          "default": 0,
+          "uniform": "snowAmt",
+          "min": 0,
+          "max": 100,
+          "ui": {
+            "label": "snow",
+            "control": "slider",
+            "category": "effects"
+          }
+        },
+        "vignetteAmt": {
+          "type": "float",
+          "default": 0,
+          "uniform": "vignetteAmt",
+          "min": -100,
+          "max": 100,
+          "ui": {
+            "label": "vignette",
+            "control": "slider",
+            "category": "effects"
+          }
+        },
+        "distortion": {
+          "type": "float",
+          "default": 0,
+          "uniform": "distortion",
+          "min": -100,
+          "max": 100,
+          "ui": {
+            "label": "lens",
+            "control": "slider",
+            "category": "distortion"
+          }
+        },
+        "aspectLens": {
+          "type": "boolean",
+          "default": false,
+          "uniform": "aspectLens",
+          "ui": {
+            "label": "1:1 aspect",
+            "control": "checkbox",
+            "category": "distortion"
+          }
+        }
+      },
+      "textures": {},
+      "passes": [
+        {
+          "name": "render",
+          "program": "glitch",
+          "key": "classicNoisedeck/glitch:glitch",
+          "inputs": {
+            "inputTex": "inputTex"
           },
           "outputs": {
             "fragColor": "outputTex"
@@ -2055,7 +1895,7 @@
           "step": 0.01,
           "uniform": "replaceAlpha",
           "ui": {
-            "label": "matched α",
+            "label": "matched \u03b1",
             "control": "slider"
           }
         },
@@ -2067,7 +1907,7 @@
           "step": 0.01,
           "uniform": "keepAlpha",
           "ui": {
-            "label": "unmatched α",
+            "label": "unmatched \u03b1",
             "control": "slider"
           }
         }
@@ -3119,6 +2959,68 @@
           "name": "main",
           "program": "fxaa",
           "key": "filter/fxaa:fxaa",
+          "inputs": {
+            "inputTex": "inputTex"
+          },
+          "outputs": {
+            "fragColor": "outputTex"
+          }
+        }
+      ]
+    },
+    "filter/glowingEdge": {
+      "namespace": "filter",
+      "func": "glowingEdge",
+      "kind": "filter",
+      "params": {
+        "shape": {
+          "type": "int",
+          "default": 0,
+          "uniform": "sobelMetric",
+          "choices": {
+            "circle": 0,
+            "diamond": 1,
+            "square": 2,
+            "star": 3
+          },
+          "ui": {
+            "label": "shape",
+            "control": "dropdown"
+          }
+        },
+        "width": {
+          "type": "int",
+          "default": 1,
+          "uniform": "width",
+          "min": 0,
+          "max": 10,
+          "zero": 0,
+          "randMin": 1,
+          "randMax": 3,
+          "ui": {
+            "label": "width",
+            "control": "slider"
+          }
+        },
+        "alpha": {
+          "type": "float",
+          "default": 1,
+          "uniform": "alpha",
+          "min": 0,
+          "max": 1,
+          "step": 0.05,
+          "ui": {
+            "label": "alpha",
+            "control": "slider"
+          }
+        }
+      },
+      "textures": {},
+      "passes": [
+        {
+          "name": "main",
+          "program": "glowingEdge",
+          "key": "filter/glowingEdge:glowingEdge",
           "inputs": {
             "inputTex": "inputTex"
           },
@@ -4253,88 +4155,6 @@
         }
       ]
     },
-    "filter/lensFlare": {
-      "namespace": "filter",
-      "func": "lensFlare",
-      "kind": "filter",
-      "params": {
-        "brightness": {
-          "type": "float",
-          "default": 100,
-          "uniform": "brightness",
-          "min": 10,
-          "max": 300,
-          "ui": {
-            "label": "brightness",
-            "control": "slider"
-          }
-        },
-        "centerX": {
-          "type": "float",
-          "default": 0.35,
-          "uniform": "centerX",
-          "min": 0,
-          "max": 1,
-          "ui": {
-            "label": "center x",
-            "control": "slider"
-          }
-        },
-        "centerY": {
-          "type": "float",
-          "default": 0.35,
-          "uniform": "centerY",
-          "min": 0,
-          "max": 1,
-          "ui": {
-            "label": "center y",
-            "control": "slider"
-          }
-        },
-        "lensType": {
-          "type": "int",
-          "default": 0,
-          "define": "LENS_TYPE",
-          "choices": {
-            "zoom50_300": 0,
-            "prime35": 1,
-            "prime105": 2,
-            "moviePrime": 3
-          },
-          "ui": {
-            "label": "lens type",
-            "control": "dropdown"
-          }
-        },
-        "tint": {
-          "type": "color",
-          "default": [
-            1,
-            0.95,
-            0.85
-          ],
-          "uniform": "tint",
-          "ui": {
-            "label": "tint",
-            "control": "color"
-          }
-        }
-      },
-      "textures": {},
-      "passes": [
-        {
-          "name": "render",
-          "program": "lensFlare",
-          "key": "filter/lensFlare:lensFlare",
-          "inputs": {
-            "inputTex": "inputTex"
-          },
-          "outputs": {
-            "fragColor": "outputTex"
-          }
-        }
-      ]
-    },
     "filter/lensWarp": {
       "namespace": "filter",
       "func": "lensWarp",
@@ -4631,50 +4451,6 @@
         }
       ]
     },
-    "filter/median": {
-      "namespace": "filter",
-      "func": "median",
-      "kind": "filter",
-      "params": {
-        "radius": {
-          "type": "int",
-          "default": 3,
-          "define": "RADIUS",
-          "min": 1,
-          "max": 3,
-          "step": 1,
-          "ui": {
-            "label": "radius",
-            "control": "slider"
-          }
-        },
-        "threshold": {
-          "type": "float",
-          "default": 0,
-          "uniform": "threshold",
-          "min": 0,
-          "max": 100,
-          "ui": {
-            "label": "threshold",
-            "control": "slider"
-          }
-        }
-      },
-      "textures": {},
-      "passes": [
-        {
-          "name": "median",
-          "program": "median",
-          "key": "filter/median:median",
-          "inputs": {
-            "inputTex": "inputTex"
-          },
-          "outputs": {
-            "fragColor": "outputTex"
-          }
-        }
-      ]
-    },
     "filter/morphology": {
       "namespace": "filter",
       "func": "morphology",
@@ -4945,105 +4721,6 @@
         }
       ]
     },
-    "filter/oilPaint": {
-      "incomplete": true,
-      "namespace": "filter",
-      "func": "oilPaint",
-      "kind": "filter",
-      "params": {
-        "mode": {
-          "type": "int",
-          "default": 1,
-          "define": "MODE",
-          "choices": {
-            "facet": 0,
-            "daubs": 1,
-            "dryBrush": 2,
-            "fresco": 3,
-            "knife": 4,
-            "sponge": 5
-          },
-          "ui": {
-            "label": "mode",
-            "control": "dropdown"
-          }
-        },
-        "size": {
-          "type": "float",
-          "default": 6,
-          "uniform": "size",
-          "min": 1,
-          "max": 12,
-          "step": 0.5,
-          "ui": {
-            "label": "size",
-            "control": "slider"
-          }
-        },
-        "detail": {
-          "type": "float",
-          "default": 50,
-          "uniform": "detail",
-          "min": 0,
-          "max": 100,
-          "ui": {
-            "label": "detail",
-            "control": "slider",
-            "enabledBy": {
-              "param": "mode",
-              "neq": 0
-            }
-          }
-        },
-        "texture": {
-          "type": "float",
-          "default": 20,
-          "uniform": "textureAmount",
-          "min": 0,
-          "max": 100,
-          "ui": {
-            "label": "texture",
-            "control": "slider"
-          }
-        },
-        "seed": {
-          "type": "int",
-          "default": 1,
-          "uniform": "seed",
-          "min": 1,
-          "max": 100,
-          "ui": {
-            "label": "seed",
-            "control": "slider",
-            "enabledBy": {
-              "param": "mode",
-              "eq": 5
-            }
-          }
-        }
-      },
-      "textures": {
-        "_paintTmp": {
-          "width": "input",
-          "height": "input",
-          "format": "rgba8unorm"
-        }
-      },
-      "passes": [
-        {
-          "name": "post",
-          "program": "oilPost",
-          "key": "filter/oilPaint:oilPost",
-          "inputs": {
-            "inputTex": "inputTex",
-            "flatTex": "_paintTmp"
-          },
-          "outputs": {
-            "fragColor": "outputTex"
-          }
-        }
-      ]
-    },
     "filter/osd": {
       "namespace": "filter",
       "func": "osd",
@@ -5118,7 +4795,6 @@
       ]
     },
     "filter/outline": {
-      "incomplete": true,
       "namespace": "filter",
       "func": "outline",
       "kind": "filter",
@@ -5182,6 +4858,17 @@
           },
           "outputs": {
             "color": "outlineValueMap"
+          }
+        },
+        {
+          "name": "sobel",
+          "program": "outlineSobel",
+          "key": "filter/outline:outlineSobel",
+          "inputs": {
+            "valueTexture": "outlineValueMap"
+          },
+          "outputs": {
+            "color": "outlineEdges"
           }
         },
         {
@@ -6291,18 +5978,6 @@
           "outputs": {
             "fragColor": "_rlBlur"
           }
-        },
-        {
-          "name": "shade",
-          "program": "rlShade",
-          "key": "filter/relief:rlShade",
-          "inputs": {
-            "inputTex": "inputTex",
-            "blurTex": "_rlBlur"
-          },
-          "outputs": {
-            "fragColor": "outputTex"
-          }
         }
       ]
     },
@@ -6780,17 +6455,6 @@
         }
       },
       "passes": [
-        {
-          "name": "scatterJitter",
-          "program": "scatterJitter",
-          "key": "filter/scatter:scatterJitter",
-          "inputs": {
-            "inputTex": "inputTex"
-          },
-          "outputs": {
-            "fragColor": "_scatterTmp"
-          }
-        },
         {
           "name": "scatterSmooth",
           "program": "scatterSmooth",
@@ -7956,7 +7620,6 @@
       ]
     },
     "filter/strokes": {
-      "incomplete": true,
       "namespace": "filter",
       "func": "strokes",
       "kind": "filter",
@@ -8762,6 +8425,148 @@
           "key": "filter/tetraCosine:tetraCosine",
           "inputs": {
             "inputTex": "inputTex"
+          },
+          "outputs": {
+            "fragColor": "outputTex"
+          }
+        }
+      ]
+    },
+    "filter/text": {
+      "namespace": "filter",
+      "func": "text",
+      "kind": "filter",
+      "params": {
+        "text": {
+          "type": "string",
+          "default": "Hello World",
+          "ui": {
+            "label": "text",
+            "multiline": true,
+            "category": "general"
+          }
+        },
+        "font": {
+          "type": "string",
+          "default": "Nunito",
+          "choices": {
+            "nunito": "Nunito",
+            "sansSerif": "sans-serif",
+            "serif": "serif",
+            "monospace": "monospace",
+            "cursive": "cursive",
+            "fantasy": "fantasy"
+          },
+          "ui": {
+            "label": "font",
+            "control": "dropdown",
+            "category": "general"
+          }
+        },
+        "size": {
+          "type": "float",
+          "default": 0.1,
+          "min": 0.01,
+          "max": 1,
+          "step": 0.01,
+          "ui": {
+            "label": "size",
+            "control": "slider",
+            "category": "transform"
+          }
+        },
+        "posX": {
+          "type": "float",
+          "default": 0.5,
+          "min": 0,
+          "max": 1,
+          "step": 0.01,
+          "ui": {
+            "label": "pos x",
+            "control": "slider",
+            "category": "transform"
+          }
+        },
+        "posY": {
+          "type": "float",
+          "default": 0.5,
+          "min": 0,
+          "max": 1,
+          "step": 0.01,
+          "ui": {
+            "label": "pos y",
+            "control": "slider",
+            "category": "transform"
+          }
+        },
+        "rotation": {
+          "type": "float",
+          "default": 0,
+          "min": -180,
+          "max": 180,
+          "step": 1,
+          "ui": {
+            "label": "rotation",
+            "control": "slider",
+            "category": "transform"
+          }
+        },
+        "color": {
+          "type": "color",
+          "default": "#ffffff",
+          "ui": {
+            "label": "color",
+            "control": "color",
+            "category": "general"
+          }
+        },
+        "matteColor": {
+          "type": "color",
+          "default": "#000000",
+          "uniform": "matteColor",
+          "ui": {
+            "label": "matte color",
+            "control": "color",
+            "category": "background"
+          }
+        },
+        "matteOpacity": {
+          "type": "float",
+          "default": 0,
+          "min": 0,
+          "max": 1,
+          "step": 0.01,
+          "uniform": "matteOpacity",
+          "ui": {
+            "label": "matte opacity",
+            "control": "slider",
+            "category": "background"
+          }
+        },
+        "justify": {
+          "type": "string",
+          "default": "center",
+          "choices": {
+            "left": "left",
+            "center": "center",
+            "right": "right"
+          },
+          "ui": {
+            "label": "justify",
+            "control": "dropdown",
+            "category": "general"
+          }
+        }
+      },
+      "textures": {},
+      "passes": [
+        {
+          "name": "overlay",
+          "program": "text",
+          "key": "filter/text:text",
+          "inputs": {
+            "inputTex": "inputTex",
+            "textTex": "textTex"
           },
           "outputs": {
             "fragColor": "outputTex"
@@ -9643,7 +9448,6 @@
       ]
     },
     "filter/wormhole": {
-      "incomplete": true,
       "namespace": "filter",
       "func": "wormhole",
       "kind": "filter",
@@ -10418,170 +10222,6 @@
           "inputs": {
             "inputTex": "inputTex",
             "tex": "tex"
-          },
-          "outputs": {
-            "fragColor": "outputTex"
-          }
-        }
-      ]
-    },
-    "mixer/mashup": {
-      "namespace": "mixer",
-      "func": "mashup",
-      "kind": "filter",
-      "params": {
-        "source": {
-          "type": "surface",
-          "default": "none",
-          "ui": {
-            "label": "input"
-          }
-        },
-        "layers": {
-          "type": "int",
-          "default": 4,
-          "uniform": "layers",
-          "min": 2,
-          "max": 8,
-          "step": 1,
-          "ui": {
-            "label": "layers",
-            "control": "slider"
-          }
-        },
-        "smoothness": {
-          "type": "float",
-          "default": 0.1,
-          "uniform": "smoothness",
-          "min": 0,
-          "max": 0.5,
-          "zero": 0,
-          "ui": {
-            "label": "smoothness",
-            "control": "slider"
-          }
-        },
-        "layer0_tex": {
-          "type": "surface",
-          "default": "none",
-          "colorModeUniform": "layer0_active",
-          "ui": {
-            "label": "layer 1 source",
-            "category": "layer 1",
-            "enabledBy": {
-              "param": "layers",
-              "gt": 0
-            }
-          }
-        },
-        "layer1_tex": {
-          "type": "surface",
-          "default": "none",
-          "colorModeUniform": "layer1_active",
-          "ui": {
-            "label": "layer 2 source",
-            "category": "layer 2",
-            "enabledBy": {
-              "param": "layers",
-              "gt": 1
-            }
-          }
-        },
-        "layer2_tex": {
-          "type": "surface",
-          "default": "none",
-          "colorModeUniform": "layer2_active",
-          "ui": {
-            "label": "layer 3 source",
-            "category": "layer 3",
-            "enabledBy": {
-              "param": "layers",
-              "gt": 2
-            }
-          }
-        },
-        "layer3_tex": {
-          "type": "surface",
-          "default": "none",
-          "colorModeUniform": "layer3_active",
-          "ui": {
-            "label": "layer 4 source",
-            "category": "layer 4",
-            "enabledBy": {
-              "param": "layers",
-              "gt": 3
-            }
-          }
-        },
-        "layer4_tex": {
-          "type": "surface",
-          "default": "none",
-          "colorModeUniform": "layer4_active",
-          "ui": {
-            "label": "layer 5 source",
-            "category": "layer 5",
-            "enabledBy": {
-              "param": "layers",
-              "gt": 4
-            }
-          }
-        },
-        "layer5_tex": {
-          "type": "surface",
-          "default": "none",
-          "colorModeUniform": "layer5_active",
-          "ui": {
-            "label": "layer 6 source",
-            "category": "layer 6",
-            "enabledBy": {
-              "param": "layers",
-              "gt": 5
-            }
-          }
-        },
-        "layer6_tex": {
-          "type": "surface",
-          "default": "none",
-          "colorModeUniform": "layer6_active",
-          "ui": {
-            "label": "layer 7 source",
-            "category": "layer 7",
-            "enabledBy": {
-              "param": "layers",
-              "gt": 6
-            }
-          }
-        },
-        "layer7_tex": {
-          "type": "surface",
-          "default": "none",
-          "colorModeUniform": "layer7_active",
-          "ui": {
-            "label": "layer 8 source",
-            "category": "layer 8",
-            "enabledBy": {
-              "param": "layers",
-              "gt": 7
-            }
-          }
-        }
-      },
-      "textures": {},
-      "passes": [
-        {
-          "name": "render",
-          "program": "mashup",
-          "key": "mixer/mashup:mashup",
-          "inputs": {
-            "source": "source",
-            "layer0_tex": "layer0_tex",
-            "layer1_tex": "layer1_tex",
-            "layer2_tex": "layer2_tex",
-            "layer3_tex": "layer3_tex",
-            "layer4_tex": "layer4_tex",
-            "layer5_tex": "layer5_tex",
-            "layer6_tex": "layer6_tex",
-            "layer7_tex": "layer7_tex"
           },
           "outputs": {
             "fragColor": "outputTex"
@@ -11640,106 +11280,6 @@
         }
       ]
     },
-    "synth/curl": {
-      "namespace": "synth",
-      "func": "curl",
-      "kind": "generator",
-      "params": {
-        "scale": {
-          "type": "float",
-          "default": 16,
-          "uniform": "scale",
-          "min": 0.5,
-          "max": 20,
-          "ui": {
-            "label": "scale",
-            "control": "slider"
-          }
-        },
-        "octaves": {
-          "type": "int",
-          "default": 1,
-          "define": "OCTAVES",
-          "min": 1,
-          "max": 3,
-          "ui": {
-            "label": "octaves",
-            "control": "slider"
-          }
-        },
-        "seed": {
-          "type": "int",
-          "default": 0,
-          "uniform": "seed",
-          "min": 0,
-          "max": 1000,
-          "ui": {
-            "label": "seed",
-            "control": "slider"
-          }
-        },
-        "ridges": {
-          "type": "boolean",
-          "default": true,
-          "define": "RIDGES",
-          "ui": {
-            "label": "ridges",
-            "control": "checkbox"
-          }
-        },
-        "intensity": {
-          "type": "float",
-          "default": 1,
-          "uniform": "intensity",
-          "min": 0,
-          "max": 2,
-          "ui": {
-            "label": "intensity",
-            "control": "slider"
-          }
-        },
-        "speed": {
-          "type": "int",
-          "default": 1,
-          "uniform": "speed",
-          "min": 0,
-          "max": 5,
-          "zero": 0,
-          "ui": {
-            "label": "speed",
-            "control": "slider"
-          }
-        },
-        "outputMode": {
-          "type": "int",
-          "default": 3,
-          "define": "OUTPUT_MODE",
-          "choices": {
-            "flowX": 0,
-            "flowY": 1,
-            "flowZ": 2,
-            "full": 3,
-            "magnitude": 4
-          },
-          "ui": {
-            "label": "output",
-            "control": "dropdown"
-          }
-        }
-      },
-      "textures": {},
-      "passes": [
-        {
-          "name": "render",
-          "program": "curl",
-          "key": "synth/curl:curl",
-          "inputs": {},
-          "outputs": {
-            "fragColor": "outputTex"
-          }
-        }
-      ]
-    },
     "synth/gabor": {
       "namespace": "synth",
       "func": "gabor",
@@ -12081,7 +11621,7 @@
           "default": 300,
           "uniform": "iterations",
           "min": 50,
-          "max": 1000,
+          "max": 1000.0,
           "ui": {
             "label": "iterations",
             "control": "slider",
@@ -12631,7 +12171,7 @@
           "default": 500,
           "uniform": "iterations",
           "min": 50,
-          "max": 2000,
+          "max": 2000.0,
           "ui": {
             "label": "iterations",
             "control": "slider",
@@ -12788,6 +12328,173 @@
           "program": "mandelbrot",
           "key": "synth/mandelbrot:mandelbrot",
           "inputs": {},
+          "outputs": {
+            "fragColor": "outputTex"
+          }
+        }
+      ]
+    },
+    "synth/media": {
+      "namespace": "synth",
+      "func": "media",
+      "kind": "filter",
+      "params": {
+        "position": {
+          "type": "int",
+          "default": 4,
+          "uniform": "position",
+          "choices": {
+            "topLeft": 0,
+            "topCenter": 1,
+            "topRight": 2,
+            "midLeft": 3,
+            "midCenter": 4,
+            "midRight": 5,
+            "bottomLeft": 6,
+            "bottomCenter": 7,
+            "bottomRight": 8
+          },
+          "ui": {
+            "label": "position",
+            "control": "dropdown",
+            "category": "orientation"
+          }
+        },
+        "tiling": {
+          "type": "int",
+          "default": 0,
+          "uniform": "tiling",
+          "choices": {
+            "none": 0,
+            "horizAndVert": 1,
+            "horizOnly": 2,
+            "vertOnly": 3
+          },
+          "ui": {
+            "label": "tiling",
+            "control": "dropdown",
+            "category": "orientation"
+          }
+        },
+        "flip": {
+          "type": "int",
+          "default": 0,
+          "uniform": "flip",
+          "choices": {
+            "none": 0,
+            "all": 1,
+            "horizontal": 2,
+            "vertical": 3,
+            "mirrorLtoR": 11,
+            "mirrorRtoL": 12,
+            "mirrorUtoD": 13,
+            "mirrorDtoU": 14,
+            "mirrorLtoRUtoD": 15,
+            "mirrorLtoRDtoU": 16,
+            "mirrorRtoLUtoD": 17,
+            "mirrorRtoLDtoU": 18
+          },
+          "ui": {
+            "label": "flip/mirror",
+            "control": "dropdown",
+            "category": "orientation"
+          }
+        },
+        "scaleAmt": {
+          "type": "float",
+          "default": 100,
+          "min": 25,
+          "max": 400,
+          "uniform": "scaleAmt",
+          "ui": {
+            "label": "scale %",
+            "control": "slider",
+            "category": "transform"
+          }
+        },
+        "rotation": {
+          "type": "float",
+          "default": 0,
+          "min": -180,
+          "max": 180,
+          "uniform": "rotation",
+          "ui": {
+            "label": "rotate",
+            "control": "slider",
+            "category": "transform"
+          }
+        },
+        "offsetX": {
+          "type": "float",
+          "default": 0,
+          "min": -100,
+          "max": 100,
+          "uniform": "offsetX",
+          "ui": {
+            "label": "offset x",
+            "control": "slider",
+            "category": "transform"
+          }
+        },
+        "offsetY": {
+          "type": "float",
+          "default": 0,
+          "min": -100,
+          "max": 100,
+          "uniform": "offsetY",
+          "ui": {
+            "label": "offset y",
+            "control": "slider",
+            "category": "transform"
+          }
+        },
+        "bgColor": {
+          "type": "color",
+          "default": [
+            0,
+            0,
+            0
+          ],
+          "uniform": "bgColor",
+          "ui": {
+            "label": "bg color",
+            "control": "color",
+            "category": "background"
+          }
+        },
+        "bgAlpha": {
+          "type": "float",
+          "default": 0,
+          "min": 0,
+          "max": 1,
+          "uniform": "bgAlpha",
+          "ui": {
+            "label": "bg opacity",
+            "control": "slider",
+            "category": "background"
+          }
+        },
+        "imageSize": {
+          "type": "vec2",
+          "default": [
+            1024,
+            1024
+          ],
+          "uniform": "imageSize",
+          "ui": {
+            "control": false
+          }
+        }
+      },
+      "textures": {},
+      "passes": [
+        {
+          "name": "main",
+          "program": "mediaInput",
+          "key": "synth/media:mediaInput",
+          "inputs": {
+            "imageTex": "imageTex"
+          },
           "outputs": {
             "fragColor": "outputTex"
           }
@@ -13282,7 +12989,7 @@
           "type": "int",
           "default": 0,
           "min": 0,
-          "max": 1000,
+          "max": 1000.0,
           "uniform": "seed",
           "ui": {
             "label": "seed",
@@ -13499,141 +13206,6 @@
         }
       ]
     },
-    "synth/perlin": {
-      "namespace": "synth",
-      "func": "perlin",
-      "kind": "generator",
-      "params": {
-        "scale": {
-          "type": "float",
-          "default": 25,
-          "min": 0,
-          "max": 100,
-          "randMin": 15,
-          "uniform": "scale",
-          "ui": {
-            "label": "scale"
-          }
-        },
-        "octaves": {
-          "type": "int",
-          "default": 1,
-          "min": 1,
-          "max": 6,
-          "uniform": "octaves",
-          "ui": {
-            "label": "octaves"
-          }
-        },
-        "colorMode": {
-          "type": "int",
-          "default": 1,
-          "uniform": "colorMode",
-          "choices": {
-            "mono": 0,
-            "rgb": 1
-          },
-          "ui": {
-            "label": "color mode",
-            "control": "dropdown"
-          }
-        },
-        "dimensions": {
-          "type": "int",
-          "default": 2,
-          "min": 2,
-          "max": 3,
-          "uniform": "dimensions",
-          "define": "DIMENSIONS",
-          "ui": {
-            "label": "dimensions"
-          }
-        },
-        "ridges": {
-          "type": "boolean",
-          "default": false,
-          "uniform": "ridges",
-          "ui": {
-            "label": "ridges"
-          }
-        },
-        "warpIterations": {
-          "type": "int",
-          "default": 0,
-          "min": 0,
-          "max": 4,
-          "uniform": "warpIterations",
-          "ui": {
-            "label": "warp iterations",
-            "category": "warp"
-          }
-        },
-        "warpScale": {
-          "type": "float",
-          "default": 50,
-          "min": 0,
-          "max": 100,
-          "uniform": "warpScale",
-          "ui": {
-            "label": "warp scale",
-            "category": "warp",
-            "enabledBy": {
-              "param": "warpIterations",
-              "neq": 0
-            }
-          }
-        },
-        "warpIntensity": {
-          "type": "float",
-          "default": 50,
-          "min": 0,
-          "max": 100,
-          "uniform": "warpIntensity",
-          "ui": {
-            "label": "warp intensity",
-            "category": "warp",
-            "enabledBy": {
-              "param": "warpIterations",
-              "neq": 0
-            }
-          }
-        },
-        "seed": {
-          "type": "int",
-          "default": 0,
-          "min": 0,
-          "max": 100,
-          "uniform": "seed",
-          "ui": {
-            "label": "seed"
-          }
-        },
-        "speed": {
-          "type": "int",
-          "default": 1,
-          "min": 0,
-          "max": 5,
-          "zero": 0,
-          "randMax": 2,
-          "uniform": "speed",
-          "ui": {
-            "label": "speed"
-          }
-        }
-      },
-      "textures": {},
-      "passes": [
-        {
-          "name": "main",
-          "program": "perlin",
-          "key": "synth/perlin:perlin",
-          "inputs": {},
-          "outputs": {
-            "color": "outputTex"
-          }
-        }
-      ]
-    },
     "synth/polygon": {
       "namespace": "synth",
       "func": "polygon",
@@ -13749,4546 +13321,6 @@
           "inputs": {},
           "outputs": {
             "color": "outputTex"
-          }
-        }
-      ]
-    },
-    "synth/remap": {
-      "namespace": "synth",
-      "func": "remap",
-      "kind": "filter",
-      "params": {
-        "zoneCount": {
-          "type": "int",
-          "default": 0,
-          "uniform": "zoneCount",
-          "min": 0,
-          "max": 8,
-          "step": 1,
-          "ui": {
-            "label": "zone count",
-            "control": "slider"
-          }
-        },
-        "bgColor": {
-          "type": "color",
-          "default": [
-            0,
-            0,
-            0
-          ],
-          "uniform": "bgColor",
-          "ui": {
-            "label": "background",
-            "control": "color"
-          }
-        },
-        "bgAlpha": {
-          "type": "float",
-          "default": 1,
-          "uniform": "bgAlpha",
-          "min": 0,
-          "max": 1,
-          "ui": {
-            "label": "background alpha",
-            "control": "slider"
-          }
-        },
-        "smoothEdge": {
-          "type": "float",
-          "default": 0.04,
-          "uniform": "smoothEdge",
-          "min": 0,
-          "max": 1,
-          "step": 0.01,
-          "ui": {
-            "label": "edge smoothing",
-            "control": "slider"
-          }
-        },
-        "zone0_tex": {
-          "type": "surface",
-          "default": "none",
-          "colorModeUniform": "zone0_active",
-          "ui": {
-            "label": "zone 1 source",
-            "category": "zone 1",
-            "enabledBy": {
-              "param": "zoneCount",
-              "gt": 0
-            }
-          }
-        },
-        "zone0_count": {
-          "type": "int",
-          "default": 0,
-          "uniform": "zone0_count",
-          "min": 0,
-          "max": 64,
-          "ui": {
-            "label": "vertices",
-            "control": "slider",
-            "hidden": true,
-            "category": "zone 1",
-            "enabledBy": {
-              "param": "zoneCount",
-              "gt": 0
-            }
-          }
-        },
-        "zone0_alpha": {
-          "type": "float",
-          "default": 1,
-          "uniform": "zone0_alpha",
-          "min": 0,
-          "max": 1,
-          "ui": {
-            "label": "alpha",
-            "control": "slider",
-            "category": "zone 1",
-            "enabledBy": {
-              "param": "zoneCount",
-              "gt": 0
-            }
-          }
-        },
-        "zone0_v0": {
-          "type": "vec4",
-          "default": [
-            0,
-            0,
-            0,
-            0
-          ],
-          "uniform": "zone0_v0",
-          "ui": {
-            "label": "verts 0–1",
-            "control": "slider",
-            "hidden": true,
-            "category": "zone 1"
-          }
-        },
-        "zone0_v1": {
-          "type": "vec4",
-          "default": [
-            0,
-            0,
-            0,
-            0
-          ],
-          "uniform": "zone0_v1",
-          "ui": {
-            "label": "verts 2–3",
-            "control": "slider",
-            "hidden": true,
-            "category": "zone 1"
-          }
-        },
-        "zone0_v2": {
-          "type": "vec4",
-          "default": [
-            0,
-            0,
-            0,
-            0
-          ],
-          "uniform": "zone0_v2",
-          "ui": {
-            "label": "verts 4–5",
-            "control": "slider",
-            "hidden": true,
-            "category": "zone 1"
-          }
-        },
-        "zone0_v3": {
-          "type": "vec4",
-          "default": [
-            0,
-            0,
-            0,
-            0
-          ],
-          "uniform": "zone0_v3",
-          "ui": {
-            "label": "verts 6–7",
-            "control": "slider",
-            "hidden": true,
-            "category": "zone 1"
-          }
-        },
-        "zone0_v4": {
-          "type": "vec4",
-          "default": [
-            0,
-            0,
-            0,
-            0
-          ],
-          "uniform": "zone0_v4",
-          "ui": {
-            "label": "verts 8–9",
-            "control": "slider",
-            "hidden": true,
-            "category": "zone 1"
-          }
-        },
-        "zone0_v5": {
-          "type": "vec4",
-          "default": [
-            0,
-            0,
-            0,
-            0
-          ],
-          "uniform": "zone0_v5",
-          "ui": {
-            "label": "verts 10–11",
-            "control": "slider",
-            "hidden": true,
-            "category": "zone 1"
-          }
-        },
-        "zone0_v6": {
-          "type": "vec4",
-          "default": [
-            0,
-            0,
-            0,
-            0
-          ],
-          "uniform": "zone0_v6",
-          "ui": {
-            "label": "verts 12–13",
-            "control": "slider",
-            "hidden": true,
-            "category": "zone 1"
-          }
-        },
-        "zone0_v7": {
-          "type": "vec4",
-          "default": [
-            0,
-            0,
-            0,
-            0
-          ],
-          "uniform": "zone0_v7",
-          "ui": {
-            "label": "verts 14–15",
-            "control": "slider",
-            "hidden": true,
-            "category": "zone 1"
-          }
-        },
-        "zone0_v8": {
-          "type": "vec4",
-          "default": [
-            0,
-            0,
-            0,
-            0
-          ],
-          "uniform": "zone0_v8",
-          "ui": {
-            "label": "verts 16–17",
-            "control": "slider",
-            "hidden": true,
-            "category": "zone 1"
-          }
-        },
-        "zone0_v9": {
-          "type": "vec4",
-          "default": [
-            0,
-            0,
-            0,
-            0
-          ],
-          "uniform": "zone0_v9",
-          "ui": {
-            "label": "verts 18–19",
-            "control": "slider",
-            "hidden": true,
-            "category": "zone 1"
-          }
-        },
-        "zone0_v10": {
-          "type": "vec4",
-          "default": [
-            0,
-            0,
-            0,
-            0
-          ],
-          "uniform": "zone0_v10",
-          "ui": {
-            "label": "verts 20–21",
-            "control": "slider",
-            "hidden": true,
-            "category": "zone 1"
-          }
-        },
-        "zone0_v11": {
-          "type": "vec4",
-          "default": [
-            0,
-            0,
-            0,
-            0
-          ],
-          "uniform": "zone0_v11",
-          "ui": {
-            "label": "verts 22–23",
-            "control": "slider",
-            "hidden": true,
-            "category": "zone 1"
-          }
-        },
-        "zone0_v12": {
-          "type": "vec4",
-          "default": [
-            0,
-            0,
-            0,
-            0
-          ],
-          "uniform": "zone0_v12",
-          "ui": {
-            "label": "verts 24–25",
-            "control": "slider",
-            "hidden": true,
-            "category": "zone 1"
-          }
-        },
-        "zone0_v13": {
-          "type": "vec4",
-          "default": [
-            0,
-            0,
-            0,
-            0
-          ],
-          "uniform": "zone0_v13",
-          "ui": {
-            "label": "verts 26–27",
-            "control": "slider",
-            "hidden": true,
-            "category": "zone 1"
-          }
-        },
-        "zone0_v14": {
-          "type": "vec4",
-          "default": [
-            0,
-            0,
-            0,
-            0
-          ],
-          "uniform": "zone0_v14",
-          "ui": {
-            "label": "verts 28–29",
-            "control": "slider",
-            "hidden": true,
-            "category": "zone 1"
-          }
-        },
-        "zone0_v15": {
-          "type": "vec4",
-          "default": [
-            0,
-            0,
-            0,
-            0
-          ],
-          "uniform": "zone0_v15",
-          "ui": {
-            "label": "verts 30–31",
-            "control": "slider",
-            "hidden": true,
-            "category": "zone 1"
-          }
-        },
-        "zone0_v16": {
-          "type": "vec4",
-          "default": [
-            0,
-            0,
-            0,
-            0
-          ],
-          "uniform": "zone0_v16",
-          "ui": {
-            "label": "verts 32–33",
-            "control": "slider",
-            "hidden": true,
-            "category": "zone 1"
-          }
-        },
-        "zone0_v17": {
-          "type": "vec4",
-          "default": [
-            0,
-            0,
-            0,
-            0
-          ],
-          "uniform": "zone0_v17",
-          "ui": {
-            "label": "verts 34–35",
-            "control": "slider",
-            "hidden": true,
-            "category": "zone 1"
-          }
-        },
-        "zone0_v18": {
-          "type": "vec4",
-          "default": [
-            0,
-            0,
-            0,
-            0
-          ],
-          "uniform": "zone0_v18",
-          "ui": {
-            "label": "verts 36–37",
-            "control": "slider",
-            "hidden": true,
-            "category": "zone 1"
-          }
-        },
-        "zone0_v19": {
-          "type": "vec4",
-          "default": [
-            0,
-            0,
-            0,
-            0
-          ],
-          "uniform": "zone0_v19",
-          "ui": {
-            "label": "verts 38–39",
-            "control": "slider",
-            "hidden": true,
-            "category": "zone 1"
-          }
-        },
-        "zone0_v20": {
-          "type": "vec4",
-          "default": [
-            0,
-            0,
-            0,
-            0
-          ],
-          "uniform": "zone0_v20",
-          "ui": {
-            "label": "verts 40–41",
-            "control": "slider",
-            "hidden": true,
-            "category": "zone 1"
-          }
-        },
-        "zone0_v21": {
-          "type": "vec4",
-          "default": [
-            0,
-            0,
-            0,
-            0
-          ],
-          "uniform": "zone0_v21",
-          "ui": {
-            "label": "verts 42–43",
-            "control": "slider",
-            "hidden": true,
-            "category": "zone 1"
-          }
-        },
-        "zone0_v22": {
-          "type": "vec4",
-          "default": [
-            0,
-            0,
-            0,
-            0
-          ],
-          "uniform": "zone0_v22",
-          "ui": {
-            "label": "verts 44–45",
-            "control": "slider",
-            "hidden": true,
-            "category": "zone 1"
-          }
-        },
-        "zone0_v23": {
-          "type": "vec4",
-          "default": [
-            0,
-            0,
-            0,
-            0
-          ],
-          "uniform": "zone0_v23",
-          "ui": {
-            "label": "verts 46–47",
-            "control": "slider",
-            "hidden": true,
-            "category": "zone 1"
-          }
-        },
-        "zone0_v24": {
-          "type": "vec4",
-          "default": [
-            0,
-            0,
-            0,
-            0
-          ],
-          "uniform": "zone0_v24",
-          "ui": {
-            "label": "verts 48–49",
-            "control": "slider",
-            "hidden": true,
-            "category": "zone 1"
-          }
-        },
-        "zone0_v25": {
-          "type": "vec4",
-          "default": [
-            0,
-            0,
-            0,
-            0
-          ],
-          "uniform": "zone0_v25",
-          "ui": {
-            "label": "verts 50–51",
-            "control": "slider",
-            "hidden": true,
-            "category": "zone 1"
-          }
-        },
-        "zone0_v26": {
-          "type": "vec4",
-          "default": [
-            0,
-            0,
-            0,
-            0
-          ],
-          "uniform": "zone0_v26",
-          "ui": {
-            "label": "verts 52–53",
-            "control": "slider",
-            "hidden": true,
-            "category": "zone 1"
-          }
-        },
-        "zone0_v27": {
-          "type": "vec4",
-          "default": [
-            0,
-            0,
-            0,
-            0
-          ],
-          "uniform": "zone0_v27",
-          "ui": {
-            "label": "verts 54–55",
-            "control": "slider",
-            "hidden": true,
-            "category": "zone 1"
-          }
-        },
-        "zone0_v28": {
-          "type": "vec4",
-          "default": [
-            0,
-            0,
-            0,
-            0
-          ],
-          "uniform": "zone0_v28",
-          "ui": {
-            "label": "verts 56–57",
-            "control": "slider",
-            "hidden": true,
-            "category": "zone 1"
-          }
-        },
-        "zone0_v29": {
-          "type": "vec4",
-          "default": [
-            0,
-            0,
-            0,
-            0
-          ],
-          "uniform": "zone0_v29",
-          "ui": {
-            "label": "verts 58–59",
-            "control": "slider",
-            "hidden": true,
-            "category": "zone 1"
-          }
-        },
-        "zone0_v30": {
-          "type": "vec4",
-          "default": [
-            0,
-            0,
-            0,
-            0
-          ],
-          "uniform": "zone0_v30",
-          "ui": {
-            "label": "verts 60–61",
-            "control": "slider",
-            "hidden": true,
-            "category": "zone 1"
-          }
-        },
-        "zone0_v31": {
-          "type": "vec4",
-          "default": [
-            0,
-            0,
-            0,
-            0
-          ],
-          "uniform": "zone0_v31",
-          "ui": {
-            "label": "verts 62–63",
-            "control": "slider",
-            "hidden": true,
-            "category": "zone 1"
-          }
-        },
-        "zone1_tex": {
-          "type": "surface",
-          "default": "none",
-          "colorModeUniform": "zone1_active",
-          "ui": {
-            "label": "zone 2 source",
-            "category": "zone 2",
-            "enabledBy": {
-              "param": "zoneCount",
-              "gt": 1
-            }
-          }
-        },
-        "zone1_count": {
-          "type": "int",
-          "default": 0,
-          "uniform": "zone1_count",
-          "min": 0,
-          "max": 64,
-          "ui": {
-            "label": "vertices",
-            "control": "slider",
-            "hidden": true,
-            "category": "zone 2",
-            "enabledBy": {
-              "param": "zoneCount",
-              "gt": 1
-            }
-          }
-        },
-        "zone1_alpha": {
-          "type": "float",
-          "default": 1,
-          "uniform": "zone1_alpha",
-          "min": 0,
-          "max": 1,
-          "ui": {
-            "label": "alpha",
-            "control": "slider",
-            "category": "zone 2",
-            "enabledBy": {
-              "param": "zoneCount",
-              "gt": 1
-            }
-          }
-        },
-        "zone1_v0": {
-          "type": "vec4",
-          "default": [
-            0,
-            0,
-            0,
-            0
-          ],
-          "uniform": "zone1_v0",
-          "ui": {
-            "label": "verts 0–1",
-            "control": "slider",
-            "hidden": true,
-            "category": "zone 2"
-          }
-        },
-        "zone1_v1": {
-          "type": "vec4",
-          "default": [
-            0,
-            0,
-            0,
-            0
-          ],
-          "uniform": "zone1_v1",
-          "ui": {
-            "label": "verts 2–3",
-            "control": "slider",
-            "hidden": true,
-            "category": "zone 2"
-          }
-        },
-        "zone1_v2": {
-          "type": "vec4",
-          "default": [
-            0,
-            0,
-            0,
-            0
-          ],
-          "uniform": "zone1_v2",
-          "ui": {
-            "label": "verts 4–5",
-            "control": "slider",
-            "hidden": true,
-            "category": "zone 2"
-          }
-        },
-        "zone1_v3": {
-          "type": "vec4",
-          "default": [
-            0,
-            0,
-            0,
-            0
-          ],
-          "uniform": "zone1_v3",
-          "ui": {
-            "label": "verts 6–7",
-            "control": "slider",
-            "hidden": true,
-            "category": "zone 2"
-          }
-        },
-        "zone1_v4": {
-          "type": "vec4",
-          "default": [
-            0,
-            0,
-            0,
-            0
-          ],
-          "uniform": "zone1_v4",
-          "ui": {
-            "label": "verts 8–9",
-            "control": "slider",
-            "hidden": true,
-            "category": "zone 2"
-          }
-        },
-        "zone1_v5": {
-          "type": "vec4",
-          "default": [
-            0,
-            0,
-            0,
-            0
-          ],
-          "uniform": "zone1_v5",
-          "ui": {
-            "label": "verts 10–11",
-            "control": "slider",
-            "hidden": true,
-            "category": "zone 2"
-          }
-        },
-        "zone1_v6": {
-          "type": "vec4",
-          "default": [
-            0,
-            0,
-            0,
-            0
-          ],
-          "uniform": "zone1_v6",
-          "ui": {
-            "label": "verts 12–13",
-            "control": "slider",
-            "hidden": true,
-            "category": "zone 2"
-          }
-        },
-        "zone1_v7": {
-          "type": "vec4",
-          "default": [
-            0,
-            0,
-            0,
-            0
-          ],
-          "uniform": "zone1_v7",
-          "ui": {
-            "label": "verts 14–15",
-            "control": "slider",
-            "hidden": true,
-            "category": "zone 2"
-          }
-        },
-        "zone1_v8": {
-          "type": "vec4",
-          "default": [
-            0,
-            0,
-            0,
-            0
-          ],
-          "uniform": "zone1_v8",
-          "ui": {
-            "label": "verts 16–17",
-            "control": "slider",
-            "hidden": true,
-            "category": "zone 2"
-          }
-        },
-        "zone1_v9": {
-          "type": "vec4",
-          "default": [
-            0,
-            0,
-            0,
-            0
-          ],
-          "uniform": "zone1_v9",
-          "ui": {
-            "label": "verts 18–19",
-            "control": "slider",
-            "hidden": true,
-            "category": "zone 2"
-          }
-        },
-        "zone1_v10": {
-          "type": "vec4",
-          "default": [
-            0,
-            0,
-            0,
-            0
-          ],
-          "uniform": "zone1_v10",
-          "ui": {
-            "label": "verts 20–21",
-            "control": "slider",
-            "hidden": true,
-            "category": "zone 2"
-          }
-        },
-        "zone1_v11": {
-          "type": "vec4",
-          "default": [
-            0,
-            0,
-            0,
-            0
-          ],
-          "uniform": "zone1_v11",
-          "ui": {
-            "label": "verts 22–23",
-            "control": "slider",
-            "hidden": true,
-            "category": "zone 2"
-          }
-        },
-        "zone1_v12": {
-          "type": "vec4",
-          "default": [
-            0,
-            0,
-            0,
-            0
-          ],
-          "uniform": "zone1_v12",
-          "ui": {
-            "label": "verts 24–25",
-            "control": "slider",
-            "hidden": true,
-            "category": "zone 2"
-          }
-        },
-        "zone1_v13": {
-          "type": "vec4",
-          "default": [
-            0,
-            0,
-            0,
-            0
-          ],
-          "uniform": "zone1_v13",
-          "ui": {
-            "label": "verts 26–27",
-            "control": "slider",
-            "hidden": true,
-            "category": "zone 2"
-          }
-        },
-        "zone1_v14": {
-          "type": "vec4",
-          "default": [
-            0,
-            0,
-            0,
-            0
-          ],
-          "uniform": "zone1_v14",
-          "ui": {
-            "label": "verts 28–29",
-            "control": "slider",
-            "hidden": true,
-            "category": "zone 2"
-          }
-        },
-        "zone1_v15": {
-          "type": "vec4",
-          "default": [
-            0,
-            0,
-            0,
-            0
-          ],
-          "uniform": "zone1_v15",
-          "ui": {
-            "label": "verts 30–31",
-            "control": "slider",
-            "hidden": true,
-            "category": "zone 2"
-          }
-        },
-        "zone1_v16": {
-          "type": "vec4",
-          "default": [
-            0,
-            0,
-            0,
-            0
-          ],
-          "uniform": "zone1_v16",
-          "ui": {
-            "label": "verts 32–33",
-            "control": "slider",
-            "hidden": true,
-            "category": "zone 2"
-          }
-        },
-        "zone1_v17": {
-          "type": "vec4",
-          "default": [
-            0,
-            0,
-            0,
-            0
-          ],
-          "uniform": "zone1_v17",
-          "ui": {
-            "label": "verts 34–35",
-            "control": "slider",
-            "hidden": true,
-            "category": "zone 2"
-          }
-        },
-        "zone1_v18": {
-          "type": "vec4",
-          "default": [
-            0,
-            0,
-            0,
-            0
-          ],
-          "uniform": "zone1_v18",
-          "ui": {
-            "label": "verts 36–37",
-            "control": "slider",
-            "hidden": true,
-            "category": "zone 2"
-          }
-        },
-        "zone1_v19": {
-          "type": "vec4",
-          "default": [
-            0,
-            0,
-            0,
-            0
-          ],
-          "uniform": "zone1_v19",
-          "ui": {
-            "label": "verts 38–39",
-            "control": "slider",
-            "hidden": true,
-            "category": "zone 2"
-          }
-        },
-        "zone1_v20": {
-          "type": "vec4",
-          "default": [
-            0,
-            0,
-            0,
-            0
-          ],
-          "uniform": "zone1_v20",
-          "ui": {
-            "label": "verts 40–41",
-            "control": "slider",
-            "hidden": true,
-            "category": "zone 2"
-          }
-        },
-        "zone1_v21": {
-          "type": "vec4",
-          "default": [
-            0,
-            0,
-            0,
-            0
-          ],
-          "uniform": "zone1_v21",
-          "ui": {
-            "label": "verts 42–43",
-            "control": "slider",
-            "hidden": true,
-            "category": "zone 2"
-          }
-        },
-        "zone1_v22": {
-          "type": "vec4",
-          "default": [
-            0,
-            0,
-            0,
-            0
-          ],
-          "uniform": "zone1_v22",
-          "ui": {
-            "label": "verts 44–45",
-            "control": "slider",
-            "hidden": true,
-            "category": "zone 2"
-          }
-        },
-        "zone1_v23": {
-          "type": "vec4",
-          "default": [
-            0,
-            0,
-            0,
-            0
-          ],
-          "uniform": "zone1_v23",
-          "ui": {
-            "label": "verts 46–47",
-            "control": "slider",
-            "hidden": true,
-            "category": "zone 2"
-          }
-        },
-        "zone1_v24": {
-          "type": "vec4",
-          "default": [
-            0,
-            0,
-            0,
-            0
-          ],
-          "uniform": "zone1_v24",
-          "ui": {
-            "label": "verts 48–49",
-            "control": "slider",
-            "hidden": true,
-            "category": "zone 2"
-          }
-        },
-        "zone1_v25": {
-          "type": "vec4",
-          "default": [
-            0,
-            0,
-            0,
-            0
-          ],
-          "uniform": "zone1_v25",
-          "ui": {
-            "label": "verts 50–51",
-            "control": "slider",
-            "hidden": true,
-            "category": "zone 2"
-          }
-        },
-        "zone1_v26": {
-          "type": "vec4",
-          "default": [
-            0,
-            0,
-            0,
-            0
-          ],
-          "uniform": "zone1_v26",
-          "ui": {
-            "label": "verts 52–53",
-            "control": "slider",
-            "hidden": true,
-            "category": "zone 2"
-          }
-        },
-        "zone1_v27": {
-          "type": "vec4",
-          "default": [
-            0,
-            0,
-            0,
-            0
-          ],
-          "uniform": "zone1_v27",
-          "ui": {
-            "label": "verts 54–55",
-            "control": "slider",
-            "hidden": true,
-            "category": "zone 2"
-          }
-        },
-        "zone1_v28": {
-          "type": "vec4",
-          "default": [
-            0,
-            0,
-            0,
-            0
-          ],
-          "uniform": "zone1_v28",
-          "ui": {
-            "label": "verts 56–57",
-            "control": "slider",
-            "hidden": true,
-            "category": "zone 2"
-          }
-        },
-        "zone1_v29": {
-          "type": "vec4",
-          "default": [
-            0,
-            0,
-            0,
-            0
-          ],
-          "uniform": "zone1_v29",
-          "ui": {
-            "label": "verts 58–59",
-            "control": "slider",
-            "hidden": true,
-            "category": "zone 2"
-          }
-        },
-        "zone1_v30": {
-          "type": "vec4",
-          "default": [
-            0,
-            0,
-            0,
-            0
-          ],
-          "uniform": "zone1_v30",
-          "ui": {
-            "label": "verts 60–61",
-            "control": "slider",
-            "hidden": true,
-            "category": "zone 2"
-          }
-        },
-        "zone1_v31": {
-          "type": "vec4",
-          "default": [
-            0,
-            0,
-            0,
-            0
-          ],
-          "uniform": "zone1_v31",
-          "ui": {
-            "label": "verts 62–63",
-            "control": "slider",
-            "hidden": true,
-            "category": "zone 2"
-          }
-        },
-        "zone2_tex": {
-          "type": "surface",
-          "default": "none",
-          "colorModeUniform": "zone2_active",
-          "ui": {
-            "label": "zone 3 source",
-            "category": "zone 3",
-            "enabledBy": {
-              "param": "zoneCount",
-              "gt": 2
-            }
-          }
-        },
-        "zone2_count": {
-          "type": "int",
-          "default": 0,
-          "uniform": "zone2_count",
-          "min": 0,
-          "max": 64,
-          "ui": {
-            "label": "vertices",
-            "control": "slider",
-            "hidden": true,
-            "category": "zone 3",
-            "enabledBy": {
-              "param": "zoneCount",
-              "gt": 2
-            }
-          }
-        },
-        "zone2_alpha": {
-          "type": "float",
-          "default": 1,
-          "uniform": "zone2_alpha",
-          "min": 0,
-          "max": 1,
-          "ui": {
-            "label": "alpha",
-            "control": "slider",
-            "category": "zone 3",
-            "enabledBy": {
-              "param": "zoneCount",
-              "gt": 2
-            }
-          }
-        },
-        "zone2_v0": {
-          "type": "vec4",
-          "default": [
-            0,
-            0,
-            0,
-            0
-          ],
-          "uniform": "zone2_v0",
-          "ui": {
-            "label": "verts 0–1",
-            "control": "slider",
-            "hidden": true,
-            "category": "zone 3"
-          }
-        },
-        "zone2_v1": {
-          "type": "vec4",
-          "default": [
-            0,
-            0,
-            0,
-            0
-          ],
-          "uniform": "zone2_v1",
-          "ui": {
-            "label": "verts 2–3",
-            "control": "slider",
-            "hidden": true,
-            "category": "zone 3"
-          }
-        },
-        "zone2_v2": {
-          "type": "vec4",
-          "default": [
-            0,
-            0,
-            0,
-            0
-          ],
-          "uniform": "zone2_v2",
-          "ui": {
-            "label": "verts 4–5",
-            "control": "slider",
-            "hidden": true,
-            "category": "zone 3"
-          }
-        },
-        "zone2_v3": {
-          "type": "vec4",
-          "default": [
-            0,
-            0,
-            0,
-            0
-          ],
-          "uniform": "zone2_v3",
-          "ui": {
-            "label": "verts 6–7",
-            "control": "slider",
-            "hidden": true,
-            "category": "zone 3"
-          }
-        },
-        "zone2_v4": {
-          "type": "vec4",
-          "default": [
-            0,
-            0,
-            0,
-            0
-          ],
-          "uniform": "zone2_v4",
-          "ui": {
-            "label": "verts 8–9",
-            "control": "slider",
-            "hidden": true,
-            "category": "zone 3"
-          }
-        },
-        "zone2_v5": {
-          "type": "vec4",
-          "default": [
-            0,
-            0,
-            0,
-            0
-          ],
-          "uniform": "zone2_v5",
-          "ui": {
-            "label": "verts 10–11",
-            "control": "slider",
-            "hidden": true,
-            "category": "zone 3"
-          }
-        },
-        "zone2_v6": {
-          "type": "vec4",
-          "default": [
-            0,
-            0,
-            0,
-            0
-          ],
-          "uniform": "zone2_v6",
-          "ui": {
-            "label": "verts 12–13",
-            "control": "slider",
-            "hidden": true,
-            "category": "zone 3"
-          }
-        },
-        "zone2_v7": {
-          "type": "vec4",
-          "default": [
-            0,
-            0,
-            0,
-            0
-          ],
-          "uniform": "zone2_v7",
-          "ui": {
-            "label": "verts 14–15",
-            "control": "slider",
-            "hidden": true,
-            "category": "zone 3"
-          }
-        },
-        "zone2_v8": {
-          "type": "vec4",
-          "default": [
-            0,
-            0,
-            0,
-            0
-          ],
-          "uniform": "zone2_v8",
-          "ui": {
-            "label": "verts 16–17",
-            "control": "slider",
-            "hidden": true,
-            "category": "zone 3"
-          }
-        },
-        "zone2_v9": {
-          "type": "vec4",
-          "default": [
-            0,
-            0,
-            0,
-            0
-          ],
-          "uniform": "zone2_v9",
-          "ui": {
-            "label": "verts 18–19",
-            "control": "slider",
-            "hidden": true,
-            "category": "zone 3"
-          }
-        },
-        "zone2_v10": {
-          "type": "vec4",
-          "default": [
-            0,
-            0,
-            0,
-            0
-          ],
-          "uniform": "zone2_v10",
-          "ui": {
-            "label": "verts 20–21",
-            "control": "slider",
-            "hidden": true,
-            "category": "zone 3"
-          }
-        },
-        "zone2_v11": {
-          "type": "vec4",
-          "default": [
-            0,
-            0,
-            0,
-            0
-          ],
-          "uniform": "zone2_v11",
-          "ui": {
-            "label": "verts 22–23",
-            "control": "slider",
-            "hidden": true,
-            "category": "zone 3"
-          }
-        },
-        "zone2_v12": {
-          "type": "vec4",
-          "default": [
-            0,
-            0,
-            0,
-            0
-          ],
-          "uniform": "zone2_v12",
-          "ui": {
-            "label": "verts 24–25",
-            "control": "slider",
-            "hidden": true,
-            "category": "zone 3"
-          }
-        },
-        "zone2_v13": {
-          "type": "vec4",
-          "default": [
-            0,
-            0,
-            0,
-            0
-          ],
-          "uniform": "zone2_v13",
-          "ui": {
-            "label": "verts 26–27",
-            "control": "slider",
-            "hidden": true,
-            "category": "zone 3"
-          }
-        },
-        "zone2_v14": {
-          "type": "vec4",
-          "default": [
-            0,
-            0,
-            0,
-            0
-          ],
-          "uniform": "zone2_v14",
-          "ui": {
-            "label": "verts 28–29",
-            "control": "slider",
-            "hidden": true,
-            "category": "zone 3"
-          }
-        },
-        "zone2_v15": {
-          "type": "vec4",
-          "default": [
-            0,
-            0,
-            0,
-            0
-          ],
-          "uniform": "zone2_v15",
-          "ui": {
-            "label": "verts 30–31",
-            "control": "slider",
-            "hidden": true,
-            "category": "zone 3"
-          }
-        },
-        "zone2_v16": {
-          "type": "vec4",
-          "default": [
-            0,
-            0,
-            0,
-            0
-          ],
-          "uniform": "zone2_v16",
-          "ui": {
-            "label": "verts 32–33",
-            "control": "slider",
-            "hidden": true,
-            "category": "zone 3"
-          }
-        },
-        "zone2_v17": {
-          "type": "vec4",
-          "default": [
-            0,
-            0,
-            0,
-            0
-          ],
-          "uniform": "zone2_v17",
-          "ui": {
-            "label": "verts 34–35",
-            "control": "slider",
-            "hidden": true,
-            "category": "zone 3"
-          }
-        },
-        "zone2_v18": {
-          "type": "vec4",
-          "default": [
-            0,
-            0,
-            0,
-            0
-          ],
-          "uniform": "zone2_v18",
-          "ui": {
-            "label": "verts 36–37",
-            "control": "slider",
-            "hidden": true,
-            "category": "zone 3"
-          }
-        },
-        "zone2_v19": {
-          "type": "vec4",
-          "default": [
-            0,
-            0,
-            0,
-            0
-          ],
-          "uniform": "zone2_v19",
-          "ui": {
-            "label": "verts 38–39",
-            "control": "slider",
-            "hidden": true,
-            "category": "zone 3"
-          }
-        },
-        "zone2_v20": {
-          "type": "vec4",
-          "default": [
-            0,
-            0,
-            0,
-            0
-          ],
-          "uniform": "zone2_v20",
-          "ui": {
-            "label": "verts 40–41",
-            "control": "slider",
-            "hidden": true,
-            "category": "zone 3"
-          }
-        },
-        "zone2_v21": {
-          "type": "vec4",
-          "default": [
-            0,
-            0,
-            0,
-            0
-          ],
-          "uniform": "zone2_v21",
-          "ui": {
-            "label": "verts 42–43",
-            "control": "slider",
-            "hidden": true,
-            "category": "zone 3"
-          }
-        },
-        "zone2_v22": {
-          "type": "vec4",
-          "default": [
-            0,
-            0,
-            0,
-            0
-          ],
-          "uniform": "zone2_v22",
-          "ui": {
-            "label": "verts 44–45",
-            "control": "slider",
-            "hidden": true,
-            "category": "zone 3"
-          }
-        },
-        "zone2_v23": {
-          "type": "vec4",
-          "default": [
-            0,
-            0,
-            0,
-            0
-          ],
-          "uniform": "zone2_v23",
-          "ui": {
-            "label": "verts 46–47",
-            "control": "slider",
-            "hidden": true,
-            "category": "zone 3"
-          }
-        },
-        "zone2_v24": {
-          "type": "vec4",
-          "default": [
-            0,
-            0,
-            0,
-            0
-          ],
-          "uniform": "zone2_v24",
-          "ui": {
-            "label": "verts 48–49",
-            "control": "slider",
-            "hidden": true,
-            "category": "zone 3"
-          }
-        },
-        "zone2_v25": {
-          "type": "vec4",
-          "default": [
-            0,
-            0,
-            0,
-            0
-          ],
-          "uniform": "zone2_v25",
-          "ui": {
-            "label": "verts 50–51",
-            "control": "slider",
-            "hidden": true,
-            "category": "zone 3"
-          }
-        },
-        "zone2_v26": {
-          "type": "vec4",
-          "default": [
-            0,
-            0,
-            0,
-            0
-          ],
-          "uniform": "zone2_v26",
-          "ui": {
-            "label": "verts 52–53",
-            "control": "slider",
-            "hidden": true,
-            "category": "zone 3"
-          }
-        },
-        "zone2_v27": {
-          "type": "vec4",
-          "default": [
-            0,
-            0,
-            0,
-            0
-          ],
-          "uniform": "zone2_v27",
-          "ui": {
-            "label": "verts 54–55",
-            "control": "slider",
-            "hidden": true,
-            "category": "zone 3"
-          }
-        },
-        "zone2_v28": {
-          "type": "vec4",
-          "default": [
-            0,
-            0,
-            0,
-            0
-          ],
-          "uniform": "zone2_v28",
-          "ui": {
-            "label": "verts 56–57",
-            "control": "slider",
-            "hidden": true,
-            "category": "zone 3"
-          }
-        },
-        "zone2_v29": {
-          "type": "vec4",
-          "default": [
-            0,
-            0,
-            0,
-            0
-          ],
-          "uniform": "zone2_v29",
-          "ui": {
-            "label": "verts 58–59",
-            "control": "slider",
-            "hidden": true,
-            "category": "zone 3"
-          }
-        },
-        "zone2_v30": {
-          "type": "vec4",
-          "default": [
-            0,
-            0,
-            0,
-            0
-          ],
-          "uniform": "zone2_v30",
-          "ui": {
-            "label": "verts 60–61",
-            "control": "slider",
-            "hidden": true,
-            "category": "zone 3"
-          }
-        },
-        "zone2_v31": {
-          "type": "vec4",
-          "default": [
-            0,
-            0,
-            0,
-            0
-          ],
-          "uniform": "zone2_v31",
-          "ui": {
-            "label": "verts 62–63",
-            "control": "slider",
-            "hidden": true,
-            "category": "zone 3"
-          }
-        },
-        "zone3_tex": {
-          "type": "surface",
-          "default": "none",
-          "colorModeUniform": "zone3_active",
-          "ui": {
-            "label": "zone 4 source",
-            "category": "zone 4",
-            "enabledBy": {
-              "param": "zoneCount",
-              "gt": 3
-            }
-          }
-        },
-        "zone3_count": {
-          "type": "int",
-          "default": 0,
-          "uniform": "zone3_count",
-          "min": 0,
-          "max": 64,
-          "ui": {
-            "label": "vertices",
-            "control": "slider",
-            "hidden": true,
-            "category": "zone 4",
-            "enabledBy": {
-              "param": "zoneCount",
-              "gt": 3
-            }
-          }
-        },
-        "zone3_alpha": {
-          "type": "float",
-          "default": 1,
-          "uniform": "zone3_alpha",
-          "min": 0,
-          "max": 1,
-          "ui": {
-            "label": "alpha",
-            "control": "slider",
-            "category": "zone 4",
-            "enabledBy": {
-              "param": "zoneCount",
-              "gt": 3
-            }
-          }
-        },
-        "zone3_v0": {
-          "type": "vec4",
-          "default": [
-            0,
-            0,
-            0,
-            0
-          ],
-          "uniform": "zone3_v0",
-          "ui": {
-            "label": "verts 0–1",
-            "control": "slider",
-            "hidden": true,
-            "category": "zone 4"
-          }
-        },
-        "zone3_v1": {
-          "type": "vec4",
-          "default": [
-            0,
-            0,
-            0,
-            0
-          ],
-          "uniform": "zone3_v1",
-          "ui": {
-            "label": "verts 2–3",
-            "control": "slider",
-            "hidden": true,
-            "category": "zone 4"
-          }
-        },
-        "zone3_v2": {
-          "type": "vec4",
-          "default": [
-            0,
-            0,
-            0,
-            0
-          ],
-          "uniform": "zone3_v2",
-          "ui": {
-            "label": "verts 4–5",
-            "control": "slider",
-            "hidden": true,
-            "category": "zone 4"
-          }
-        },
-        "zone3_v3": {
-          "type": "vec4",
-          "default": [
-            0,
-            0,
-            0,
-            0
-          ],
-          "uniform": "zone3_v3",
-          "ui": {
-            "label": "verts 6–7",
-            "control": "slider",
-            "hidden": true,
-            "category": "zone 4"
-          }
-        },
-        "zone3_v4": {
-          "type": "vec4",
-          "default": [
-            0,
-            0,
-            0,
-            0
-          ],
-          "uniform": "zone3_v4",
-          "ui": {
-            "label": "verts 8–9",
-            "control": "slider",
-            "hidden": true,
-            "category": "zone 4"
-          }
-        },
-        "zone3_v5": {
-          "type": "vec4",
-          "default": [
-            0,
-            0,
-            0,
-            0
-          ],
-          "uniform": "zone3_v5",
-          "ui": {
-            "label": "verts 10–11",
-            "control": "slider",
-            "hidden": true,
-            "category": "zone 4"
-          }
-        },
-        "zone3_v6": {
-          "type": "vec4",
-          "default": [
-            0,
-            0,
-            0,
-            0
-          ],
-          "uniform": "zone3_v6",
-          "ui": {
-            "label": "verts 12–13",
-            "control": "slider",
-            "hidden": true,
-            "category": "zone 4"
-          }
-        },
-        "zone3_v7": {
-          "type": "vec4",
-          "default": [
-            0,
-            0,
-            0,
-            0
-          ],
-          "uniform": "zone3_v7",
-          "ui": {
-            "label": "verts 14–15",
-            "control": "slider",
-            "hidden": true,
-            "category": "zone 4"
-          }
-        },
-        "zone3_v8": {
-          "type": "vec4",
-          "default": [
-            0,
-            0,
-            0,
-            0
-          ],
-          "uniform": "zone3_v8",
-          "ui": {
-            "label": "verts 16–17",
-            "control": "slider",
-            "hidden": true,
-            "category": "zone 4"
-          }
-        },
-        "zone3_v9": {
-          "type": "vec4",
-          "default": [
-            0,
-            0,
-            0,
-            0
-          ],
-          "uniform": "zone3_v9",
-          "ui": {
-            "label": "verts 18–19",
-            "control": "slider",
-            "hidden": true,
-            "category": "zone 4"
-          }
-        },
-        "zone3_v10": {
-          "type": "vec4",
-          "default": [
-            0,
-            0,
-            0,
-            0
-          ],
-          "uniform": "zone3_v10",
-          "ui": {
-            "label": "verts 20–21",
-            "control": "slider",
-            "hidden": true,
-            "category": "zone 4"
-          }
-        },
-        "zone3_v11": {
-          "type": "vec4",
-          "default": [
-            0,
-            0,
-            0,
-            0
-          ],
-          "uniform": "zone3_v11",
-          "ui": {
-            "label": "verts 22–23",
-            "control": "slider",
-            "hidden": true,
-            "category": "zone 4"
-          }
-        },
-        "zone3_v12": {
-          "type": "vec4",
-          "default": [
-            0,
-            0,
-            0,
-            0
-          ],
-          "uniform": "zone3_v12",
-          "ui": {
-            "label": "verts 24–25",
-            "control": "slider",
-            "hidden": true,
-            "category": "zone 4"
-          }
-        },
-        "zone3_v13": {
-          "type": "vec4",
-          "default": [
-            0,
-            0,
-            0,
-            0
-          ],
-          "uniform": "zone3_v13",
-          "ui": {
-            "label": "verts 26–27",
-            "control": "slider",
-            "hidden": true,
-            "category": "zone 4"
-          }
-        },
-        "zone3_v14": {
-          "type": "vec4",
-          "default": [
-            0,
-            0,
-            0,
-            0
-          ],
-          "uniform": "zone3_v14",
-          "ui": {
-            "label": "verts 28–29",
-            "control": "slider",
-            "hidden": true,
-            "category": "zone 4"
-          }
-        },
-        "zone3_v15": {
-          "type": "vec4",
-          "default": [
-            0,
-            0,
-            0,
-            0
-          ],
-          "uniform": "zone3_v15",
-          "ui": {
-            "label": "verts 30–31",
-            "control": "slider",
-            "hidden": true,
-            "category": "zone 4"
-          }
-        },
-        "zone3_v16": {
-          "type": "vec4",
-          "default": [
-            0,
-            0,
-            0,
-            0
-          ],
-          "uniform": "zone3_v16",
-          "ui": {
-            "label": "verts 32–33",
-            "control": "slider",
-            "hidden": true,
-            "category": "zone 4"
-          }
-        },
-        "zone3_v17": {
-          "type": "vec4",
-          "default": [
-            0,
-            0,
-            0,
-            0
-          ],
-          "uniform": "zone3_v17",
-          "ui": {
-            "label": "verts 34–35",
-            "control": "slider",
-            "hidden": true,
-            "category": "zone 4"
-          }
-        },
-        "zone3_v18": {
-          "type": "vec4",
-          "default": [
-            0,
-            0,
-            0,
-            0
-          ],
-          "uniform": "zone3_v18",
-          "ui": {
-            "label": "verts 36–37",
-            "control": "slider",
-            "hidden": true,
-            "category": "zone 4"
-          }
-        },
-        "zone3_v19": {
-          "type": "vec4",
-          "default": [
-            0,
-            0,
-            0,
-            0
-          ],
-          "uniform": "zone3_v19",
-          "ui": {
-            "label": "verts 38–39",
-            "control": "slider",
-            "hidden": true,
-            "category": "zone 4"
-          }
-        },
-        "zone3_v20": {
-          "type": "vec4",
-          "default": [
-            0,
-            0,
-            0,
-            0
-          ],
-          "uniform": "zone3_v20",
-          "ui": {
-            "label": "verts 40–41",
-            "control": "slider",
-            "hidden": true,
-            "category": "zone 4"
-          }
-        },
-        "zone3_v21": {
-          "type": "vec4",
-          "default": [
-            0,
-            0,
-            0,
-            0
-          ],
-          "uniform": "zone3_v21",
-          "ui": {
-            "label": "verts 42–43",
-            "control": "slider",
-            "hidden": true,
-            "category": "zone 4"
-          }
-        },
-        "zone3_v22": {
-          "type": "vec4",
-          "default": [
-            0,
-            0,
-            0,
-            0
-          ],
-          "uniform": "zone3_v22",
-          "ui": {
-            "label": "verts 44–45",
-            "control": "slider",
-            "hidden": true,
-            "category": "zone 4"
-          }
-        },
-        "zone3_v23": {
-          "type": "vec4",
-          "default": [
-            0,
-            0,
-            0,
-            0
-          ],
-          "uniform": "zone3_v23",
-          "ui": {
-            "label": "verts 46–47",
-            "control": "slider",
-            "hidden": true,
-            "category": "zone 4"
-          }
-        },
-        "zone3_v24": {
-          "type": "vec4",
-          "default": [
-            0,
-            0,
-            0,
-            0
-          ],
-          "uniform": "zone3_v24",
-          "ui": {
-            "label": "verts 48–49",
-            "control": "slider",
-            "hidden": true,
-            "category": "zone 4"
-          }
-        },
-        "zone3_v25": {
-          "type": "vec4",
-          "default": [
-            0,
-            0,
-            0,
-            0
-          ],
-          "uniform": "zone3_v25",
-          "ui": {
-            "label": "verts 50–51",
-            "control": "slider",
-            "hidden": true,
-            "category": "zone 4"
-          }
-        },
-        "zone3_v26": {
-          "type": "vec4",
-          "default": [
-            0,
-            0,
-            0,
-            0
-          ],
-          "uniform": "zone3_v26",
-          "ui": {
-            "label": "verts 52–53",
-            "control": "slider",
-            "hidden": true,
-            "category": "zone 4"
-          }
-        },
-        "zone3_v27": {
-          "type": "vec4",
-          "default": [
-            0,
-            0,
-            0,
-            0
-          ],
-          "uniform": "zone3_v27",
-          "ui": {
-            "label": "verts 54–55",
-            "control": "slider",
-            "hidden": true,
-            "category": "zone 4"
-          }
-        },
-        "zone3_v28": {
-          "type": "vec4",
-          "default": [
-            0,
-            0,
-            0,
-            0
-          ],
-          "uniform": "zone3_v28",
-          "ui": {
-            "label": "verts 56–57",
-            "control": "slider",
-            "hidden": true,
-            "category": "zone 4"
-          }
-        },
-        "zone3_v29": {
-          "type": "vec4",
-          "default": [
-            0,
-            0,
-            0,
-            0
-          ],
-          "uniform": "zone3_v29",
-          "ui": {
-            "label": "verts 58–59",
-            "control": "slider",
-            "hidden": true,
-            "category": "zone 4"
-          }
-        },
-        "zone3_v30": {
-          "type": "vec4",
-          "default": [
-            0,
-            0,
-            0,
-            0
-          ],
-          "uniform": "zone3_v30",
-          "ui": {
-            "label": "verts 60–61",
-            "control": "slider",
-            "hidden": true,
-            "category": "zone 4"
-          }
-        },
-        "zone3_v31": {
-          "type": "vec4",
-          "default": [
-            0,
-            0,
-            0,
-            0
-          ],
-          "uniform": "zone3_v31",
-          "ui": {
-            "label": "verts 62–63",
-            "control": "slider",
-            "hidden": true,
-            "category": "zone 4"
-          }
-        },
-        "zone4_tex": {
-          "type": "surface",
-          "default": "none",
-          "colorModeUniform": "zone4_active",
-          "ui": {
-            "label": "zone 5 source",
-            "category": "zone 5",
-            "enabledBy": {
-              "param": "zoneCount",
-              "gt": 4
-            }
-          }
-        },
-        "zone4_count": {
-          "type": "int",
-          "default": 0,
-          "uniform": "zone4_count",
-          "min": 0,
-          "max": 64,
-          "ui": {
-            "label": "vertices",
-            "control": "slider",
-            "hidden": true,
-            "category": "zone 5",
-            "enabledBy": {
-              "param": "zoneCount",
-              "gt": 4
-            }
-          }
-        },
-        "zone4_alpha": {
-          "type": "float",
-          "default": 1,
-          "uniform": "zone4_alpha",
-          "min": 0,
-          "max": 1,
-          "ui": {
-            "label": "alpha",
-            "control": "slider",
-            "category": "zone 5",
-            "enabledBy": {
-              "param": "zoneCount",
-              "gt": 4
-            }
-          }
-        },
-        "zone4_v0": {
-          "type": "vec4",
-          "default": [
-            0,
-            0,
-            0,
-            0
-          ],
-          "uniform": "zone4_v0",
-          "ui": {
-            "label": "verts 0–1",
-            "control": "slider",
-            "hidden": true,
-            "category": "zone 5"
-          }
-        },
-        "zone4_v1": {
-          "type": "vec4",
-          "default": [
-            0,
-            0,
-            0,
-            0
-          ],
-          "uniform": "zone4_v1",
-          "ui": {
-            "label": "verts 2–3",
-            "control": "slider",
-            "hidden": true,
-            "category": "zone 5"
-          }
-        },
-        "zone4_v2": {
-          "type": "vec4",
-          "default": [
-            0,
-            0,
-            0,
-            0
-          ],
-          "uniform": "zone4_v2",
-          "ui": {
-            "label": "verts 4–5",
-            "control": "slider",
-            "hidden": true,
-            "category": "zone 5"
-          }
-        },
-        "zone4_v3": {
-          "type": "vec4",
-          "default": [
-            0,
-            0,
-            0,
-            0
-          ],
-          "uniform": "zone4_v3",
-          "ui": {
-            "label": "verts 6–7",
-            "control": "slider",
-            "hidden": true,
-            "category": "zone 5"
-          }
-        },
-        "zone4_v4": {
-          "type": "vec4",
-          "default": [
-            0,
-            0,
-            0,
-            0
-          ],
-          "uniform": "zone4_v4",
-          "ui": {
-            "label": "verts 8–9",
-            "control": "slider",
-            "hidden": true,
-            "category": "zone 5"
-          }
-        },
-        "zone4_v5": {
-          "type": "vec4",
-          "default": [
-            0,
-            0,
-            0,
-            0
-          ],
-          "uniform": "zone4_v5",
-          "ui": {
-            "label": "verts 10–11",
-            "control": "slider",
-            "hidden": true,
-            "category": "zone 5"
-          }
-        },
-        "zone4_v6": {
-          "type": "vec4",
-          "default": [
-            0,
-            0,
-            0,
-            0
-          ],
-          "uniform": "zone4_v6",
-          "ui": {
-            "label": "verts 12–13",
-            "control": "slider",
-            "hidden": true,
-            "category": "zone 5"
-          }
-        },
-        "zone4_v7": {
-          "type": "vec4",
-          "default": [
-            0,
-            0,
-            0,
-            0
-          ],
-          "uniform": "zone4_v7",
-          "ui": {
-            "label": "verts 14–15",
-            "control": "slider",
-            "hidden": true,
-            "category": "zone 5"
-          }
-        },
-        "zone4_v8": {
-          "type": "vec4",
-          "default": [
-            0,
-            0,
-            0,
-            0
-          ],
-          "uniform": "zone4_v8",
-          "ui": {
-            "label": "verts 16–17",
-            "control": "slider",
-            "hidden": true,
-            "category": "zone 5"
-          }
-        },
-        "zone4_v9": {
-          "type": "vec4",
-          "default": [
-            0,
-            0,
-            0,
-            0
-          ],
-          "uniform": "zone4_v9",
-          "ui": {
-            "label": "verts 18–19",
-            "control": "slider",
-            "hidden": true,
-            "category": "zone 5"
-          }
-        },
-        "zone4_v10": {
-          "type": "vec4",
-          "default": [
-            0,
-            0,
-            0,
-            0
-          ],
-          "uniform": "zone4_v10",
-          "ui": {
-            "label": "verts 20–21",
-            "control": "slider",
-            "hidden": true,
-            "category": "zone 5"
-          }
-        },
-        "zone4_v11": {
-          "type": "vec4",
-          "default": [
-            0,
-            0,
-            0,
-            0
-          ],
-          "uniform": "zone4_v11",
-          "ui": {
-            "label": "verts 22–23",
-            "control": "slider",
-            "hidden": true,
-            "category": "zone 5"
-          }
-        },
-        "zone4_v12": {
-          "type": "vec4",
-          "default": [
-            0,
-            0,
-            0,
-            0
-          ],
-          "uniform": "zone4_v12",
-          "ui": {
-            "label": "verts 24–25",
-            "control": "slider",
-            "hidden": true,
-            "category": "zone 5"
-          }
-        },
-        "zone4_v13": {
-          "type": "vec4",
-          "default": [
-            0,
-            0,
-            0,
-            0
-          ],
-          "uniform": "zone4_v13",
-          "ui": {
-            "label": "verts 26–27",
-            "control": "slider",
-            "hidden": true,
-            "category": "zone 5"
-          }
-        },
-        "zone4_v14": {
-          "type": "vec4",
-          "default": [
-            0,
-            0,
-            0,
-            0
-          ],
-          "uniform": "zone4_v14",
-          "ui": {
-            "label": "verts 28–29",
-            "control": "slider",
-            "hidden": true,
-            "category": "zone 5"
-          }
-        },
-        "zone4_v15": {
-          "type": "vec4",
-          "default": [
-            0,
-            0,
-            0,
-            0
-          ],
-          "uniform": "zone4_v15",
-          "ui": {
-            "label": "verts 30–31",
-            "control": "slider",
-            "hidden": true,
-            "category": "zone 5"
-          }
-        },
-        "zone4_v16": {
-          "type": "vec4",
-          "default": [
-            0,
-            0,
-            0,
-            0
-          ],
-          "uniform": "zone4_v16",
-          "ui": {
-            "label": "verts 32–33",
-            "control": "slider",
-            "hidden": true,
-            "category": "zone 5"
-          }
-        },
-        "zone4_v17": {
-          "type": "vec4",
-          "default": [
-            0,
-            0,
-            0,
-            0
-          ],
-          "uniform": "zone4_v17",
-          "ui": {
-            "label": "verts 34–35",
-            "control": "slider",
-            "hidden": true,
-            "category": "zone 5"
-          }
-        },
-        "zone4_v18": {
-          "type": "vec4",
-          "default": [
-            0,
-            0,
-            0,
-            0
-          ],
-          "uniform": "zone4_v18",
-          "ui": {
-            "label": "verts 36–37",
-            "control": "slider",
-            "hidden": true,
-            "category": "zone 5"
-          }
-        },
-        "zone4_v19": {
-          "type": "vec4",
-          "default": [
-            0,
-            0,
-            0,
-            0
-          ],
-          "uniform": "zone4_v19",
-          "ui": {
-            "label": "verts 38–39",
-            "control": "slider",
-            "hidden": true,
-            "category": "zone 5"
-          }
-        },
-        "zone4_v20": {
-          "type": "vec4",
-          "default": [
-            0,
-            0,
-            0,
-            0
-          ],
-          "uniform": "zone4_v20",
-          "ui": {
-            "label": "verts 40–41",
-            "control": "slider",
-            "hidden": true,
-            "category": "zone 5"
-          }
-        },
-        "zone4_v21": {
-          "type": "vec4",
-          "default": [
-            0,
-            0,
-            0,
-            0
-          ],
-          "uniform": "zone4_v21",
-          "ui": {
-            "label": "verts 42–43",
-            "control": "slider",
-            "hidden": true,
-            "category": "zone 5"
-          }
-        },
-        "zone4_v22": {
-          "type": "vec4",
-          "default": [
-            0,
-            0,
-            0,
-            0
-          ],
-          "uniform": "zone4_v22",
-          "ui": {
-            "label": "verts 44–45",
-            "control": "slider",
-            "hidden": true,
-            "category": "zone 5"
-          }
-        },
-        "zone4_v23": {
-          "type": "vec4",
-          "default": [
-            0,
-            0,
-            0,
-            0
-          ],
-          "uniform": "zone4_v23",
-          "ui": {
-            "label": "verts 46–47",
-            "control": "slider",
-            "hidden": true,
-            "category": "zone 5"
-          }
-        },
-        "zone4_v24": {
-          "type": "vec4",
-          "default": [
-            0,
-            0,
-            0,
-            0
-          ],
-          "uniform": "zone4_v24",
-          "ui": {
-            "label": "verts 48–49",
-            "control": "slider",
-            "hidden": true,
-            "category": "zone 5"
-          }
-        },
-        "zone4_v25": {
-          "type": "vec4",
-          "default": [
-            0,
-            0,
-            0,
-            0
-          ],
-          "uniform": "zone4_v25",
-          "ui": {
-            "label": "verts 50–51",
-            "control": "slider",
-            "hidden": true,
-            "category": "zone 5"
-          }
-        },
-        "zone4_v26": {
-          "type": "vec4",
-          "default": [
-            0,
-            0,
-            0,
-            0
-          ],
-          "uniform": "zone4_v26",
-          "ui": {
-            "label": "verts 52–53",
-            "control": "slider",
-            "hidden": true,
-            "category": "zone 5"
-          }
-        },
-        "zone4_v27": {
-          "type": "vec4",
-          "default": [
-            0,
-            0,
-            0,
-            0
-          ],
-          "uniform": "zone4_v27",
-          "ui": {
-            "label": "verts 54–55",
-            "control": "slider",
-            "hidden": true,
-            "category": "zone 5"
-          }
-        },
-        "zone4_v28": {
-          "type": "vec4",
-          "default": [
-            0,
-            0,
-            0,
-            0
-          ],
-          "uniform": "zone4_v28",
-          "ui": {
-            "label": "verts 56–57",
-            "control": "slider",
-            "hidden": true,
-            "category": "zone 5"
-          }
-        },
-        "zone4_v29": {
-          "type": "vec4",
-          "default": [
-            0,
-            0,
-            0,
-            0
-          ],
-          "uniform": "zone4_v29",
-          "ui": {
-            "label": "verts 58–59",
-            "control": "slider",
-            "hidden": true,
-            "category": "zone 5"
-          }
-        },
-        "zone4_v30": {
-          "type": "vec4",
-          "default": [
-            0,
-            0,
-            0,
-            0
-          ],
-          "uniform": "zone4_v30",
-          "ui": {
-            "label": "verts 60–61",
-            "control": "slider",
-            "hidden": true,
-            "category": "zone 5"
-          }
-        },
-        "zone4_v31": {
-          "type": "vec4",
-          "default": [
-            0,
-            0,
-            0,
-            0
-          ],
-          "uniform": "zone4_v31",
-          "ui": {
-            "label": "verts 62–63",
-            "control": "slider",
-            "hidden": true,
-            "category": "zone 5"
-          }
-        },
-        "zone5_tex": {
-          "type": "surface",
-          "default": "none",
-          "colorModeUniform": "zone5_active",
-          "ui": {
-            "label": "zone 6 source",
-            "category": "zone 6",
-            "enabledBy": {
-              "param": "zoneCount",
-              "gt": 5
-            }
-          }
-        },
-        "zone5_count": {
-          "type": "int",
-          "default": 0,
-          "uniform": "zone5_count",
-          "min": 0,
-          "max": 64,
-          "ui": {
-            "label": "vertices",
-            "control": "slider",
-            "hidden": true,
-            "category": "zone 6",
-            "enabledBy": {
-              "param": "zoneCount",
-              "gt": 5
-            }
-          }
-        },
-        "zone5_alpha": {
-          "type": "float",
-          "default": 1,
-          "uniform": "zone5_alpha",
-          "min": 0,
-          "max": 1,
-          "ui": {
-            "label": "alpha",
-            "control": "slider",
-            "category": "zone 6",
-            "enabledBy": {
-              "param": "zoneCount",
-              "gt": 5
-            }
-          }
-        },
-        "zone5_v0": {
-          "type": "vec4",
-          "default": [
-            0,
-            0,
-            0,
-            0
-          ],
-          "uniform": "zone5_v0",
-          "ui": {
-            "label": "verts 0–1",
-            "control": "slider",
-            "hidden": true,
-            "category": "zone 6"
-          }
-        },
-        "zone5_v1": {
-          "type": "vec4",
-          "default": [
-            0,
-            0,
-            0,
-            0
-          ],
-          "uniform": "zone5_v1",
-          "ui": {
-            "label": "verts 2–3",
-            "control": "slider",
-            "hidden": true,
-            "category": "zone 6"
-          }
-        },
-        "zone5_v2": {
-          "type": "vec4",
-          "default": [
-            0,
-            0,
-            0,
-            0
-          ],
-          "uniform": "zone5_v2",
-          "ui": {
-            "label": "verts 4–5",
-            "control": "slider",
-            "hidden": true,
-            "category": "zone 6"
-          }
-        },
-        "zone5_v3": {
-          "type": "vec4",
-          "default": [
-            0,
-            0,
-            0,
-            0
-          ],
-          "uniform": "zone5_v3",
-          "ui": {
-            "label": "verts 6–7",
-            "control": "slider",
-            "hidden": true,
-            "category": "zone 6"
-          }
-        },
-        "zone5_v4": {
-          "type": "vec4",
-          "default": [
-            0,
-            0,
-            0,
-            0
-          ],
-          "uniform": "zone5_v4",
-          "ui": {
-            "label": "verts 8–9",
-            "control": "slider",
-            "hidden": true,
-            "category": "zone 6"
-          }
-        },
-        "zone5_v5": {
-          "type": "vec4",
-          "default": [
-            0,
-            0,
-            0,
-            0
-          ],
-          "uniform": "zone5_v5",
-          "ui": {
-            "label": "verts 10–11",
-            "control": "slider",
-            "hidden": true,
-            "category": "zone 6"
-          }
-        },
-        "zone5_v6": {
-          "type": "vec4",
-          "default": [
-            0,
-            0,
-            0,
-            0
-          ],
-          "uniform": "zone5_v6",
-          "ui": {
-            "label": "verts 12–13",
-            "control": "slider",
-            "hidden": true,
-            "category": "zone 6"
-          }
-        },
-        "zone5_v7": {
-          "type": "vec4",
-          "default": [
-            0,
-            0,
-            0,
-            0
-          ],
-          "uniform": "zone5_v7",
-          "ui": {
-            "label": "verts 14–15",
-            "control": "slider",
-            "hidden": true,
-            "category": "zone 6"
-          }
-        },
-        "zone5_v8": {
-          "type": "vec4",
-          "default": [
-            0,
-            0,
-            0,
-            0
-          ],
-          "uniform": "zone5_v8",
-          "ui": {
-            "label": "verts 16–17",
-            "control": "slider",
-            "hidden": true,
-            "category": "zone 6"
-          }
-        },
-        "zone5_v9": {
-          "type": "vec4",
-          "default": [
-            0,
-            0,
-            0,
-            0
-          ],
-          "uniform": "zone5_v9",
-          "ui": {
-            "label": "verts 18–19",
-            "control": "slider",
-            "hidden": true,
-            "category": "zone 6"
-          }
-        },
-        "zone5_v10": {
-          "type": "vec4",
-          "default": [
-            0,
-            0,
-            0,
-            0
-          ],
-          "uniform": "zone5_v10",
-          "ui": {
-            "label": "verts 20–21",
-            "control": "slider",
-            "hidden": true,
-            "category": "zone 6"
-          }
-        },
-        "zone5_v11": {
-          "type": "vec4",
-          "default": [
-            0,
-            0,
-            0,
-            0
-          ],
-          "uniform": "zone5_v11",
-          "ui": {
-            "label": "verts 22–23",
-            "control": "slider",
-            "hidden": true,
-            "category": "zone 6"
-          }
-        },
-        "zone5_v12": {
-          "type": "vec4",
-          "default": [
-            0,
-            0,
-            0,
-            0
-          ],
-          "uniform": "zone5_v12",
-          "ui": {
-            "label": "verts 24–25",
-            "control": "slider",
-            "hidden": true,
-            "category": "zone 6"
-          }
-        },
-        "zone5_v13": {
-          "type": "vec4",
-          "default": [
-            0,
-            0,
-            0,
-            0
-          ],
-          "uniform": "zone5_v13",
-          "ui": {
-            "label": "verts 26–27",
-            "control": "slider",
-            "hidden": true,
-            "category": "zone 6"
-          }
-        },
-        "zone5_v14": {
-          "type": "vec4",
-          "default": [
-            0,
-            0,
-            0,
-            0
-          ],
-          "uniform": "zone5_v14",
-          "ui": {
-            "label": "verts 28–29",
-            "control": "slider",
-            "hidden": true,
-            "category": "zone 6"
-          }
-        },
-        "zone5_v15": {
-          "type": "vec4",
-          "default": [
-            0,
-            0,
-            0,
-            0
-          ],
-          "uniform": "zone5_v15",
-          "ui": {
-            "label": "verts 30–31",
-            "control": "slider",
-            "hidden": true,
-            "category": "zone 6"
-          }
-        },
-        "zone5_v16": {
-          "type": "vec4",
-          "default": [
-            0,
-            0,
-            0,
-            0
-          ],
-          "uniform": "zone5_v16",
-          "ui": {
-            "label": "verts 32–33",
-            "control": "slider",
-            "hidden": true,
-            "category": "zone 6"
-          }
-        },
-        "zone5_v17": {
-          "type": "vec4",
-          "default": [
-            0,
-            0,
-            0,
-            0
-          ],
-          "uniform": "zone5_v17",
-          "ui": {
-            "label": "verts 34–35",
-            "control": "slider",
-            "hidden": true,
-            "category": "zone 6"
-          }
-        },
-        "zone5_v18": {
-          "type": "vec4",
-          "default": [
-            0,
-            0,
-            0,
-            0
-          ],
-          "uniform": "zone5_v18",
-          "ui": {
-            "label": "verts 36–37",
-            "control": "slider",
-            "hidden": true,
-            "category": "zone 6"
-          }
-        },
-        "zone5_v19": {
-          "type": "vec4",
-          "default": [
-            0,
-            0,
-            0,
-            0
-          ],
-          "uniform": "zone5_v19",
-          "ui": {
-            "label": "verts 38–39",
-            "control": "slider",
-            "hidden": true,
-            "category": "zone 6"
-          }
-        },
-        "zone5_v20": {
-          "type": "vec4",
-          "default": [
-            0,
-            0,
-            0,
-            0
-          ],
-          "uniform": "zone5_v20",
-          "ui": {
-            "label": "verts 40–41",
-            "control": "slider",
-            "hidden": true,
-            "category": "zone 6"
-          }
-        },
-        "zone5_v21": {
-          "type": "vec4",
-          "default": [
-            0,
-            0,
-            0,
-            0
-          ],
-          "uniform": "zone5_v21",
-          "ui": {
-            "label": "verts 42–43",
-            "control": "slider",
-            "hidden": true,
-            "category": "zone 6"
-          }
-        },
-        "zone5_v22": {
-          "type": "vec4",
-          "default": [
-            0,
-            0,
-            0,
-            0
-          ],
-          "uniform": "zone5_v22",
-          "ui": {
-            "label": "verts 44–45",
-            "control": "slider",
-            "hidden": true,
-            "category": "zone 6"
-          }
-        },
-        "zone5_v23": {
-          "type": "vec4",
-          "default": [
-            0,
-            0,
-            0,
-            0
-          ],
-          "uniform": "zone5_v23",
-          "ui": {
-            "label": "verts 46–47",
-            "control": "slider",
-            "hidden": true,
-            "category": "zone 6"
-          }
-        },
-        "zone5_v24": {
-          "type": "vec4",
-          "default": [
-            0,
-            0,
-            0,
-            0
-          ],
-          "uniform": "zone5_v24",
-          "ui": {
-            "label": "verts 48–49",
-            "control": "slider",
-            "hidden": true,
-            "category": "zone 6"
-          }
-        },
-        "zone5_v25": {
-          "type": "vec4",
-          "default": [
-            0,
-            0,
-            0,
-            0
-          ],
-          "uniform": "zone5_v25",
-          "ui": {
-            "label": "verts 50–51",
-            "control": "slider",
-            "hidden": true,
-            "category": "zone 6"
-          }
-        },
-        "zone5_v26": {
-          "type": "vec4",
-          "default": [
-            0,
-            0,
-            0,
-            0
-          ],
-          "uniform": "zone5_v26",
-          "ui": {
-            "label": "verts 52–53",
-            "control": "slider",
-            "hidden": true,
-            "category": "zone 6"
-          }
-        },
-        "zone5_v27": {
-          "type": "vec4",
-          "default": [
-            0,
-            0,
-            0,
-            0
-          ],
-          "uniform": "zone5_v27",
-          "ui": {
-            "label": "verts 54–55",
-            "control": "slider",
-            "hidden": true,
-            "category": "zone 6"
-          }
-        },
-        "zone5_v28": {
-          "type": "vec4",
-          "default": [
-            0,
-            0,
-            0,
-            0
-          ],
-          "uniform": "zone5_v28",
-          "ui": {
-            "label": "verts 56–57",
-            "control": "slider",
-            "hidden": true,
-            "category": "zone 6"
-          }
-        },
-        "zone5_v29": {
-          "type": "vec4",
-          "default": [
-            0,
-            0,
-            0,
-            0
-          ],
-          "uniform": "zone5_v29",
-          "ui": {
-            "label": "verts 58–59",
-            "control": "slider",
-            "hidden": true,
-            "category": "zone 6"
-          }
-        },
-        "zone5_v30": {
-          "type": "vec4",
-          "default": [
-            0,
-            0,
-            0,
-            0
-          ],
-          "uniform": "zone5_v30",
-          "ui": {
-            "label": "verts 60–61",
-            "control": "slider",
-            "hidden": true,
-            "category": "zone 6"
-          }
-        },
-        "zone5_v31": {
-          "type": "vec4",
-          "default": [
-            0,
-            0,
-            0,
-            0
-          ],
-          "uniform": "zone5_v31",
-          "ui": {
-            "label": "verts 62–63",
-            "control": "slider",
-            "hidden": true,
-            "category": "zone 6"
-          }
-        },
-        "zone6_tex": {
-          "type": "surface",
-          "default": "none",
-          "colorModeUniform": "zone6_active",
-          "ui": {
-            "label": "zone 7 source",
-            "category": "zone 7",
-            "enabledBy": {
-              "param": "zoneCount",
-              "gt": 6
-            }
-          }
-        },
-        "zone6_count": {
-          "type": "int",
-          "default": 0,
-          "uniform": "zone6_count",
-          "min": 0,
-          "max": 64,
-          "ui": {
-            "label": "vertices",
-            "control": "slider",
-            "hidden": true,
-            "category": "zone 7",
-            "enabledBy": {
-              "param": "zoneCount",
-              "gt": 6
-            }
-          }
-        },
-        "zone6_alpha": {
-          "type": "float",
-          "default": 1,
-          "uniform": "zone6_alpha",
-          "min": 0,
-          "max": 1,
-          "ui": {
-            "label": "alpha",
-            "control": "slider",
-            "category": "zone 7",
-            "enabledBy": {
-              "param": "zoneCount",
-              "gt": 6
-            }
-          }
-        },
-        "zone6_v0": {
-          "type": "vec4",
-          "default": [
-            0,
-            0,
-            0,
-            0
-          ],
-          "uniform": "zone6_v0",
-          "ui": {
-            "label": "verts 0–1",
-            "control": "slider",
-            "hidden": true,
-            "category": "zone 7"
-          }
-        },
-        "zone6_v1": {
-          "type": "vec4",
-          "default": [
-            0,
-            0,
-            0,
-            0
-          ],
-          "uniform": "zone6_v1",
-          "ui": {
-            "label": "verts 2–3",
-            "control": "slider",
-            "hidden": true,
-            "category": "zone 7"
-          }
-        },
-        "zone6_v2": {
-          "type": "vec4",
-          "default": [
-            0,
-            0,
-            0,
-            0
-          ],
-          "uniform": "zone6_v2",
-          "ui": {
-            "label": "verts 4–5",
-            "control": "slider",
-            "hidden": true,
-            "category": "zone 7"
-          }
-        },
-        "zone6_v3": {
-          "type": "vec4",
-          "default": [
-            0,
-            0,
-            0,
-            0
-          ],
-          "uniform": "zone6_v3",
-          "ui": {
-            "label": "verts 6–7",
-            "control": "slider",
-            "hidden": true,
-            "category": "zone 7"
-          }
-        },
-        "zone6_v4": {
-          "type": "vec4",
-          "default": [
-            0,
-            0,
-            0,
-            0
-          ],
-          "uniform": "zone6_v4",
-          "ui": {
-            "label": "verts 8–9",
-            "control": "slider",
-            "hidden": true,
-            "category": "zone 7"
-          }
-        },
-        "zone6_v5": {
-          "type": "vec4",
-          "default": [
-            0,
-            0,
-            0,
-            0
-          ],
-          "uniform": "zone6_v5",
-          "ui": {
-            "label": "verts 10–11",
-            "control": "slider",
-            "hidden": true,
-            "category": "zone 7"
-          }
-        },
-        "zone6_v6": {
-          "type": "vec4",
-          "default": [
-            0,
-            0,
-            0,
-            0
-          ],
-          "uniform": "zone6_v6",
-          "ui": {
-            "label": "verts 12–13",
-            "control": "slider",
-            "hidden": true,
-            "category": "zone 7"
-          }
-        },
-        "zone6_v7": {
-          "type": "vec4",
-          "default": [
-            0,
-            0,
-            0,
-            0
-          ],
-          "uniform": "zone6_v7",
-          "ui": {
-            "label": "verts 14–15",
-            "control": "slider",
-            "hidden": true,
-            "category": "zone 7"
-          }
-        },
-        "zone6_v8": {
-          "type": "vec4",
-          "default": [
-            0,
-            0,
-            0,
-            0
-          ],
-          "uniform": "zone6_v8",
-          "ui": {
-            "label": "verts 16–17",
-            "control": "slider",
-            "hidden": true,
-            "category": "zone 7"
-          }
-        },
-        "zone6_v9": {
-          "type": "vec4",
-          "default": [
-            0,
-            0,
-            0,
-            0
-          ],
-          "uniform": "zone6_v9",
-          "ui": {
-            "label": "verts 18–19",
-            "control": "slider",
-            "hidden": true,
-            "category": "zone 7"
-          }
-        },
-        "zone6_v10": {
-          "type": "vec4",
-          "default": [
-            0,
-            0,
-            0,
-            0
-          ],
-          "uniform": "zone6_v10",
-          "ui": {
-            "label": "verts 20–21",
-            "control": "slider",
-            "hidden": true,
-            "category": "zone 7"
-          }
-        },
-        "zone6_v11": {
-          "type": "vec4",
-          "default": [
-            0,
-            0,
-            0,
-            0
-          ],
-          "uniform": "zone6_v11",
-          "ui": {
-            "label": "verts 22–23",
-            "control": "slider",
-            "hidden": true,
-            "category": "zone 7"
-          }
-        },
-        "zone6_v12": {
-          "type": "vec4",
-          "default": [
-            0,
-            0,
-            0,
-            0
-          ],
-          "uniform": "zone6_v12",
-          "ui": {
-            "label": "verts 24–25",
-            "control": "slider",
-            "hidden": true,
-            "category": "zone 7"
-          }
-        },
-        "zone6_v13": {
-          "type": "vec4",
-          "default": [
-            0,
-            0,
-            0,
-            0
-          ],
-          "uniform": "zone6_v13",
-          "ui": {
-            "label": "verts 26–27",
-            "control": "slider",
-            "hidden": true,
-            "category": "zone 7"
-          }
-        },
-        "zone6_v14": {
-          "type": "vec4",
-          "default": [
-            0,
-            0,
-            0,
-            0
-          ],
-          "uniform": "zone6_v14",
-          "ui": {
-            "label": "verts 28–29",
-            "control": "slider",
-            "hidden": true,
-            "category": "zone 7"
-          }
-        },
-        "zone6_v15": {
-          "type": "vec4",
-          "default": [
-            0,
-            0,
-            0,
-            0
-          ],
-          "uniform": "zone6_v15",
-          "ui": {
-            "label": "verts 30–31",
-            "control": "slider",
-            "hidden": true,
-            "category": "zone 7"
-          }
-        },
-        "zone6_v16": {
-          "type": "vec4",
-          "default": [
-            0,
-            0,
-            0,
-            0
-          ],
-          "uniform": "zone6_v16",
-          "ui": {
-            "label": "verts 32–33",
-            "control": "slider",
-            "hidden": true,
-            "category": "zone 7"
-          }
-        },
-        "zone6_v17": {
-          "type": "vec4",
-          "default": [
-            0,
-            0,
-            0,
-            0
-          ],
-          "uniform": "zone6_v17",
-          "ui": {
-            "label": "verts 34–35",
-            "control": "slider",
-            "hidden": true,
-            "category": "zone 7"
-          }
-        },
-        "zone6_v18": {
-          "type": "vec4",
-          "default": [
-            0,
-            0,
-            0,
-            0
-          ],
-          "uniform": "zone6_v18",
-          "ui": {
-            "label": "verts 36–37",
-            "control": "slider",
-            "hidden": true,
-            "category": "zone 7"
-          }
-        },
-        "zone6_v19": {
-          "type": "vec4",
-          "default": [
-            0,
-            0,
-            0,
-            0
-          ],
-          "uniform": "zone6_v19",
-          "ui": {
-            "label": "verts 38–39",
-            "control": "slider",
-            "hidden": true,
-            "category": "zone 7"
-          }
-        },
-        "zone6_v20": {
-          "type": "vec4",
-          "default": [
-            0,
-            0,
-            0,
-            0
-          ],
-          "uniform": "zone6_v20",
-          "ui": {
-            "label": "verts 40–41",
-            "control": "slider",
-            "hidden": true,
-            "category": "zone 7"
-          }
-        },
-        "zone6_v21": {
-          "type": "vec4",
-          "default": [
-            0,
-            0,
-            0,
-            0
-          ],
-          "uniform": "zone6_v21",
-          "ui": {
-            "label": "verts 42–43",
-            "control": "slider",
-            "hidden": true,
-            "category": "zone 7"
-          }
-        },
-        "zone6_v22": {
-          "type": "vec4",
-          "default": [
-            0,
-            0,
-            0,
-            0
-          ],
-          "uniform": "zone6_v22",
-          "ui": {
-            "label": "verts 44–45",
-            "control": "slider",
-            "hidden": true,
-            "category": "zone 7"
-          }
-        },
-        "zone6_v23": {
-          "type": "vec4",
-          "default": [
-            0,
-            0,
-            0,
-            0
-          ],
-          "uniform": "zone6_v23",
-          "ui": {
-            "label": "verts 46–47",
-            "control": "slider",
-            "hidden": true,
-            "category": "zone 7"
-          }
-        },
-        "zone6_v24": {
-          "type": "vec4",
-          "default": [
-            0,
-            0,
-            0,
-            0
-          ],
-          "uniform": "zone6_v24",
-          "ui": {
-            "label": "verts 48–49",
-            "control": "slider",
-            "hidden": true,
-            "category": "zone 7"
-          }
-        },
-        "zone6_v25": {
-          "type": "vec4",
-          "default": [
-            0,
-            0,
-            0,
-            0
-          ],
-          "uniform": "zone6_v25",
-          "ui": {
-            "label": "verts 50–51",
-            "control": "slider",
-            "hidden": true,
-            "category": "zone 7"
-          }
-        },
-        "zone6_v26": {
-          "type": "vec4",
-          "default": [
-            0,
-            0,
-            0,
-            0
-          ],
-          "uniform": "zone6_v26",
-          "ui": {
-            "label": "verts 52–53",
-            "control": "slider",
-            "hidden": true,
-            "category": "zone 7"
-          }
-        },
-        "zone6_v27": {
-          "type": "vec4",
-          "default": [
-            0,
-            0,
-            0,
-            0
-          ],
-          "uniform": "zone6_v27",
-          "ui": {
-            "label": "verts 54–55",
-            "control": "slider",
-            "hidden": true,
-            "category": "zone 7"
-          }
-        },
-        "zone6_v28": {
-          "type": "vec4",
-          "default": [
-            0,
-            0,
-            0,
-            0
-          ],
-          "uniform": "zone6_v28",
-          "ui": {
-            "label": "verts 56–57",
-            "control": "slider",
-            "hidden": true,
-            "category": "zone 7"
-          }
-        },
-        "zone6_v29": {
-          "type": "vec4",
-          "default": [
-            0,
-            0,
-            0,
-            0
-          ],
-          "uniform": "zone6_v29",
-          "ui": {
-            "label": "verts 58–59",
-            "control": "slider",
-            "hidden": true,
-            "category": "zone 7"
-          }
-        },
-        "zone6_v30": {
-          "type": "vec4",
-          "default": [
-            0,
-            0,
-            0,
-            0
-          ],
-          "uniform": "zone6_v30",
-          "ui": {
-            "label": "verts 60–61",
-            "control": "slider",
-            "hidden": true,
-            "category": "zone 7"
-          }
-        },
-        "zone6_v31": {
-          "type": "vec4",
-          "default": [
-            0,
-            0,
-            0,
-            0
-          ],
-          "uniform": "zone6_v31",
-          "ui": {
-            "label": "verts 62–63",
-            "control": "slider",
-            "hidden": true,
-            "category": "zone 7"
-          }
-        },
-        "zone7_tex": {
-          "type": "surface",
-          "default": "none",
-          "colorModeUniform": "zone7_active",
-          "ui": {
-            "label": "zone 8 source",
-            "category": "zone 8",
-            "enabledBy": {
-              "param": "zoneCount",
-              "gt": 7
-            }
-          }
-        },
-        "zone7_count": {
-          "type": "int",
-          "default": 0,
-          "uniform": "zone7_count",
-          "min": 0,
-          "max": 64,
-          "ui": {
-            "label": "vertices",
-            "control": "slider",
-            "hidden": true,
-            "category": "zone 8",
-            "enabledBy": {
-              "param": "zoneCount",
-              "gt": 7
-            }
-          }
-        },
-        "zone7_alpha": {
-          "type": "float",
-          "default": 1,
-          "uniform": "zone7_alpha",
-          "min": 0,
-          "max": 1,
-          "ui": {
-            "label": "alpha",
-            "control": "slider",
-            "category": "zone 8",
-            "enabledBy": {
-              "param": "zoneCount",
-              "gt": 7
-            }
-          }
-        },
-        "zone7_v0": {
-          "type": "vec4",
-          "default": [
-            0,
-            0,
-            0,
-            0
-          ],
-          "uniform": "zone7_v0",
-          "ui": {
-            "label": "verts 0–1",
-            "control": "slider",
-            "hidden": true,
-            "category": "zone 8"
-          }
-        },
-        "zone7_v1": {
-          "type": "vec4",
-          "default": [
-            0,
-            0,
-            0,
-            0
-          ],
-          "uniform": "zone7_v1",
-          "ui": {
-            "label": "verts 2–3",
-            "control": "slider",
-            "hidden": true,
-            "category": "zone 8"
-          }
-        },
-        "zone7_v2": {
-          "type": "vec4",
-          "default": [
-            0,
-            0,
-            0,
-            0
-          ],
-          "uniform": "zone7_v2",
-          "ui": {
-            "label": "verts 4–5",
-            "control": "slider",
-            "hidden": true,
-            "category": "zone 8"
-          }
-        },
-        "zone7_v3": {
-          "type": "vec4",
-          "default": [
-            0,
-            0,
-            0,
-            0
-          ],
-          "uniform": "zone7_v3",
-          "ui": {
-            "label": "verts 6–7",
-            "control": "slider",
-            "hidden": true,
-            "category": "zone 8"
-          }
-        },
-        "zone7_v4": {
-          "type": "vec4",
-          "default": [
-            0,
-            0,
-            0,
-            0
-          ],
-          "uniform": "zone7_v4",
-          "ui": {
-            "label": "verts 8–9",
-            "control": "slider",
-            "hidden": true,
-            "category": "zone 8"
-          }
-        },
-        "zone7_v5": {
-          "type": "vec4",
-          "default": [
-            0,
-            0,
-            0,
-            0
-          ],
-          "uniform": "zone7_v5",
-          "ui": {
-            "label": "verts 10–11",
-            "control": "slider",
-            "hidden": true,
-            "category": "zone 8"
-          }
-        },
-        "zone7_v6": {
-          "type": "vec4",
-          "default": [
-            0,
-            0,
-            0,
-            0
-          ],
-          "uniform": "zone7_v6",
-          "ui": {
-            "label": "verts 12–13",
-            "control": "slider",
-            "hidden": true,
-            "category": "zone 8"
-          }
-        },
-        "zone7_v7": {
-          "type": "vec4",
-          "default": [
-            0,
-            0,
-            0,
-            0
-          ],
-          "uniform": "zone7_v7",
-          "ui": {
-            "label": "verts 14–15",
-            "control": "slider",
-            "hidden": true,
-            "category": "zone 8"
-          }
-        },
-        "zone7_v8": {
-          "type": "vec4",
-          "default": [
-            0,
-            0,
-            0,
-            0
-          ],
-          "uniform": "zone7_v8",
-          "ui": {
-            "label": "verts 16–17",
-            "control": "slider",
-            "hidden": true,
-            "category": "zone 8"
-          }
-        },
-        "zone7_v9": {
-          "type": "vec4",
-          "default": [
-            0,
-            0,
-            0,
-            0
-          ],
-          "uniform": "zone7_v9",
-          "ui": {
-            "label": "verts 18–19",
-            "control": "slider",
-            "hidden": true,
-            "category": "zone 8"
-          }
-        },
-        "zone7_v10": {
-          "type": "vec4",
-          "default": [
-            0,
-            0,
-            0,
-            0
-          ],
-          "uniform": "zone7_v10",
-          "ui": {
-            "label": "verts 20–21",
-            "control": "slider",
-            "hidden": true,
-            "category": "zone 8"
-          }
-        },
-        "zone7_v11": {
-          "type": "vec4",
-          "default": [
-            0,
-            0,
-            0,
-            0
-          ],
-          "uniform": "zone7_v11",
-          "ui": {
-            "label": "verts 22–23",
-            "control": "slider",
-            "hidden": true,
-            "category": "zone 8"
-          }
-        },
-        "zone7_v12": {
-          "type": "vec4",
-          "default": [
-            0,
-            0,
-            0,
-            0
-          ],
-          "uniform": "zone7_v12",
-          "ui": {
-            "label": "verts 24–25",
-            "control": "slider",
-            "hidden": true,
-            "category": "zone 8"
-          }
-        },
-        "zone7_v13": {
-          "type": "vec4",
-          "default": [
-            0,
-            0,
-            0,
-            0
-          ],
-          "uniform": "zone7_v13",
-          "ui": {
-            "label": "verts 26–27",
-            "control": "slider",
-            "hidden": true,
-            "category": "zone 8"
-          }
-        },
-        "zone7_v14": {
-          "type": "vec4",
-          "default": [
-            0,
-            0,
-            0,
-            0
-          ],
-          "uniform": "zone7_v14",
-          "ui": {
-            "label": "verts 28–29",
-            "control": "slider",
-            "hidden": true,
-            "category": "zone 8"
-          }
-        },
-        "zone7_v15": {
-          "type": "vec4",
-          "default": [
-            0,
-            0,
-            0,
-            0
-          ],
-          "uniform": "zone7_v15",
-          "ui": {
-            "label": "verts 30–31",
-            "control": "slider",
-            "hidden": true,
-            "category": "zone 8"
-          }
-        },
-        "zone7_v16": {
-          "type": "vec4",
-          "default": [
-            0,
-            0,
-            0,
-            0
-          ],
-          "uniform": "zone7_v16",
-          "ui": {
-            "label": "verts 32–33",
-            "control": "slider",
-            "hidden": true,
-            "category": "zone 8"
-          }
-        },
-        "zone7_v17": {
-          "type": "vec4",
-          "default": [
-            0,
-            0,
-            0,
-            0
-          ],
-          "uniform": "zone7_v17",
-          "ui": {
-            "label": "verts 34–35",
-            "control": "slider",
-            "hidden": true,
-            "category": "zone 8"
-          }
-        },
-        "zone7_v18": {
-          "type": "vec4",
-          "default": [
-            0,
-            0,
-            0,
-            0
-          ],
-          "uniform": "zone7_v18",
-          "ui": {
-            "label": "verts 36–37",
-            "control": "slider",
-            "hidden": true,
-            "category": "zone 8"
-          }
-        },
-        "zone7_v19": {
-          "type": "vec4",
-          "default": [
-            0,
-            0,
-            0,
-            0
-          ],
-          "uniform": "zone7_v19",
-          "ui": {
-            "label": "verts 38–39",
-            "control": "slider",
-            "hidden": true,
-            "category": "zone 8"
-          }
-        },
-        "zone7_v20": {
-          "type": "vec4",
-          "default": [
-            0,
-            0,
-            0,
-            0
-          ],
-          "uniform": "zone7_v20",
-          "ui": {
-            "label": "verts 40–41",
-            "control": "slider",
-            "hidden": true,
-            "category": "zone 8"
-          }
-        },
-        "zone7_v21": {
-          "type": "vec4",
-          "default": [
-            0,
-            0,
-            0,
-            0
-          ],
-          "uniform": "zone7_v21",
-          "ui": {
-            "label": "verts 42–43",
-            "control": "slider",
-            "hidden": true,
-            "category": "zone 8"
-          }
-        },
-        "zone7_v22": {
-          "type": "vec4",
-          "default": [
-            0,
-            0,
-            0,
-            0
-          ],
-          "uniform": "zone7_v22",
-          "ui": {
-            "label": "verts 44–45",
-            "control": "slider",
-            "hidden": true,
-            "category": "zone 8"
-          }
-        },
-        "zone7_v23": {
-          "type": "vec4",
-          "default": [
-            0,
-            0,
-            0,
-            0
-          ],
-          "uniform": "zone7_v23",
-          "ui": {
-            "label": "verts 46–47",
-            "control": "slider",
-            "hidden": true,
-            "category": "zone 8"
-          }
-        },
-        "zone7_v24": {
-          "type": "vec4",
-          "default": [
-            0,
-            0,
-            0,
-            0
-          ],
-          "uniform": "zone7_v24",
-          "ui": {
-            "label": "verts 48–49",
-            "control": "slider",
-            "hidden": true,
-            "category": "zone 8"
-          }
-        },
-        "zone7_v25": {
-          "type": "vec4",
-          "default": [
-            0,
-            0,
-            0,
-            0
-          ],
-          "uniform": "zone7_v25",
-          "ui": {
-            "label": "verts 50–51",
-            "control": "slider",
-            "hidden": true,
-            "category": "zone 8"
-          }
-        },
-        "zone7_v26": {
-          "type": "vec4",
-          "default": [
-            0,
-            0,
-            0,
-            0
-          ],
-          "uniform": "zone7_v26",
-          "ui": {
-            "label": "verts 52–53",
-            "control": "slider",
-            "hidden": true,
-            "category": "zone 8"
-          }
-        },
-        "zone7_v27": {
-          "type": "vec4",
-          "default": [
-            0,
-            0,
-            0,
-            0
-          ],
-          "uniform": "zone7_v27",
-          "ui": {
-            "label": "verts 54–55",
-            "control": "slider",
-            "hidden": true,
-            "category": "zone 8"
-          }
-        },
-        "zone7_v28": {
-          "type": "vec4",
-          "default": [
-            0,
-            0,
-            0,
-            0
-          ],
-          "uniform": "zone7_v28",
-          "ui": {
-            "label": "verts 56–57",
-            "control": "slider",
-            "hidden": true,
-            "category": "zone 8"
-          }
-        },
-        "zone7_v29": {
-          "type": "vec4",
-          "default": [
-            0,
-            0,
-            0,
-            0
-          ],
-          "uniform": "zone7_v29",
-          "ui": {
-            "label": "verts 58–59",
-            "control": "slider",
-            "hidden": true,
-            "category": "zone 8"
-          }
-        },
-        "zone7_v30": {
-          "type": "vec4",
-          "default": [
-            0,
-            0,
-            0,
-            0
-          ],
-          "uniform": "zone7_v30",
-          "ui": {
-            "label": "verts 60–61",
-            "control": "slider",
-            "hidden": true,
-            "category": "zone 8"
-          }
-        },
-        "zone7_v31": {
-          "type": "vec4",
-          "default": [
-            0,
-            0,
-            0,
-            0
-          ],
-          "uniform": "zone7_v31",
-          "ui": {
-            "label": "verts 62–63",
-            "control": "slider",
-            "hidden": true,
-            "category": "zone 8"
-          }
-        }
-      },
-      "textures": {},
-      "passes": [
-        {
-          "name": "render",
-          "program": "remap",
-          "key": "synth/remap:remap",
-          "inputs": {
-            "zone0_tex": "zone0_tex",
-            "zone1_tex": "zone1_tex",
-            "zone2_tex": "zone2_tex",
-            "zone3_tex": "zone3_tex",
-            "zone4_tex": "zone4_tex",
-            "zone5_tex": "zone5_tex",
-            "zone6_tex": "zone6_tex",
-            "zone7_tex": "zone7_tex"
-          },
-          "outputs": {
-            "fragColor": "outputTex"
           }
         }
       ]
@@ -18881,6 +13913,63 @@
           },
           "outputs": {
             "fragColor": "outputTex"
+          }
+        }
+      ]
+    },
+    "synth/testPattern": {
+      "namespace": "synth",
+      "func": "testPattern",
+      "kind": "generator",
+      "params": {
+        "pattern": {
+          "type": "int",
+          "default": 0,
+          "uniform": "pattern",
+          "choices": {
+            "checkerboard": 0,
+            "colorBars": 1,
+            "gradient": 2,
+            "uvMap": 3,
+            "gridLines": 4,
+            "colorGrid": 5,
+            "dotGrid": 6
+          },
+          "ui": {
+            "label": "pattern",
+            "control": "dropdown"
+          }
+        },
+        "gridSize": {
+          "type": "int",
+          "default": 4,
+          "min": 1,
+          "max": 16,
+          "uniform": "gridSize",
+          "ui": {
+            "label": "grid size",
+            "control": "slider",
+            "enabledBy": {
+              "param": "pattern",
+              "in": [
+                0,
+                4,
+                5,
+                6
+              ]
+            }
+          }
+        }
+      },
+      "textures": {},
+      "passes": [
+        {
+          "name": "main",
+          "program": "testPattern",
+          "key": "synth/testPattern:testPattern",
+          "inputs": {},
+          "outputs": {
+            "color": "outputTex"
           }
         }
       ]

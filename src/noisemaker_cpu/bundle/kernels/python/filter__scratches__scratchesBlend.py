@@ -8,18 +8,11 @@ def run_pixel(ctx, out):
     _u_inputTex = T["inputTex"]
     _u_overlayTex = T["overlayTex"]
     _u_alpha = U["alpha"]
-    def cpu_ivec2__float(value):
-        return rt.construct(2, value)
-    def cpu_ivec2__vec2(value):
-        value = rt.copy(value)
-        return value
-    def cpu_ivec2__float_float(v0, v1):
-        return rt.construct(2, v0, v1)
     def main__void():
-        coord = cpu_ivec2__vec2(rt.swizzle(ctx.frag_coord, "xy"))
+        coord = rt.construct(2, rt.swizzle(ctx.frag_coord, "xy"), base="int")
         base = rt.texel_fetch(_u_inputTex, coord, rt.i(0))
         overlay = rt.texel_fetch(_u_overlayTex, coord, rt.i(0))
-        scratchStrength = rt.binary("*", rt.swizzle(overlay, "a"), _u_alpha, 1)
+        scratchStrength = rt.binary("*", rt.swizzle(overlay, "a"), _u_alpha, 1, "float")
         result = rt.component_wise("max", rt.swizzle(base, "rgb"), rt.construct(3, scratchStrength), width=3)
         g.fragColor = rt.construct(4, result, rt.swizzle(base, "a"))
     main__void()

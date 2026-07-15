@@ -6,30 +6,23 @@ def run_pixel(ctx, out):
         pass
     g = _G()
     _u_statsTex = T["statsTex"]
-    g.F32_MAX = rt.f(3.402823466e38)
-    g.F32_MIN = rt.unary("-", rt.f(3.402823466e38))
+    g.F32_MAX = rt.f(3.402823466e+38)
+    g.F32_MIN = rt.unary("-", rt.f(3.402823466e+38))
     g.TILE_SIZE = rt.i(8)
     g.MAX_TILE_DIM = rt.i(512)
-    def cpu_ivec2__float(value):
-        return rt.construct(2, value)
-    def cpu_ivec2__vec2(value):
-        value = rt.copy(value)
-        return value
-    def cpu_ivec2__float_float(v0, v1):
-        return rt.construct(2, v0, v1)
     def main__void():
-        if rt.binary("||", rt.binary("!=", rt.construct(1, rt.swizzle(ctx.frag_coord, "x")), rt.i(0)), rt.binary("!=", rt.construct(1, rt.swizzle(ctx.frag_coord, "y")), rt.i(0))):
+        if (bool(rt.binary("!=", rt.construct(1, rt.swizzle(ctx.frag_coord, "x"), base="int"), rt.i(0))) or bool(rt.binary("!=", rt.construct(1, rt.swizzle(ctx.frag_coord, "y"), base="int"), rt.i(0)))):
             g.fragColor = rt.construct(4, rt.f(0.0))
             return
         statsTexSize = rt.texture_size(_u_statsTex)
-        tileCount = cpu_ivec2__float_float(rt.binary("/", rt.binary("-", rt.binary("+", rt.swizzle(statsTexSize, "x"), g.TILE_SIZE, 1), rt.i(1), 1), g.TILE_SIZE, 1), rt.binary("/", rt.binary("-", rt.binary("+", rt.swizzle(statsTexSize, "y"), g.TILE_SIZE, 1), rt.i(1), 1), g.TILE_SIZE, 1))
+        tileCount = rt.construct(2, rt.binary("/", rt.binary("-", rt.binary("+", rt.swizzle(statsTexSize, "x"), g.TILE_SIZE, 1, "int"), rt.i(1), 1, "int"), g.TILE_SIZE, 1, "int"), rt.binary("/", rt.binary("-", rt.binary("+", rt.swizzle(statsTexSize, "y"), g.TILE_SIZE, 1, "int"), rt.i(1), 1, "int"), g.TILE_SIZE, 1, "int"), base="int")
         globalMin = g.F32_MAX
         globalMax = g.F32_MIN
         ty = rt.i(0)
         _for0_first = True
         for _for0 in range(1048576):
             if not _for0_first:
-                rt.unary("++", ty)
+                ty = rt.binary("+", ty, rt.i(1), 1, "int")
             _for0_first = False
             if not (rt.binary("<", ty, g.MAX_TILE_DIM)):
                 break
@@ -39,13 +32,13 @@ def run_pixel(ctx, out):
             _for1_first = True
             for _for1 in range(1048576):
                 if not _for1_first:
-                    rt.unary("++", tx)
+                    tx = rt.binary("+", tx, rt.i(1), 1, "int")
                 _for1_first = False
                 if not (rt.binary("<", tx, g.MAX_TILE_DIM)):
                     break
                 if rt.binary(">=", tx, rt.swizzle(tileCount, "x")):
                     break
-                sampleCoord = cpu_ivec2__float_float(rt.binary("*", tx, g.TILE_SIZE, 1), rt.binary("*", ty, g.TILE_SIZE, 1))
+                sampleCoord = rt.construct(2, rt.binary("*", tx, g.TILE_SIZE, 1, "int"), rt.binary("*", ty, g.TILE_SIZE, 1, "int"), base="int")
                 tileStats = rt.swizzle(rt.texel_fetch(_u_statsTex, sampleCoord, rt.i(0)), "xy")
                 globalMin = rt.component_wise("min", globalMin, rt.swizzle(tileStats, "x"), width=1)
                 globalMax = rt.component_wise("max", globalMax, rt.swizzle(tileStats, "y"), width=1)

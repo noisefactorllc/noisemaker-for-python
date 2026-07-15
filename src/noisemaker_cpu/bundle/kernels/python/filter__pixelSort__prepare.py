@@ -15,10 +15,10 @@ def run_pixel(ctx, out):
     def applyWrap__vec2_vec2(coord, size):
         coord = rt.copy(coord)
         size = rt.copy(size)
-        uv = rt.binary("/", coord, size, 2)
-        mode = rt.construct(1, _u_wrap)
+        uv = rt.binary("/", coord, size, 2, "float")
+        mode = rt.construct(1, _u_wrap, base="int")
         if rt.binary("==", mode, rt.i(0)):
-            uv = rt.component_wise("abs", rt.binary("-", rt.component_wise("mod", rt.binary("+", uv, rt.f(1.0), 2), rt.f(2.0), width=2), rt.f(1.0), 2), width=2)
+            uv = rt.component_wise("abs", rt.binary("-", rt.component_wise("mod", rt.binary("+", uv, rt.f(1.0), 2, "float"), rt.f(2.0), width=2), rt.f(1.0), 2, "float"), width=2)
         else:
             if rt.binary("==", mode, rt.i(1)):
                 uv = rt.component_wise("fract", uv, width=2)
@@ -27,20 +27,20 @@ def run_pixel(ctx, out):
         return uv
     def main__void():
         texSize = rt.construct(2, rt.texture_size(_u_inputTex))
-        center = rt.binary("*", texSize, rt.f(0.5), 2)
-        pixelCoord = rt.binary("-", rt.swizzle(ctx.frag_coord, "xy"), center, 2)
+        center = rt.binary("*", texSize, rt.f(0.5), 2, "float")
+        pixelCoord = rt.binary("-", rt.swizzle(ctx.frag_coord, "xy"), center, 2, "float")
         angle = _u_angled
-        rad = rt.binary("/", rt.binary("*", angle, g.PI, 1), rt.f(180.0), 1)
+        rad = rt.binary("/", rt.binary("*", angle, g.PI, 1, "float"), rt.f(180.0), 1, "float")
         c = rt.component_wise("cos", rad, width=1)
         s = rt.component_wise("sin", rad, width=1)
         srcCoord = rt.construct(2, 0.0)
-        srcCoord = rt.assign_swizzle(srcCoord, "x", rt.binary("+", rt.binary("*", c, rt.swizzle(pixelCoord, "x"), 1), rt.binary("*", s, rt.swizzle(pixelCoord, "y"), 1), 1))
-        srcCoord = rt.assign_swizzle(srcCoord, "y", rt.binary("+", rt.binary("*", rt.unary("-", s), rt.swizzle(pixelCoord, "x"), 1), rt.binary("*", c, rt.swizzle(pixelCoord, "y"), 1), 1))
-        srcCoord = rt.binary("+", srcCoord, center, 2)
+        srcCoord = rt.assign_swizzle(srcCoord, "x", rt.binary("+", rt.binary("*", c, rt.swizzle(pixelCoord, "x"), 1, "float"), rt.binary("*", s, rt.swizzle(pixelCoord, "y"), 1, "float"), 1, "float"))
+        srcCoord = rt.assign_swizzle(srcCoord, "y", rt.binary("+", rt.binary("*", rt.unary("-", s), rt.swizzle(pixelCoord, "x"), 1, "float"), rt.binary("*", c, rt.swizzle(pixelCoord, "y"), 1, "float"), 1, "float"))
+        srcCoord = rt.binary("+", srcCoord, center, 2, "float")
         wrappedUV = applyWrap__vec2_vec2(srcCoord, texSize)
         color = rt.texture(_u_inputTex, wrappedUV)
         if _u_darkest:
-            color = rt.construct(4, rt.binary("-", rt.construct(3, rt.f(1.0)), rt.swizzle(color, "rgb"), 3), rt.swizzle(color, "a"))
+            color = rt.construct(4, rt.binary("-", rt.construct(3, rt.f(1.0)), rt.swizzle(color, "rgb"), 3, "float"), rt.swizzle(color, "a"))
         g.fragColor = color
     main__void()
     _c = g.fragColor

@@ -11,21 +11,14 @@ def run_pixel(ctx, out):
     _u_tileOffset = U["tileOffset"]
     _u_fullResolution = U["fullResolution"]
     _u_renderScale = U["renderScale"]
-    def cpu_ivec2__float(value):
-        return rt.construct(2, value)
-    def cpu_ivec2__vec2(value):
-        value = rt.copy(value)
-        return value
-    def cpu_ivec2__float_float(v0, v1):
-        return rt.construct(2, v0, v1)
     def main__void():
-        coord = cpu_ivec2__vec2(rt.swizzle(ctx.frag_coord, "xy"))
+        coord = rt.construct(2, rt.swizzle(ctx.frag_coord, "xy"), base="int")
         baseSize = rt.texture_size(_u_inputTex)
         overlaySize = rt.texture_size(_u_overlayTex)
-        base = rt.texel_fetch(_u_inputTex, rt.component_wise("clamp", coord, cpu_ivec2__float(rt.i(0)), rt.binary("-", baseSize, rt.i(1), 2), width=2), rt.i(0))
-        overlay = rt.texel_fetch(_u_overlayTex, rt.component_wise("clamp", coord, cpu_ivec2__float(rt.i(0)), rt.binary("-", overlaySize, rt.i(1), 2), width=2), rt.i(0))
-        a = rt.binary("*", rt.swizzle(overlay, "a"), _u_alpha, 1)
-        result = rt.binary("+", rt.binary("*", rt.swizzle(base, "rgb"), rt.binary("-", rt.f(1.0), a, 1), 3), rt.binary("*", rt.swizzle(overlay, "rgb"), a, 3), 3)
+        base = rt.texel_fetch(_u_inputTex, rt.component_wise("clamp", coord, rt.construct(2, rt.i(0), base="int"), rt.binary("-", baseSize, rt.i(1), 2, "int"), width=2), rt.i(0))
+        overlay = rt.texel_fetch(_u_overlayTex, rt.component_wise("clamp", coord, rt.construct(2, rt.i(0), base="int"), rt.binary("-", overlaySize, rt.i(1), 2, "int"), width=2), rt.i(0))
+        a = rt.binary("*", rt.swizzle(overlay, "a"), _u_alpha, 1, "float")
+        result = rt.binary("+", rt.binary("*", rt.swizzle(base, "rgb"), rt.binary("-", rt.f(1.0), a, 1, "float"), 3, "float"), rt.binary("*", rt.swizzle(overlay, "rgb"), a, 3, "float"), 3, "float")
         g.fragColor = rt.construct(4, result, rt.swizzle(base, "a"))
     main__void()
     _c = g.fragColor

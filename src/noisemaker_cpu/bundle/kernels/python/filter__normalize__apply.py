@@ -9,24 +9,17 @@ def run_pixel(ctx, out):
     _u_fullResolution = U["fullResolution"]
     _u_inputTex = T["inputTex"]
     _u_statsTex = T["statsTex"]
-    def cpu_ivec2__float(value):
-        return rt.construct(2, value)
-    def cpu_ivec2__vec2(value):
-        value = rt.copy(value)
-        return value
-    def cpu_ivec2__float_float(v0, v1):
-        return rt.construct(2, v0, v1)
     def main__void():
-        globalCoord = rt.binary("+", rt.swizzle(ctx.frag_coord, "xy"), _u_tileOffset, 2)
-        coord = cpu_ivec2__vec2(rt.swizzle(ctx.frag_coord, "xy"))
+        globalCoord = rt.binary("+", rt.swizzle(ctx.frag_coord, "xy"), _u_tileOffset, 2, "float")
+        coord = rt.construct(2, rt.swizzle(ctx.frag_coord, "xy"), base="int")
         color = rt.texel_fetch(_u_inputTex, coord, rt.i(0))
-        stats = rt.texel_fetch(_u_statsTex, cpu_ivec2__float_float(rt.i(0), rt.i(0)), rt.i(0))
+        stats = rt.texel_fetch(_u_statsTex, rt.construct(2, rt.i(0), rt.i(0), base="int"), rt.i(0))
         minVal = rt.swizzle(stats, "r")
         maxVal = rt.swizzle(stats, "g")
-        if rt.binary("<", rt.binary("-", maxVal, minVal, 1), rt.f(0.00001)):
+        if rt.binary("<", rt.binary("-", maxVal, minVal, 1, "float"), rt.f(1e-05)):
             g.fragColor = color
             return
-        normalized = rt.binary("/", rt.binary("-", rt.swizzle(color, "rgb"), minVal, 3), rt.binary("-", maxVal, minVal, 1), 3)
+        normalized = rt.binary("/", rt.binary("-", rt.swizzle(color, "rgb"), minVal, 3, "float"), rt.binary("-", maxVal, minVal, 1, "float"), 3, "float")
         g.fragColor = rt.construct(4, normalized, rt.swizzle(color, "a"))
     main__void()
     _c = g.fragColor

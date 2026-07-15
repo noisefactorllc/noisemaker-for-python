@@ -10,21 +10,14 @@ def run_pixel(ctx, out):
     _u_inputTex = T["inputTex"]
     _u_threshold = U["threshold"]
     _u_softKnee = U["softKnee"]
-    def cpu_ivec2__float(value):
-        return rt.construct(2, value)
-    def cpu_ivec2__vec2(value):
-        value = rt.copy(value)
-        return value
-    def cpu_ivec2__float_float(v0, v1):
-        return rt.construct(2, v0, v1)
     def main__void():
-        globalCoord = rt.binary("+", rt.swizzle(ctx.frag_coord, "xy"), _u_tileOffset, 2)
-        coord = cpu_ivec2__vec2(rt.swizzle(ctx.frag_coord, "xy"))
+        globalCoord = rt.binary("+", rt.swizzle(ctx.frag_coord, "xy"), _u_tileOffset, 2, "float")
+        coord = rt.construct(2, rt.swizzle(ctx.frag_coord, "xy"), base="int")
         color = rt.texel_fetch(_u_inputTex, coord, rt.i(0))
         luma = rt.dot(rt.swizzle(color, "rgb"), rt.construct(3, rt.f(0.2126), rt.f(0.7152), rt.f(0.0722)))
         knee = _u_softKnee
-        threshLow = rt.binary("-", _u_threshold, knee, 1)
-        threshHigh = rt.binary("+", _u_threshold, knee, 1)
+        threshLow = rt.binary("-", _u_threshold, knee, 1, "float")
+        threshHigh = rt.binary("+", _u_threshold, knee, 1, "float")
         bloomFactor = rt.f(0.0)
         if rt.binary("<=", luma, threshLow):
             bloomFactor = rt.f(0.0)
@@ -32,9 +25,9 @@ def run_pixel(ctx, out):
             if rt.binary(">=", luma, threshHigh):
                 bloomFactor = rt.f(1.0)
             else:
-                t = rt.binary("/", rt.binary("-", luma, threshLow, 1), rt.binary("-", threshHigh, threshLow, 1), 1)
-                bloomFactor = rt.binary("*", rt.binary("*", t, t, 1), rt.binary("-", rt.f(3.0), rt.binary("*", rt.f(2.0), t, 1), 1), 1)
-        brightColor = rt.binary("*", rt.swizzle(color, "rgb"), bloomFactor, 3)
+                t = rt.binary("/", rt.binary("-", luma, threshLow, 1, "float"), rt.binary("-", threshHigh, threshLow, 1, "float"), 1, "float")
+                bloomFactor = rt.binary("*", rt.binary("*", t, t, 1, "float"), rt.binary("-", rt.f(3.0), rt.binary("*", rt.f(2.0), t, 1, "float"), 1, "float"), 1, "float")
+        brightColor = rt.binary("*", rt.swizzle(color, "rgb"), bloomFactor, 3, "float")
         g.fragColor = rt.construct(4, brightColor, rt.swizzle(color, "a"))
     main__void()
     _c = g.fragColor

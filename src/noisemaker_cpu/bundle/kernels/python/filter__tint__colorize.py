@@ -11,13 +11,6 @@ def run_pixel(ctx, out):
     _u_alpha = U["alpha"]
     _u_mode = U["mode"]
     _u_inputTex = T["inputTex"]
-    def cpu_ivec2__float(value):
-        return rt.construct(2, value)
-    def cpu_ivec2__vec2(value):
-        value = rt.copy(value)
-        return value
-    def cpu_ivec2__float_float(v0, v1):
-        return rt.construct(2, v0, v1)
     def rgb_to_hsv__vec3(rgb):
         rgb = rt.copy(rgb)
         r = rt.swizzle(rgb, "x")
@@ -25,45 +18,45 @@ def run_pixel(ctx, out):
         b = rt.swizzle(rgb, "z")
         max_c = rt.component_wise("max", rt.component_wise("max", r, g, width=1), b, width=1)
         min_c = rt.component_wise("min", rt.component_wise("min", r, g, width=1), b, width=1)
-        delta = rt.binary("-", max_c, min_c, 1)
+        delta = rt.binary("-", max_c, min_c, 1, "float")
         hue = rt.f(0.0)
         if rt.binary("!=", delta, rt.f(0.0)):
             if rt.binary("==", max_c, r):
-                raw = rt.binary("/", rt.binary("-", g, b, 1), delta, 1)
-                raw = rt.binary("-", raw, rt.binary("*", rt.component_wise("floor", rt.binary("/", raw, rt.f(6.0), 1), width=1), rt.f(6.0), 1), 1)
+                raw = rt.binary("/", rt.binary("-", g, b, 1, "float"), delta, 1, "float")
+                raw = rt.binary("-", raw, rt.binary("*", rt.component_wise("floor", rt.binary("/", raw, rt.f(6.0), 1, "float"), width=1), rt.f(6.0), 1, "float"), 1, "float")
                 if rt.binary("<", raw, rt.f(0.0)):
-                    raw = rt.binary("+", raw, rt.f(6.0), 1)
+                    raw = rt.binary("+", raw, rt.f(6.0), 1, "float")
                 hue = raw
             else:
                 if rt.binary("==", max_c, g):
-                    hue = rt.binary("+", rt.binary("/", rt.binary("-", b, r, 1), delta, 1), rt.f(2.0), 1)
+                    hue = rt.binary("+", rt.binary("/", rt.binary("-", b, r, 1, "float"), delta, 1, "float"), rt.f(2.0), 1, "float")
                 else:
-                    hue = rt.binary("+", rt.binary("/", rt.binary("-", r, g, 1), delta, 1), rt.f(4.0), 1)
-        hue = rt.binary("/", hue, rt.f(6.0), 1)
+                    hue = rt.binary("+", rt.binary("/", rt.binary("-", r, g, 1, "float"), delta, 1, "float"), rt.f(4.0), 1, "float")
+        hue = rt.binary("/", hue, rt.f(6.0), 1, "float")
         if rt.binary("<", hue, rt.f(0.0)):
-            hue = rt.binary("+", hue, rt.f(1.0), 1)
-        sat = (rt.binary("/", delta, max_c, 1) if rt.binary("!=", max_c, rt.f(0.0)) else rt.f(0.0))
+            hue = rt.binary("+", hue, rt.f(1.0), 1, "float")
+        sat = (rt.binary("/", delta, max_c, 1, "float") if rt.binary("!=", max_c, rt.f(0.0)) else rt.f(0.0))
         return rt.construct(3, hue, sat, max_c)
     def hsv_to_rgb__vec3(hsv):
         hsv = rt.copy(hsv)
         h = rt.swizzle(hsv, "x")
         s = rt.swizzle(hsv, "y")
         v = rt.swizzle(hsv, "z")
-        dh = rt.binary("*", h, rt.f(6.0), 1)
-        dr = rt.component_wise("clamp", rt.binary("-", rt.component_wise("abs", rt.binary("-", dh, rt.f(3.0), 1), width=1), rt.f(1.0), 1), rt.f(0.0), rt.f(1.0), width=1)
-        dg = rt.component_wise("clamp", rt.binary("+", rt.unary("-", rt.component_wise("abs", rt.binary("-", dh, rt.f(2.0), 1), width=1)), rt.f(2.0), 1), rt.f(0.0), rt.f(1.0), width=1)
-        db = rt.component_wise("clamp", rt.binary("+", rt.unary("-", rt.component_wise("abs", rt.binary("-", dh, rt.f(4.0), 1), width=1)), rt.f(2.0), 1), rt.f(0.0), rt.f(1.0), width=1)
-        oms = rt.binary("-", rt.f(1.0), s, 1)
-        return rt.construct(3, rt.binary("*", rt.binary("+", oms, rt.binary("*", s, dr, 1), 1), v, 1), rt.binary("*", rt.binary("+", oms, rt.binary("*", s, dg, 1), 1), v, 1), rt.binary("*", rt.binary("+", oms, rt.binary("*", s, db, 1), 1), v, 1))
+        dh = rt.binary("*", h, rt.f(6.0), 1, "float")
+        dr = rt.component_wise("clamp", rt.binary("-", rt.component_wise("abs", rt.binary("-", dh, rt.f(3.0), 1, "float"), width=1), rt.f(1.0), 1, "float"), rt.f(0.0), rt.f(1.0), width=1)
+        dg = rt.component_wise("clamp", rt.binary("+", rt.unary("-", rt.component_wise("abs", rt.binary("-", dh, rt.f(2.0), 1, "float"), width=1)), rt.f(2.0), 1, "float"), rt.f(0.0), rt.f(1.0), width=1)
+        db = rt.component_wise("clamp", rt.binary("+", rt.unary("-", rt.component_wise("abs", rt.binary("-", dh, rt.f(4.0), 1, "float"), width=1)), rt.f(2.0), 1, "float"), rt.f(0.0), rt.f(1.0), width=1)
+        oms = rt.binary("-", rt.f(1.0), s, 1, "float")
+        return rt.construct(3, rt.binary("*", rt.binary("+", oms, rt.binary("*", s, dr, 1, "float"), 1, "float"), v, 1, "float"), rt.binary("*", rt.binary("+", oms, rt.binary("*", s, dg, 1, "float"), 1, "float"), v, 1, "float"), rt.binary("*", rt.binary("+", oms, rt.binary("*", s, db, 1, "float"), 1, "float"), v, 1, "float"))
     def main__void():
-        globalCoord = rt.binary("+", rt.swizzle(ctx.frag_coord, "xy"), _u_tileOffset, 2)
-        st = rt.binary("/", rt.swizzle(ctx.frag_coord, "xy"), rt.construct(2, rt.component_wise("max", rt.texture_size(_u_inputTex), cpu_ivec2__float(rt.i(1)), width=2)), 2)
+        globalCoord = rt.binary("+", rt.swizzle(ctx.frag_coord, "xy"), _u_tileOffset, 2, "float")
+        st = rt.binary("/", rt.swizzle(ctx.frag_coord, "xy"), rt.construct(2, rt.component_wise("max", rt.texture_size(_u_inputTex), rt.construct(2, rt.i(1), base="int"), width=2)), 2, "float")
         base = rt.texture(_u_inputTex, st)
         base_rgb = rt.component_wise("clamp", rt.swizzle(base, "rgb"), rt.f(0.0), rt.f(1.0), width=3)
-        m = rt.construct(1, _u_mode)
+        m = rt.construct(1, _u_mode, base="int")
         tinted = rt.construct(3, 0.0)
         if rt.binary("==", m, rt.i(1)):
-            tinted = rt.binary("*", base_rgb, _u_color, 3)
+            tinted = rt.binary("*", base_rgb, _u_color, 3, "float")
         else:
             if rt.binary("==", m, rt.i(2)):
                 tintHue = rt.swizzle(rgb_to_hsv__vec3(_u_color), "x")

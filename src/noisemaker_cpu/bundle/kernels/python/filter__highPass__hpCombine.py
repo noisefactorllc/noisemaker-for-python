@@ -13,11 +13,11 @@ def run_pixel(ctx, out):
         c = rt.copy(c)
         return rt.dot(c, rt.construct(3, rt.f(0.2126), rt.f(0.7152), rt.f(0.0722)))
     def main__void():
-        uv = rt.binary("/", rt.swizzle(ctx.frag_coord, "xy"), _u_resolution, 2)
+        uv = rt.binary("/", rt.swizzle(ctx.frag_coord, "xy"), _u_resolution, 2, "float")
         src = rt.texture(_u_inputTex, uv)
         blur = rt.texture(_u_blurTex, uv)
-        diff = rt.binary("-", rt.swizzle(src, "rgb"), rt.swizzle(blur, "rgb"), 3)
-        hp = (rt.construct(3, rt.binary("+", lum__vec3(diff), rt.f(0.5), 1)) if _u_mono else rt.binary("+", diff, rt.f(0.5), 3))
+        diff = rt.binary("-", rt.swizzle(src, "rgb"), rt.swizzle(blur, "rgb"), 3, "float")
+        hp = (rt.construct(3, rt.binary("+", lum__vec3(diff), rt.f(0.5), 1, "float")) if _u_mono else rt.binary("+", diff, rt.f(0.5), 3, "float"))
         g.fragColor = rt.construct(4, rt.component_wise("clamp", hp, rt.f(0.0), rt.f(1.0), width=3), rt.swizzle(src, "a"))
     main__void()
     _c = g.fragColor

@@ -16,17 +16,17 @@ def run_pixel(ctx, out):
     _u_wrap = U["wrap"]
     _u_inputTex = T["inputTex"]
     def main__void():
-        globalCoord = rt.binary("+", rt.swizzle(ctx.frag_coord, "xy"), _u_tileOffset, 2)
-        st = rt.binary("/", globalCoord, _u_fullResolution, 2)
+        globalCoord = rt.binary("+", rt.swizzle(ctx.frag_coord, "xy"), _u_tileOffset, 2, "float")
+        st = rt.binary("/", globalCoord, _u_fullResolution, 2, "float")
         c = rt.construct(2, rt.unary("-", _u_centerX), _u_centerY)
-        st = rt.binary("-", st, c, 2)
-        st = rt.assign_swizzle(st, "x", rt.binary("*", rt.swizzle(st, "x"), _u_aspect, 1))
-        st = rt.binary("/", st, rt.construct(2, _u_scaleX, _u_scaleY), 2)
-        st = rt.assign_swizzle(st, "x", rt.binary("/", rt.swizzle(st, "x"), _u_aspect, 1))
-        st = rt.binary("+", st, c, 2)
-        localUV = rt.binary("/", rt.binary("-", rt.binary("*", st, _u_fullResolution, 2), _u_tileOffset, 2), _u_resolution, 2)
+        st = rt.binary("-", st, c, 2, "float")
+        st = rt.assign_swizzle(st, "x", rt.binary("*", rt.swizzle(st, "x"), _u_aspect, 1, "float"))
+        st = rt.binary("/", st, rt.construct(2, _u_scaleX, _u_scaleY), 2, "float")
+        st = rt.assign_swizzle(st, "x", rt.binary("/", rt.swizzle(st, "x"), _u_aspect, 1, "float"))
+        st = rt.binary("+", st, c, 2, "float")
+        localUV = rt.binary("/", rt.binary("-", rt.binary("*", st, _u_fullResolution, 2, "float"), _u_tileOffset, 2, "float"), _u_resolution, 2, "float")
         if rt.binary("==", _u_wrap, rt.i(0)):
-            localUV = rt.component_wise("abs", rt.binary("-", rt.component_wise("mod", rt.binary("+", localUV, rt.f(1.0), 2), rt.f(2.0), width=2), rt.f(1.0), 2), width=2)
+            localUV = rt.component_wise("abs", rt.binary("-", rt.component_wise("mod", rt.binary("+", localUV, rt.f(1.0), 2, "float"), rt.f(2.0), width=2), rt.f(1.0), 2, "float"), width=2)
         else:
             if rt.binary("==", _u_wrap, rt.i(1)):
                 localUV = rt.component_wise("fract", localUV, width=2)

@@ -11,6 +11,9 @@ dependencies = ["numpy>=1.26"]
 
 [project.optional-dependencies]
 dev = ["pytest>=8"]
+# Build-time only: the transpiler (transpiler/) fetches + parses CDN shader
+# bundles. Not required at runtime.
+build = ["json5>=0.9"]
 
 [project.scripts]
 noisemaker-cpu = "noisemaker_cpu.cli:main"

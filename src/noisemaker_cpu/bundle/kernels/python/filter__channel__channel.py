@@ -12,8 +12,8 @@ def run_pixel(ctx, out):
     _u_scale = U["scale"]
     _u_offset = U["offset"]
     def main__void():
-        globalCoord = rt.binary("+", rt.swizzle(ctx.frag_coord, "xy"), _u_tileOffset, 2)
-        st = rt.binary("/", rt.binary("-", rt.swizzle(ctx.frag_coord, "xy"), rt.f(0.5), 2), rt.construct(2, rt.texture_size(_u_inputTex)), 2)
+        globalCoord = rt.binary("+", rt.swizzle(ctx.frag_coord, "xy"), _u_tileOffset, 2, "float")
+        st = rt.binary("/", rt.binary("-", rt.swizzle(ctx.frag_coord, "xy"), rt.f(0.5), 2, "float"), rt.construct(2, rt.texture_size(_u_inputTex)), 2, "float")
         c = rt.texture(_u_inputTex, st)
         v = rt.f(0.0)
         if rt.binary("==", _u_channel, rt.i(0)):
@@ -26,7 +26,7 @@ def run_pixel(ctx, out):
                     v = rt.swizzle(c, "b")
                 else:
                     v = rt.swizzle(c, "a")
-        v = rt.component_wise("fract", rt.binary("+", rt.binary("*", v, _u_scale, 1), _u_offset, 1), width=1)
+        v = rt.component_wise("fract", rt.binary("+", rt.binary("*", v, _u_scale, 1, "float"), _u_offset, 1, "float"), width=1)
         g.fragColor = rt.construct(4, rt.construct(3, v), rt.f(1.0))
     main__void()
     _c = g.fragColor

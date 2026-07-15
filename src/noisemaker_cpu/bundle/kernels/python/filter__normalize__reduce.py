@@ -8,25 +8,18 @@ def run_pixel(ctx, out):
     _u_tileOffset = U["tileOffset"]
     _u_fullResolution = U["fullResolution"]
     _u_inputTex = T["inputTex"]
-    def cpu_ivec2__float(value):
-        return rt.construct(2, value)
-    def cpu_ivec2__vec2(value):
-        value = rt.copy(value)
-        return value
-    def cpu_ivec2__float_float(v0, v1):
-        return rt.construct(2, v0, v1)
     def main__void():
-        globalCoord = rt.binary("+", rt.swizzle(ctx.frag_coord, "xy"), _u_tileOffset, 2)
-        outCoord = cpu_ivec2__vec2(rt.swizzle(ctx.frag_coord, "xy"))
+        globalCoord = rt.binary("+", rt.swizzle(ctx.frag_coord, "xy"), _u_tileOffset, 2, "float")
+        outCoord = rt.construct(2, rt.swizzle(ctx.frag_coord, "xy"), base="int")
         inSize = rt.texture_size(_u_inputTex)
-        baseCoord = rt.binary("*", outCoord, rt.i(16), 2)
+        baseCoord = rt.binary("*", outCoord, rt.i(16), 2, "int")
         minVal = rt.f(100000.0)
         maxVal = rt.unary("-", rt.f(100000.0))
         dy = rt.i(0)
         _for0_first = True
         for _for0 in range(1048576):
             if not _for0_first:
-                dy = rt.binary("+", dy, rt.i(1), 1)
+                dy = rt.binary("+", dy, rt.i(1), 1, "int")
             _for0_first = False
             if not (rt.binary("<", dy, rt.i(16))):
                 break
@@ -34,12 +27,12 @@ def run_pixel(ctx, out):
             _for1_first = True
             for _for1 in range(1048576):
                 if not _for1_first:
-                    dx = rt.binary("+", dx, rt.i(1), 1)
+                    dx = rt.binary("+", dx, rt.i(1), 1, "int")
                 _for1_first = False
                 if not (rt.binary("<", dx, rt.i(16))):
                     break
-                sampleCoord = rt.binary("+", baseCoord, cpu_ivec2__float_float(dx, dy), 2)
-                if rt.binary("||", rt.binary(">=", rt.swizzle(sampleCoord, "x"), rt.swizzle(inSize, "x")), rt.binary(">=", rt.swizzle(sampleCoord, "y"), rt.swizzle(inSize, "y"))):
+                sampleCoord = rt.binary("+", baseCoord, rt.construct(2, dx, dy, base="int"), 2, "int")
+                if (bool(rt.binary(">=", rt.swizzle(sampleCoord, "x"), rt.swizzle(inSize, "x"))) or bool(rt.binary(">=", rt.swizzle(sampleCoord, "y"), rt.swizzle(inSize, "y")))):
                     continue
                 color = rt.texel_fetch(_u_inputTex, sampleCoord, rt.i(0))
                 pixelMin = rt.component_wise("min", rt.component_wise("min", rt.swizzle(color, "r"), rt.swizzle(color, "g"), width=1), rt.swizzle(color, "b"), width=1)
