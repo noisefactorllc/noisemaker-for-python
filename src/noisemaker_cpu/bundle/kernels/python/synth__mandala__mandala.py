@@ -1,0 +1,117 @@
+def run_pixel(ctx, out):
+    rt = ctx.rt
+    U = ctx.uniforms
+    T = ctx.textures
+    class _G:
+        pass
+    g = _G()
+    _u_resolution = U["resolution"]
+    _u_tileOffset = U["tileOffset"]
+    _u_fullResolution = U["fullResolution"]
+    _u_aspect = U["aspect"]
+    _u_scale = U["scale"]
+    _u_rotation = U["rotation"]
+    _u_thickness = U["thickness"]
+    _u_smoothness = U["smoothness"]
+    _u_symmetry = U["symmetry"]
+    _u_layers = U["layers"]
+    _u_shape = U["shape"]
+    _u_layerSpacing = U["layerSpacing"]
+    _u_twist = U["twist"]
+    _u_shapeGrowth = U["shapeGrowth"]
+    _u_bindu = U["bindu"]
+    _u_animation = U["animation"]
+    _u_speed = U["speed"]
+    _u_pulseDepth = U["pulseDepth"]
+    _u_time = U["time"]
+    _u_fgColor = U["fgColor"]
+    _u_bgColor = U["bgColor"]
+    def rotate2D__vec2_float(p, angle):
+        p = rt.copy(p)
+        c = rt.component_wise("cos", angle, width=1)
+        s = rt.component_wise("sin", angle, width=1)
+        return rt.construct(2, rt.binary("-", rt.binary("*", rt.swizzle(p, "x"), c, 1), rt.binary("*", rt.swizzle(p, "y"), s, 1), 1), rt.binary("+", rt.binary("*", rt.swizzle(p, "x"), s, 1), rt.binary("*", rt.swizzle(p, "y"), c, 1), 1))
+    def sdEquilateralTriangle__vec2_float(p, r):
+        p = rt.copy(p)
+        k = rt.f(1.7320508075688772)
+        p = rt.assign_swizzle(p, "x", rt.binary("-", rt.component_wise("abs", rt.swizzle(p, "x"), width=1), r, 1))
+        p = rt.assign_swizzle(p, "y", rt.binary("+", rt.swizzle(p, "y"), rt.binary("/", r, k, 1), 1))
+        if rt.binary(">", rt.binary("+", rt.swizzle(p, "x"), rt.binary("*", k, rt.swizzle(p, "y"), 1), 1), rt.f(0.0)):
+            p = rt.binary("/", rt.construct(2, rt.binary("-", rt.swizzle(p, "x"), rt.binary("*", k, rt.swizzle(p, "y"), 1), 1), rt.binary("-", rt.binary("*", rt.unary("-", k), rt.swizzle(p, "x"), 1), rt.swizzle(p, "y"), 1)), rt.f(2.0), 2)
+        p = rt.assign_swizzle(p, "x", rt.binary("-", rt.swizzle(p, "x"), rt.component_wise("clamp", rt.swizzle(p, "x"), rt.binary("*", rt.unary("-", rt.f(2.0)), r, 1), rt.f(0.0), width=1), 1))
+        return rt.binary("*", rt.unary("-", rt.length(p)), rt.component_wise("sign", rt.swizzle(p, "y"), width=1), 1)
+    def fillEdge__float(d):
+        return rt.component_wise("smoothstep", _u_smoothness, rt.unary("-", _u_smoothness), d, width=1)
+    def mandalaMask__vec2(p):
+        p = rt.copy(p)
+        r = rt.length(p)
+        theta = rt.binary("-", rt.component_wise("atan", rt.swizzle(p, "y"), rt.swizzle(p, "x"), width=1), rt.binary("*", rt.f(3.14159265359), rt.f(0.5), 1), 1)
+        wedge = rt.binary("/", rt.f(6.28318530718), _u_symmetry, 1)
+        twistRad = rt.binary("/", rt.binary("*", _u_twist, rt.f(3.14159265359), 1), rt.f(180.0), 1)
+        baseSize = rt.binary("+", rt.f(0.25), rt.binary("*", _u_thickness, rt.f(0.65), 1), 1)
+        dynTwistRad = twistRad
+        if rt.binary("==", _u_animation, rt.i(5)):
+            dynTwistRad = rt.binary("*", twistRad, rt.component_wise("sin", rt.binary("*", rt.binary("*", _u_time, rt.f(6.28318530718), 1), rt.component_wise("floor", _u_speed, width=1), 1), width=1), 1)
+        m = rt.f(0.0)
+        if _u_bindu:
+            dBindu = rt.binary("-", rt.length(p), rt.binary("+", rt.f(0.15), rt.binary("*", _u_thickness, rt.f(0.15), 1), 1), 1)
+            m = rt.component_wise("max", m, fillEdge__float(dBindu), width=1)
+        i = rt.i(0)
+        _for0_first = True
+        for _for0 in range(1048576):
+            if not _for0_first:
+                i = rt.binary("+", i, rt.i(1), 1)
+            _for0_first = False
+            if not (rt.binary("<", i, rt.i(12))):
+                break
+            if rt.binary(">=", i, _u_layers):
+                break
+            Rlayer = rt.binary("*", rt.construct(1, rt.binary("+", i, rt.i(1), 1)), _u_layerSpacing, 1)
+            layerAnimRot = rt.f(0.0)
+            if rt.binary("==", _u_animation, rt.i(3)):
+                layerAnimRot = rt.binary("*", rt.binary("*", _u_time, rt.f(6.28318530718), 1), rt.binary("+", rt.component_wise("floor", _u_speed, width=1), i, 1), 1)
+            else:
+                if rt.binary("==", _u_animation, rt.i(4)):
+                    dir = (rt.f(1.0) if rt.binary("<", rt.component_wise("mod", i, rt.f(2.0), width=1), rt.f(0.5)) else rt.unary("-", rt.f(1.0)))
+                    layerAnimRot = rt.binary("*", rt.binary("*", rt.binary("*", _u_time, rt.f(6.28318530718), 1), rt.component_wise("floor", _u_speed, width=1), 1), dir, 1)
+            layerTheta = rt.binary("-", rt.binary("-", theta, rt.binary("*", i, dynTwistRad, 1), 1), layerAnimRot, 1)
+            folded = rt.component_wise("abs", rt.binary("-", rt.component_wise("mod", rt.binary("+", layerTheta, rt.binary("*", wedge, rt.f(0.5), 1), 1), wedge, width=1), rt.binary("*", wedge, rt.f(0.5), 1), 1), width=1)
+            radial = rt.binary("-", r, Rlayer, 1)
+            tangent = rt.binary("*", folded, Rlayer, 1)
+            lt = rt.f(0.0)
+            if rt.binary(">", _u_layers, rt.i(1)):
+                lt = rt.binary("-", rt.binary("/", i, rt.construct(1, rt.binary("-", _u_layers, rt.i(1), 1)), 1), rt.f(0.5), 1)
+            shapeSize = rt.binary("*", baseSize, rt.binary("+", rt.f(1.0), rt.binary("*", _u_shapeGrowth, lt, 1), 1), 1)
+            if rt.binary("==", _u_animation, rt.i(6)):
+                shapeSize = rt.binary("*", shapeSize, rt.binary("+", rt.f(1.0), rt.binary("*", _u_pulseDepth, rt.component_wise("sin", rt.binary("-", rt.binary("*", rt.binary("*", _u_time, rt.f(6.28318530718), 1), rt.component_wise("floor", _u_speed, width=1), 1), rt.binary("*", i, rt.f(0.6), 1), 1), width=1), 1), 1), 1)
+            if rt.binary("==", _u_shape, rt.i(0)):
+                d = rt.binary("-", rt.length(rt.construct(2, rt.binary("*", radial, rt.f(0.55), 1), tangent)), shapeSize, 1)
+                m = rt.component_wise("max", m, fillEdge__float(d), width=1)
+            else:
+                if rt.binary("==", _u_shape, rt.i(1)):
+                    q = rt.construct(2, tangent, rt.unary("-", radial))
+                    d = sdEquilateralTriangle__vec2_float(q, shapeSize)
+                    m = rt.component_wise("max", m, fillEdge__float(d), width=1)
+                else:
+                    d = rt.binary("-", rt.length(rt.construct(2, radial, tangent)), rt.binary("*", shapeSize, rt.f(0.7), 1), 1)
+                    m = rt.component_wise("max", m, fillEdge__float(d), width=1)
+        return m
+    def main__void():
+        globalCoord = rt.binary("+", rt.swizzle(ctx.frag_coord, "xy"), _u_tileOffset, 2)
+        st = rt.binary("/", globalCoord, _u_fullResolution, 2)
+        st = rt.binary("*", rt.binary("-", st, rt.f(0.5), 2), rt.f(2.0), 2)
+        st = rt.assign_swizzle(st, "x", rt.binary("*", rt.swizzle(st, "x"), _u_aspect, 1))
+        rad = rt.binary("/", rt.binary("*", _u_rotation, rt.f(3.14159265359), 1), rt.f(180.0), 1)
+        st = rotate2D__vec2_float(st, rad)
+        if rt.binary("==", _u_animation, rt.i(1)):
+            st = rotate2D__vec2_float(st, rt.binary("*", rt.binary("*", _u_time, rt.f(6.28318530718), 1), rt.component_wise("floor", _u_speed, width=1), 1))
+        scaleFactor = rt.binary("-", rt.f(21.0), _u_scale, 1)
+        if rt.binary("==", _u_animation, rt.i(2)):
+            scaleFactor = rt.binary("*", scaleFactor, rt.binary("+", rt.f(1.0), rt.binary("*", _u_pulseDepth, rt.component_wise("sin", rt.binary("*", rt.binary("*", _u_time, rt.f(6.28318530718), 1), rt.component_wise("floor", _u_speed, width=1), 1), width=1), 1), 1), 1)
+        p = rt.binary("*", st, scaleFactor, 2)
+        m = rt.component_wise("clamp", mandalaMask__vec2(p), rt.f(0.0), rt.f(1.0), width=1)
+        color = rt.component_wise("mix", _u_bgColor, _u_fgColor, m, width=3)
+        g.fragColor = rt.construct(4, color, rt.f(1.0))
+    main__void()
+    _c = g.fragColor
+    out[0] = rt.f32(_c[0]); out[1] = rt.f32(_c[1]); out[2] = rt.f32(_c[2]); out[3] = rt.f32(_c[3])

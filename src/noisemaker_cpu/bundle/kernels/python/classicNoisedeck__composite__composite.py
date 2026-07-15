@@ -1,0 +1,172 @@
+def run_pixel(ctx, out):
+    rt = ctx.rt
+    U = ctx.uniforms
+    T = ctx.textures
+    class _G:
+        pass
+    g = _G()
+    _u_inputTex = T["inputTex"]
+    _u_tex = T["tex"]
+    _u_resolution = U["resolution"]
+    _u_tileOffset = U["tileOffset"]
+    _u_fullResolution = U["fullResolution"]
+    _u_time = U["time"]
+    _u_inputColor = U["inputColor"]
+    _u_blendMode = U["blendMode"]
+    _u_range = U["range"]
+    _u_mixAmt = U["mixAmt"]
+    def hsv2rgb__vec3(hsv):
+        hsv = rt.copy(hsv)
+        h = rt.component_wise("fract", rt.swizzle(hsv, "x"), width=1)
+        s = rt.swizzle(hsv, "y")
+        v = rt.swizzle(hsv, "z")
+        c = rt.binary("*", v, s, 1)
+        x = rt.binary("*", c, rt.binary("-", rt.f(1.0), rt.component_wise("abs", rt.binary("-", rt.component_wise("mod", rt.binary("*", h, rt.f(6.0), 1), rt.f(2.0), width=1), rt.f(1.0), 1), width=1), 1), 1)
+        m = rt.binary("-", v, c, 1)
+        rgb = rt.construct(3, 0.0)
+        if rt.binary("&&", rt.binary("<=", rt.f(0.0), h), rt.binary("<", h, rt.binary("/", rt.f(1.0), rt.f(6.0), 1))):
+            rgb = rt.construct(3, c, x, rt.f(0.0))
+        else:
+            if rt.binary("&&", rt.binary("<=", rt.binary("/", rt.f(1.0), rt.f(6.0), 1), h), rt.binary("<", h, rt.binary("/", rt.f(2.0), rt.f(6.0), 1))):
+                rgb = rt.construct(3, x, c, rt.f(0.0))
+            else:
+                if rt.binary("&&", rt.binary("<=", rt.binary("/", rt.f(2.0), rt.f(6.0), 1), h), rt.binary("<", h, rt.binary("/", rt.f(3.0), rt.f(6.0), 1))):
+                    rgb = rt.construct(3, rt.f(0.0), c, x)
+                else:
+                    if rt.binary("&&", rt.binary("<=", rt.binary("/", rt.f(3.0), rt.f(6.0), 1), h), rt.binary("<", h, rt.binary("/", rt.f(4.0), rt.f(6.0), 1))):
+                        rgb = rt.construct(3, rt.f(0.0), x, c)
+                    else:
+                        if rt.binary("&&", rt.binary("<=", rt.binary("/", rt.f(4.0), rt.f(6.0), 1), h), rt.binary("<", h, rt.binary("/", rt.f(5.0), rt.f(6.0), 1))):
+                            rgb = rt.construct(3, x, rt.f(0.0), c)
+                        else:
+                            if rt.binary("&&", rt.binary("<=", rt.binary("/", rt.f(5.0), rt.f(6.0), 1), h), rt.binary("<", h, rt.f(1.0))):
+                                rgb = rt.construct(3, c, rt.f(0.0), x)
+                            else:
+                                rgb = rt.construct(3, rt.f(0.0), rt.f(0.0), rt.f(0.0))
+        return rt.binary("+", rgb, rt.construct(3, m, m, m), 3)
+    def rgb2hsv__vec3(rgb):
+        rgb = rt.copy(rgb)
+        r = rt.swizzle(rgb, "r")
+        g = rt.swizzle(rgb, "g")
+        b = rt.swizzle(rgb, "b")
+        _max = rt.component_wise("max", r, rt.component_wise("max", g, b, width=1), width=1)
+        _min = rt.component_wise("min", r, rt.component_wise("min", g, b, width=1), width=1)
+        delta = rt.binary("-", _max, _min, 1)
+        h = rt.f(0.0)
+        if rt.binary("!=", delta, rt.f(0.0)):
+            if rt.binary("==", _max, r):
+                h = rt.binary("/", rt.component_wise("mod", rt.binary("/", rt.binary("-", g, b, 1), delta, 1), rt.f(6.0), width=1), rt.f(6.0), 1)
+            else:
+                if rt.binary("==", _max, g):
+                    h = rt.binary("/", rt.binary("+", rt.binary("/", rt.binary("-", b, r, 1), delta, 1), rt.f(2.0), 1), rt.f(6.0), 1)
+                else:
+                    if rt.binary("==", _max, b):
+                        h = rt.binary("/", rt.binary("+", rt.binary("/", rt.binary("-", r, g, 1), delta, 1), rt.f(4.0), 1), rt.f(6.0), 1)
+        s = (rt.f(0.0) if rt.binary("==", _max, rt.f(0.0)) else rt.binary("/", delta, _max, 1))
+        v = _max
+        return rt.construct(3, h, s, v)
+    def desaturate__vec3(color):
+        color = rt.copy(color)
+        c = rgb2hsv__vec3(color)
+        c = rt.assign_swizzle(c, "g", rt.f(0.0))
+        return hsv2rgb__vec3(c)
+    def blend__vec3_vec3(color1, color2):
+        color1 = rt.copy(color1)
+        color2 = rt.copy(color2)
+        color = rt.construct(3, rt.f(0.0))
+        cut = rt.binary("*", _u_range, rt.f(0.01), 1)
+        if rt.binary("==", _u_blendMode, rt.i(0)):
+            if rt.binary(">", rt.distance(_u_inputColor, color1), rt.binary("*", _u_range, rt.f(0.01), 1)):
+                color1 = desaturate__vec3(color1)
+            if rt.binary(">", rt.distance(_u_inputColor, color2), rt.binary("*", _u_range, rt.f(0.01), 1)):
+                color2 = desaturate__vec3(color2)
+            color = rt.component_wise("mix", color1, color2, rt.binary("*", _u_mixAmt, rt.f(0.01), 1), width=3)
+        else:
+            if rt.binary("==", _u_blendMode, rt.i(1)):
+                if rt.binary("<=", rt.distance(_u_inputColor, color1), rt.binary("*", _u_range, rt.f(0.01), 1)):
+                    color = color2
+                else:
+                    color = rt.component_wise("mix", color1, color2, rt.binary("*", _u_mixAmt, rt.f(0.01), 1), width=3)
+            else:
+                if rt.binary("==", _u_blendMode, rt.i(2)):
+                    if rt.binary("<=", rt.distance(_u_inputColor, color2), rt.binary("*", _u_range, rt.f(0.01), 1)):
+                        color = color1
+                    else:
+                        color = rt.component_wise("mix", color2, color1, rt.binary("*", _u_mixAmt, rt.f(0.01), 1), width=3)
+                else:
+                    if rt.binary("==", _u_blendMode, rt.i(3)):
+                        c = rt.binary("-", rt.f(1.0), rt.component_wise("step", cut, rt.swizzle(desaturate__vec3(color2), "r"), width=1), 1)
+                        color2 = rt.component_wise("mix", color1, rt.construct(3, rt.f(0.0)), c, width=3)
+                        color = rt.component_wise("mix", color1, color2, rt.binary("*", _u_mixAmt, rt.f(0.01), 1), width=3)
+                    else:
+                        if rt.binary("==", _u_blendMode, rt.i(4)):
+                            c = rt.binary("-", rt.f(1.0), rt.component_wise("step", cut, color2, width=3), 3)
+                            color2 = rt.component_wise("mix", color1, rt.construct(3, rt.f(0.0)), c, width=3)
+                            color = rt.component_wise("mix", color1, color2, rt.binary("*", _u_mixAmt, rt.f(0.01), 1), width=3)
+                        else:
+                            if rt.binary("==", _u_blendMode, rt.i(5)):
+                                c = rt.swizzle(rgb2hsv__vec3(color2), "r")
+                                color2 = rt.component_wise("mix", color1, color2, rt.binary("*", c, cut, 1), width=3)
+                                color = rt.component_wise("mix", color1, color2, rt.binary("*", _u_mixAmt, rt.f(0.01), 1), width=3)
+                            else:
+                                if rt.binary("==", _u_blendMode, rt.i(6)):
+                                    c = rt.swizzle(rgb2hsv__vec3(color2), "g")
+                                    color2 = rt.component_wise("mix", color1, color2, rt.binary("*", c, cut, 1), width=3)
+                                    color = rt.component_wise("mix", color1, color2, rt.binary("*", _u_mixAmt, rt.f(0.01), 1), width=3)
+                                else:
+                                    if rt.binary("==", _u_blendMode, rt.i(7)):
+                                        c = rt.swizzle(rgb2hsv__vec3(color2), "b")
+                                        color2 = rt.component_wise("mix", color1, color2, rt.binary("*", c, cut, 1), width=3)
+                                        color = rt.component_wise("mix", color1, color2, rt.binary("*", _u_mixAmt, rt.f(0.01), 1), width=3)
+                                    else:
+                                        if rt.binary("==", _u_blendMode, rt.i(8)):
+                                            c = rt.binary("-", rt.f(1.0), rt.component_wise("step", cut, rt.swizzle(desaturate__vec3(color1), "r"), width=1), 1)
+                                            color1 = rt.component_wise("mix", color2, rt.construct(3, rt.f(0.0)), c, width=3)
+                                            color = rt.component_wise("mix", color2, color1, rt.binary("*", _u_mixAmt, rt.f(0.01), 1), width=3)
+                                        else:
+                                            if rt.binary("==", _u_blendMode, rt.i(9)):
+                                                c = rt.binary("-", rt.f(1.0), rt.component_wise("step", cut, color1, width=3), 3)
+                                                color1 = rt.component_wise("mix", color2, rt.construct(3, rt.f(0.0)), c, width=3)
+                                                color = rt.component_wise("mix", color2, color1, rt.binary("*", _u_mixAmt, rt.f(0.01), 1), width=3)
+                                            else:
+                                                if rt.binary("==", _u_blendMode, rt.i(10)):
+                                                    c = rt.swizzle(rgb2hsv__vec3(color1), "r")
+                                                    color1 = rt.component_wise("mix", color1, color2, rt.binary("*", c, cut, 1), width=3)
+                                                    color = rt.component_wise("mix", color2, color1, rt.binary("*", _u_mixAmt, rt.f(0.01), 1), width=3)
+                                                else:
+                                                    if rt.binary("==", _u_blendMode, rt.i(11)):
+                                                        c = rt.swizzle(rgb2hsv__vec3(color1), "g")
+                                                        color1 = rt.component_wise("mix", color1, color2, rt.binary("*", c, cut, 1), width=3)
+                                                        color = rt.component_wise("mix", color2, color1, rt.binary("*", _u_mixAmt, rt.f(0.01), 1), width=3)
+                                                    else:
+                                                        if rt.binary("==", _u_blendMode, rt.i(12)):
+                                                            c = rt.swizzle(rgb2hsv__vec3(color1), "b")
+                                                            color1 = rt.component_wise("mix", color1, color2, rt.binary("*", c, cut, 1), width=3)
+                                                            color = rt.component_wise("mix", color2, color1, rt.binary("*", _u_mixAmt, rt.f(0.01), 1), width=3)
+                                                        else:
+                                                            if rt.binary("==", _u_blendMode, rt.i(13)):
+                                                                color2 = rt.component_wise("mix", color1, color2, cut, width=3)
+                                                                color = rt.component_wise("mix", color1, color2, rt.binary("*", _u_mixAmt, rt.f(0.01), 1), width=3)
+                                                            else:
+                                                                if rt.binary("==", _u_blendMode, rt.i(14)):
+                                                                    c = rt.component_wise("step", cut, rt.component_wise("mix", color1, color2, rt.f(0.5), width=3), width=3)
+                                                                    color2 = rt.component_wise("mix", color1, color2, c, width=3)
+                                                                    color = rt.component_wise("mix", color1, color2, rt.binary("*", _u_mixAmt, rt.f(0.01), 1), width=3)
+                                                                else:
+                                                                    if rt.binary("==", _u_blendMode, rt.i(15)):
+                                                                        c1 = rt.component_wise("smoothstep", color1, rt.construct(3, cut), color2, width=3)
+                                                                        c2 = rt.component_wise("smoothstep", color2, rt.construct(3, cut), color1, width=3)
+                                                                        color = rt.component_wise("mix", rt.swizzle(c1, "brg"), rt.swizzle(c2, "gbr"), rt.binary("*", _u_mixAmt, rt.f(0.01), 1), width=3)
+        return color
+    def main__void():
+        globalCoord = rt.binary("+", rt.swizzle(ctx.frag_coord, "xy"), _u_tileOffset, 2)
+        color = rt.construct(4, rt.f(0.0), rt.f(0.0), rt.f(1.0), rt.f(1.0))
+        st = rt.binary("/", globalCoord, _u_fullResolution, 2)
+        color1 = rt.texture(_u_inputTex, rt.binary("/", rt.swizzle(ctx.frag_coord, "xy"), rt.construct(2, rt.texture_size(_u_inputTex)), 2))
+        color2 = rt.texture(_u_tex, rt.binary("/", rt.swizzle(ctx.frag_coord, "xy"), rt.construct(2, rt.texture_size(_u_tex)), 2))
+        color = rt.assign_swizzle(color, "rgb", blend__vec3_vec3(rt.swizzle(color1, "rgb"), rt.swizzle(color2, "rgb")))
+        color = rt.assign_swizzle(color, "a", rt.component_wise("mix", rt.swizzle(color1, "a"), rt.swizzle(color2, "a"), rt.binary("*", _u_mixAmt, rt.f(0.01), 1), width=1))
+        g.fragColor = color
+    main__void()
+    _c = g.fragColor
+    out[0] = rt.f32(_c[0]); out[1] = rt.f32(_c[1]); out[2] = rt.f32(_c[2]); out[3] = rt.f32(_c[3])

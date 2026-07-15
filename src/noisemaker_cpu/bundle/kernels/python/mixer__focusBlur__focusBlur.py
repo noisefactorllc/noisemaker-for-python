@@ -1,0 +1,56 @@
+def run_pixel(ctx, out):
+    rt = ctx.rt
+    U = ctx.uniforms
+    T = ctx.textures
+    class _G:
+        pass
+    g = _G()
+    _u_inputTex = T["inputTex"]
+    _u_tex = T["tex"]
+    _u_resolution = U["resolution"]
+    _u_tileOffset = U["tileOffset"]
+    _u_fullResolution = U["fullResolution"]
+    _u_focalDistance = U["focalDistance"]
+    _u_aperture = U["aperture"]
+    _u_sampleBias = U["sampleBias"]
+    _u_depthSource = U["depthSource"]
+    def getLuminosity__vec3(color):
+        color = rt.copy(color)
+        return rt.dot(color, rt.construct(3, rt.f(0.2126), rt.f(0.7152), rt.f(0.0722)))
+    def computeBlurFactor__float(depth):
+        focalPlane = rt.binary("*", _u_focalDistance, rt.f(0.01), 1)
+        blur = rt.binary("*", rt.component_wise("abs", rt.binary("-", depth, focalPlane, 1), width=1), _u_aperture, 1)
+        return rt.component_wise("clamp", blur, rt.f(0.0), rt.f(1.0), width=1)
+    def applyFocusBlur__sampler2D_sampler2D_vec2(sceneTex, depthTex, uv):
+        uv = rt.copy(uv)
+        depthSample = rt.texture(depthTex, rt.binary("/", rt.swizzle(ctx.frag_coord, "xy"), rt.construct(2, rt.texture_size(depthTex)), 2))
+        depth = getLuminosity__vec3(rt.swizzle(depthSample, "rgb"))
+        blurRadius = rt.binary("*", computeBlurFactor__float(depth), _u_sampleBias, 1)
+        color = rt.construct(4, rt.f(0.0))
+        GOLDEN = rt.f(2.399963)
+        i = rt.i(0)
+        _for0_first = True
+        for _for0 in range(1048576):
+            if not _for0_first:
+                i = rt.binary("+", i, rt.i(1), 1)
+            _for0_first = False
+            if not (rt.binary("<", i, rt.i(64))):
+                break
+            r = rt.component_wise("sqrt", rt.binary("/", i, rt.f(64.0), 1), width=1)
+            theta = rt.binary("*", i, GOLDEN, 1)
+            offset = rt.binary("/", rt.binary("*", rt.binary("*", rt.construct(2, rt.component_wise("cos", theta, width=1), rt.component_wise("sin", theta, width=1)), r, 2), blurRadius, 2), _u_resolution, 2)
+            color = rt.binary("+", color, rt.texture(sceneTex, rt.binary("/", rt.binary("-", rt.binary("*", rt.binary("+", uv, offset, 2), _u_fullResolution, 2), _u_tileOffset, 2), rt.construct(2, rt.texture_size(sceneTex)), 2)), 4)
+        return rt.binary("/", color, rt.f(64.0), 4)
+    def main__void():
+        globalCoord = rt.binary("+", rt.swizzle(ctx.frag_coord, "xy"), _u_tileOffset, 2)
+        uv = rt.binary("/", globalCoord, _u_fullResolution, 2)
+        color = rt.construct(4, 0.0)
+        if rt.binary("==", _u_depthSource, rt.i(0)):
+            color = applyFocusBlur__sampler2D_sampler2D_vec2(_u_tex, _u_inputTex, uv)
+        else:
+            color = applyFocusBlur__sampler2D_sampler2D_vec2(_u_inputTex, _u_tex, uv)
+        color = rt.assign_swizzle(color, "a", rt.component_wise("max", rt.swizzle(rt.texture(_u_inputTex, rt.binary("/", rt.swizzle(ctx.frag_coord, "xy"), rt.construct(2, rt.texture_size(_u_inputTex)), 2)), "a"), rt.swizzle(rt.texture(_u_tex, rt.binary("/", rt.swizzle(ctx.frag_coord, "xy"), rt.construct(2, rt.texture_size(_u_tex)), 2)), "a"), width=1))
+        g.fragColor = color
+    main__void()
+    _c = g.fragColor
+    out[0] = rt.f32(_c[0]); out[1] = rt.f32(_c[1]); out[2] = rt.f32(_c[2]); out[3] = rt.f32(_c[3])

@@ -1,0 +1,306 @@
+def run_pixel(ctx, out):
+    rt = ctx.rt
+    U = ctx.uniforms
+    T = ctx.textures
+    class _G:
+        pass
+    g = _G()
+    _u_resolution = U["resolution"]
+    _u_tileOffset = U["tileOffset"]
+    _u_fullResolution = U["fullResolution"]
+    _u_time = U["time"]
+    _u_cReal = U["cReal"]
+    _u_cImag = U["cImag"]
+    _u_poi = U["poi"]
+    _u_outputMode = U["outputMode"]
+    _u_centerX = U["centerX"]
+    _u_centerY = U["centerY"]
+    _u_rotation = U["rotation"]
+    _u_iterations = U["iterations"]
+    _u_stripeFreq = U["stripeFreq"]
+    _u_trapShape = U["trapShape"]
+    _u_lightAngle = U["lightAngle"]
+    _u_cPath = U["cPath"]
+    _u_cSpeed = U["cSpeed"]
+    _u_cRadius = U["cRadius"]
+    _u_invert = U["invert"]
+    _u_zoomSpeed = U["zoomSpeed"]
+    _u_zoomDepth = U["zoomDepth"]
+    g.PI = rt.f(3.14159265359)
+    g.TAU = rt.f(6.28318530718)
+    g.BAILOUT = rt.f(256.0)
+    g.LOG2 = rt.f(0.6931471805599453)
+    g.df64_split_const = rt.f(4097.0)
+    def getPOI__int(idx):
+        if rt.binary("==", idx, rt.i(1)):
+            return rt.construct(2, rt.unary("-", rt.f(0.123)), rt.f(0.745))
+        if rt.binary("==", idx, rt.i(2)):
+            return rt.construct(2, rt.unary("-", rt.f(0.3905)), rt.f(0.5868))
+        if rt.binary("==", idx, rt.i(3)):
+            return rt.construct(2, rt.f(0.0), rt.f(1.0))
+        if rt.binary("==", idx, rt.i(4)):
+            return rt.construct(2, rt.unary("-", rt.f(1.0)), rt.f(0.0))
+        if rt.binary("==", idx, rt.i(5)):
+            return rt.construct(2, rt.unary("-", rt.f(0.7455)), rt.f(0.1130))
+        if rt.binary("==", idx, rt.i(6)):
+            return rt.construct(2, rt.unary("-", rt.f(0.0986)), rt.f(0.6534))
+        if rt.binary("==", idx, rt.i(7)):
+            return rt.construct(2, rt.unary("-", rt.f(0.8)), rt.f(0.156))
+        if rt.binary("==", idx, rt.i(8)):
+            return rt.construct(2, rt.unary("-", rt.f(0.75)), rt.f(0.0))
+        if rt.binary("==", idx, rt.i(9)):
+            return rt.construct(2, rt.unary("-", rt.f(0.5792)), rt.f(0.5385))
+        if rt.binary("==", idx, rt.i(10)):
+            return rt.construct(2, rt.f(0.28), rt.f(0.008))
+        return rt.construct(2, rt.unary("-", rt.f(0.123)), rt.f(0.745))
+    def getAnimatedC__int_float_float(pathType, t, radius):
+        theta = rt.binary("*", t, g.TAU, 1)
+        if rt.binary("==", pathType, rt.i(1)):
+            return rt.construct(2, rt.binary("-", rt.binary("*", rt.component_wise("cos", theta, width=1), rt.f(0.5), 1), rt.binary("*", rt.component_wise("cos", rt.binary("*", rt.f(2.0), theta, 1), width=1), rt.f(0.25), 1), 1), rt.binary("-", rt.binary("*", rt.component_wise("sin", theta, width=1), rt.f(0.5), 1), rt.binary("*", rt.component_wise("sin", rt.binary("*", rt.f(2.0), theta, 1), width=1), rt.f(0.25), 1), 1))
+        if rt.binary("==", pathType, rt.i(2)):
+            return rt.binary("*", rt.construct(2, rt.component_wise("cos", theta, width=1), rt.component_wise("sin", theta, width=1)), radius, 2)
+        if rt.binary("==", pathType, rt.i(3)):
+            return rt.construct(2, rt.binary("+", rt.unary("-", rt.f(1.0)), rt.binary("*", rt.component_wise("cos", theta, width=1), rt.f(0.25), 1), 1), rt.binary("*", rt.component_wise("sin", theta, width=1), rt.f(0.25), 1))
+        return rt.construct(2, rt.f(0.0))
+    def cmul__vec2_vec2(a, b):
+        a = rt.copy(a)
+        b = rt.copy(b)
+        return rt.construct(2, rt.binary("-", rt.binary("*", rt.swizzle(a, "x"), rt.swizzle(b, "x"), 1), rt.binary("*", rt.swizzle(a, "y"), rt.swizzle(b, "y"), 1), 1), rt.binary("+", rt.binary("*", rt.swizzle(a, "x"), rt.swizzle(b, "y"), 1), rt.binary("*", rt.swizzle(a, "y"), rt.swizzle(b, "x"), 1), 1))
+    def df64_from__float(a):
+        return rt.construct(2, a, rt.f(0.0))
+    def df64_add__vec2_vec2(a, b):
+        a = rt.copy(a)
+        b = rt.copy(b)
+        s = rt.binary("+", rt.swizzle(a, "x"), rt.swizzle(b, "x"), 1)
+        v = rt.binary("-", s, rt.swizzle(a, "x"), 1)
+        e = rt.binary("+", rt.binary("-", rt.swizzle(a, "x"), rt.binary("-", s, v, 1), 1), rt.binary("-", rt.swizzle(b, "x"), v, 1), 1)
+        return rt.construct(2, s, rt.binary("+", rt.binary("+", e, rt.swizzle(a, "y"), 1), rt.swizzle(b, "y"), 1))
+    def df64_sub__vec2_vec2(a, b):
+        a = rt.copy(a)
+        b = rt.copy(b)
+        return df64_add__vec2_vec2(a, rt.construct(2, rt.unary("-", rt.swizzle(b, "x")), rt.unary("-", rt.swizzle(b, "y"))))
+    def df64_split__float_float_float(a, hi, lo):
+        t = rt.binary("*", g.df64_split_const, a, 1)
+        hi = rt.binary("-", t, rt.binary("-", t, a, 1), 1)
+        lo = rt.binary("-", a, hi, 1)
+    def df64_mul__vec2_vec2(a, b):
+        a = rt.copy(a)
+        b = rt.copy(b)
+        p = rt.binary("*", rt.swizzle(a, "x"), rt.swizzle(b, "x"), 1)
+        ahi = rt.f(0.0)
+        alo = rt.f(0.0)
+        bhi = rt.f(0.0)
+        blo = rt.f(0.0)
+        df64_split__float_float_float(rt.swizzle(a, "x"), ahi, alo)
+        df64_split__float_float_float(rt.swizzle(b, "x"), bhi, blo)
+        e = rt.binary("+", rt.binary("+", rt.binary("+", rt.binary("-", rt.binary("*", ahi, bhi, 1), p, 1), rt.binary("*", ahi, blo, 1), 1), rt.binary("*", alo, bhi, 1), 1), rt.binary("*", alo, blo, 1), 1)
+        e = rt.binary("+", e, rt.binary("+", rt.binary("*", rt.swizzle(a, "x"), rt.swizzle(b, "y"), 1), rt.binary("*", rt.swizzle(a, "y"), rt.swizzle(b, "x"), 1), 1), 1)
+        return rt.construct(2, p, e)
+    def df64_mul_f__vec2_float(a, b):
+        a = rt.copy(a)
+        p = rt.binary("*", rt.swizzle(a, "x"), b, 1)
+        ahi = rt.f(0.0)
+        alo = rt.f(0.0)
+        bhi = rt.f(0.0)
+        blo = rt.f(0.0)
+        df64_split__float_float_float(rt.swizzle(a, "x"), ahi, alo)
+        df64_split__float_float_float(b, bhi, blo)
+        e = rt.binary("+", rt.binary("+", rt.binary("+", rt.binary("-", rt.binary("*", ahi, bhi, 1), p, 1), rt.binary("*", ahi, blo, 1), 1), rt.binary("*", alo, bhi, 1), 1), rt.binary("*", alo, blo, 1), 1)
+        e = rt.binary("+", e, rt.binary("*", rt.swizzle(a, "y"), b, 1), 1)
+        return rt.construct(2, p, e)
+    def resolveC__void():
+        if rt.binary(">", _u_poi, rt.i(0)):
+            return getPOI__int(_u_poi)
+        if rt.binary(">", _u_cPath, rt.i(0)):
+            return getAnimatedC__int_float_float(_u_cPath, rt.binary("*", _u_time, _u_cSpeed, 1), _u_cRadius)
+        return rt.construct(2, _u_cReal, _u_cImag)
+    def transformCoords__vec2_float_vec2_vec2(fragCoord, zm, reDF, imDF):
+        fragCoord = rt.copy(fragCoord)
+        reDF = rt.copy(reDF)
+        imDF = rt.copy(imDF)
+        uv = rt.binary("/", rt.binary("-", fragCoord, rt.binary("*", rt.f(0.5), _u_fullResolution, 2), 2), rt.component_wise("min", rt.swizzle(_u_fullResolution, "x"), rt.swizzle(_u_fullResolution, "y"), width=1), 2)
+        angle = rt.binary("/", rt.binary("*", rt.unary("-", _u_rotation), g.TAU, 1), rt.f(360.0), 1)
+        cs = rt.component_wise("cos", angle, width=1)
+        sn = rt.component_wise("sin", angle, width=1)
+        uv = rt.binary("*", rt.construct(4, cs, rt.unary("-", sn), sn, cs), uv, 4)
+        scale = rt.binary("/", rt.f(2.5), zm, 1)
+        reDF = df64_add__vec2_vec2(df64_mul_f__vec2_float(df64_from__float(rt.swizzle(uv, "x")), scale), df64_from__float(_u_centerX))
+        imDF = df64_add__vec2_vec2(df64_mul_f__vec2_float(df64_from__float(rt.swizzle(uv, "y")), scale), df64_from__float(_u_centerY))
+    def juliaIterate__vec2_vec2_vec2_int_float_int(z0Re, z0Im, c, maxIter, freq, trap):
+        z0Re = rt.copy(z0Re)
+        z0Im = rt.copy(z0Im)
+        c = rt.copy(c)
+        r = rt.f(0.0)
+        zRe = z0Re
+        zIm = z0Im
+        dz = rt.construct(2, rt.f(1.0), rt.f(0.0))
+        i = rt.f(0.0)
+        stripeSum = rt.f(0.0)
+        stripeLast = rt.f(0.0)
+        stripeCount = rt.f(0.0)
+        trapMin = rt.f(1e10)
+        bail2 = rt.binary("*", g.BAILOUT, g.BAILOUT, 1)
+        zSlow = rt.construct(2, rt.swizzle(z0Re, "x"), rt.swizzle(z0Im, "x"))
+        period = rt.i(0)
+        n = rt.i(0)
+        _for0_first = True
+        for _for0 in range(1048576):
+            if not _for0_first:
+                n = rt.binary("+", n, rt.i(1), 1)
+            _for0_first = False
+            if not (rt.binary("<", n, rt.i(1000))):
+                break
+            if rt.binary(">=", n, maxIter):
+                break
+            zF = rt.construct(2, rt.swizzle(zRe, "x"), rt.swizzle(zIm, "x"))
+            dz = rt.binary("*", rt.f(2.0), cmul__vec2_vec2(zF, dz), 2)
+            zRe2 = df64_mul__vec2_vec2(zRe, zRe)
+            zIm2 = df64_mul__vec2_vec2(zIm, zIm)
+            zReIm = df64_mul__vec2_vec2(zRe, zIm)
+            zRe = df64_add__vec2_vec2(df64_sub__vec2_vec2(zRe2, zIm2), df64_from__float(rt.swizzle(c, "x")))
+            zIm = df64_add__vec2_vec2(df64_mul_f__vec2_float(zReIm, rt.f(2.0)), df64_from__float(rt.swizzle(c, "y")))
+            zMag2 = rt.binary("+", rt.binary("*", rt.swizzle(zRe, "x"), rt.swizzle(zRe, "x"), 1), rt.binary("*", rt.swizzle(zIm, "x"), rt.swizzle(zIm, "x"), 1), 1)
+            if rt.binary(">", zMag2, bail2):
+                break
+            i = rt.binary("+", i, rt.f(1.0), 1)
+            zHi = rt.construct(2, rt.swizzle(zRe, "x"), rt.swizzle(zIm, "x"))
+            if rt.binary(">", freq, rt.f(0.0)):
+                stripeLast = rt.binary("+", rt.binary("*", rt.f(0.5), rt.component_wise("sin", rt.binary("*", freq, rt.component_wise("atan", rt.swizzle(zHi, "y"), rt.swizzle(zHi, "x"), width=1), 1), width=1), 1), rt.f(0.5), 1)
+                stripeSum = rt.binary("+", stripeSum, stripeLast, 1)
+                stripeCount = rt.binary("+", stripeCount, rt.f(1.0), 1)
+            td = rt.f(0.0)
+            if rt.binary("==", trap, rt.i(0)):
+                td = rt.length(zHi)
+            else:
+                if rt.binary("==", trap, rt.i(1)):
+                    td = rt.component_wise("min", rt.component_wise("abs", rt.swizzle(zHi, "x"), width=1), rt.component_wise("abs", rt.swizzle(zHi, "y"), width=1), width=1)
+                else:
+                    td = rt.component_wise("abs", rt.binary("-", rt.length(zHi), rt.f(1.0), 1), width=1)
+            trapMin = rt.component_wise("min", trapMin, td, width=1)
+            period = rt.binary("+", period, rt.i(1), 1)
+            if rt.binary("==", period, rt.i(20)):
+                period = rt.i(0)
+                zSlow = zHi
+            else:
+                if rt.binary("<", rt.distance(zHi, zSlow), rt.f(1e-10)):
+                    i = maxIter
+                    break
+        r = rt.assign_swizzle(r, "iter", i)
+        r = rt.assign_swizzle(r, "zMag2", rt.binary("+", rt.binary("*", rt.swizzle(zRe, "x"), rt.swizzle(zRe, "x"), 1), rt.binary("*", rt.swizzle(zIm, "x"), rt.swizzle(zIm, "x"), 1), 1))
+        r = rt.assign_swizzle(r, "dzMag2", rt.dot(dz, dz))
+        r = rt.assign_swizzle(r, "stripeSum", stripeSum)
+        r = rt.assign_swizzle(r, "stripeCount", stripeCount)
+        r = rt.assign_swizzle(r, "stripeLast", stripeLast)
+        r = rt.assign_swizzle(r, "trapMin", trapMin)
+        return r
+    def outputSmoothIteration__float_float(r, maxIter):
+        if rt.binary(">=", rt.swizzle(r, "iter"), maxIter):
+            return rt.f(0.0)
+        log_zn = rt.binary("*", rt.component_wise("log", rt.swizzle(r, "zMag2"), width=5), rt.f(0.5), 5)
+        nu = rt.binary("/", rt.component_wise("log", rt.binary("/", log_zn, g.LOG2, 1), width=1), g.LOG2, 1)
+        return rt.component_wise("clamp", rt.binary("/", rt.binary("-", rt.binary("+", rt.swizzle(r, "iter"), rt.f(1.0), 4), nu, 4), maxIter, 4), rt.f(0.0), rt.f(1.0), width=4)
+    def outputDistanceEstimation__float_float(r, maxIter):
+        if rt.binary(">=", rt.swizzle(r, "iter"), maxIter):
+            return rt.f(0.0)
+        zMag = rt.component_wise("sqrt", rt.swizzle(r, "zMag2"), width=5)
+        dzMag = rt.component_wise("sqrt", rt.swizzle(r, "dzMag2"), width=6)
+        if rt.binary("<", dzMag, rt.f(1e-10)):
+            return rt.f(0.0)
+        dist = rt.binary("/", rt.binary("*", rt.binary("*", rt.f(2.0), zMag, 1), rt.component_wise("log", zMag, width=1), 1), dzMag, 1)
+        return rt.component_wise("clamp", rt.binary("*", rt.component_wise("log", rt.binary("+", dist, rt.f(1.0), 1), width=1), rt.f(2.0), 1), rt.f(0.0), rt.f(1.0), width=1)
+    def outputStripeAverage__float_float(r, maxIter):
+        if rt.binary(">=", rt.swizzle(r, "iter"), maxIter):
+            return rt.f(0.0)
+        if rt.binary("<", rt.swizzle(r, "stripeCount"), rt.f(1.0)):
+            return rt.f(0.0)
+        avg = rt.binary("/", rt.swizzle(r, "stripeSum"), rt.swizzle(r, "stripeCount"), 11)
+        prevAvg = (rt.binary("/", rt.binary("-", rt.swizzle(r, "stripeSum"), rt.swizzle(r, "stripeLast"), 10), rt.binary("-", rt.swizzle(r, "stripeCount"), rt.f(1.0), 11), 11) if rt.binary(">", rt.swizzle(r, "stripeCount"), rt.f(1.0)) else avg)
+        log_zn = rt.binary("*", rt.component_wise("log", rt.swizzle(r, "zMag2"), width=5), rt.f(0.5), 5)
+        nu = rt.binary("/", rt.component_wise("log", rt.binary("/", log_zn, g.LOG2, 1), width=1), g.LOG2, 1)
+        frac = rt.component_wise("clamp", rt.binary("+", rt.binary("-", rt.f(1.0), nu, 1), rt.component_wise("floor", nu, width=1), 1), rt.f(0.0), rt.f(1.0), width=1)
+        return rt.component_wise("clamp", rt.component_wise("mix", prevAvg, avg, frac, width=1), rt.f(0.0), rt.f(1.0), width=1)
+    def outputOrbitTrap__float_float(r, maxIter):
+        if rt.binary(">=", rt.swizzle(r, "iter"), maxIter):
+            return rt.f(0.0)
+        return rt.component_wise("clamp", rt.binary("-", rt.f(1.0), rt.swizzle(r, "trapMin"), 7), rt.f(0.0), rt.f(1.0), width=7)
+    def iterateSmooth__vec2_vec2_int_float(fragCoord, c, maxIter, zm):
+        fragCoord = rt.copy(fragCoord)
+        c = rt.copy(c)
+        reDF = rt.construct(2, 0.0)
+        imDF = rt.construct(2, 0.0)
+        transformCoords__vec2_float_vec2_vec2(fragCoord, zm, reDF, imDF)
+        zRe = reDF
+        zIm = imDF
+        i = rt.f(0.0)
+        bail2 = rt.binary("*", g.BAILOUT, g.BAILOUT, 1)
+        n = rt.i(0)
+        _for1_first = True
+        for _for1 in range(1048576):
+            if not _for1_first:
+                n = rt.binary("+", n, rt.i(1), 1)
+            _for1_first = False
+            if not (rt.binary("<", n, rt.i(1000))):
+                break
+            if rt.binary(">=", n, maxIter):
+                break
+            zRe2 = df64_mul__vec2_vec2(zRe, zRe)
+            zIm2 = df64_mul__vec2_vec2(zIm, zIm)
+            zReIm = df64_mul__vec2_vec2(zRe, zIm)
+            zRe = df64_add__vec2_vec2(df64_sub__vec2_vec2(zRe2, zIm2), df64_from__float(rt.swizzle(c, "x")))
+            zIm = df64_add__vec2_vec2(df64_mul_f__vec2_float(zReIm, rt.f(2.0)), df64_from__float(rt.swizzle(c, "y")))
+            zMag2 = rt.binary("+", rt.binary("*", rt.swizzle(zRe, "x"), rt.swizzle(zRe, "x"), 1), rt.binary("*", rt.swizzle(zIm, "x"), rt.swizzle(zIm, "x"), 1), 1)
+            if rt.binary(">", zMag2, bail2):
+                break
+            i = rt.binary("+", i, rt.f(1.0), 1)
+        if rt.binary(">=", i, maxIter):
+            return rt.f(0.0)
+        zMag2 = rt.binary("+", rt.binary("*", rt.swizzle(zRe, "x"), rt.swizzle(zRe, "x"), 1), rt.binary("*", rt.swizzle(zIm, "x"), rt.swizzle(zIm, "x"), 1), 1)
+        log_zn = rt.binary("*", rt.component_wise("log", zMag2, width=1), rt.f(0.5), 1)
+        nu = rt.binary("/", rt.component_wise("log", rt.binary("/", log_zn, g.LOG2, 1), width=1), g.LOG2, 1)
+        return rt.component_wise("clamp", rt.binary("/", rt.binary("-", rt.binary("+", i, rt.f(1.0), 1), nu, 1), maxIter, 1), rt.f(0.0), rt.f(1.0), width=1)
+    def outputNormalMap__vec2_vec2_int_float_float(fragCoord, c, maxIter, angle, zm):
+        fragCoord = rt.copy(fragCoord)
+        c = rt.copy(c)
+        d0 = iterateSmooth__vec2_vec2_int_float(fragCoord, c, maxIter, zm)
+        d1 = iterateSmooth__vec2_vec2_int_float(rt.binary("+", fragCoord, rt.construct(2, rt.f(1.0), rt.f(0.0)), 2), c, maxIter, zm)
+        d2 = iterateSmooth__vec2_vec2_int_float(rt.binary("+", fragCoord, rt.construct(2, rt.f(0.0), rt.f(1.0)), 2), c, maxIter, zm)
+        normal = rt.normalize(rt.construct(3, rt.binary("-", d1, d0, 1), rt.binary("-", d2, d0, 1), rt.f(0.05)))
+        rad = rt.binary("/", rt.binary("*", angle, g.TAU, 1), rt.f(360.0), 1)
+        lightDir = rt.normalize(rt.construct(3, rt.component_wise("cos", rad, width=1), rt.component_wise("sin", rad, width=1), rt.f(0.7)))
+        return rt.component_wise("clamp", rt.component_wise("max", rt.dot(normal, lightDir), rt.f(0.0), width=1), rt.f(0.0), rt.f(1.0), width=1)
+    def main__void():
+        globalCoord = rt.binary("+", rt.swizzle(ctx.frag_coord, "xy"), _u_tileOffset, 2)
+        c = resolveC__void()
+        effectiveZoom = rt.f(0.0)
+        if rt.binary(">", _u_zoomSpeed, rt.f(0.0)):
+            phase = rt.binary("*", rt.f(0.5), rt.binary("-", rt.f(1.0), rt.component_wise("cos", rt.binary("*", rt.binary("*", _u_time, _u_zoomSpeed, 1), g.TAU, 1), width=1), 1), 1)
+            effectiveZoom = rt.component_wise("pow", rt.f(10.0), rt.binary("*", _u_zoomDepth, phase, 1), width=1)
+        else:
+            effectiveZoom = rt.component_wise("pow", rt.f(10.0), _u_zoomDepth, width=1)
+        value = rt.f(0.0)
+        if rt.binary("==", _u_outputMode, rt.i(4)):
+            value = outputNormalMap__vec2_vec2_int_float_float(globalCoord, c, _u_iterations, _u_lightAngle, effectiveZoom)
+        else:
+            reDF = rt.construct(2, 0.0)
+            imDF = rt.construct(2, 0.0)
+            transformCoords__vec2_float_vec2_vec2(globalCoord, effectiveZoom, reDF, imDF)
+            r = juliaIterate__vec2_vec2_vec2_int_float_int(reDF, imDF, c, _u_iterations, _u_stripeFreq, _u_trapShape)
+            if rt.binary("==", _u_outputMode, rt.i(0)):
+                value = outputSmoothIteration__float_float(r, _u_iterations)
+            else:
+                if rt.binary("==", _u_outputMode, rt.i(1)):
+                    value = outputDistanceEstimation__float_float(r, _u_iterations)
+                else:
+                    if rt.binary("==", _u_outputMode, rt.i(2)):
+                        value = outputStripeAverage__float_float(r, _u_iterations)
+                    else:
+                        if rt.binary("==", _u_outputMode, rt.i(3)):
+                            value = outputOrbitTrap__float_float(r, _u_iterations)
+                        else:
+                            value = outputSmoothIteration__float_float(r, _u_iterations)
+        if _u_invert:
+            value = rt.binary("-", rt.f(1.0), value, 1)
+        g.fragColor = rt.construct(4, rt.construct(3, value), rt.f(1.0))
+    main__void()
+    _c = g.fragColor
+    out[0] = rt.f32(_c[0]); out[1] = rt.f32(_c[1]); out[2] = rt.f32(_c[2]); out[3] = rt.f32(_c[3])

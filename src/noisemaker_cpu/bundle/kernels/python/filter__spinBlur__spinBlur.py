@@ -1,0 +1,60 @@
+def run_pixel(ctx, out):
+    rt = ctx.rt
+    U = ctx.uniforms
+    T = ctx.textures
+    class _G:
+        pass
+    g = _G()
+    _u_inputTex = T["inputTex"]
+    _u_resolution = U["resolution"]
+    _u_tileOffset = U["tileOffset"]
+    _u_fullResolution = U["fullResolution"]
+    _u_amount = U["amount"]
+    _u_centerX = U["centerX"]
+    _u_centerY = U["centerY"]
+    g.N = rt.i(32)
+    def hash12__vec2(p):
+        p = rt.copy(p)
+        p3 = rt.component_wise("fract", rt.binary("*", rt.construct(3, rt.swizzle(p, "xyx")), rt.f(0.1031), 3), width=3)
+        p3 = rt.binary("+", p3, rt.dot(p3, rt.binary("+", rt.swizzle(p3, "yzx"), rt.f(33.33), 3)), 3)
+        return rt.component_wise("fract", rt.binary("*", rt.binary("+", rt.swizzle(p3, "x"), rt.swizzle(p3, "y"), 1), rt.swizzle(p3, "z"), 1), width=1)
+    def rotateAround__vec2_vec2_float_float(uv, center, angle, aspectRatio):
+        uv = rt.copy(uv)
+        center = rt.copy(center)
+        p = uv
+        p = rt.assign_swizzle(p, "x", rt.binary("*", rt.swizzle(p, "x"), aspectRatio, 1))
+        c = center
+        c = rt.assign_swizzle(c, "x", rt.binary("*", rt.swizzle(c, "x"), aspectRatio, 1))
+        p = rt.binary("-", p, c, 2)
+        s = rt.component_wise("sin", angle, width=1)
+        co = rt.component_wise("cos", angle, width=1)
+        p = rt.binary("*", rt.construct(4, co, rt.unary("-", s), s, co), p, 4)
+        p = rt.binary("+", p, c, 2)
+        p = rt.assign_swizzle(p, "x", rt.binary("/", rt.swizzle(p, "x"), aspectRatio, 1))
+        return p
+    def main__void():
+        aspectRatio = rt.binary("/", rt.swizzle(_u_fullResolution, "x"), rt.swizzle(_u_fullResolution, "y"), 1)
+        globalCoord = rt.binary("+", rt.swizzle(ctx.frag_coord, "xy"), _u_tileOffset, 2)
+        uv = rt.binary("/", globalCoord, _u_fullResolution, 2)
+        center = rt.construct(2, _u_centerX, _u_centerY)
+        arc = rt.component_wise("radians", _u_amount, width=1)
+        angularStep = rt.binary("/", arc, rt.construct(1, rt.binary("-", g.N, rt.i(1), 1)), 1)
+        jitterCoord = rt.construct(2, rt.swizzle(globalCoord, "x"), rt.component_wise("abs", rt.binary("-", rt.swizzle(globalCoord, "y"), rt.binary("*", rt.swizzle(_u_fullResolution, "y"), rt.f(0.5), 1), 1), width=1))
+        jitter = rt.binary("*", rt.binary("-", hash12__vec2(jitterCoord), rt.f(0.5), 1), angularStep, 1)
+        sum = rt.construct(4, rt.f(0.0))
+        i = rt.i(0)
+        _for0_first = True
+        for _for0 in range(1048576):
+            if not _for0_first:
+                i = rt.binary("+", i, rt.i(1), 1)
+            _for0_first = False
+            if not (rt.binary("<", i, g.N)):
+                break
+            theta = rt.binary("+", rt.binary("*", rt.binary("-", rt.binary("/", i, rt.construct(1, rt.binary("-", g.N, rt.i(1), 1)), 1), rt.f(0.5), 1), arc, 1), jitter, 1)
+            distorted = rt.component_wise("clamp", rotateAround__vec2_vec2_float_float(uv, center, theta, aspectRatio), rt.f(0.0), rt.f(1.0), width=2)
+            sampleUV = rt.component_wise("clamp", rt.binary("/", rt.binary("-", rt.binary("*", distorted, _u_fullResolution, 2), _u_tileOffset, 2), _u_resolution, 2), rt.f(0.0), rt.f(1.0), width=2)
+            sum = rt.binary("+", sum, rt.texture(_u_inputTex, sampleUV), 4)
+        g.fragColor = rt.binary("/", sum, g.N, 4)
+    main__void()
+    _c = g.fragColor
+    out[0] = rt.f32(_c[0]); out[1] = rt.f32(_c[1]); out[2] = rt.f32(_c[2]); out[3] = rt.f32(_c[3])
