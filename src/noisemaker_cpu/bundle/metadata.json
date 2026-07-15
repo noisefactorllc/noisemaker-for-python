@@ -1,7 +1,8 @@
 {
   "provenance": {
-    "upstreamRevision": "dc67827bfc2d4e71d64cb6095cd8c922dc64360f",
-    "backend": "python"
+    "source": "shaders.noisedeck.app CDN",
+    "version": "1.0",
+    "base": "https://shaders.noisedeck.app"
   },
   "effects": {
     "synth/solid": {
@@ -16,18 +17,26 @@
             0.5,
             0.5
           ],
-          "uniform": "color"
+          "uniform": "color",
+          "ui": {
+            "label": "color",
+            "control": "color"
+          }
         },
         "alpha": {
           "type": "float",
           "default": 1,
-          "uniform": "alpha",
           "min": 0,
-          "max": 1
+          "max": 1,
+          "randMin": 0.5,
+          "uniform": "alpha",
+          "ui": {
+            "label": "opacity",
+            "control": "slider"
+          }
         }
       },
       "textures": {},
-      "paramAliases": {},
       "passes": [
         {
           "name": "main",
@@ -52,11 +61,14 @@
           "choices": {
             "full": 0,
             "solarize": 1
+          },
+          "ui": {
+            "label": "mode",
+            "control": "dropdown"
           }
         }
       },
       "textures": {},
-      "paramAliases": {},
       "passes": [
         {
           "name": "render",
