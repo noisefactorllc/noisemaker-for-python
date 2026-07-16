@@ -5,6 +5,300 @@
     "base": "https://shaders.noisedeck.app"
   },
   "effects": {
+    "classicNoisedeck/bitEffects": {
+      "namespace": "classicNoisedeck",
+      "func": "bitEffects",
+      "kind": "generator",
+      "params": {
+        "mode": {
+          "type": "int",
+          "default": 1,
+          "define": "MODE",
+          "choices": {
+            "bitField": 0,
+            "bitMask": 1
+          },
+          "ui": {
+            "label": "mode",
+            "control": "dropdown"
+          }
+        },
+        "speed": {
+          "type": "float",
+          "default": 50,
+          "uniform": "speed",
+          "min": 0,
+          "max": 100,
+          "zero": 0,
+          "ui": {
+            "label": "speed",
+            "control": "slider"
+          }
+        },
+        "formula": {
+          "type": "int",
+          "default": 0,
+          "define": "FORMULA",
+          "choices": {
+            "alien": 0,
+            "sierpinski": 1
+          },
+          "ui": {
+            "label": "formula",
+            "control": "dropdown",
+            "category": "bit field",
+            "enabledBy": {
+              "param": "mode",
+              "eq": 0
+            }
+          }
+        },
+        "n": {
+          "type": "int",
+          "default": 1,
+          "uniform": "n",
+          "min": 1,
+          "max": 200,
+          "ui": {
+            "label": "mod",
+            "control": "slider",
+            "category": "bit field",
+            "enabledBy": {
+              "param": "mode",
+              "eq": 0
+            }
+          }
+        },
+        "scale": {
+          "type": "float",
+          "default": 75,
+          "uniform": "scale",
+          "min": 1,
+          "max": 100,
+          "ui": {
+            "label": "scale",
+            "control": "slider",
+            "category": "bit field",
+            "enabledBy": {
+              "param": "mode",
+              "eq": 0
+            }
+          }
+        },
+        "rotation": {
+          "type": "float",
+          "default": 0,
+          "uniform": "rotation",
+          "min": -180,
+          "max": 180,
+          "ui": {
+            "label": "rotate",
+            "control": "slider",
+            "category": "bit field",
+            "enabledBy": {
+              "param": "mode",
+              "eq": 0
+            }
+          }
+        },
+        "colorScheme": {
+          "type": "int",
+          "default": 20,
+          "define": "COLOR_SCHEME",
+          "choices": {
+            "blue": 0,
+            "cyan": 1,
+            "green": 2,
+            "magenta": 3,
+            "red": 4,
+            "white": 5,
+            "yellow": 6,
+            "blueAndGreen": 10,
+            "blueAndRed": 11,
+            "blueAndYellow": 12,
+            "greenAndMagenta": 13,
+            "greenAndRed": 14,
+            "redAndCyan": 15,
+            "redGreenAndBlue": 20
+          },
+          "ui": {
+            "label": "colors",
+            "control": "dropdown",
+            "category": "bit field",
+            "enabledBy": {
+              "param": "mode",
+              "eq": 0
+            }
+          }
+        },
+        "interp": {
+          "type": "int",
+          "default": 0,
+          "define": "INTERP",
+          "choices": {
+            "constant": 0,
+            "linear": 1
+          },
+          "ui": {
+            "label": "blend",
+            "control": "dropdown",
+            "category": "bit field",
+            "enabledBy": {
+              "param": "mode",
+              "eq": 0
+            }
+          }
+        },
+        "maskFormula": {
+          "type": "int",
+          "default": 10,
+          "define": "MASK_FORMULA",
+          "choices": {
+            "invaders": 10,
+            "wideInvaders": 11,
+            "glyphs": 20,
+            "areciboNumber": 30
+          },
+          "ui": {
+            "label": "formula",
+            "control": "dropdown",
+            "category": "bit mask",
+            "enabledBy": {
+              "param": "mode",
+              "eq": 1
+            }
+          }
+        },
+        "tiles": {
+          "type": "int",
+          "default": 5,
+          "uniform": "tiles",
+          "min": 1,
+          "max": 40,
+          "ui": {
+            "label": "tiles",
+            "control": "slider",
+            "category": "bit mask",
+            "enabledBy": {
+              "param": "mode",
+              "eq": 1
+            }
+          }
+        },
+        "complexity": {
+          "type": "float",
+          "default": 57,
+          "uniform": "complexity",
+          "min": 1,
+          "max": 100,
+          "ui": {
+            "label": "complexity",
+            "control": "slider",
+            "category": "bit mask",
+            "enabledBy": {
+              "param": "mode",
+              "eq": 1
+            }
+          }
+        },
+        "maskColorScheme": {
+          "type": "int",
+          "default": 1,
+          "define": "MASK_COLOR_SCHEME",
+          "choices": {
+            "blackWhite": 0,
+            "justHue": 3,
+            "hueSaturation": 2,
+            "hsv": 1
+          },
+          "ui": {
+            "label": "color space",
+            "control": "dropdown",
+            "category": "bit mask",
+            "enabledBy": {
+              "param": "mode",
+              "eq": 1
+            }
+          }
+        },
+        "baseHueRange": {
+          "type": "float",
+          "default": 50,
+          "uniform": "baseHueRange",
+          "min": 0,
+          "max": 100,
+          "ui": {
+            "label": "hue variants",
+            "control": "slider",
+            "category": "bit mask",
+            "enabledBy": {
+              "param": "mode",
+              "eq": 1
+            }
+          }
+        },
+        "hueRotation": {
+          "type": "float",
+          "default": 180,
+          "uniform": "hueRotation",
+          "min": 0,
+          "max": 360,
+          "ui": {
+            "label": "hue rotate",
+            "control": "slider",
+            "category": "bit mask",
+            "enabledBy": {
+              "param": "mode",
+              "eq": 1
+            }
+          }
+        },
+        "hueRange": {
+          "type": "float",
+          "default": 25,
+          "uniform": "hueRange",
+          "min": 0,
+          "max": 100,
+          "ui": {
+            "label": "hue range",
+            "control": "slider",
+            "category": "bit mask",
+            "enabledBy": {
+              "param": "mode",
+              "eq": 1
+            }
+          }
+        },
+        "seed": {
+          "type": "int",
+          "default": 63,
+          "uniform": "seed",
+          "min": 1,
+          "max": 100,
+          "ui": {
+            "label": "seed",
+            "control": "slider",
+            "category": "bit mask",
+            "enabledBy": {
+              "param": "mode",
+              "eq": 1
+            }
+          }
+        }
+      },
+      "textures": {},
+      "passes": [
+        {
+          "name": "render",
+          "program": "bitEffects",
+          "key": "classicNoisedeck/bitEffects:bitEffects",
+          "inputs": {},
+          "outputs": {
+            "fragColor": "outputTex"
+          }
+        }
+      ]
+    },
     "classicNoisedeck/coalesce": {
       "namespace": "classicNoisedeck",
       "func": "coalesce",
@@ -215,6 +509,166 @@
           "inputs": {
             "inputTex": "inputTex",
             "tex": "tex"
+          },
+          "outputs": {
+            "fragColor": "outputTex"
+          }
+        }
+      ]
+    },
+    "classicNoisedeck/effects": {
+      "namespace": "classicNoisedeck",
+      "func": "effects",
+      "kind": "filter",
+      "params": {
+        "effect": {
+          "type": "int",
+          "default": 0,
+          "define": "EFFECT",
+          "choices": {
+            "none": 0,
+            "bloom": 220,
+            "blur": 1,
+            "blurSharpen": 300,
+            "cga": 200,
+            "derivatives": 120,
+            "derivDivide": 2,
+            "edge": 3,
+            "emboss": 4,
+            "litEdge": 9,
+            "outline": 5,
+            "pixels": 100,
+            "posterize": 110,
+            "shadow": 6,
+            "sharpen": 7,
+            "smoothEdge": 301,
+            "sobel": 8,
+            "subpixel": 210,
+            "zoomBlur": 230
+          },
+          "ui": {
+            "label": "effect",
+            "control": "dropdown"
+          }
+        },
+        "effectAmt": {
+          "type": "int",
+          "default": 1,
+          "uniform": "effectAmt",
+          "min": 0,
+          "max": 20,
+          "ui": {
+            "label": "effect amt",
+            "control": "slider"
+          }
+        },
+        "scaleAmt": {
+          "type": "float",
+          "default": 100,
+          "uniform": "scaleAmt",
+          "min": 25,
+          "max": 400,
+          "ui": {
+            "label": "scale %",
+            "control": "slider",
+            "category": "transform"
+          }
+        },
+        "rotation": {
+          "type": "float",
+          "default": 0,
+          "uniform": "rotation",
+          "min": -180,
+          "max": 180,
+          "ui": {
+            "label": "rotate",
+            "control": "slider",
+            "category": "transform"
+          }
+        },
+        "offsetX": {
+          "type": "float",
+          "default": 0,
+          "uniform": "offsetX",
+          "min": -100,
+          "max": 100,
+          "ui": {
+            "label": "offset x",
+            "control": "slider",
+            "category": "transform"
+          }
+        },
+        "offsetY": {
+          "type": "float",
+          "default": 0,
+          "uniform": "offsetY",
+          "min": -100,
+          "max": 100,
+          "ui": {
+            "label": "offset y",
+            "control": "slider",
+            "category": "transform"
+          }
+        },
+        "flip": {
+          "type": "int",
+          "default": 0,
+          "define": "FLIP",
+          "choices": {
+            "none": 0,
+            "Flip:": null,
+            "all": 1,
+            "horizontal": 2,
+            "vertical": 3,
+            "Mirror:": null,
+            "leftToRight": 11,
+            "rightToLeft": 12,
+            "upToDown": 13,
+            "downToUp": 14,
+            "lrUd": 15,
+            "lrDu": 16,
+            "rlUd": 17,
+            "rlDu": 18
+          },
+          "ui": {
+            "label": "flip/mirror",
+            "control": "dropdown",
+            "category": "transform"
+          }
+        },
+        "intensity": {
+          "type": "float",
+          "default": 0,
+          "uniform": "intensity",
+          "min": -100,
+          "max": 100,
+          "ui": {
+            "label": "intensity",
+            "control": "slider",
+            "category": "adjustments"
+          }
+        },
+        "saturation": {
+          "type": "float",
+          "default": 0,
+          "uniform": "saturation",
+          "min": -100,
+          "max": 100,
+          "ui": {
+            "label": "saturation",
+            "control": "slider",
+            "category": "adjustments"
+          }
+        }
+      },
+      "textures": {},
+      "passes": [
+        {
+          "name": "render",
+          "program": "effects",
+          "key": "classicNoisedeck/effects:effects",
+          "inputs": {
+            "inputTex": "inputTex"
           },
           "outputs": {
             "fragColor": "outputTex"
@@ -3825,6 +4279,131 @@
         }
       ]
     },
+    "filter/hatch": {
+      "namespace": "filter",
+      "func": "hatch",
+      "kind": "filter",
+      "params": {
+        "mode": {
+          "type": "int",
+          "default": 0,
+          "define": "MODE",
+          "choices": {
+            "pen": 0,
+            "charcoal": 1,
+            "chalkCharcoal": 2,
+            "conte": 3,
+            "crosshatch": 4,
+            "coloredPencil": 5
+          },
+          "ui": {
+            "label": "mode",
+            "control": "dropdown"
+          }
+        },
+        "strokeLength": {
+          "type": "float",
+          "default": 50,
+          "uniform": "strokeLength",
+          "min": 0,
+          "max": 100,
+          "ui": {
+            "label": "stroke length",
+            "control": "slider"
+          }
+        },
+        "direction": {
+          "type": "int",
+          "default": 0,
+          "uniform": "direction",
+          "choices": {
+            "rightDiag": 0,
+            "horizontal": 1,
+            "leftDiag": 2,
+            "vertical": 3
+          },
+          "ui": {
+            "label": "direction",
+            "control": "dropdown"
+          }
+        },
+        "balance": {
+          "type": "float",
+          "default": 50,
+          "uniform": "balance",
+          "min": 0,
+          "max": 100,
+          "ui": {
+            "label": "balance",
+            "control": "slider"
+          }
+        },
+        "pressure": {
+          "type": "float",
+          "default": 50,
+          "uniform": "pressure",
+          "min": 0,
+          "max": 100,
+          "ui": {
+            "label": "pressure",
+            "control": "slider"
+          }
+        },
+        "inkColor": {
+          "type": "color",
+          "default": [
+            0.1,
+            0.1,
+            0.1
+          ],
+          "uniform": "inkColor",
+          "ui": {
+            "label": "ink color",
+            "control": "color",
+            "enabledBy": {
+              "param": "mode",
+              "notIn": [
+                4,
+                5
+              ]
+            }
+          }
+        },
+        "paperColor": {
+          "type": "color",
+          "default": [
+            0.96,
+            0.94,
+            0.88
+          ],
+          "uniform": "paperColor",
+          "ui": {
+            "label": "paper color",
+            "control": "color",
+            "enabledBy": {
+              "param": "mode",
+              "notIn": [
+                4
+              ]
+            }
+          }
+        }
+      },
+      "textures": {},
+      "passes": [
+        {
+          "name": "hatch",
+          "program": "hatch",
+          "key": "filter/hatch:hatch",
+          "inputs": {
+            "inputTex": "inputTex"
+          },
+          "outputs": {
+            "fragColor": "outputTex"
+          }
+        }
+      ]
+    },
     "filter/highPass": {
       "namespace": "filter",
       "func": "highPass",
@@ -4146,6 +4725,88 @@
           "name": "render",
           "program": "lens",
           "key": "filter/lens:lens",
+          "inputs": {
+            "inputTex": "inputTex"
+          },
+          "outputs": {
+            "fragColor": "outputTex"
+          }
+        }
+      ]
+    },
+    "filter/lensFlare": {
+      "namespace": "filter",
+      "func": "lensFlare",
+      "kind": "filter",
+      "params": {
+        "brightness": {
+          "type": "float",
+          "default": 100,
+          "uniform": "brightness",
+          "min": 10,
+          "max": 300,
+          "ui": {
+            "label": "brightness",
+            "control": "slider"
+          }
+        },
+        "centerX": {
+          "type": "float",
+          "default": 0.35,
+          "uniform": "centerX",
+          "min": 0,
+          "max": 1,
+          "ui": {
+            "label": "center x",
+            "control": "slider"
+          }
+        },
+        "centerY": {
+          "type": "float",
+          "default": 0.35,
+          "uniform": "centerY",
+          "min": 0,
+          "max": 1,
+          "ui": {
+            "label": "center y",
+            "control": "slider"
+          }
+        },
+        "lensType": {
+          "type": "int",
+          "default": 0,
+          "define": "LENS_TYPE",
+          "choices": {
+            "zoom50_300": 0,
+            "prime35": 1,
+            "prime105": 2,
+            "moviePrime": 3
+          },
+          "ui": {
+            "label": "lens type",
+            "control": "dropdown"
+          }
+        },
+        "tint": {
+          "type": "color",
+          "default": [
+            1,
+            0.95,
+            0.85
+          ],
+          "uniform": "tint",
+          "ui": {
+            "label": "tint",
+            "control": "color"
+          }
+        }
+      },
+      "textures": {},
+      "passes": [
+        {
+          "name": "render",
+          "program": "lensFlare",
+          "key": "filter/lensFlare:lensFlare",
           "inputs": {
             "inputTex": "inputTex"
           },
@@ -4526,6 +5187,150 @@
         }
       ]
     },
+    "filter/mosaicTiles": {
+      "namespace": "filter",
+      "func": "mosaicTiles",
+      "kind": "filter",
+      "params": {
+        "mode": {
+          "type": "int",
+          "default": 0,
+          "define": "MODE",
+          "choices": {
+            "mosaic": 0,
+            "shifted": 1
+          },
+          "ui": {
+            "label": "mode",
+            "control": "dropdown"
+          }
+        },
+        "tileSize": {
+          "type": "float",
+          "default": 32,
+          "uniform": "tileSize",
+          "min": 4,
+          "max": 128,
+          "ui": {
+            "label": "tile size",
+            "control": "slider"
+          }
+        },
+        "groutWidth": {
+          "type": "float",
+          "default": 12,
+          "uniform": "groutWidth",
+          "min": 0,
+          "max": 100,
+          "ui": {
+            "label": "grout width",
+            "control": "slider",
+            "enabledBy": {
+              "param": "mode",
+              "eq": 0
+            }
+          }
+        },
+        "relief": {
+          "type": "float",
+          "default": 40,
+          "uniform": "relief",
+          "min": 0,
+          "max": 100,
+          "ui": {
+            "label": "relief",
+            "control": "slider",
+            "enabledBy": {
+              "param": "mode",
+              "eq": 0
+            }
+          }
+        },
+        "maxOffset": {
+          "type": "float",
+          "default": 25,
+          "uniform": "maxOffset",
+          "min": 0,
+          "max": 100,
+          "ui": {
+            "label": "max offset",
+            "control": "slider",
+            "enabledBy": {
+              "param": "mode",
+              "eq": 1
+            }
+          }
+        },
+        "gapFill": {
+          "type": "int",
+          "default": 0,
+          "uniform": "gapFill",
+          "choices": {
+            "background": 0,
+            "inverse": 1,
+            "unaltered": 2
+          },
+          "ui": {
+            "label": "gap fill",
+            "control": "dropdown",
+            "enabledBy": {
+              "param": "mode",
+              "eq": 1
+            }
+          }
+        },
+        "backgroundColor": {
+          "type": "color",
+          "default": [
+            0.1,
+            0.1,
+            0.1
+          ],
+          "uniform": "backgroundColor",
+          "ui": {
+            "label": "background color",
+            "control": "color",
+            "enabledBy": {
+              "and": [
+                {
+                  "param": "mode",
+                  "eq": 1
+                },
+                {
+                  "param": "gapFill",
+                  "eq": 0
+                }
+              ]
+            }
+          }
+        },
+        "seed": {
+          "type": "int",
+          "default": 1,
+          "uniform": "seed",
+          "min": 1,
+          "max": 100,
+          "ui": {
+            "label": "seed",
+            "control": "slider"
+          }
+        }
+      },
+      "textures": {},
+      "passes": [
+        {
+          "name": "render",
+          "program": "mosaicTiles",
+          "key": "filter/mosaicTiles:mosaicTiles",
+          "inputs": {
+            "inputTex": "inputTex"
+          },
+          "outputs": {
+            "fragColor": "outputTex"
+          }
+        }
+      ]
+    },
     "filter/normalMap": {
       "namespace": "filter",
       "func": "normalMap",
@@ -4714,6 +5519,104 @@
           "key": "filter/octaveWarp:octaveWarp",
           "inputs": {
             "inputTex": "inputTex"
+          },
+          "outputs": {
+            "fragColor": "outputTex"
+          }
+        }
+      ]
+    },
+    "filter/oilPaint": {
+      "namespace": "filter",
+      "func": "oilPaint",
+      "kind": "filter",
+      "params": {
+        "mode": {
+          "type": "int",
+          "default": 1,
+          "define": "MODE",
+          "choices": {
+            "facet": 0,
+            "daubs": 1,
+            "dryBrush": 2,
+            "fresco": 3,
+            "knife": 4,
+            "sponge": 5
+          },
+          "ui": {
+            "label": "mode",
+            "control": "dropdown"
+          }
+        },
+        "size": {
+          "type": "float",
+          "default": 6,
+          "uniform": "size",
+          "min": 1,
+          "max": 12,
+          "step": 0.5,
+          "ui": {
+            "label": "size",
+            "control": "slider"
+          }
+        },
+        "detail": {
+          "type": "float",
+          "default": 50,
+          "uniform": "detail",
+          "min": 0,
+          "max": 100,
+          "ui": {
+            "label": "detail",
+            "control": "slider",
+            "enabledBy": {
+              "param": "mode",
+              "neq": 0
+            }
+          }
+        },
+        "texture": {
+          "type": "float",
+          "default": 20,
+          "uniform": "textureAmount",
+          "min": 0,
+          "max": 100,
+          "ui": {
+            "label": "texture",
+            "control": "slider"
+          }
+        },
+        "seed": {
+          "type": "int",
+          "default": 1,
+          "uniform": "seed",
+          "min": 1,
+          "max": 100,
+          "ui": {
+            "label": "seed",
+            "control": "slider",
+            "enabledBy": {
+              "param": "mode",
+              "eq": 5
+            }
+          }
+        }
+      },
+      "textures": {
+        "_paintTmp": {
+          "width": "input",
+          "height": "input",
+          "format": "rgba8unorm"
+        }
+      },
+      "passes": [
+        {
+          "name": "post",
+          "program": "oilPost",
+          "key": "filter/oilPaint:oilPost",
+          "inputs": {
+            "inputTex": "inputTex",
+            "flatTex": "_paintTmp"
           },
           "outputs": {
             "fragColor": "outputTex"
@@ -5631,6 +6534,87 @@
         }
       ]
     },
+    "filter/pondRipples": {
+      "namespace": "filter",
+      "func": "pondRipples",
+      "kind": "filter",
+      "params": {
+        "amount": {
+          "type": "float",
+          "default": 30,
+          "uniform": "amount",
+          "min": 0,
+          "max": 100,
+          "zero": 0,
+          "ui": {
+            "label": "amount",
+            "control": "slider"
+          }
+        },
+        "ridges": {
+          "type": "int",
+          "default": 8,
+          "uniform": "ridges",
+          "min": 1,
+          "max": 20,
+          "ui": {
+            "label": "ridges",
+            "control": "slider"
+          }
+        },
+        "style": {
+          "type": "int",
+          "default": 2,
+          "define": "STYLE",
+          "choices": {
+            "aroundCenter": 0,
+            "outFromCenter": 1,
+            "pondRipples": 2
+          },
+          "ui": {
+            "label": "style",
+            "control": "dropdown"
+          }
+        },
+        "wrap": {
+          "type": "int",
+          "default": 0,
+          "define": "WRAP",
+          "choices": {
+            "mirror": 0,
+            "repeat": 1,
+            "clamp": 2
+          },
+          "ui": {
+            "label": "wrap",
+            "control": "dropdown"
+          }
+        },
+        "antialias": {
+          "type": "boolean",
+          "default": true,
+          "uniform": "antialias",
+          "ui": {
+            "label": "antialias",
+            "control": "checkbox"
+          }
+        }
+      },
+      "textures": {},
+      "passes": [
+        {
+          "name": "render",
+          "program": "pondRipples",
+          "key": "filter/pondRipples:pondRipples",
+          "inputs": {
+            "inputTex": "inputTex"
+          },
+          "outputs": {
+            "fragColor": "outputTex"
+          }
+        }
+      ]
+    },
     "filter/posterize": {
       "namespace": "filter",
       "func": "posterize",
@@ -5977,6 +6961,18 @@
           },
           "outputs": {
             "fragColor": "_rlBlur"
+          }
+        },
+        {
+          "name": "shade",
+          "program": "rlShade",
+          "key": "filter/relief:rlShade",
+          "inputs": {
+            "inputTex": "inputTex",
+            "blurTex": "_rlBlur"
+          },
+          "outputs": {
+            "fragColor": "outputTex"
           }
         }
       ]
@@ -6455,6 +7451,17 @@
         }
       },
       "passes": [
+        {
+          "name": "scatterJitter",
+          "program": "scatterJitter",
+          "key": "filter/scatter:scatterJitter",
+          "inputs": {
+            "inputTex": "inputTex"
+          },
+          "outputs": {
+            "fragColor": "_scatterTmp"
+          }
+        },
         {
           "name": "scatterSmooth",
           "program": "scatterSmooth",
@@ -7555,6 +8562,116 @@
         }
       ]
     },
+    "filter/stipple": {
+      "namespace": "filter",
+      "func": "stipple",
+      "kind": "filter",
+      "params": {
+        "mode": {
+          "type": "int",
+          "default": 0,
+          "define": "MODE",
+          "choices": {
+            "pointillize": 0,
+            "mezzoDots": 1,
+            "mezzoLines": 2,
+            "mezzoStrokes": 3,
+            "reticulation": 4
+          },
+          "ui": {
+            "label": "mode",
+            "control": "dropdown"
+          }
+        },
+        "cellSize": {
+          "type": "float",
+          "default": 8,
+          "uniform": "cellSize",
+          "min": 3,
+          "max": 64,
+          "ui": {
+            "label": "cell size",
+            "control": "slider",
+            "enabledBy": {
+              "param": "mode",
+              "eq": 0
+            }
+          }
+        },
+        "grainSize": {
+          "type": "float",
+          "default": 2,
+          "uniform": "grainSize",
+          "min": 0.5,
+          "max": 16,
+          "ui": {
+            "label": "grain size",
+            "control": "slider",
+            "enabledBy": {
+              "param": "mode",
+              "neq": 0
+            }
+          }
+        },
+        "density": {
+          "type": "float",
+          "default": 50,
+          "uniform": "density",
+          "min": 0,
+          "max": 100,
+          "ui": {
+            "label": "density",
+            "control": "slider",
+            "enabledBy": {
+              "param": "mode",
+              "neq": 0
+            }
+          }
+        },
+        "paperColor": {
+          "type": "color",
+          "default": [
+            0.98,
+            0.96,
+            0.9
+          ],
+          "uniform": "paperColor",
+          "ui": {
+            "label": "paper color",
+            "control": "color",
+            "enabledBy": {
+              "param": "mode",
+              "eq": 0
+            }
+          }
+        },
+        "seed": {
+          "type": "int",
+          "default": 1,
+          "uniform": "seed",
+          "min": 1,
+          "max": 100,
+          "ui": {
+            "label": "seed",
+            "control": "slider"
+          }
+        }
+      },
+      "textures": {},
+      "passes": [
+        {
+          "name": "render",
+          "program": "stipple",
+          "key": "filter/stipple:stipple",
+          "inputs": {
+            "inputTex": "inputTex"
+          },
+          "outputs": {
+            "fragColor": "outputTex"
+          }
+        }
+      ]
+    },
     "filter/strayHair": {
       "namespace": "filter",
       "func": "strayHair",
@@ -7708,6 +8825,17 @@
         }
       },
       "passes": [
+        {
+          "name": "smear",
+          "program": "stkSmear",
+          "key": "filter/strokes:stkSmear",
+          "inputs": {
+            "inputTex": "inputTex"
+          },
+          "outputs": {
+            "fragColor": "_stkTmp"
+          }
+        },
         {
           "name": "post",
           "program": "stkPost",
@@ -11273,6 +12401,106 @@
           "name": "render",
           "program": "cell",
           "key": "synth/cell:cell",
+          "inputs": {},
+          "outputs": {
+            "fragColor": "outputTex"
+          }
+        }
+      ]
+    },
+    "synth/curl": {
+      "namespace": "synth",
+      "func": "curl",
+      "kind": "generator",
+      "params": {
+        "scale": {
+          "type": "float",
+          "default": 16,
+          "uniform": "scale",
+          "min": 0.5,
+          "max": 20,
+          "ui": {
+            "label": "scale",
+            "control": "slider"
+          }
+        },
+        "octaves": {
+          "type": "int",
+          "default": 1,
+          "define": "OCTAVES",
+          "min": 1,
+          "max": 3,
+          "ui": {
+            "label": "octaves",
+            "control": "slider"
+          }
+        },
+        "seed": {
+          "type": "int",
+          "default": 0,
+          "uniform": "seed",
+          "min": 0,
+          "max": 1000.0,
+          "ui": {
+            "label": "seed",
+            "control": "slider"
+          }
+        },
+        "ridges": {
+          "type": "boolean",
+          "default": true,
+          "define": "RIDGES",
+          "ui": {
+            "label": "ridges",
+            "control": "checkbox"
+          }
+        },
+        "intensity": {
+          "type": "float",
+          "default": 1,
+          "uniform": "intensity",
+          "min": 0,
+          "max": 2,
+          "ui": {
+            "label": "intensity",
+            "control": "slider"
+          }
+        },
+        "speed": {
+          "type": "int",
+          "default": 1,
+          "uniform": "speed",
+          "min": 0,
+          "max": 5,
+          "zero": 0,
+          "ui": {
+            "label": "speed",
+            "control": "slider"
+          }
+        },
+        "outputMode": {
+          "type": "int",
+          "default": 3,
+          "define": "OUTPUT_MODE",
+          "choices": {
+            "flowX": 0,
+            "flowY": 1,
+            "flowZ": 2,
+            "full": 3,
+            "magnitude": 4
+          },
+          "ui": {
+            "label": "output",
+            "control": "dropdown"
+          }
+        }
+      },
+      "textures": {},
+      "passes": [
+        {
+          "name": "render",
+          "program": "curl",
+          "key": "synth/curl:curl",
           "inputs": {},
           "outputs": {
             "fragColor": "outputTex"

@@ -22,7 +22,7 @@ def run_pixel(ctx, out):
     def hash12__vec2(p):
         p = rt.copy(p)
         p3 = rt.component_wise("fract", rt.binary("*", rt.construct(3, rt.swizzle(p, "xyx")), rt.f(0.1031), 3, "float"), width=3)
-        p3 = rt.binary("+", p3, rt.dot(p3, rt.binary("+", rt.swizzle(p3, "yzx"), rt.f(33.33), 3, "float")), 3)
+        p3 = rt.binary("+", p3, rt.dot(p3, rt.binary("+", rt.swizzle(p3, "yzx"), rt.f(33.33), 3, "float")), 3, "float")
         return rt.component_wise("fract", rt.binary("*", rt.binary("+", rt.swizzle(p3, "x"), rt.swizzle(p3, "y"), 1, "float"), rt.swizzle(p3, "z"), 1, "float"), width=1)
     def reliefShade__float_float_float_float_float(hC, hR, hT, strength, lightAngleDeg):
         grad = rt.binary("*", rt.construct(2, rt.binary("-", hR, hC, 1, "float"), rt.binary("-", hT, hC, 1, "float")), strength, 2, "float")
@@ -61,7 +61,7 @@ def run_pixel(ctx, out):
                     sheet = rt.component_wise("mix", rt.binary("+", rt.binary("*", _u_inkColor, rt.f(0.9), 3, "float"), rt.f(0.1), 3, "float"), _u_paperColor, m, width=3)
                     shade = reliefShade__float_float_float_float_float(hC, hR, hT, strength, _u_lightAngle)
                     gradMag = rt.length(rt.construct(2, rt.binary("-", hR, hC, 1, "float"), rt.binary("-", hT, hC, 1, "float")))
-                    bandHeight = rt.component_wise("max", rt.binary("*", gradMag, rt.f(2.0), 1, "float"), rt.f(1e-5), width=1)
+                    bandHeight = rt.component_wise("max", rt.binary("*", gradMag, rt.f(2.0), 1, "float"), rt.f(1e-05), width=1)
                     edge = rt.binary("-", rt.f(1.0), rt.component_wise("smoothstep", rt.f(0.0), bandHeight, rt.component_wise("abs", rt.binary("-", hC, threshold, 1, "float"), width=1), width=1), 1, "float")
                     beveled = rt.component_wise("clamp", rt.binary("*", sheet, rt.component_wise("mix", rt.f(0.6), rt.f(1.4), shade, width=1), 3, "float"), rt.f(0.0), rt.f(1.0), width=3)
                     sheetOut = rt.component_wise("mix", sheet, beveled, edge, width=3)

@@ -12,9 +12,9 @@ def run_pixel(ctx, out):
     _u_motion = U["motion"]
     g.CHANNEL_COUNT = rt.i(4)
     g.CHANNEL_CAP = rt.i(4)
-    g.SOBEL_OFFSETS = rt.construct(2, rt.construct(2, rt.unary("-", rt.i(1)), rt.unary("-", rt.i(1)), base="int"), rt.construct(2, rt.i(0), rt.unary("-", rt.i(1)), base="int"), rt.construct(2, rt.i(1), rt.unary("-", rt.i(1)), base="int"), rt.construct(2, rt.unary("-", rt.i(1)), rt.i(0), base="int"), rt.construct(2, rt.i(0), rt.i(0), base="int"), rt.construct(2, rt.i(1), rt.i(0), base="int"), rt.construct(2, rt.unary("-", rt.i(1)), rt.i(1), base="int"), rt.construct(2, rt.i(0), rt.i(1), base="int"), rt.construct(2, rt.i(1), rt.i(1), base="int"), base="int")
-    g.SOBEL_X_KERNEL = rt.construct(1, rt.f(0.5), rt.f(0.0), rt.unary("-", rt.f(0.5)), rt.f(1.0), rt.f(0.0), rt.unary("-", rt.f(1.0)), rt.f(0.5), rt.f(0.0), rt.unary("-", rt.f(0.5)))
-    g.SOBEL_Y_KERNEL = rt.construct(1, rt.f(0.5), rt.f(1.0), rt.f(0.5), rt.f(0.0), rt.f(0.0), rt.f(0.0), rt.unary("-", rt.f(0.5)), rt.unary("-", rt.f(1.0)), rt.unary("-", rt.f(0.5)))
+    g.SOBEL_OFFSETS = rt.array([rt.construct(2, rt.unary("-", rt.i(1)), rt.unary("-", rt.i(1)), base="int"), rt.construct(2, rt.i(0), rt.unary("-", rt.i(1)), base="int"), rt.construct(2, rt.i(1), rt.unary("-", rt.i(1)), base="int"), rt.construct(2, rt.unary("-", rt.i(1)), rt.i(0), base="int"), rt.construct(2, rt.i(0), rt.i(0), base="int"), rt.construct(2, rt.i(1), rt.i(0), base="int"), rt.construct(2, rt.unary("-", rt.i(1)), rt.i(1), base="int"), rt.construct(2, rt.i(0), rt.i(1), base="int"), rt.construct(2, rt.i(1), rt.i(1), base="int")])
+    g.SOBEL_X_KERNEL = rt.array([rt.f(0.5), rt.f(0.0), rt.unary("-", rt.f(0.5)), rt.f(1.0), rt.f(0.0), rt.unary("-", rt.f(1.0)), rt.f(0.5), rt.f(0.0), rt.unary("-", rt.f(0.5))])
+    g.SOBEL_Y_KERNEL = rt.array([rt.f(0.5), rt.f(1.0), rt.f(0.5), rt.f(0.0), rt.f(0.0), rt.f(0.0), rt.unary("-", rt.f(0.5)), rt.unary("-", rt.f(1.0)), rt.unary("-", rt.f(0.5))])
     def as_u32__float(value):
         return rt.construct(1, rt.component_wise("max", rt.component_wise("round", value, width=1), rt.f(0.0), width=1), base="uint")
     def clamp01__float(value):

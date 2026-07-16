@@ -146,13 +146,16 @@ def _cond_runtime(directive: str, head: str, runtime_defines: dict) -> bool:
     return any(rd in set(_IDENT.findall(directive)) for rd in runtime_defines)
 
 
+def _strip_kw(directive: str) -> str:
+    return re.sub(r"^(elif|ifdef|ifndef|if)\b\s*", "", directive).strip()
+
+
 def _glsl_cond(directive: str, head: str, defines: dict) -> str:
     if head == "ifdef":
         return "true"
     if head == "ifndef":
         return "false"
-    expr = directive[len("if"):].strip()
-    return _expand(expr, defines)
+    return _expand(_strip_kw(directive), defines)
 
 
 def _eval(directive: str, head: str, defines: dict, runtime_defines: dict | None = None) -> bool:
@@ -163,7 +166,7 @@ def _eval(directive: str, head: str, defines: dict, runtime_defines: dict | None
     if head == "ifndef":
         n = directive.split()[1]
         return n not in defines and n not in runtime_defines
-    expr = directive[len("if"):].strip()
+    expr = _strip_kw(directive)
     expr = re.sub(r"defined\s*\(\s*(\w+)\s*\)", lambda m: "1" if m.group(1) in defines else "0", expr)
     expr = re.sub(r"defined\s+(\w+)", lambda m: "1" if m.group(1) in defines else "0", expr)
     expr = _expand(expr, defines)

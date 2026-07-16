@@ -205,17 +205,15 @@ class CodeGen:
         elif k == "decl":
             for dc in s["declarators"]:
                 t = self.type_of_name(s["type"], dc.get("array"))
+                # Resolve the initializer in the ENCLOSING scope, before the new
+                # name is defined (GLSL `float time = time;` reads the outer time).
+                init_code = self.expr(dc["init"], scope)[0] if dc.get("init") is not None else None
                 e = scope.define(dc["name"], t)
-                if dc.get("array") is not None:
-                    if dc.get("init"):
-                        code, _ = self.expr(dc["init"], scope)
-                        out.append(f"{pad}{e['py']} = {code}")
-                    else:
-                        n_code = self.expr(dc["array"], scope)[0] if dc["array"] else "0"
-                        out.append(f"{pad}{e['py']} = rt.new_array({n_code}, {t['width']})")
-                elif dc.get("init") is not None:
-                    code, _ = self.expr(dc["init"], scope)
-                    out.append(f"{pad}{e['py']} = {code}")
+                if init_code is not None:
+                    out.append(f"{pad}{e['py']} = {init_code}")
+                elif dc.get("array") is not None:
+                    n_code = self.expr(dc["array"], scope)[0] if dc["array"] not in (None, True) else "0"
+                    out.append(f"{pad}{e['py']} = rt.new_array({n_code}, {t['width']})")
                 else:
                     out.append(f"{pad}{e['py']} = {self._default(t)}")
         elif k == "expr":
@@ -477,6 +475,7 @@ _ROUTED = {
     "texelFetch": lambda g, c, a: (f"rt.texel_fetch({c[0]}, {c[1]}, {c[2] if len(c) > 2 else '0'})", VEC4),
     "textureSize": lambda g, c, a: (f"rt.texture_size({c[0]})", TYPE["ivec2"]),
     "length": lambda g, c, a: (f"rt.length({c[0]})", FLOAT),
+    "__array_length": lambda g, c, a: (f"len({c[0]})", TYPE["int"]),
     "distance": lambda g, c, a: (f"rt.distance({c[0]}, {c[1]})", FLOAT),
     "dot": lambda g, c, a: (f"rt.dot({c[0]}, {c[1]})", FLOAT),
     "normalize": lambda g, c, a: (f"rt.normalize({c[0]})", a[0][1]),

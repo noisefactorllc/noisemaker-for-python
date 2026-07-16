@@ -17,7 +17,7 @@ def run_pixel(ctx, out):
     def hash12__vec2(p):
         p = rt.copy(p)
         p3 = rt.component_wise("fract", rt.binary("*", rt.construct(3, rt.swizzle(p, "xyx")), rt.f(0.1031), 3, "float"), width=3)
-        p3 = rt.binary("+", p3, rt.dot(p3, rt.binary("+", rt.swizzle(p3, "yzx"), rt.f(33.33), 3, "float")), 3)
+        p3 = rt.binary("+", p3, rt.dot(p3, rt.binary("+", rt.swizzle(p3, "yzx"), rt.f(33.33), 3, "float")), 3, "float")
         return rt.component_wise("fract", rt.binary("*", rt.binary("+", rt.swizzle(p3, "x"), rt.swizzle(p3, "y"), 1, "float"), rt.swizzle(p3, "z"), 1, "float"), width=1)
     def vnoise__vec2(p):
         p = rt.copy(p)
@@ -33,13 +33,13 @@ def run_pixel(ctx, out):
         _for0_first = True
         for _for0 in range(1048576):
             if not _for0_first:
-                i = rt.binary("+", i, rt.i(1), 1)
+                i = rt.binary("+", i, rt.i(1), 1, "int")
             _for0_first = False
             if not (rt.binary("<", i, rt.i(5))):
                 break
-            v = rt.binary("+", v, rt.binary("*", a, vnoise__vec2(p), 1, "float"), 1)
-            p = rt.binary("*", p, rt.f(2.03), 2)
-            a = rt.binary("*", a, rt.f(0.5), 1)
+            v = rt.binary("+", v, rt.binary("*", a, vnoise__vec2(p), 1, "float"), 1, "float")
+            p = rt.binary("*", p, rt.f(2.03), 2, "float")
+            a = rt.binary("*", a, rt.f(0.5), 1, "float")
         return v
     def lum__vec3(c):
         c = rt.copy(c)
@@ -65,7 +65,7 @@ def run_pixel(ctx, out):
         _for1_first = True
         for _for1 in range(1048576):
             if not _for1_first:
-                dy = rt.binary("+", dy, rt.i(1), 1)
+                dy = rt.binary("+", dy, rt.i(1), 1, "int")
             _for1_first = False
             if not (rt.binary("<=", dy, rt.i(1))):
                 break
@@ -73,13 +73,13 @@ def run_pixel(ctx, out):
             _for2_first = True
             for _for2 in range(1048576):
                 if not _for2_first:
-                    dx = rt.binary("+", dx, rt.i(1), 1)
+                    dx = rt.binary("+", dx, rt.i(1), 1, "int")
                 _for2_first = False
                 if not (rt.binary("<=", dx, rt.i(1))):
                     break
                 w = rt.binary("*", (rt.f(2.0) if rt.binary("==", dx, rt.i(0)) else rt.f(1.0)), (rt.f(2.0) if rt.binary("==", dy, rt.i(0)) else rt.f(1.0)), 1, "float")
-                sum = rt.binary("+", sum, rt.binary("*", rt.swizzle(rt.texture(_u_flatTex, rt.binary("+", uv, rt.binary("*", rt.construct(2, dx, dy), px, 2, "float"), 2, "float")), "rgb"), w, 3, "float"), 3)
-                wsum = rt.binary("+", wsum, w, 1)
+                sum = rt.binary("+", sum, rt.binary("*", rt.swizzle(rt.texture(_u_flatTex, rt.binary("+", uv, rt.binary("*", rt.construct(2, rt.construct(1, dx), rt.construct(1, dy)), px, 2, "float"), 2, "float")), "rgb"), w, 3, "float"), 3, "float")
+                wsum = rt.binary("+", wsum, w, 1, "float")
         return rt.binary("/", sum, wsum, 3, "float")
     def sCurve__float(x):
         t = rt.component_wise("clamp", x, rt.f(0.0), rt.f(1.0), width=1)
@@ -111,7 +111,7 @@ def run_pixel(ctx, out):
                             blurred = tent3x3__vec2(uv)
                             return rt.component_wise("mix", c, blurred, rt.binary("/", _u_detail, rt.f(100.0), 1, "float"), width=3)
                         else:
-                            band = fbm__vec2(rt.binary("/", rt.binary("+", globalCoord, rt.binary("*", _u_seed, rt.f(37.0), 1, "float"), 2, "float"), rt.binary("+", rt.f(4.0), _u_size, 1, "float"), 2, "float"))
+                            band = fbm__vec2(rt.binary("/", rt.binary("+", globalCoord, rt.binary("*", rt.construct(1, _u_seed), rt.f(37.0), 1, "float"), 2, "float"), rt.binary("+", rt.f(4.0), _u_size, 1, "float"), 2, "float"))
                             shift = rt.binary("*", rt.binary("*", rt.binary("-", rt.binary("*", band, rt.f(2.0), 1, "float"), rt.f(1.0), 1, "float"), rt.binary("/", _u_detail, rt.f(100.0), 1, "float"), 1, "float"), rt.f(0.25), 1, "float")
                             return rt.component_wise("clamp", rt.binary("+", c, rt.construct(3, shift), 3, "float"), rt.f(0.0), rt.f(1.0), width=3)
     def main__void():

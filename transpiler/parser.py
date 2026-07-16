@@ -161,7 +161,7 @@ class Parser:
         while True:
             arr = None
             if self.eat("["):
-                arr = None if self.at("]") else self.expr()
+                arr = True if self.at("]") else self.expr()
                 self.expect("]")
             init = None
             if self.eat("="):
@@ -329,10 +329,10 @@ class Parser:
             if t.value == ".":
                 self.next()
                 field = self.next().value
-                if self.at("(") and field == "length":  # .length()
+                if self.at("(") and field == "length":  # arr.length() -> array size
                     self.expect("(")
                     self.expect(")")
-                    e = {"k": "call", "name": "length", "args": [e]}
+                    e = {"k": "call", "name": "__array_length", "args": [e]}
                 else:
                     e = {"k": "member", "obj": e, "field": field}
             elif t.value == "[":
@@ -380,7 +380,7 @@ class Parser:
                 self.next()
                 arr = None
                 if self.eat("["):
-                    arr = None if self.at("]") else self.expr()
+                    arr = True if self.at("]") else self.expr()
                     self.expect("]")
                 self.expect("(")
                 args = []

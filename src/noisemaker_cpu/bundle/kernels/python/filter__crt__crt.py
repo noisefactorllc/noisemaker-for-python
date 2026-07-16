@@ -311,8 +311,8 @@ def run_pixel(ctx, out):
         fullRes = (_u_fullResolution if rt.binary(">", rt.swizzle(_u_fullResolution, "x"), rt.f(0.0)) else _u_resolution)
         width_f = rt.component_wise("max", rt.binary("/", rt.swizzle(fullRes, "x"), rs, 1, "float"), rt.f(1.0), width=1)
         height_f = rt.component_wise("max", rt.binary("/", rt.swizzle(fullRes, "y"), rs, 1, "float"), rt.f(1.0), width=1)
-        time = time
-        speed = speed
+        time = _u_time
+        speed = _u_speed
         x = rt.binary("/", rt.binary("+", rt.construct(1, rt.swizzle(global_id, "x")), rt.swizzle(_u_tileOffset, "x"), 1, "float"), rs, 1, "float")
         y = rt.binary("/", rt.binary("+", rt.construct(1, rt.swizzle(global_id, "y")), rt.swizzle(_u_tileOffset, "y"), 1, "float"), rs, 1, "float")
         displacement = rt.f(0.0625)
