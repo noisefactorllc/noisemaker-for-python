@@ -26,12 +26,36 @@ SEED = 1
 TIME = 0.25
 
 
-def js_effect(effect_id: str, out: str):
-    subprocess.run(
-        ["node", CLI, "effect", effect_id, "--width", str(SIZE), "--height", str(SIZE),
-         "--seed", str(SEED), "--time", str(TIME), "--output", out],
-        cwd=CPU_DIR, check=True, capture_output=True, timeout=120,
-    )
+EXT_PNG = "/tmp/ph_ext.png"
+_EXT_TEX = None
+
+
+def _ext_texture():
+    """Deterministic non-uniform 8-bit texture for external-texture effects
+    (text/media). Written to a PNG so both engines read the identical input;
+    a solid would hide any texture-orientation/sampling divergence."""
+    global _EXT_TEX
+    if _EXT_TEX is None:
+        from noisemaker_cpu.png import encode_png
+        from noisemaker_cpu.surface import Surface
+        d = np.zeros(SIZE * SIZE * 4, dtype=np.float32)
+        for y in range(SIZE):
+            for x in range(SIZE):
+                i = (y * SIZE + x) * 4
+                d[i] = x / (SIZE - 1); d[i + 1] = y / (SIZE - 1)
+                d[i + 2] = ((x + y) % SIZE) / (SIZE - 1); d[i + 3] = 1.0
+        with open(EXT_PNG, "wb") as f:
+            f.write(encode_png(Surface(SIZE, SIZE, d)))
+        _EXT_TEX = decode_png(open(EXT_PNG, "rb").read())
+    return _EXT_TEX
+
+
+def js_effect(effect_id: str, out: str, input_png: str | None = None):
+    cmd = ["node", CLI, "effect", effect_id, "--width", str(SIZE), "--height", str(SIZE),
+           "--seed", str(SEED), "--time", str(TIME), "--output", out]
+    if input_png:
+        cmd += ["--input", input_png]
+    subprocess.run(cmd, cwd=CPU_DIR, check=True, capture_output=True, timeout=120)
     with open(out, "rb") as f:
         return decode_png(f.read())
 
@@ -41,12 +65,15 @@ def _solid(color=None):
                          width=SIZE, height=SIZE, seed=SEED, time=TIME)
 
 
-def py_render(effect_id: str, kind: str):
+def py_render(effect_id: str, kind: str, ext: str | None = None):
     if kind == "generator":
-        return render_effect(effect_id, {}, width=SIZE, height=SIZE, seed=SEED, time=TIME)
+        inputs = {ext: _ext_texture()} if ext else {}
+        return render_effect(effect_id, {}, inputs, width=SIZE, height=SIZE, seed=SEED, time=TIME)
     # Replicate the JS `effect` CLI: primary input is a default solid; each
     # surface param (mixers) gets solid(#f30 / #0cf), alternating by index.
     inputs = {"inputTex": _solid()}
+    if ext:
+        inputs[ext] = _ext_texture()
     surf = [pn for pn, sp in _meta()["effects"][effect_id]["params"].items()
             if isinstance(sp, dict) and sp.get("type") == "surface"][:6]
     for i, pname in enumerate(surf):
@@ -68,13 +95,15 @@ def main():
     ok, diffs, errors, oracle_err = [], [], {}, []
     for eid in ids:
         kind = effects[eid]["kind"]
+        ext = effects[eid].get("externalTexture")
+        input_png = _ext_texture() and EXT_PNG if ext else None
         try:
-            js = js_effect(eid, "/tmp/ph_js.png")
+            js = js_effect(eid, "/tmp/ph_js.png", input_png)
         except Exception:
             oracle_err.append(eid)
             continue
         try:
-            py = py_render(eid, kind)
+            py = py_render(eid, kind, ext)
         except Exception as e:
             key = f"{type(e).__name__}: {e}".splitlines()[0][:70]
             errors.setdefault(key, []).append(eid)

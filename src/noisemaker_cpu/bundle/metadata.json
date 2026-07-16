@@ -13086,7 +13086,8 @@
             "matteOpacity": "matteOpacity"
           }
         }
-      ]
+      ],
+      "externalTexture": "textTex"
     },
     "filter/texture": {
       "namespace": "filter",
@@ -17388,7 +17389,8 @@
           },
           "uniforms": {}
         }
-      ]
+      ],
+      "externalTexture": "imageTex"
     },
     "synth/modPattern": {
       "namespace": "synth",

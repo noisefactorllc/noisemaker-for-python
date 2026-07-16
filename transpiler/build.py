@@ -111,6 +111,8 @@ def build(ids, out_dir=BUNDLE, update_lock=False):
             "namespace": eff["namespace"], "func": eff["func"], "kind": infer_kind(eff["passes"]),
             "params": eff["params"], "textures": eff.get("textures", {}), "passes": passes,
         }
+        if eff.get("externalTexture"):
+            bundle["effects"][eid]["externalTexture"] = eff["externalTexture"]
     if drift and not update_lock:
         print(f"\nSHADER DRIFT vs bundle-lock.json ({len(drift)}): {drift[:8]}\nRe-run with --update-lock to accept.", file=sys.stderr)
         sys.exit(1)

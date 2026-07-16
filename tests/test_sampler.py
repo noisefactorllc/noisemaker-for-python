@@ -82,14 +82,14 @@ def test_sample_bilinear_center_averages_all_four_texels():
 
 
 def test_sample_bilinear_exact_texel_center_returns_that_texel():
-    # (0.25, 0.25) etc. are the exact half-texel centers of each storage
-    # texel; bilinear addresses storage directly (no bottom-left flip), so
-    # each must land exactly on its texel with zero blending.
+    # (0.25, 0.25) etc. are the exact half-texel centers of each storage texel;
+    # bilinear uses GL bottom-left row addressing (flips the integer texel row),
+    # so v maps top<->bottom, each landing on its texel with zero blending.
     s = make_surface()
-    np.testing.assert_array_equal(sample_bilinear(s, 0.25, 0.25), TOP_LEFT)
-    np.testing.assert_array_equal(sample_bilinear(s, 0.75, 0.25), TOP_RIGHT)
-    np.testing.assert_array_equal(sample_bilinear(s, 0.25, 0.75), BOTTOM_LEFT)
-    np.testing.assert_array_equal(sample_bilinear(s, 0.75, 0.75), BOTTOM_RIGHT)
+    np.testing.assert_array_equal(sample_bilinear(s, 0.25, 0.25), BOTTOM_LEFT)
+    np.testing.assert_array_equal(sample_bilinear(s, 0.75, 0.25), BOTTOM_RIGHT)
+    np.testing.assert_array_equal(sample_bilinear(s, 0.25, 0.75), TOP_LEFT)
+    np.testing.assert_array_equal(sample_bilinear(s, 0.75, 0.75), TOP_RIGHT)
 
 
 def test_returns_fresh_array_not_a_view_into_surface_data():

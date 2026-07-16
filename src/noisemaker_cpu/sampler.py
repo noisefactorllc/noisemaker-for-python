@@ -5,11 +5,12 @@ clamps to the edge texel for out-of-range `u`/`v` (no wraparound).
 
 GLSL samplers address rows from the bottom, but `Surface` storage stays
 top-down (for fast Canvas/ImageData and PNG handoff). `sample_nearest`
-addresses storage rows directly (no flip). `sample_nearest_bottom_left`
-flips the *integer texel row* (`y = height - 1 - shader_y`) rather than the
-normalized coordinate (`1 - v`) — `1 - v` is wrong exactly on texel
-boundaries. `sample_bilinear` does not flip at all; it addresses storage
-directly, same as `sample_nearest`.
+addresses storage rows directly (no flip). `sample_nearest_bottom_left` and
+`sample_bilinear` flip the *integer texel row* (`y = height - 1 - shader_y`)
+rather than the normalized coordinate (`1 - v`) — `1 - v` is wrong exactly on
+texel boundaries. The flip is only observable on a non-uniform texture (a solid
+input renders identically either way), which is why it must match the GL
+bottom-left convention that texelFetch uses.
 
 `sample_bilinear` mirrors the JS precision behavior: the four taps are read
 at full (float64) precision and blended, and only the final per-channel
@@ -59,7 +60,8 @@ def sample_nearest_bottom_left(surface, u: float, v: float) -> np.ndarray:
 
 
 def sample_bilinear(surface, u: float, v: float) -> np.ndarray:
-    """Bilinear sample, half-texel-centered, clamped to edge, no row flip."""
+    """Bilinear sample, half-texel-centered, clamped to edge, GL bottom-left row
+    addressing (flips the integer texel row, like sample_nearest_bottom_left)."""
     width = surface.width
     height = surface.height
     data = surface.data
@@ -73,8 +75,8 @@ def sample_bilinear(surface, u: float, v: float) -> np.ndarray:
     tx = px - x0
     ty = py - y0
 
-    row0 = y0 * width * 4
-    row1 = y1 * width * 4
+    row0 = (height - 1 - y0) * width * 4
+    row1 = (height - 1 - y1) * width * 4
     p00 = row0 + x0 * 4
     p10 = row0 + x1 * 4
     p01 = row1 + x0 * 4

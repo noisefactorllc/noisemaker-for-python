@@ -357,6 +357,7 @@ def fetch_effect(effect_id: str, version: str = CDN_VERSION) -> dict:
         "params": _parse_field(region, effect_id, "globals", {}),
         "passes": _parse_field(region, effect_id, "passes", []),
         "textures": _parse_field(region, effect_id, "textures", {}),
+        "externalTexture": _parse_field(region, effect_id, "externalTexture", None),
         "programs": _extract_programs(bundle),
     }
     cache_file.parent.mkdir(parents=True, exist_ok=True)
