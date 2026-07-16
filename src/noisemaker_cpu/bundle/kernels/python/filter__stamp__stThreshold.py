@@ -7,29 +7,29 @@ def run_pixel(ctx, out):
     g = _G()
     _u_inputTex = T["inputTex"]
     _u_blurTex = T["blurTex"]
-    _u_resolution = U["resolution"]
-    _u_tileOffset = U["tileOffset"]
-    _u_balance = U["balance"]
-    _u_roughness = U["roughness"]
-    _u_inkColor = U["inkColor"]
-    _u_paperColor = U["paperColor"]
+    _u_resolution = U.get("resolution", rt.construct(2, 0.0))
+    _u_tileOffset = U.get("tileOffset", rt.construct(2, 0.0))
+    _u_balance = U.get("balance", rt.f(0.0))
+    _u_roughness = U.get("roughness", rt.f(0.0))
+    _u_inkColor = U.get("inkColor", rt.construct(3, 0.0))
+    _u_paperColor = U.get("paperColor", rt.construct(3, 0.0))
     g.fragColor = rt.construct(4, 0.0)
     def lum__vec3(c):
-        c = rt.copy(c)
+        c = rt.copy(c, "float")
         return rt.dot(c, rt.construct(3, rt.f(0.2126), rt.f(0.7152), rt.f(0.0722)))
     def hash12__vec2(p):
-        p = rt.copy(p)
+        p = rt.copy(p, "float")
         p3 = rt.component_wise("fract", rt.binary("*", rt.construct(3, rt.swizzle(p, "xyx")), rt.f(0.1031), 3, "float"), width=3)
         p3 = rt.binary("+", p3, rt.dot(p3, rt.binary("+", rt.swizzle(p3, "yzx"), rt.f(33.33), 3, "float")), 3, "float")
         return rt.component_wise("fract", rt.binary("*", rt.binary("+", rt.swizzle(p3, "x"), rt.swizzle(p3, "y"), 1, "float"), rt.swizzle(p3, "z"), 1, "float"), width=1)
     def vnoise__vec2(p):
-        p = rt.copy(p)
+        p = rt.copy(p, "float")
         i = rt.component_wise("floor", p, width=2)
         f = rt.component_wise("fract", p, width=2)
         u = rt.binary("*", rt.binary("*", f, f, 2, "float"), rt.binary("-", rt.f(3.0), rt.binary("*", rt.f(2.0), f, 2, "float"), 2, "float"), 2, "float")
         return rt.component_wise("mix", rt.component_wise("mix", hash12__vec2(i), hash12__vec2(rt.binary("+", i, rt.construct(2, rt.f(1.0), rt.f(0.0)), 2, "float")), rt.swizzle(u, "x"), width=1), rt.component_wise("mix", hash12__vec2(rt.binary("+", i, rt.construct(2, rt.f(0.0), rt.f(1.0)), 2, "float")), hash12__vec2(rt.binary("+", i, rt.construct(2, rt.f(1.0), rt.f(1.0)), 2, "float")), rt.swizzle(u, "x"), width=1), rt.swizzle(u, "y"), width=1)
     def fbm__vec2(p):
-        p = rt.copy(p)
+        p = rt.copy(p, "float")
         v = rt.f(0.0)
         a = rt.f(0.5)
         i = rt.i(0)
@@ -45,8 +45,8 @@ def run_pixel(ctx, out):
             a = rt.binary("*", a, rt.f(0.5), 1, "float")
         return v
     def tonemap2__float_vec3_vec3(t, ink, paper):
-        ink = rt.copy(ink)
-        paper = rt.copy(paper)
+        ink = rt.copy(ink, "float")
+        paper = rt.copy(paper, "float")
         return rt.component_wise("mix", ink, paper, rt.component_wise("clamp", t, rt.f(0.0), rt.f(1.0), width=1), width=3)
     def main__void():
         uv = rt.binary("/", rt.swizzle(ctx.frag_coord, "xy"), _u_resolution, 2, "float")

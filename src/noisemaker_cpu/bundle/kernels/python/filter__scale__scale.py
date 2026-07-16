@@ -5,15 +5,15 @@ def run_pixel(ctx, out):
     class _G:
         pass
     g = _G()
-    _u_resolution = U["resolution"]
-    _u_tileOffset = U["tileOffset"]
-    _u_fullResolution = U["fullResolution"]
-    _u_aspect = U["aspect"]
-    _u_scaleX = U["scaleX"]
-    _u_scaleY = U["scaleY"]
-    _u_centerX = U["centerX"]
-    _u_centerY = U["centerY"]
-    _u_wrap = U["wrap"]
+    _u_resolution = U.get("resolution", rt.construct(2, 0.0))
+    _u_tileOffset = U.get("tileOffset", rt.construct(2, 0.0))
+    _u_fullResolution = U.get("fullResolution", rt.construct(2, 0.0))
+    _u_aspect = U.get("aspect", rt.f(0.0))
+    _u_scaleX = U.get("scaleX", rt.f(0.0))
+    _u_scaleY = U.get("scaleY", rt.f(0.0))
+    _u_centerX = U.get("centerX", rt.f(0.0))
+    _u_centerY = U.get("centerY", rt.f(0.0))
+    _u_wrap = U.get("wrap", 0)
     _u_inputTex = T["inputTex"]
     g.fragColor = rt.construct(4, 0.0)
     def main__void():

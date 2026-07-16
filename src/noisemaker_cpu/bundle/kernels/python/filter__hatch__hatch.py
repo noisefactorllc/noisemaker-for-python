@@ -5,33 +5,33 @@ def run_pixel(ctx, out):
     class _G:
         pass
     g = _G()
-    _u_MODE = U["MODE"]
+    _u_MODE = U.get("MODE", 0)
     _u_inputTex = T["inputTex"]
-    _u_resolution = U["resolution"]
-    _u_tileOffset = U["tileOffset"]
-    _u_strokeLength = U["strokeLength"]
-    _u_direction = U["direction"]
-    _u_balance = U["balance"]
-    _u_pressure = U["pressure"]
-    _u_inkColor = U["inkColor"]
-    _u_paperColor = U["paperColor"]
+    _u_resolution = U.get("resolution", rt.construct(2, 0.0))
+    _u_tileOffset = U.get("tileOffset", rt.construct(2, 0.0))
+    _u_strokeLength = U.get("strokeLength", rt.f(0.0))
+    _u_direction = U.get("direction", 0)
+    _u_balance = U.get("balance", rt.f(0.0))
+    _u_pressure = U.get("pressure", rt.f(0.0))
+    _u_inkColor = U.get("inkColor", rt.construct(3, 0.0))
+    _u_paperColor = U.get("paperColor", rt.construct(3, 0.0))
     g.fragColor = rt.construct(4, 0.0)
     def hash12__vec2(p):
-        p = rt.copy(p)
+        p = rt.copy(p, "float")
         p3 = rt.component_wise("fract", rt.binary("*", rt.construct(3, rt.swizzle(p, "xyx")), rt.f(0.1031), 3, "float"), width=3)
         p3 = rt.binary("+", p3, rt.dot(p3, rt.binary("+", rt.swizzle(p3, "yzx"), rt.f(33.33), 3, "float")), 3, "float")
         return rt.component_wise("fract", rt.binary("*", rt.binary("+", rt.swizzle(p3, "x"), rt.swizzle(p3, "y"), 1, "float"), rt.swizzle(p3, "z"), 1, "float"), width=1)
     def lum__vec3(c):
-        c = rt.copy(c)
+        c = rt.copy(c, "float")
         return rt.dot(c, rt.construct(3, rt.f(0.2126), rt.f(0.7152), rt.f(0.0722)))
     def vnoise__vec2(p):
-        p = rt.copy(p)
+        p = rt.copy(p, "float")
         i = rt.component_wise("floor", p, width=2)
         f = rt.component_wise("fract", p, width=2)
         u = rt.binary("*", rt.binary("*", f, f, 2, "float"), rt.binary("-", rt.f(3.0), rt.binary("*", rt.f(2.0), f, 2, "float"), 2, "float"), 2, "float")
         return rt.component_wise("mix", rt.component_wise("mix", hash12__vec2(i), hash12__vec2(rt.binary("+", i, rt.construct(2, rt.f(1.0), rt.f(0.0)), 2, "float")), rt.swizzle(u, "x"), width=1), rt.component_wise("mix", hash12__vec2(rt.binary("+", i, rt.construct(2, rt.f(0.0), rt.f(1.0)), 2, "float")), hash12__vec2(rt.binary("+", i, rt.construct(2, rt.f(1.0), rt.f(1.0)), 2, "float")), rt.swizzle(u, "x"), width=1), rt.swizzle(u, "y"), width=1)
     def fbm__vec2(p):
-        p = rt.copy(p)
+        p = rt.copy(p, "float")
         v = rt.f(0.0)
         a = rt.f(0.5)
         i = rt.i(0)
@@ -47,7 +47,7 @@ def run_pixel(ctx, out):
             a = rt.binary("*", a, rt.f(0.5), 1, "float")
         return v
     def lumGradient__vec2(uv):
-        uv = rt.copy(uv)
+        uv = rt.copy(uv, "float")
         px = rt.binary("/", rt.f(1.0), _u_resolution, 2, "float")
         tl = lum__vec3(rt.swizzle(rt.texture(_u_inputTex, rt.binary("+", uv, rt.binary("*", px, rt.construct(2, rt.unary("-", rt.f(1.0)), rt.f(1.0)), 2, "float"), 2, "float")), "rgb"))
         l = lum__vec3(rt.swizzle(rt.texture(_u_inputTex, rt.binary("+", uv, rt.binary("*", px, rt.construct(2, rt.unary("-", rt.f(1.0)), rt.f(0.0)), 2, "float"), 2, "float")), "rgb"))
@@ -59,11 +59,11 @@ def run_pixel(ctx, out):
         b = lum__vec3(rt.swizzle(rt.texture(_u_inputTex, rt.binary("+", uv, rt.binary("*", px, rt.construct(2, rt.f(0.0), rt.unary("-", rt.f(1.0))), 2, "float"), 2, "float")), "rgb"))
         return rt.construct(2, rt.binary("-", rt.binary("-", rt.binary("-", rt.binary("+", rt.binary("+", tr, rt.binary("*", rt.f(2.0), r, 1, "float"), 1, "float"), br, 1, "float"), tl, 1, "float"), rt.binary("*", rt.f(2.0), l, 1, "float"), 1, "float"), bl, 1, "float"), rt.binary("-", rt.binary("-", rt.binary("-", rt.binary("+", rt.binary("+", tl, rt.binary("*", rt.f(2.0), t, 1, "float"), 1, "float"), tr, 1, "float"), bl, 1, "float"), rt.binary("*", rt.f(2.0), b, 1, "float"), 1, "float"), br, 1, "float"))
     def tonemap2__float_vec3_vec3(t, ink, paper):
-        ink = rt.copy(ink)
-        paper = rt.copy(paper)
+        ink = rt.copy(ink, "float")
+        paper = rt.copy(paper, "float")
         return rt.component_wise("mix", ink, paper, rt.component_wise("clamp", t, rt.f(0.0), rt.f(1.0), width=1), width=3)
     def rotate2D__vec2_float(v, angleDeg):
-        v = rt.copy(v)
+        v = rt.copy(v, "float")
         a = rt.component_wise("radians", angleDeg, width=1)
         co = rt.component_wise("cos", a, width=1)
         si = rt.component_wise("sin", a, width=1)
@@ -77,7 +77,7 @@ def run_pixel(ctx, out):
             return rt.f(90.0)
         return rt.f(45.0)
     def strokeField__vec2_float_float(gc, angleDeg, stretchAmt):
-        gc = rt.copy(gc)
+        gc = rt.copy(gc, "float")
         p = rt.binary("*", rotate2D__vec2_float(gc, angleDeg), rt.construct(2, rt.binary("/", rt.f(1.0), stretchAmt, 1, "float"), rt.f(0.9)), 2, "float")
         return vnoise__vec2(p)
     def main__void():

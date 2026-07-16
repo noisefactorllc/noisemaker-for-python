@@ -5,33 +5,33 @@ def run_pixel(ctx, out):
     class _G:
         pass
     g = _G()
-    _u_MODE = U["MODE"]
-    _u_FORMULA = U["FORMULA"]
-    _u_COLOR_SCHEME = U["COLOR_SCHEME"]
-    _u_INTERP = U["INTERP"]
-    _u_MASK_FORMULA = U["MASK_FORMULA"]
-    _u_MASK_COLOR_SCHEME = U["MASK_COLOR_SCHEME"]
-    _u_time = U["time"]
-    _u_seed = U["seed"]
-    _u_resolution = U["resolution"]
-    _u_tileOffset = U["tileOffset"]
-    _u_fullResolution = U["fullResolution"]
-    _u_n = U["n"]
-    _u_scale = U["scale"]
-    _u_rotation = U["rotation"]
-    _u_speed = U["speed"]
-    _u_tiles = U["tiles"]
-    _u_complexity = U["complexity"]
-    _u_hueRange = U["hueRange"]
-    _u_hueRotation = U["hueRotation"]
-    _u_baseHueRange = U["baseHueRange"]
+    _u_MODE = U.get("MODE", 0)
+    _u_FORMULA = U.get("FORMULA", 0)
+    _u_COLOR_SCHEME = U.get("COLOR_SCHEME", 0)
+    _u_INTERP = U.get("INTERP", 0)
+    _u_MASK_FORMULA = U.get("MASK_FORMULA", 0)
+    _u_MASK_COLOR_SCHEME = U.get("MASK_COLOR_SCHEME", 0)
+    _u_time = U.get("time", rt.f(0.0))
+    _u_seed = U.get("seed", 0)
+    _u_resolution = U.get("resolution", rt.construct(2, 0.0))
+    _u_tileOffset = U.get("tileOffset", rt.construct(2, 0.0))
+    _u_fullResolution = U.get("fullResolution", rt.construct(2, 0.0))
+    _u_n = U.get("n", rt.f(0.0))
+    _u_scale = U.get("scale", rt.f(0.0))
+    _u_rotation = U.get("rotation", rt.f(0.0))
+    _u_speed = U.get("speed", rt.f(0.0))
+    _u_tiles = U.get("tiles", rt.f(0.0))
+    _u_complexity = U.get("complexity", rt.f(0.0))
+    _u_hueRange = U.get("hueRange", rt.f(0.0))
+    _u_hueRotation = U.get("hueRotation", rt.f(0.0))
+    _u_baseHueRange = U.get("baseHueRange", rt.f(0.0))
     g.fragColor = rt.construct(4, 0.0)
     g.BIT_COUNT = rt.i(8)
     g.mask = rt.binary("-", rt.binary("<<", rt.i(1), g.BIT_COUNT, 1, "int"), rt.i(1), 1, "int")
     def map__float_float_float_float_float(value, inMin, inMax, outMin, outMax):
         return rt.binary("+", outMin, rt.binary("/", rt.binary("*", rt.binary("-", outMax, outMin, 1, "float"), rt.binary("-", value, inMin, 1, "float"), 1, "float"), rt.binary("-", inMax, inMin, 1, "float"), 1, "float"), 1, "float")
     def pcg__uvec3(v):
-        v = rt.copy(v)
+        v = rt.copy(v, "uint")
         v = rt.binary("+", rt.binary("*", v, rt.construct(1, rt.i(1664525), base="uint"), 3, "uint"), rt.construct(1, rt.i(1013904223), base="uint"), 3, "uint")
         v = rt.assign_swizzle(v, "x", rt.binary("+", rt.swizzle(v, "x"), rt.binary("*", rt.swizzle(v, "y"), rt.swizzle(v, "z"), 1, "uint"), 1, "uint"))
         v = rt.assign_swizzle(v, "y", rt.binary("+", rt.swizzle(v, "y"), rt.binary("*", rt.swizzle(v, "z"), rt.swizzle(v, "x"), 1, "uint"), 1, "uint"))
@@ -42,10 +42,10 @@ def run_pixel(ctx, out):
         v = rt.assign_swizzle(v, "z", rt.binary("+", rt.swizzle(v, "z"), rt.binary("*", rt.swizzle(v, "x"), rt.swizzle(v, "y"), 1, "uint"), 1, "uint"))
         return v
     def prng__vec3(p):
-        p = rt.copy(p)
+        p = rt.copy(p, "float")
         return rt.binary("/", rt.construct(3, pcg__uvec3(rt.construct(3, p, base="uint"))), rt.construct(1, rt.construct(1, rt.i(4294967295), base="uint")), 3, "float")
     def rotate2D__vec2_float(st, rot):
-        st = rt.copy(st)
+        st = rt.copy(st, "float")
         rot = map__float_float_float_float_float(rot, rt.f(0.0), rt.f(360.0), rt.f(0.0), rt.f(1.0))
         angle = rt.binary("*", rot, rt.f(6.28318530718), 1, "float")
         st = rt.binary("-", st, rt.binary("*", _u_fullResolution, rt.f(0.5), 2, "float"), 2, "float")
@@ -55,8 +55,8 @@ def run_pixel(ctx, out):
     def periodicFunction__float(p):
         return map__float_float_float_float_float(rt.component_wise("sin", rt.binary("*", p, rt.f(6.28318530718), 1, "float"), width=1), rt.unary("-", rt.f(1.0)), rt.f(1.0), rt.f(0.0), rt.f(1.0))
     def randomFromLatticeWithOffset__vec2_float_float_float_ivec2(st, xFreq, yFreq, s, offset):
-        st = rt.copy(st)
-        offset = rt.copy(offset)
+        st = rt.copy(st, "float")
+        offset = rt.copy(offset, "int")
         lattice = rt.construct(2, rt.binary("*", rt.swizzle(st, "x"), xFreq, 1, "float"), rt.binary("*", rt.swizzle(st, "y"), yFreq, 1, "float"))
         baseFloor = rt.component_wise("floor", lattice, width=2)
         base = rt.binary("+", rt.construct(2, baseFloor, base="int"), offset, 2, "int")
@@ -76,13 +76,13 @@ def run_pixel(ctx, out):
         denom = rt.construct(1, rt.i(4294967295))
         return rt.construct(3, rt.binary("/", rt.construct(1, rt.swizzle(prngState, "x")), denom, 1, "float"), rt.binary("/", rt.construct(1, rt.swizzle(prngState, "y")), denom, 1, "float"), rt.binary("/", rt.construct(1, rt.swizzle(prngState, "z")), denom, 1, "float"))
     def constant__vec2_float_float_float(st, xFreq, yFreq, s):
-        st = rt.copy(st)
+        st = rt.copy(st, "float")
         randTime = randomFromLatticeWithOffset__vec2_float_float_float_ivec2(st, xFreq, yFreq, s, rt.construct(2, rt.i(40), rt.i(0), base="int"))
         scaledTime = rt.binary("*", periodicFunction__float(rt.binary("-", rt.swizzle(randTime, "x"), _u_time, 1, "float")), map__float_float_float_float_float(rt.component_wise("abs", _u_speed, width=1), rt.f(0.0), rt.f(100.0), rt.f(0.0), rt.f(0.333)), 1, "float")
         rand = randomFromLatticeWithOffset__vec2_float_float_float_ivec2(st, xFreq, yFreq, s, rt.construct(2, rt.i(0), rt.i(0), base="int"))
         return periodicFunction__float(rt.binary("-", rt.swizzle(rand, "x"), scaledTime, 1, "float"))
     def value__vec2_float_float_float(st, xFreq, yFreq, s):
-        st = rt.copy(st)
+        st = rt.copy(st, "float")
         x1y1 = constant__vec2_float_float_float(st, xFreq, yFreq, s)
         if rt.binary("==", _u_INTERP, rt.i(0)):
             return x1y1
@@ -115,7 +115,7 @@ def run_pixel(ctx, out):
     def xor__float_float(a, b):
         return rt.construct(1, xor__int_int(rt.construct(1, a, base="int"), rt.construct(1, b, base="int")))
     def bitValue__vec2_float_float(st, freq, nForColor):
-        st = rt.copy(st)
+        st = rt.copy(st, "float")
         blendy = rt.binary("+", nForColor, rt.binary("*", periodicFunction__float(rt.binary("*", value__vec2_float_float_float(st, rt.binary("*", freq, rt.f(0.01), 1, "float"), rt.binary("*", freq, rt.f(0.01), 1, "float"), nForColor), rt.f(0.1), 1, "float")), rt.f(100.0), 1, "float"), 1, "float")
         v = rt.f(1.0)
         if rt.binary("==", _u_FORMULA, rt.i(0)):
@@ -137,7 +137,7 @@ def run_pixel(ctx, out):
                                 v = rt.component_wise("mod", rt.binary("*", rt.binary("-", rt.binary("*", rt.swizzle(st, "x"), freq, 1, "float"), rt.f(0.5), 1, "float"), rt.f(0.25), 1, "float"), rt.binary("-", rt.binary("*", rt.swizzle(st, "y"), freq, 1, "float"), rt.f(0.5), 1, "float"), width=1)
         return (rt.f(0.0) if rt.binary(">", v, rt.f(1.0)) else rt.f(1.0))
     def bitField__vec2(st):
-        st = rt.copy(st)
+        st = rt.copy(st, "float")
         st = rt.binary("/", st, _u_scale, 2, "float")
         st = rotate2D__vec2_float(st, _u_rotation)
         freq = map__float_float_float_float_float(_u_scale, rt.f(1.0), rt.f(100.0), _u_scale, rt.f(8.0))
@@ -193,7 +193,7 @@ def run_pixel(ctx, out):
                                                                 color = rt.assign_swizzle(color, "b", bitValue__vec2_float_float(st, freq, rt.binary("+", _u_n, rt.f(2.0), 1, "float")))
         return color
     def hsv2rgb__vec3(hsv):
-        hsv = rt.copy(hsv)
+        hsv = rt.copy(hsv, "float")
         h = rt.component_wise("fract", rt.swizzle(hsv, "x"), width=1)
         s = rt.swizzle(hsv, "y")
         v = rt.swizzle(hsv, "z")
@@ -222,7 +222,7 @@ def run_pixel(ctx, out):
                                 rgb = rt.construct(3, rt.f(0.0), rt.f(0.0), rt.f(0.0))
         return rt.binary("+", rgb, rt.construct(3, m, m, m), 3, "float")
     def rgb2hsv__vec3(rgb):
-        rgb = rt.copy(rgb)
+        rgb = rt.copy(rgb, "float")
         r = rt.swizzle(rgb, "r")
         _g = rt.swizzle(rgb, "g")
         b = rt.swizzle(rgb, "b")
@@ -243,13 +243,13 @@ def run_pixel(ctx, out):
         v = max
         return rt.construct(3, h, s, v)
     def maskValue__vec2_float_float_float(st, xFreq, yFreq, s):
-        st = rt.copy(st)
+        st = rt.copy(st, "float")
         return constant__vec2_float_float_float(st, xFreq, yFreq, s)
     def maskValue__vec2_float_float(st, freq, s):
-        st = rt.copy(st)
+        st = rt.copy(st, "float")
         return maskValue__vec2_float_float_float(st, freq, freq, s)
     def arecibo__vec2_float_float_float(st, xFreq, yFreq, _seed):
-        st = rt.copy(st)
+        st = rt.copy(st, "float")
         xMod = rt.component_wise("mod", rt.component_wise("floor", rt.binary("*", rt.swizzle(st, "x"), xFreq, 1, "float"), width=1), xFreq, width=1)
         yMod = rt.component_wise("mod", rt.component_wise("floor", rt.binary("*", rt.swizzle(st, "y"), yFreq, 1, "float"), width=1), yFreq, width=1)
         v = rt.f(1.0)
@@ -262,10 +262,10 @@ def run_pixel(ctx, out):
                 v = maskValue__vec2_float_float_float(st, xFreq, yFreq, _seed)
         return v
     def areciboNum__vec2_float_float(st, freq, _seed):
-        st = rt.copy(st)
+        st = rt.copy(st, "float")
         return arecibo__vec2_float_float_float(st, rt.binary("+", rt.component_wise("floor", rt.binary("*", freq, rt.f(0.5), 1, "float"), width=1), rt.f(1.0), 1, "float"), rt.component_wise("floor", freq, width=1), _seed)
     def glyphs__vec2_float_float(st, freq, _seed):
-        st = rt.copy(st)
+        st = rt.copy(st, "float")
         xFreq = rt.component_wise("floor", rt.binary("*", freq, rt.f(0.75), 1, "float"), width=1)
         xMod = rt.component_wise("mod", rt.component_wise("floor", rt.binary("*", rt.swizzle(st, "x"), xFreq, 1, "float"), width=1), xFreq, width=1)
         yMod = rt.component_wise("mod", rt.component_wise("floor", rt.binary("*", rt.swizzle(st, "y"), freq, 1, "float"), width=1), freq, width=1)
@@ -276,7 +276,7 @@ def run_pixel(ctx, out):
             v = maskValue__vec2_float_float_float(st, xFreq, freq, _seed)
         return v
     def invaders__vec2_float_float(st, freq, _seed):
-        st = rt.copy(st)
+        st = rt.copy(st, "float")
         xMod = rt.component_wise("mod", rt.component_wise("floor", rt.binary("*", rt.swizzle(st, "x"), freq, 1, "float"), width=1), freq, width=1)
         yMod = rt.component_wise("mod", rt.component_wise("floor", rt.binary("*", rt.swizzle(st, "y"), freq, 1, "float"), width=1), freq, width=1)
         v = rt.f(1.0)
@@ -289,7 +289,7 @@ def run_pixel(ctx, out):
                 v = maskValue__vec2_float_float(st, freq, _seed)
         return v
     def bitMaskValue__vec2_float_float(st, freq, _seed):
-        st = rt.copy(st)
+        st = rt.copy(st, "float")
         v = rt.f(1.0)
         if (bool(rt.binary("==", _u_MASK_FORMULA, rt.i(10))) or bool(rt.binary("==", _u_MASK_FORMULA, rt.i(11)))):
             v = invaders__vec2_float_float(st, freq, _seed)
@@ -301,7 +301,7 @@ def run_pixel(ctx, out):
                     v = areciboNum__vec2_float_float(st, freq, _seed)
         return v
     def bitMask__vec2(st):
-        st = rt.copy(st)
+        st = rt.copy(st, "float")
         color = rt.construct(3, rt.f(0.0))
         st = rt.binary("-", st, rt.construct(2, rt.binary("/", rt.binary("*", rt.f(0.5), rt.swizzle(_u_fullResolution, "x"), 1, "float"), rt.swizzle(_u_fullResolution, "y"), 1, "float"), rt.f(0.5)), 2, "float")
         st = rt.binary("*", st, _u_tiles, 2, "float")

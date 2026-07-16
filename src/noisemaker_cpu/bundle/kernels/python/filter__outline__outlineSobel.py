@@ -5,12 +5,12 @@ def run_pixel(ctx, out):
     class _G:
         pass
     g = _G()
-    _u_tileOffset = U["tileOffset"]
-    _u_fullResolution = U["fullResolution"]
+    _u_tileOffset = U.get("tileOffset", rt.construct(2, 0.0))
+    _u_fullResolution = U.get("fullResolution", rt.construct(2, 0.0))
     _u_valueTexture = T["valueTexture"]
-    _u_sobelMetric = U["sobelMetric"]
-    _u_thickness = U["thickness"]
-    _u_renderScale = U["renderScale"]
+    _u_sobelMetric = U.get("sobelMetric", rt.f(0.0))
+    _u_thickness = U.get("thickness", rt.f(0.0))
+    _u_renderScale = U.get("renderScale", rt.f(0.0))
     g.fragColor = rt.construct(4, 0.0)
     def wrapCoord__int_int(value, size):
         if rt.binary("<=", size, rt.i(0)):

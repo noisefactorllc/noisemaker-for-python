@@ -5,29 +5,29 @@ def run_pixel(ctx, out):
     class _G:
         pass
     g = _G()
-    _u_MODE = U["MODE"]
+    _u_MODE = U.get("MODE", 0)
     _u_inputTex = T["inputTex"]
     _u_flatTex = T["flatTex"]
-    _u_resolution = U["resolution"]
-    _u_tileOffset = U["tileOffset"]
-    _u_size = U["size"]
-    _u_detail = U["detail"]
-    _u_textureAmount = U["textureAmount"]
-    _u_seed = U["seed"]
+    _u_resolution = U.get("resolution", rt.construct(2, 0.0))
+    _u_tileOffset = U.get("tileOffset", rt.construct(2, 0.0))
+    _u_size = U.get("size", rt.f(0.0))
+    _u_detail = U.get("detail", rt.f(0.0))
+    _u_textureAmount = U.get("textureAmount", rt.f(0.0))
+    _u_seed = U.get("seed", 0)
     g.fragColor = rt.construct(4, 0.0)
     def hash12__vec2(p):
-        p = rt.copy(p)
+        p = rt.copy(p, "float")
         p3 = rt.component_wise("fract", rt.binary("*", rt.construct(3, rt.swizzle(p, "xyx")), rt.f(0.1031), 3, "float"), width=3)
         p3 = rt.binary("+", p3, rt.dot(p3, rt.binary("+", rt.swizzle(p3, "yzx"), rt.f(33.33), 3, "float")), 3, "float")
         return rt.component_wise("fract", rt.binary("*", rt.binary("+", rt.swizzle(p3, "x"), rt.swizzle(p3, "y"), 1, "float"), rt.swizzle(p3, "z"), 1, "float"), width=1)
     def vnoise__vec2(p):
-        p = rt.copy(p)
+        p = rt.copy(p, "float")
         i = rt.component_wise("floor", p, width=2)
         f = rt.component_wise("fract", p, width=2)
         u = rt.binary("*", rt.binary("*", f, f, 2, "float"), rt.binary("-", rt.f(3.0), rt.binary("*", rt.f(2.0), f, 2, "float"), 2, "float"), 2, "float")
         return rt.component_wise("mix", rt.component_wise("mix", hash12__vec2(i), hash12__vec2(rt.binary("+", i, rt.construct(2, rt.f(1.0), rt.f(0.0)), 2, "float")), rt.swizzle(u, "x"), width=1), rt.component_wise("mix", hash12__vec2(rt.binary("+", i, rt.construct(2, rt.f(0.0), rt.f(1.0)), 2, "float")), hash12__vec2(rt.binary("+", i, rt.construct(2, rt.f(1.0), rt.f(1.0)), 2, "float")), rt.swizzle(u, "x"), width=1), rt.swizzle(u, "y"), width=1)
     def fbm__vec2(p):
-        p = rt.copy(p)
+        p = rt.copy(p, "float")
         v = rt.f(0.0)
         a = rt.f(0.5)
         i = rt.i(0)
@@ -43,10 +43,10 @@ def run_pixel(ctx, out):
             a = rt.binary("*", a, rt.f(0.5), 1, "float")
         return v
     def lum__vec3(c):
-        c = rt.copy(c)
+        c = rt.copy(c, "float")
         return rt.dot(c, rt.construct(3, rt.f(0.2126), rt.f(0.7152), rt.f(0.0722)))
     def lumGradientFlat__vec2(uv):
-        uv = rt.copy(uv)
+        uv = rt.copy(uv, "float")
         px = rt.binary("/", rt.f(1.0), _u_resolution, 2, "float")
         tl = lum__vec3(rt.swizzle(rt.texture(_u_flatTex, rt.binary("+", uv, rt.binary("*", px, rt.construct(2, rt.unary("-", rt.f(1.0)), rt.f(1.0)), 2, "float"), 2, "float")), "rgb"))
         l = lum__vec3(rt.swizzle(rt.texture(_u_flatTex, rt.binary("+", uv, rt.binary("*", px, rt.construct(2, rt.unary("-", rt.f(1.0)), rt.f(0.0)), 2, "float"), 2, "float")), "rgb"))
@@ -58,7 +58,7 @@ def run_pixel(ctx, out):
         b = lum__vec3(rt.swizzle(rt.texture(_u_flatTex, rt.binary("+", uv, rt.binary("*", px, rt.construct(2, rt.f(0.0), rt.unary("-", rt.f(1.0))), 2, "float"), 2, "float")), "rgb"))
         return rt.construct(2, rt.binary("-", rt.binary("-", rt.binary("-", rt.binary("+", rt.binary("+", tr, rt.binary("*", rt.f(2.0), r, 1, "float"), 1, "float"), br, 1, "float"), tl, 1, "float"), rt.binary("*", rt.f(2.0), l, 1, "float"), 1, "float"), bl, 1, "float"), rt.binary("-", rt.binary("-", rt.binary("-", rt.binary("+", rt.binary("+", tl, rt.binary("*", rt.f(2.0), t, 1, "float"), 1, "float"), tr, 1, "float"), bl, 1, "float"), rt.binary("*", rt.f(2.0), b, 1, "float"), 1, "float"), br, 1, "float"))
     def tent3x3__vec2(uv):
-        uv = rt.copy(uv)
+        uv = rt.copy(uv, "float")
         px = rt.binary("/", rt.f(1.0), _u_resolution, 2, "float")
         sum = rt.construct(3, rt.f(0.0))
         wsum = rt.f(0.0)
@@ -86,9 +86,9 @@ def run_pixel(ctx, out):
         t = rt.component_wise("clamp", x, rt.f(0.0), rt.f(1.0), width=1)
         return rt.binary("*", rt.binary("*", t, t, 1, "float"), rt.binary("-", rt.f(3.0), rt.binary("*", rt.f(2.0), t, 1, "float"), 1, "float"), 1, "float")
     def modeColor__vec2_vec3_vec2(uv, c, globalCoord):
-        uv = rt.copy(uv)
-        c = rt.copy(c)
-        globalCoord = rt.copy(globalCoord)
+        uv = rt.copy(uv, "float")
+        c = rt.copy(c, "float")
+        globalCoord = rt.copy(globalCoord, "float")
         if rt.binary("==", _u_MODE, rt.i(0)):
             return c
         else:

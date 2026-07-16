@@ -6,15 +6,15 @@ def run_pixel(ctx, out):
         pass
     g = _G()
     _u_inputTex = T["inputTex"]
-    _u_resolution = U["resolution"]
-    _u_tileOffset = U["tileOffset"]
-    _u_fullResolution = U["fullResolution"]
-    _u_alpha = U["alpha"]
-    _u_sobelMetric = U["sobelMetric"]
-    _u_width = U["width"]
+    _u_resolution = U.get("resolution", rt.construct(2, 0.0))
+    _u_tileOffset = U.get("tileOffset", rt.construct(2, 0.0))
+    _u_fullResolution = U.get("fullResolution", rt.construct(2, 0.0))
+    _u_alpha = U.get("alpha", rt.f(0.0))
+    _u_sobelMetric = U.get("sobelMetric", rt.f(0.0))
+    _u_width = U.get("width", rt.f(0.0))
     g.fragColor = rt.construct(4, 0.0)
     def luminance__vec3(rgb):
-        rgb = rt.copy(rgb)
+        rgb = rt.copy(rgb, "float")
         return rt.dot(rgb, rt.construct(3, rt.f(0.299), rt.f(0.587), rt.f(0.114)))
     def distance_metric__float_float_int(gx, gy, metric):
         abs_gx = rt.component_wise("abs", gx, width=1)

@@ -6,13 +6,13 @@ def run_pixel(ctx, out):
         pass
     g = _G()
     _u_inputTex = T["inputTex"]
-    _u_resolution = U["resolution"]
-    _u_tileOffset = U["tileOffset"]
-    _u_fullResolution = U["fullResolution"]
-    _u_alpha = U["alpha"]
-    _u_time = U["time"]
-    _u_pause = U["pause"]
-    _u_density = U["density"]
+    _u_resolution = U.get("resolution", rt.construct(2, 0.0))
+    _u_tileOffset = U.get("tileOffset", rt.construct(2, 0.0))
+    _u_fullResolution = U.get("fullResolution", rt.construct(2, 0.0))
+    _u_alpha = U.get("alpha", rt.f(0.0))
+    _u_time = U.get("time", rt.f(0.0))
+    _u_pause = U.get("pause", rt.f(0.0))
+    _u_density = U.get("density", rt.f(0.0))
     g.CHANNEL_COUNT = rt.i(4)
     g.TAU = rt.f(6.283185307179586)
     g.TIME_SEED_OFFSETS = rt.construct(3, rt.f(97.0), rt.f(57.0), rt.f(131.0))
@@ -28,10 +28,10 @@ def run_pixel(ctx, out):
     def periodic_value__float_float(time, value):
         return normalized_sine__float(rt.binary("*", rt.binary("-", time, value, 1, "float"), g.TAU, 1, "float"))
     def snow_fract_vec3__vec3(value):
-        value = rt.copy(value)
+        value = rt.copy(value, "float")
         return rt.binary("-", value, rt.component_wise("floor", value, width=3), 3, "float")
     def snow_hash__vec3(input_sample):
-        input_sample = rt.copy(input_sample)
+        input_sample = rt.copy(input_sample, "float")
         scaled = snow_fract_vec3__vec3(rt.binary("*", input_sample, rt.f(0.1031), 3, "float"))
         dot_val = rt.dot(scaled, rt.binary("+", rt.swizzle(scaled, "yzx"), rt.construct(3, rt.f(33.33)), 3, "float"))
         shifted = rt.binary("+", scaled, dot_val, 3, "float")
@@ -39,8 +39,8 @@ def run_pixel(ctx, out):
         fractional = rt.binary("-", combined, rt.component_wise("floor", combined, width=1), 1, "float")
         return rt.component_wise("clamp", fractional, rt.f(0.0), rt.f(1.0), width=1)
     def snow_noise__vec2_float_float_vec3(coord, time, speed, seed):
-        coord = rt.copy(coord)
-        seed = rt.copy(seed)
+        coord = rt.copy(coord, "float")
+        seed = rt.copy(seed, "float")
         angle = rt.binary("*", time, g.TAU, 1, "float")
         z_base = rt.binary("*", rt.component_wise("cos", angle, width=1), speed, 1, "float")
         base_sample = rt.construct(3, rt.binary("+", rt.swizzle(coord, "x"), rt.swizzle(seed, "x"), 1, "float"), rt.binary("+", rt.swizzle(coord, "y"), rt.swizzle(seed, "y"), 1, "float"), rt.binary("+", z_base, rt.swizzle(seed, "z"), 1, "float"))

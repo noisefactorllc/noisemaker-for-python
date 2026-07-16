@@ -7,16 +7,16 @@ def run_pixel(ctx, out):
     g = _G()
     _u_inputTex = T["inputTex"]
     _u_tex = T["tex"]
-    _u_resolution = U["resolution"]
-    _u_tileOffset = U["tileOffset"]
-    _u_fullResolution = U["fullResolution"]
-    _u_time = U["time"]
-    _u_blendMode = U["blendMode"]
-    _u_mixAmt = U["mixAmt"]
-    _u_refractAAmt = U["refractAAmt"]
-    _u_refractBAmt = U["refractBAmt"]
-    _u_refractADir = U["refractADir"]
-    _u_refractBDir = U["refractBDir"]
+    _u_resolution = U.get("resolution", rt.construct(2, 0.0))
+    _u_tileOffset = U.get("tileOffset", rt.construct(2, 0.0))
+    _u_fullResolution = U.get("fullResolution", rt.construct(2, 0.0))
+    _u_time = U.get("time", rt.f(0.0))
+    _u_blendMode = U.get("blendMode", 0)
+    _u_mixAmt = U.get("mixAmt", rt.f(0.0))
+    _u_refractAAmt = U.get("refractAAmt", rt.f(0.0))
+    _u_refractBAmt = U.get("refractBAmt", rt.f(0.0))
+    _u_refractADir = U.get("refractADir", rt.f(0.0))
+    _u_refractBDir = U.get("refractBDir", rt.f(0.0))
     g.fragColor = rt.construct(4, 0.0)
     def map__float_float_float_float_float(value, inMin, inMax, outMin, outMax):
         return rt.binary("+", outMin, rt.binary("/", rt.binary("*", rt.binary("-", outMax, outMin, 1, "float"), rt.binary("-", value, inMin, 1, "float"), 1, "float"), rt.binary("-", inMax, inMin, 1, "float"), 1, "float"), 1, "float")
@@ -25,7 +25,7 @@ def run_pixel(ctx, out):
     def blendSoftLight__float_float(base, blend):
         return (rt.binary("+", rt.binary("*", rt.binary("*", rt.f(2.0), base, 1, "float"), blend, 1, "float"), rt.binary("*", rt.binary("*", base, base, 1, "float"), rt.binary("-", rt.f(1.0), rt.binary("*", rt.f(2.0), blend, 1, "float"), 1, "float"), 1, "float"), 1, "float") if rt.binary("<", blend, rt.f(0.5)) else rt.binary("+", rt.binary("*", rt.component_wise("sqrt", base, width=1), rt.binary("-", rt.binary("*", rt.f(2.0), blend, 1, "float"), rt.f(1.0), 1, "float"), 1, "float"), rt.binary("*", rt.binary("*", rt.f(2.0), base, 1, "float"), rt.binary("-", rt.f(1.0), blend, 1, "float"), 1, "float"), 1, "float"))
     def cloak__vec2(st):
-        st = rt.copy(st)
+        st = rt.copy(st, "float")
         m = map__float_float_float_float_float(_u_mixAmt, rt.unary("-", rt.f(100.0)), rt.f(100.0), rt.f(0.0), rt.f(1.0))
         ra = map__float_float_float_float_float(_u_refractAAmt, rt.f(0.0), rt.f(100.0), rt.f(0.0), rt.f(0.125))
         rb = map__float_float_float_float_float(_u_refractBAmt, rt.f(0.0), rt.f(100.0), rt.f(0.0), rt.f(0.125))
@@ -55,7 +55,7 @@ def run_pixel(ctx, out):
             right = rt.component_wise("mix", rightRefracted, rightRefracted, map__float_float_float_float_float(_u_mixAmt, rt.f(0.0), rt.f(100.0), rt.f(0.0), rt.f(1.0)), width=4)
         return rt.component_wise("mix", left, right, m, width=4)
     def hsv2rgb__vec3(hsv):
-        hsv = rt.copy(hsv)
+        hsv = rt.copy(hsv, "float")
         h = rt.component_wise("fract", rt.swizzle(hsv, "x"), width=1)
         s = rt.swizzle(hsv, "y")
         v = rt.swizzle(hsv, "z")
@@ -84,7 +84,7 @@ def run_pixel(ctx, out):
                                 rgb = rt.construct(3, rt.f(0.0), rt.f(0.0), rt.f(0.0))
         return rt.binary("+", rgb, rt.construct(3, m, m, m), 3, "float")
     def rgb2hsv__vec3(rgb):
-        rgb = rt.copy(rgb)
+        rgb = rt.copy(rgb, "float")
         r = rt.swizzle(rgb, "r")
         _g = rt.swizzle(rgb, "g")
         b = rt.swizzle(rgb, "b")
@@ -105,8 +105,8 @@ def run_pixel(ctx, out):
         v = max
         return rt.construct(3, h, s, v)
     def blend__vec4_vec4_int_float(color1, color2, mode, factor):
-        color1 = rt.copy(color1)
-        color2 = rt.copy(color2)
+        color1 = rt.copy(color1, "float")
+        color2 = rt.copy(color2, "float")
         color = rt.construct(4, 0.0)
         middle = rt.construct(4, 0.0)
         amt = map__float_float_float_float_float(_u_mixAmt, rt.unary("-", rt.f(100.0)), rt.f(100.0), rt.f(0.0), rt.f(1.0))

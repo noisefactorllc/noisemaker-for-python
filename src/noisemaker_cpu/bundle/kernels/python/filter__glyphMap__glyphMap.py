@@ -6,16 +6,16 @@ def run_pixel(ctx, out):
         pass
     g = _G()
     _u_inputTex = T["inputTex"]
-    _u_tileOffset = U["tileOffset"]
-    _u_fullResolution = U["fullResolution"]
-    _u_renderScale = U["renderScale"]
-    _u_cellSize = U["cellSize"]
-    _u_seed = U["seed"]
-    _u_colorMode = U["colorMode"]
+    _u_tileOffset = U.get("tileOffset", rt.construct(2, 0.0))
+    _u_fullResolution = U.get("fullResolution", rt.construct(2, 0.0))
+    _u_renderScale = U.get("renderScale", rt.f(0.0))
+    _u_cellSize = U.get("cellSize", 0)
+    _u_seed = U.get("seed", 0)
+    _u_colorMode = U.get("colorMode", 0)
     g.fragColor = rt.construct(4, 0.0)
     g.GLYPH_COUNT = rt.i(16)
     def pcg__uvec3(v):
-        v = rt.copy(v)
+        v = rt.copy(v, "uint")
         v = rt.binary("+", rt.binary("*", v, rt.i(1664525), 3, "uint"), rt.i(1013904223), 3, "uint")
         v = rt.assign_swizzle(v, "x", rt.binary("+", rt.swizzle(v, "x"), rt.binary("*", rt.swizzle(v, "y"), rt.swizzle(v, "z"), 1, "uint"), 1, "uint"))
         v = rt.assign_swizzle(v, "y", rt.binary("+", rt.swizzle(v, "y"), rt.binary("*", rt.swizzle(v, "z"), rt.swizzle(v, "x"), 1, "uint"), 1, "uint"))
@@ -26,7 +26,7 @@ def run_pixel(ctx, out):
         v = rt.assign_swizzle(v, "z", rt.binary("+", rt.swizzle(v, "z"), rt.binary("*", rt.swizzle(v, "x"), rt.swizzle(v, "y"), 1, "uint"), 1, "uint"))
         return v
     def hash__vec2(p):
-        p = rt.copy(p)
+        p = rt.copy(p, "float")
         v = pcg__uvec3(rt.construct(3, rt.construct(1, (rt.binary("*", rt.swizzle(p, "x"), rt.f(2.0), 1, "float") if rt.binary(">=", rt.swizzle(p, "x"), rt.f(0.0)) else rt.binary("+", rt.binary("*", rt.unary("-", rt.swizzle(p, "x")), rt.f(2.0), 1, "float"), rt.f(1.0), 1, "float")), base="uint"), rt.construct(1, (rt.binary("*", rt.swizzle(p, "y"), rt.f(2.0), 1, "float") if rt.binary(">=", rt.swizzle(p, "y"), rt.f(0.0)) else rt.binary("+", rt.binary("*", rt.unary("-", rt.swizzle(p, "y")), rt.f(2.0), 1, "float"), rt.f(1.0), 1, "float")), base="uint"), rt.i(0), base="uint"))
         return rt.binary("/", rt.construct(1, rt.swizzle(v, "x")), rt.construct(1, rt.i(4294967295)), 1, "float")
     def glyphPixel__int_int_int(_g, x, y):

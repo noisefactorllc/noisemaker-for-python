@@ -7,23 +7,23 @@ def run_pixel(ctx, out):
     g = _G()
     _u_inputTex = T["inputTex"]
     _u_tex = T["tex"]
-    _u_resolution = U["resolution"]
-    _u_tileOffset = U["tileOffset"]
-    _u_fullResolution = U["fullResolution"]
-    _u_mode = U["mode"]
-    _u_quantize = U["quantize"]
-    _u_mapSource = U["mapSource"]
-    _u_threshold = U["threshold"]
-    _u_range = U["range"]
-    _u_thresholdR = U["thresholdR"]
-    _u_rangeR = U["rangeR"]
-    _u_thresholdG = U["thresholdG"]
-    _u_rangeG = U["rangeG"]
-    _u_thresholdB = U["thresholdB"]
-    _u_rangeB = U["rangeB"]
+    _u_resolution = U.get("resolution", rt.construct(2, 0.0))
+    _u_tileOffset = U.get("tileOffset", rt.construct(2, 0.0))
+    _u_fullResolution = U.get("fullResolution", rt.construct(2, 0.0))
+    _u_mode = U.get("mode", 0)
+    _u_quantize = U.get("quantize", 0)
+    _u_mapSource = U.get("mapSource", 0)
+    _u_threshold = U.get("threshold", rt.f(0.0))
+    _u_range = U.get("range", rt.f(0.0))
+    _u_thresholdR = U.get("thresholdR", rt.f(0.0))
+    _u_rangeR = U.get("rangeR", rt.f(0.0))
+    _u_thresholdG = U.get("thresholdG", rt.f(0.0))
+    _u_rangeG = U.get("rangeG", rt.f(0.0))
+    _u_thresholdB = U.get("thresholdB", rt.f(0.0))
+    _u_rangeB = U.get("rangeB", rt.f(0.0))
     g.fragColor = rt.construct(4, 0.0)
     def getLuminosity__vec3(color):
-        color = rt.copy(color)
+        color = rt.copy(color, "float")
         return rt.dot(color, rt.construct(3, rt.f(0.299), rt.f(0.587), rt.f(0.114)))
     def quantizeValue__float_int(value, bands):
         if rt.binary("<=", bands, rt.i(0)):

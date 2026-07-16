@@ -6,15 +6,15 @@ def run_pixel(ctx, out):
         pass
     g = _G()
     _u_inputTex = T["inputTex"]
-    _u_tileOffset = U["tileOffset"]
-    _u_fullResolution = U["fullResolution"]
-    _u_speed = U["speed"]
-    _u_timeOffset = U["timeOffset"]
-    _u_distortion = U["distortion"]
-    _u_noise = U["noise"]
-    _u_mode = U["mode"]
-    _u_time = U["time"]
-    _u_renderScale = U["renderScale"]
+    _u_tileOffset = U.get("tileOffset", rt.construct(2, 0.0))
+    _u_fullResolution = U.get("fullResolution", rt.construct(2, 0.0))
+    _u_speed = U.get("speed", rt.f(0.0))
+    _u_timeOffset = U.get("timeOffset", rt.f(0.0))
+    _u_distortion = U.get("distortion", rt.f(0.0))
+    _u_noise = U.get("noise", rt.f(0.0))
+    _u_mode = U.get("mode", rt.f(0.0))
+    _u_time = U.get("time", rt.f(0.0))
+    _u_renderScale = U.get("renderScale", rt.f(0.0))
     g.TAU = rt.f(6.283185307179586)
     g.fragColor = rt.construct(4, 0.0)
     g.BASE_SEED_LINE = rt.construct(3, rt.f(37.0), rt.f(91.0), rt.f(53.0))
@@ -26,19 +26,19 @@ def run_pixel(ctx, out):
     def clamp01__float(value):
         return rt.component_wise("clamp", value, rt.f(0.0), rt.f(1.0), width=1)
     def mod289_vec3__vec3(x):
-        x = rt.copy(x)
+        x = rt.copy(x, "float")
         return rt.binary("-", x, rt.binary("*", rt.component_wise("floor", rt.binary("*", x, rt.binary("/", rt.f(1.0), rt.f(289.0), 1, "float"), 3, "float"), width=3), rt.f(289.0), 3, "float"), 3, "float")
     def mod289_vec4__vec4(x):
-        x = rt.copy(x)
+        x = rt.copy(x, "float")
         return rt.binary("-", x, rt.binary("*", rt.component_wise("floor", rt.binary("*", x, rt.binary("/", rt.f(1.0), rt.f(289.0), 1, "float"), 4, "float"), width=4), rt.f(289.0), 4, "float"), 4, "float")
     def permute__vec4(x):
-        x = rt.copy(x)
+        x = rt.copy(x, "float")
         return mod289_vec4__vec4(rt.binary("*", rt.binary("+", rt.binary("*", x, rt.f(34.0), 4, "float"), rt.f(1.0), 4, "float"), x, 4, "float"))
     def taylor_inv_sqrt__vec4(r):
-        r = rt.copy(r)
+        r = rt.copy(r, "float")
         return rt.binary("-", rt.f(1.79284291400159), rt.binary("*", rt.f(0.85373472095314), r, 4, "float"), 4, "float")
     def simplex_noise__vec3(v):
-        v = rt.copy(v)
+        v = rt.copy(v, "float")
         c = rt.construct(2, rt.binary("/", rt.f(1.0), rt.f(6.0), 1, "float"), rt.binary("/", rt.f(1.0), rt.f(3.0), 1, "float"))
         d = rt.construct(4, rt.f(0.0), rt.f(0.5), rt.f(1.0), rt.f(2.0))
         i0 = rt.component_wise("floor", rt.binary("+", v, rt.dot(v, rt.construct(3, rt.swizzle(c, "y"))), 3, "float"), width=3)
@@ -88,25 +88,25 @@ def run_pixel(ctx, out):
     def periodic_value__float_float(t, value):
         return rt.binary("+", rt.binary("*", rt.component_wise("sin", rt.binary("*", rt.binary("-", t, value, 1, "float"), g.TAU, 1, "float"), width=1), rt.f(0.5), 1, "float"), rt.f(0.5), 1, "float")
     def normalized_coord__uvec2_vec2(coord, dims):
-        coord = rt.copy(coord)
-        dims = rt.copy(dims)
+        coord = rt.copy(coord, "uint")
+        dims = rt.copy(dims, "float")
         width_safe = rt.component_wise("max", rt.swizzle(dims, "x"), rt.f(1.0), width=1)
         height_safe = rt.component_wise("max", rt.swizzle(dims, "y"), rt.f(1.0), width=1)
         return rt.construct(2, rt.binary("/", rt.binary("+", rt.construct(1, rt.swizzle(coord, "x")), rt.f(0.5), 1, "float"), width_safe, 1, "float"), rt.binary("/", rt.binary("+", rt.construct(1, rt.swizzle(coord, "y")), rt.f(0.5), 1, "float"), height_safe, 1, "float"))
     def compute_simplex_value__vec2_vec2_float_float_vec3(coord, freq, t, speed_value, offset):
-        coord = rt.copy(coord)
-        freq = rt.copy(freq)
-        offset = rt.copy(offset)
+        coord = rt.copy(coord, "float")
+        freq = rt.copy(freq, "float")
+        offset = rt.copy(offset, "float")
         freq_x = rt.component_wise("max", rt.swizzle(freq, "x"), rt.f(1.0), width=1)
         freq_y = rt.component_wise("max", rt.swizzle(freq, "y"), rt.f(1.0), width=1)
         angle = rt.binary("*", rt.component_wise("cos", rt.binary("*", t, g.TAU, 1, "float"), width=1), speed_value, 1, "float")
         sampleVec = rt.construct(3, rt.binary("+", rt.binary("*", rt.swizzle(coord, "x"), freq_x, 1, "float"), rt.swizzle(offset, "x"), 1, "float"), rt.binary("+", rt.binary("*", rt.swizzle(coord, "y"), freq_y, 1, "float"), rt.swizzle(offset, "y"), 1, "float"), rt.binary("+", angle, rt.swizzle(offset, "z"), 1, "float"))
         return simplex_noise__vec3(sampleVec)
     def compute_value_noise__vec2_vec2_float_float_vec3_vec3(coord, freq, t, speed_value, base_seed, time_seed):
-        coord = rt.copy(coord)
-        freq = rt.copy(freq)
-        base_seed = rt.copy(base_seed)
-        time_seed = rt.copy(time_seed)
+        coord = rt.copy(coord, "float")
+        freq = rt.copy(freq, "float")
+        base_seed = rt.copy(base_seed, "float")
+        time_seed = rt.copy(time_seed, "float")
         base_noise = compute_simplex_value__vec2_vec2_float_float_vec3(coord, freq, t, speed_value, base_seed)
         value = clamp01__float(rt.binary("+", rt.binary("*", base_noise, rt.f(0.5), 1, "float"), rt.f(0.5), 1, "float"))
         if (bool(rt.binary("!=", speed_value, rt.f(0.0))) and bool(rt.binary("!=", t, rt.f(0.0)))):
@@ -116,10 +116,10 @@ def run_pixel(ctx, out):
             value = periodic_value__float_float(scaled_time, value)
         return clamp01__float(value)
     def compute_exponential_noise__vec2_vec2_float_float_vec3_vec3(coord, freq, t, speed_value, base_seed, time_seed):
-        coord = rt.copy(coord)
-        freq = rt.copy(freq)
-        base_seed = rt.copy(base_seed)
-        time_seed = rt.copy(time_seed)
+        coord = rt.copy(coord, "float")
+        freq = rt.copy(freq, "float")
+        base_seed = rt.copy(base_seed, "float")
+        time_seed = rt.copy(time_seed, "float")
         base = compute_value_noise__vec2_vec2_float_float_vec3_vec3(coord, freq, t, speed_value, base_seed, time_seed)
         return rt.component_wise("pow", base, rt.f(4.0), width=1)
     def wrap_coord__int_int(coord, limit):
@@ -130,7 +130,7 @@ def run_pixel(ctx, out):
             wrapped = rt.binary("+", wrapped, limit, 1, "int")
         return wrapped
     def pcg__uvec3(v):
-        v = rt.copy(v)
+        v = rt.copy(v, "uint")
         v = rt.binary("+", rt.binary("*", v, rt.i(1664525), 3, "uint"), rt.i(1013904223), 3, "uint")
         v = rt.assign_swizzle(v, "x", rt.binary("+", rt.swizzle(v, "x"), rt.binary("*", rt.swizzle(v, "y"), rt.swizzle(v, "z"), 1, "uint"), 1, "uint"))
         v = rt.assign_swizzle(v, "y", rt.binary("+", rt.swizzle(v, "y"), rt.binary("*", rt.swizzle(v, "z"), rt.swizzle(v, "x"), 1, "uint"), 1, "uint"))
@@ -141,11 +141,11 @@ def run_pixel(ctx, out):
         v = rt.assign_swizzle(v, "z", rt.binary("+", rt.swizzle(v, "z"), rt.binary("*", rt.swizzle(v, "x"), rt.swizzle(v, "y"), 1, "uint"), 1, "uint"))
         return v
     def hashNoise__vec3(p):
-        p = rt.copy(p)
+        p = rt.copy(p, "float")
         seed = rt.construct(3, rt.float_bits_to_uint(rt.swizzle(p, "x")), rt.float_bits_to_uint(rt.swizzle(p, "y")), rt.float_bits_to_uint(rt.swizzle(p, "z")), base="uint")
         return rt.binary("/", rt.construct(1, rt.swizzle(pcg__uvec3(seed), "x")), rt.construct(1, rt.i(4294967295)), 1, "float")
     def valueNoise__vec3(p):
-        p = rt.copy(p)
+        p = rt.copy(p, "float")
         i = rt.component_wise("floor", p, width=3)
         f = rt.component_wise("fract", p, width=3)
         u = rt.binary("*", rt.binary("*", f, f, 3, "float"), rt.binary("-", rt.f(3.0), rt.binary("*", rt.f(2.0), f, 3, "float"), 3, "float"), 3, "float")
@@ -159,10 +159,10 @@ def run_pixel(ctx, out):
         c111 = hashNoise__vec3(rt.binary("+", i, rt.construct(3, rt.f(1.0), rt.f(1.0), rt.f(1.0)), 3, "float"))
         return rt.component_wise("mix", rt.component_wise("mix", rt.component_wise("mix", c000, c100, rt.swizzle(u, "x"), width=1), rt.component_wise("mix", c010, c110, rt.swizzle(u, "x"), width=1), rt.swizzle(u, "y"), width=1), rt.component_wise("mix", rt.component_wise("mix", c001, c101, rt.swizzle(u, "x"), width=1), rt.component_wise("mix", c011, c111, rt.swizzle(u, "x"), width=1), rt.swizzle(u, "y"), width=1), rt.swizzle(u, "z"), width=1)
     def vhs_computeNoise__vec2_vec2_float_float_vec3_vec3(coord, freq, t, spd, baseOff, timeOff):
-        coord = rt.copy(coord)
-        freq = rt.copy(freq)
-        baseOff = rt.copy(baseOff)
-        timeOff = rt.copy(timeOff)
+        coord = rt.copy(coord, "float")
+        freq = rt.copy(freq, "float")
+        baseOff = rt.copy(baseOff, "float")
+        timeOff = rt.copy(timeOff, "float")
         p = rt.construct(3, rt.binary("+", rt.binary("*", rt.swizzle(coord, "x"), rt.swizzle(freq, "x"), 1, "float"), rt.swizzle(baseOff, "x"), 1, "float"), rt.binary("+", rt.binary("*", rt.swizzle(coord, "y"), rt.swizzle(freq, "y"), 1, "float"), rt.swizzle(baseOff, "y"), 1, "float"), rt.binary("+", rt.binary("*", rt.component_wise("cos", rt.binary("*", t, g.TAU, 1, "float"), width=1), spd, 1, "float"), rt.swizzle(baseOff, "z"), 1, "float"))
         val = valueNoise__vec3(p)
         if (bool(rt.binary("!=", spd, rt.f(0.0))) and bool(rt.binary("!=", t, rt.f(0.0)))):
@@ -176,8 +176,8 @@ def run_pixel(ctx, out):
         _g = rt.component_wise("max", rt.binary("-", base, rt.f(0.5), 1, "float"), rt.f(0.0), width=1)
         return rt.component_wise("min", rt.binary("*", _g, rt.f(2.0), 1, "float"), rt.f(1.0), width=1)
     def vhs_scanNoise__vec2_vec2_float_float(coord, freq, t, spd):
-        coord = rt.copy(coord)
-        freq = rt.copy(freq)
+        coord = rt.copy(coord, "float")
+        freq = rt.copy(freq, "float")
         return vhs_computeNoise__vec2_vec2_float_float_vec3_vec3(coord, freq, t, spd, rt.construct(3, rt.f(37.0), rt.f(59.0), rt.f(83.0)), rt.construct(3, rt.f(131.0), rt.f(173.0), rt.f(211.0)))
     def main__void():
         gid = rt.construct(3, rt.construct(1, rt.swizzle(ctx.frag_coord, "x"), base="uint"), rt.construct(1, rt.swizzle(ctx.frag_coord, "y"), base="uint"), rt.i(0), base="uint")

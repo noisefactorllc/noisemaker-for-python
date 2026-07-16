@@ -5,25 +5,25 @@ def run_pixel(ctx, out):
     class _G:
         pass
     g = _G()
-    _u_resolution = U["resolution"]
-    _u_tileOffset = U["tileOffset"]
-    _u_fullResolution = U["fullResolution"]
-    _u_renderScale = U["renderScale"]
-    _u_time = U["time"]
-    _u_operation = U["operation"]
-    _u_scale = U["scale"]
-    _u_offsetX = U["offsetX"]
-    _u_offsetY = U["offsetY"]
-    _u_mask = U["mask"]
-    _u_seed = U["seed"]
-    _u_colorMode = U["colorMode"]
-    _u_speed = U["speed"]
-    _u_rotation = U["rotation"]
-    _u_colorOffset = U["colorOffset"]
+    _u_resolution = U.get("resolution", rt.construct(2, 0.0))
+    _u_tileOffset = U.get("tileOffset", rt.construct(2, 0.0))
+    _u_fullResolution = U.get("fullResolution", rt.construct(2, 0.0))
+    _u_renderScale = U.get("renderScale", rt.f(0.0))
+    _u_time = U.get("time", rt.f(0.0))
+    _u_operation = U.get("operation", 0)
+    _u_scale = U.get("scale", rt.f(0.0))
+    _u_offsetX = U.get("offsetX", 0)
+    _u_offsetY = U.get("offsetY", 0)
+    _u_mask = U.get("mask", 0)
+    _u_seed = U.get("seed", 0)
+    _u_colorMode = U.get("colorMode", 0)
+    _u_speed = U.get("speed", rt.f(0.0))
+    _u_rotation = U.get("rotation", rt.f(0.0))
+    _u_colorOffset = U.get("colorOffset", 0)
     g.fragColor = rt.construct(4, 0.0)
     g.PI = rt.f(3.14159265358979)
     def hsv2rgb__vec3(c):
-        c = rt.copy(c)
+        c = rt.copy(c, "float")
         p = rt.component_wise("abs", rt.binary("-", rt.binary("*", rt.component_wise("fract", rt.binary("+", rt.swizzle(c, "xxx"), rt.construct(3, rt.f(1.0), rt.binary("/", rt.f(2.0), rt.f(3.0), 1, "float"), rt.binary("/", rt.f(1.0), rt.f(3.0), 1, "float")), 3, "float"), width=3), rt.f(6.0), 3, "float"), rt.f(3.0), 3, "float"), width=3)
         return rt.binary("*", rt.swizzle(c, "z"), rt.component_wise("mix", rt.construct(3, rt.f(1.0)), rt.component_wise("clamp", rt.binary("-", p, rt.f(1.0), 3, "float"), rt.f(0.0), rt.f(1.0), width=3), rt.swizzle(c, "y"), width=3), 3, "float")
     def bitOp__int_int_int_int(a, b, op, m):

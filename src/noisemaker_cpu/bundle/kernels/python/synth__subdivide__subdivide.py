@@ -6,24 +6,24 @@ def run_pixel(ctx, out):
         pass
     g = _G()
     _u_inputTex = T["inputTex"]
-    _u_resolution = U["resolution"]
-    _u_tileOffset = U["tileOffset"]
-    _u_fullResolution = U["fullResolution"]
-    _u_renderScale = U["renderScale"]
-    _u_mode = U["mode"]
-    _u_depth = U["depth"]
-    _u_density = U["density"]
-    _u_seed = U["seed"]
-    _u_fill = U["fill"]
-    _u_outline = U["outline"]
-    _u_inputMix = U["inputMix"]
-    _u_wrap = U["wrap"]
-    _u_time = U["time"]
-    _u_speed = U["speed"]
+    _u_resolution = U.get("resolution", rt.construct(2, 0.0))
+    _u_tileOffset = U.get("tileOffset", rt.construct(2, 0.0))
+    _u_fullResolution = U.get("fullResolution", rt.construct(2, 0.0))
+    _u_renderScale = U.get("renderScale", rt.f(0.0))
+    _u_mode = U.get("mode", rt.f(0.0))
+    _u_depth = U.get("depth", rt.f(0.0))
+    _u_density = U.get("density", rt.f(0.0))
+    _u_seed = U.get("seed", rt.f(0.0))
+    _u_fill = U.get("fill", rt.f(0.0))
+    _u_outline = U.get("outline", rt.f(0.0))
+    _u_inputMix = U.get("inputMix", rt.f(0.0))
+    _u_wrap = U.get("wrap", rt.f(0.0))
+    _u_time = U.get("time", rt.f(0.0))
+    _u_speed = U.get("speed", rt.f(0.0))
     g.fragColor = rt.construct(4, 0.0)
     g.PHI = rt.f(1.618033988749895)
     def pcg__uvec3(v):
-        v = rt.copy(v)
+        v = rt.copy(v, "uint")
         v = rt.binary("+", rt.binary("*", v, rt.i(1664525), 3, "uint"), rt.i(1013904223), 3, "uint")
         v = rt.assign_swizzle(v, "x", rt.binary("+", rt.swizzle(v, "x"), rt.binary("*", rt.swizzle(v, "y"), rt.swizzle(v, "z"), 1, "uint"), 1, "uint"))
         v = rt.assign_swizzle(v, "y", rt.binary("+", rt.swizzle(v, "y"), rt.binary("*", rt.swizzle(v, "z"), rt.swizzle(v, "x"), 1, "uint"), 1, "uint"))
@@ -34,24 +34,24 @@ def run_pixel(ctx, out):
         v = rt.assign_swizzle(v, "z", rt.binary("+", rt.swizzle(v, "z"), rt.binary("*", rt.swizzle(v, "x"), rt.swizzle(v, "y"), 1, "uint"), 1, "uint"))
         return v
     def prng__vec3(p):
-        p = rt.copy(p)
+        p = rt.copy(p, "float")
         return rt.binary("/", rt.construct(3, pcg__uvec3(rt.construct(3, rt.construct(1, rt.swizzle(p, "x"), base="uint"), rt.construct(1, rt.swizzle(p, "y"), base="uint"), rt.construct(1, rt.swizzle(p, "z"), base="uint"), base="uint"))), rt.construct(1, rt.i(4294967295)), 3, "float")
     def cellRand__vec2_float_float_float(cellMin, level, channel, animSeed):
-        cellMin = rt.copy(cellMin)
+        cellMin = rt.copy(cellMin, "float")
         cx = rt.component_wise("floor", rt.binary("*", rt.swizzle(cellMin, "x"), rt.f(1000.0), 1, "float"), width=1)
         cy = rt.component_wise("floor", rt.binary("*", rt.swizzle(cellMin, "y"), rt.f(1000.0), 1, "float"), width=1)
         return rt.swizzle(prng__vec3(rt.construct(3, rt.binary("+", cx, rt.binary("*", level, rt.f(7.0), 1, "float"), 1, "float"), rt.binary("+", cy, rt.binary("*", level, rt.f(13.0), 1, "float"), 1, "float"), rt.binary("+", rt.binary("+", _u_seed, channel, 1, "float"), rt.binary("*", animSeed, rt.f(100.0), 1, "float"), 1, "float"))), "x")
     def circleShape__vec2(centered):
-        centered = rt.copy(centered)
+        centered = rt.copy(centered, "float")
         return rt.component_wise("step", rt.length(centered), rt.f(0.32), width=1)
     def diamondShape__vec2(centered):
-        centered = rt.copy(centered)
+        centered = rt.copy(centered, "float")
         return rt.component_wise("step", rt.binary("+", rt.component_wise("abs", rt.swizzle(centered, "x"), width=1), rt.component_wise("abs", rt.swizzle(centered, "y"), width=1), 1, "float"), rt.f(0.32), width=1)
     def squareShape__vec2(centered):
-        centered = rt.copy(centered)
+        centered = rt.copy(centered, "float")
         return rt.component_wise("step", rt.component_wise("max", rt.component_wise("abs", rt.swizzle(centered, "x"), width=1), rt.component_wise("abs", rt.swizzle(centered, "y"), width=1), width=1), rt.f(0.28), width=1)
     def arcShape__vec2_float_float_float(centered, halfW, halfH, h):
-        centered = rt.copy(centered)
+        centered = rt.copy(centered, "float")
         corner = rt.construct(1, rt.binary("*", h, rt.f(4.0), 1, "float"), base="int")
         origin = rt.construct(2, 0.0)
         if rt.binary("==", corner, rt.i(0)):
@@ -67,7 +67,7 @@ def run_pixel(ctx, out):
         dist = rt.length(rt.binary("-", centered, origin, 2, "float"))
         return rt.binary("*", rt.component_wise("step", dist, rt.f(0.7), width=1), rt.binary("-", rt.f(1.0), rt.component_wise("step", dist, rt.f(0.5), width=1), 1, "float"), 1, "float")
     def drawShape__int_vec2_float_float_float(shapeType, centered, halfW, halfH, h):
-        centered = rt.copy(centered)
+        centered = rt.copy(centered, "float")
         if rt.binary("==", shapeType, rt.i(0)):
             return rt.f(1.0)
         if rt.binary("==", shapeType, rt.i(1)):

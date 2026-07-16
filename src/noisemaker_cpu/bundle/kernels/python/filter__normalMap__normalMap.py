@@ -5,11 +5,11 @@ def run_pixel(ctx, out):
     class _G:
         pass
     g = _G()
-    _u_tileOffset = U["tileOffset"]
-    _u_fullResolution = U["fullResolution"]
+    _u_tileOffset = U.get("tileOffset", rt.construct(2, 0.0))
+    _u_fullResolution = U.get("fullResolution", rt.construct(2, 0.0))
     _u_inputTex = T["inputTex"]
-    _u_size = U["size"]
-    _u_motion = U["motion"]
+    _u_size = U.get("size", rt.construct(4, 0.0))
+    _u_motion = U.get("motion", rt.construct(4, 0.0))
     g.CHANNEL_COUNT = rt.i(4)
     g.CHANNEL_CAP = rt.i(4)
     g.fragColor = rt.construct(4, 0.0)
@@ -44,7 +44,7 @@ def run_pixel(ctx, out):
         sign_value = (rt.f(1.0) if rt.binary(">=", value, rt.f(0.0)) else rt.unary("-", rt.f(1.0)))
         return rt.binary("*", sign_value, rt.component_wise("pow", rt.component_wise("abs", value, width=1), rt.binary("/", rt.f(1.0), rt.f(3.0), 1, "float"), width=1), 1, "float")
     def oklab_l_component__vec3(rgb):
-        rgb = rt.copy(rgb)
+        rgb = rt.copy(rgb, "float")
         r = srgb_to_linear__float(clamp01__float(rt.swizzle(rgb, "x")))
         _g = srgb_to_linear__float(clamp01__float(rt.swizzle(rgb, "y")))
         b = srgb_to_linear__float(clamp01__float(rt.swizzle(rgb, "z")))
@@ -56,7 +56,7 @@ def run_pixel(ctx, out):
         s_c = cbrt_safe__float(s)
         return clamp01__float(rt.binary("-", rt.binary("+", rt.binary("*", rt.f(0.2104542553), l_c, 1, "float"), rt.binary("*", rt.f(0.793617785), m_c, 1, "float"), 1, "float"), rt.binary("*", rt.f(0.0040720468), s_c, 1, "float"), 1, "float"))
     def value_map_component__vec4_uint(texel, channelCount):
-        texel = rt.copy(texel)
+        texel = rt.copy(texel, "float")
         if rt.binary("<=", channelCount, rt.i(1)):
             return rt.swizzle(texel, "x")
         if rt.binary("==", channelCount, rt.i(2)):
@@ -66,7 +66,7 @@ def run_pixel(ctx, out):
         clamped_rgb = rt.component_wise("clamp", rt.swizzle(texel, "xyz"), rt.construct(3, rt.f(0.0)), rt.construct(3, rt.f(1.0)), width=3)
         return oklab_l_component__vec3(clamped_rgb)
     def compute_reference_value__ivec2_uint(coords, channelCount):
-        coords = rt.copy(coords)
+        coords = rt.copy(coords, "int")
         texel = rt.texel_fetch(_u_inputTex, coords, rt.i(0))
         return value_map_component__vec4_uint(texel, channelCount)
     def main__void():

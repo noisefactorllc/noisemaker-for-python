@@ -6,9 +6,9 @@ def run_pixel(ctx, out):
         pass
     g = _G()
     _u_inputTex = T["inputTex"]
-    _u_blend = U["blend"]
-    _u_repeat = U["repeat"]
-    _u_curve = U["curve"]
+    _u_blend = U.get("blend", rt.f(0.0))
+    _u_repeat = U.get("repeat", rt.f(0.0))
+    _u_curve = U.get("curve", 0)
     g.fragColor = rt.construct(4, 0.0)
     def edgeWeight__float_float(t, width):
         if rt.binary("<=", width, rt.f(0.0)):

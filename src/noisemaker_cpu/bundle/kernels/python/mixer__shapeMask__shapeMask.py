@@ -7,34 +7,34 @@ def run_pixel(ctx, out):
     g = _G()
     _u_inputTex = T["inputTex"]
     _u_tex = T["tex"]
-    _u_resolution = U["resolution"]
-    _u_tileOffset = U["tileOffset"]
-    _u_fullResolution = U["fullResolution"]
-    _u_shape = U["shape"]
-    _u_radius = U["radius"]
-    _u_edgeSmooth = U["edgeSmooth"]
-    _u_rotation = U["rotation"]
-    _u_posX = U["posX"]
-    _u_posY = U["posY"]
-    _u_invert = U["invert"]
-    _u_speed = U["speed"]
-    _u_time = U["time"]
+    _u_resolution = U.get("resolution", rt.construct(2, 0.0))
+    _u_tileOffset = U.get("tileOffset", rt.construct(2, 0.0))
+    _u_fullResolution = U.get("fullResolution", rt.construct(2, 0.0))
+    _u_shape = U.get("shape", 0)
+    _u_radius = U.get("radius", rt.f(0.0))
+    _u_edgeSmooth = U.get("edgeSmooth", rt.f(0.0))
+    _u_rotation = U.get("rotation", rt.f(0.0))
+    _u_posX = U.get("posX", rt.f(0.0))
+    _u_posY = U.get("posY", rt.f(0.0))
+    _u_invert = U.get("invert", 0)
+    _u_speed = U.get("speed", 0)
+    _u_time = U.get("time", rt.f(0.0))
     g.fragColor = rt.construct(4, 0.0)
     def rotate2D__vec2_float(p, angle):
-        p = rt.copy(p)
+        p = rt.copy(p, "float")
         c = rt.component_wise("cos", angle, width=1)
         s = rt.component_wise("sin", angle, width=1)
         return rt.construct(2, rt.binary("-", rt.binary("*", rt.swizzle(p, "x"), c, 1, "float"), rt.binary("*", rt.swizzle(p, "y"), s, 1, "float"), 1, "float"), rt.binary("+", rt.binary("*", rt.swizzle(p, "x"), s, 1, "float"), rt.binary("*", rt.swizzle(p, "y"), c, 1, "float"), 1, "float"))
     def sdfCircle__vec2_float(p, r):
-        p = rt.copy(p)
+        p = rt.copy(p, "float")
         return rt.binary("-", rt.length(p), r, 1, "float")
     def sdfPolygon__vec2_float_float(p, r, sides):
-        p = rt.copy(p)
+        p = rt.copy(p, "float")
         a = rt.binary("+", rt.component_wise("atan", rt.swizzle(p, "x"), rt.swizzle(p, "y"), width=1), rt.f(3.14159265359), 1, "float")
         seg = rt.binary("/", rt.f(6.28318530718), sides, 1, "float")
         return rt.binary("-", rt.binary("*", rt.component_wise("cos", rt.binary("-", rt.binary("*", rt.component_wise("floor", rt.binary("+", rt.f(0.5), rt.binary("/", a, seg, 1, "float"), 1, "float"), width=1), seg, 1, "float"), a, 1, "float"), width=1), rt.length(p), 1, "float"), r, 1, "float")
     def sdfTriangle__vec2_float(p, r):
-        p = rt.copy(p)
+        p = rt.copy(p, "float")
         k = rt.f(1.732050808)
         p = rt.assign_swizzle(p, "x", rt.binary("-", rt.component_wise("abs", rt.swizzle(p, "x"), width=1), r, 1, "float"))
         p = rt.assign_swizzle(p, "y", rt.binary("+", rt.swizzle(p, "y"), rt.binary("/", r, k, 1, "float"), 1, "float"))
@@ -43,7 +43,7 @@ def run_pixel(ctx, out):
         p = rt.assign_swizzle(p, "x", rt.binary("-", rt.swizzle(p, "x"), rt.component_wise("clamp", rt.swizzle(p, "x"), rt.binary("*", rt.unary("-", rt.f(2.0)), r, 1, "float"), rt.f(0.0), width=1), 1, "float"))
         return rt.binary("*", rt.unary("-", rt.length(p)), rt.component_wise("sign", rt.swizzle(p, "y"), width=1), 1, "float")
     def sdfFlower__vec2_float(p, r):
-        p = rt.copy(p)
+        p = rt.copy(p, "float")
         outerR = r
         innerR = rt.binary("*", r, rt.f(0.45), 1, "float")
         a = rt.binary("+", rt.component_wise("atan", rt.swizzle(p, "x"), rt.swizzle(p, "y"), width=1), rt.f(3.14159265359), 1, "float")
@@ -54,7 +54,7 @@ def run_pixel(ctx, out):
         starR = rt.component_wise("mix", innerR, outerR, t, width=1)
         return rt.binary("-", rt.length(p), starR, 1, "float")
     def sdfStar5__vec2_float(p, r):
-        p = rt.copy(p)
+        p = rt.copy(p, "float")
         rf = rt.f(0.4)
         k1 = rt.construct(2, rt.f(0.809016994375), rt.unary("-", rt.f(0.587785252292)))
         k2 = rt.construct(2, rt.unary("-", rt.swizzle(k1, "x")), rt.swizzle(k1, "y"))
@@ -67,7 +67,7 @@ def run_pixel(ctx, out):
         h = rt.component_wise("clamp", rt.binary("/", rt.dot(p, ba), rt.dot(ba, ba), 1, "float"), rt.f(0.0), r, width=1)
         return rt.binary("*", rt.length(rt.binary("-", p, rt.binary("*", ba, h, 2, "float"), 2, "float")), rt.component_wise("sign", rt.binary("-", rt.binary("*", rt.swizzle(p, "y"), rt.swizzle(ba, "x"), 1, "float"), rt.binary("*", rt.swizzle(p, "x"), rt.swizzle(ba, "y"), 1, "float"), 1, "float"), width=1), 1, "float")
     def sdfRing__vec2_float(p, r):
-        p = rt.copy(p)
+        p = rt.copy(p, "float")
         ringWidth = rt.binary("*", r, rt.f(0.15), 1, "float")
         return rt.binary("-", rt.component_wise("abs", rt.binary("-", rt.length(p), r, 1, "float"), width=1), ringWidth, 1, "float")
     def main__void():

@@ -6,22 +6,22 @@ def run_pixel(ctx, out):
         pass
     g = _G()
     _u_inputTex = T["inputTex"]
-    _u_resolution = U["resolution"]
-    _u_tileOffset = U["tileOffset"]
-    _u_fullResolution = U["fullResolution"]
-    _u_amount = U["amount"]
-    _u_centerX = U["centerX"]
-    _u_centerY = U["centerY"]
+    _u_resolution = U.get("resolution", rt.construct(2, 0.0))
+    _u_tileOffset = U.get("tileOffset", rt.construct(2, 0.0))
+    _u_fullResolution = U.get("fullResolution", rt.construct(2, 0.0))
+    _u_amount = U.get("amount", rt.f(0.0))
+    _u_centerX = U.get("centerX", rt.f(0.0))
+    _u_centerY = U.get("centerY", rt.f(0.0))
     g.fragColor = rt.construct(4, 0.0)
     g.N = rt.i(32)
     def hash12__vec2(p):
-        p = rt.copy(p)
+        p = rt.copy(p, "float")
         p3 = rt.component_wise("fract", rt.binary("*", rt.construct(3, rt.swizzle(p, "xyx")), rt.f(0.1031), 3, "float"), width=3)
         p3 = rt.binary("+", p3, rt.dot(p3, rt.binary("+", rt.swizzle(p3, "yzx"), rt.f(33.33), 3, "float")), 3, "float")
         return rt.component_wise("fract", rt.binary("*", rt.binary("+", rt.swizzle(p3, "x"), rt.swizzle(p3, "y"), 1, "float"), rt.swizzle(p3, "z"), 1, "float"), width=1)
     def rotateAround__vec2_vec2_float_float(uv, center, angle, aspectRatio):
-        uv = rt.copy(uv)
-        center = rt.copy(center)
+        uv = rt.copy(uv, "float")
+        center = rt.copy(center, "float")
         p = uv
         p = rt.assign_swizzle(p, "x", rt.binary("*", rt.swizzle(p, "x"), aspectRatio, 1, "float"))
         c = center

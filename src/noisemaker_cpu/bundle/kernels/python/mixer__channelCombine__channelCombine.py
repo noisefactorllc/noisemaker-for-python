@@ -8,15 +8,15 @@ def run_pixel(ctx, out):
     _u_rTex = T["rTex"]
     _u_gTex = T["gTex"]
     _u_bTex = T["bTex"]
-    _u_resolution = U["resolution"]
-    _u_tileOffset = U["tileOffset"]
-    _u_fullResolution = U["fullResolution"]
-    _u_rLevel = U["rLevel"]
-    _u_gLevel = U["gLevel"]
-    _u_bLevel = U["bLevel"]
+    _u_resolution = U.get("resolution", rt.construct(2, 0.0))
+    _u_tileOffset = U.get("tileOffset", rt.construct(2, 0.0))
+    _u_fullResolution = U.get("fullResolution", rt.construct(2, 0.0))
+    _u_rLevel = U.get("rLevel", rt.f(0.0))
+    _u_gLevel = U.get("gLevel", rt.f(0.0))
+    _u_bLevel = U.get("bLevel", rt.f(0.0))
     g.fragColor = rt.construct(4, 0.0)
     def luminance__vec4(c):
-        c = rt.copy(c)
+        c = rt.copy(c, "float")
         return rt.dot(rt.swizzle(c, "rgb"), rt.construct(3, rt.f(0.2126), rt.f(0.7152), rt.f(0.0722)))
     def main__void():
         globalCoord = rt.binary("+", rt.swizzle(ctx.frag_coord, "xy"), _u_tileOffset, 2, "float")

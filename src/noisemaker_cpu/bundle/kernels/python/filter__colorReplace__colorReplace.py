@@ -5,16 +5,16 @@ def run_pixel(ctx, out):
     class _G:
         pass
     g = _G()
-    _u_tileOffset = U["tileOffset"]
-    _u_fullResolution = U["fullResolution"]
+    _u_tileOffset = U.get("tileOffset", rt.construct(2, 0.0))
+    _u_fullResolution = U.get("fullResolution", rt.construct(2, 0.0))
     _u_inputTex = T["inputTex"]
-    _u_targetColor = U["targetColor"]
-    _u_replaceColor = U["replaceColor"]
-    _u_sensitivity = U["sensitivity"]
-    _u_smoothing = U["smoothing"]
-    _u_colorMix = U["colorMix"]
-    _u_replaceAlpha = U["replaceAlpha"]
-    _u_keepAlpha = U["keepAlpha"]
+    _u_targetColor = U.get("targetColor", rt.construct(3, 0.0))
+    _u_replaceColor = U.get("replaceColor", rt.construct(3, 0.0))
+    _u_sensitivity = U.get("sensitivity", rt.f(0.0))
+    _u_smoothing = U.get("smoothing", rt.f(0.0))
+    _u_colorMix = U.get("colorMix", rt.f(0.0))
+    _u_replaceAlpha = U.get("replaceAlpha", rt.f(0.0))
+    _u_keepAlpha = U.get("keepAlpha", rt.f(0.0))
     g.fragColor = rt.construct(4, 0.0)
     def main__void():
         globalCoord = rt.binary("+", rt.swizzle(ctx.frag_coord, "xy"), _u_tileOffset, 2, "float")

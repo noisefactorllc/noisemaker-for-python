@@ -5,12 +5,12 @@ def run_pixel(ctx, out):
     class _G:
         pass
     g = _G()
-    _u_tileOffset = U["tileOffset"]
-    _u_fullResolution = U["fullResolution"]
+    _u_tileOffset = U.get("tileOffset", rt.construct(2, 0.0))
+    _u_fullResolution = U.get("fullResolution", rt.construct(2, 0.0))
     _u_inputTex = T["inputTex"]
-    _u_radius = U["radius"]
-    _u_renderScale = U["renderScale"]
-    _u_taps = U["taps"]
+    _u_radius = U.get("radius", rt.f(0.0))
+    _u_renderScale = U.get("renderScale", rt.f(0.0))
+    _u_taps = U.get("taps", 0)
     g.fragColor = rt.construct(4, 0.0)
     g.MAX_TAPS = rt.i(64)
     g.GOLDEN_ANGLE = rt.f(2.39996323)

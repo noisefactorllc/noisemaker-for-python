@@ -5,14 +5,14 @@ def run_pixel(ctx, out):
     class _G:
         pass
     g = _G()
-    _u_tileOffset = U["tileOffset"]
-    _u_fullResolution = U["fullResolution"]
+    _u_tileOffset = U.get("tileOffset", rt.construct(2, 0.0))
+    _u_fullResolution = U.get("fullResolution", rt.construct(2, 0.0))
     _u_inputTex = T["inputTex"]
-    _u_levels = U["levels"]
-    _u_gamma = U["gamma"]
-    _u_antialias = U["antialias"]
-    _u_lightDirection = U["lightDirection"]
-    _u_strength = U["strength"]
+    _u_levels = U.get("levels", 0)
+    _u_gamma = U.get("gamma", rt.f(0.0))
+    _u_antialias = U.get("antialias", False)
+    _u_lightDirection = U.get("lightDirection", rt.construct(3, 0.0))
+    _u_strength = U.get("strength", rt.f(0.0))
     g.fragColor = rt.construct(4, 0.0)
     g.MIN_GAMMA = rt.f(0.001)
     def srgb_to_linear_component__float(value):
@@ -24,13 +24,13 @@ def run_pixel(ctx, out):
             return rt.binary("*", value, rt.f(12.92), 1, "float")
         return rt.binary("-", rt.binary("*", rt.f(1.055), rt.component_wise("pow", value, rt.binary("/", rt.f(1.0), rt.f(2.4), 1, "float"), width=1), 1, "float"), rt.f(0.055), 1, "float")
     def srgb_to_linear_rgb__vec3(rgb):
-        rgb = rt.copy(rgb)
+        rgb = rt.copy(rgb, "float")
         return rt.construct(3, srgb_to_linear_component__float(rt.swizzle(rgb, "x")), srgb_to_linear_component__float(rt.swizzle(rgb, "y")), srgb_to_linear_component__float(rt.swizzle(rgb, "z")))
     def linear_to_srgb_rgb__vec3(rgb):
-        rgb = rt.copy(rgb)
+        rgb = rt.copy(rgb, "float")
         return rt.construct(3, linear_to_srgb_component__float(rt.swizzle(rgb, "x")), linear_to_srgb_component__float(rt.swizzle(rgb, "y")), linear_to_srgb_component__float(rt.swizzle(rgb, "z")))
     def pow_vec3__vec3_float(value, exponent):
-        value = rt.copy(value)
+        value = rt.copy(value, "float")
         return rt.construct(3, rt.component_wise("pow", rt.swizzle(value, "x"), exponent, width=1), rt.component_wise("pow", rt.swizzle(value, "y"), exponent, width=1), rt.component_wise("pow", rt.swizzle(value, "z"), exponent, width=1))
     def main__void():
         globalCoord = rt.binary("+", rt.swizzle(ctx.frag_coord, "xy"), _u_tileOffset, 2, "float")

@@ -5,16 +5,16 @@ def run_pixel(ctx, out):
     class _G:
         pass
     g = _G()
-    _u_tileOffset = U["tileOffset"]
-    _u_fullResolution = U["fullResolution"]
+    _u_tileOffset = U.get("tileOffset", rt.construct(2, 0.0))
+    _u_fullResolution = U.get("fullResolution", rt.construct(2, 0.0))
     _u_inputTex = T["inputTex"]
-    _u_iterations = U["iterations"]
-    _u_ridges = U["ridges"]
-    _u_alpha = U["alpha"]
-    _u_wrap = U["wrap"]
+    _u_iterations = U.get("iterations", 0)
+    _u_ridges = U.get("ridges", False)
+    _u_alpha = U.get("alpha", rt.f(0.0))
+    _u_wrap = U.get("wrap", rt.f(0.0))
     g.fragColor = rt.construct(4, 0.0)
     def applyWrap__vec2(uv):
-        uv = rt.copy(uv)
+        uv = rt.copy(uv, "float")
         mode = rt.construct(1, _u_wrap, base="int")
         if rt.binary("==", mode, rt.i(0)):
             return rt.component_wise("abs", rt.binary("-", rt.component_wise("mod", rt.binary("+", uv, rt.f(1.0), 2, "float"), rt.f(2.0), width=2), rt.f(1.0), 2, "float"), width=2)
@@ -23,7 +23,7 @@ def run_pixel(ctx, out):
                 return rt.component_wise("fract", uv, width=2)
         return rt.component_wise("clamp", uv, rt.f(0.0), rt.f(1.0), width=2)
     def ridge_transform__vec4(color):
-        color = rt.copy(color)
+        color = rt.copy(color, "float")
         return rt.binary("-", rt.construct(4, rt.f(1.0)), rt.component_wise("abs", rt.binary("-", rt.binary("*", color, rt.f(2.0), 4, "float"), rt.construct(4, rt.f(1.0)), 4, "float"), width=4), 4, "float")
     def main__void():
         dims = rt.texture_size(_u_inputTex)

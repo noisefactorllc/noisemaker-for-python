@@ -6,23 +6,23 @@ def run_pixel(ctx, out):
         pass
     g = _G()
     _u_inputTex = T["inputTex"]
-    _u_tileOffset = U["tileOffset"]
-    _u_fullResolution = U["fullResolution"]
-    _u_time = U["time"]
-    _u_seed = U["seed"]
-    _u_intensity = U["intensity"]
-    _u_sort = U["sort"]
-    _u_shift = U["shift"]
-    _u_bits = U["bits"]
-    _u_channelShift = U["channelShift"]
-    _u_speed = U["speed"]
-    _u_melt = U["melt"]
-    _u_scatter = U["scatter"]
-    _u_bandHeight = U["bandHeight"]
-    _u_renderScale = U["renderScale"]
+    _u_tileOffset = U.get("tileOffset", rt.construct(2, 0.0))
+    _u_fullResolution = U.get("fullResolution", rt.construct(2, 0.0))
+    _u_time = U.get("time", rt.f(0.0))
+    _u_seed = U.get("seed", rt.f(0.0))
+    _u_intensity = U.get("intensity", rt.f(0.0))
+    _u_sort = U.get("sort", rt.f(0.0))
+    _u_shift = U.get("shift", rt.f(0.0))
+    _u_bits = U.get("bits", rt.f(0.0))
+    _u_channelShift = U.get("channelShift", rt.f(0.0))
+    _u_speed = U.get("speed", rt.f(0.0))
+    _u_melt = U.get("melt", rt.f(0.0))
+    _u_scatter = U.get("scatter", rt.f(0.0))
+    _u_bandHeight = U.get("bandHeight", rt.f(0.0))
+    _u_renderScale = U.get("renderScale", rt.f(0.0))
     g.fragColor = rt.construct(4, 0.0)
     def pcg__uvec3(v):
-        v = rt.copy(v)
+        v = rt.copy(v, "uint")
         v = rt.binary("+", rt.binary("*", v, rt.i(1664525), 3, "uint"), rt.i(1013904223), 3, "uint")
         v = rt.assign_swizzle(v, "x", rt.binary("+", rt.swizzle(v, "x"), rt.binary("*", rt.swizzle(v, "y"), rt.swizzle(v, "z"), 1, "uint"), 1, "uint"))
         v = rt.assign_swizzle(v, "y", rt.binary("+", rt.swizzle(v, "y"), rt.binary("*", rt.swizzle(v, "z"), rt.swizzle(v, "x"), 1, "uint"), 1, "uint"))
@@ -33,7 +33,7 @@ def run_pixel(ctx, out):
         v = rt.assign_swizzle(v, "z", rt.binary("+", rt.swizzle(v, "z"), rt.binary("*", rt.swizzle(v, "x"), rt.swizzle(v, "y"), 1, "uint"), 1, "uint"))
         return v
     def prng__vec3(p):
-        p = rt.copy(p)
+        p = rt.copy(p, "float")
         p = rt.assign_swizzle(p, "x", (rt.binary("*", rt.swizzle(p, "x"), rt.f(2.0), 1, "float") if rt.binary(">=", rt.swizzle(p, "x"), rt.f(0.0)) else rt.binary("+", rt.binary("*", rt.unary("-", rt.swizzle(p, "x")), rt.f(2.0), 1, "float"), rt.f(1.0), 1, "float")))
         p = rt.assign_swizzle(p, "y", (rt.binary("*", rt.swizzle(p, "y"), rt.f(2.0), 1, "float") if rt.binary(">=", rt.swizzle(p, "y"), rt.f(0.0)) else rt.binary("+", rt.binary("*", rt.unary("-", rt.swizzle(p, "y")), rt.f(2.0), 1, "float"), rt.f(1.0), 1, "float")))
         p = rt.assign_swizzle(p, "z", (rt.binary("*", rt.swizzle(p, "z"), rt.f(2.0), 1, "float") if rt.binary(">=", rt.swizzle(p, "z"), rt.f(0.0)) else rt.binary("+", rt.binary("*", rt.unary("-", rt.swizzle(p, "z")), rt.f(2.0), 1, "float"), rt.f(1.0), 1, "float")))
@@ -44,7 +44,7 @@ def run_pixel(ctx, out):
     def lineHash__float_float(line, _rt):
         return prng__vec3(rt.construct(3, line, _u_seed, _rt))
     def pixelSort__vec2_float_float_float_float(uv, row, sortAmt, _rt, resX):
-        uv = rt.copy(uv)
+        uv = rt.copy(uv, "float")
         rh = lineHash__float_float(row, _rt)
         threshold = rt.component_wise("mix", rt.f(0.8), rt.f(0.2), sortAmt, width=1)
         regionSize = rt.binary("+", rt.f(3.0), rt.binary("*", rt.swizzle(rh, "y"), rt.f(20.0), 1, "float"), 1, "float")
@@ -56,7 +56,7 @@ def run_pixel(ctx, out):
             uv = rt.assign_swizzle(uv, "x", rt.component_wise("fract", rt.binary("+", rt.swizzle(uv, "x"), sortShift, 1, "float"), width=1))
         return uv
     def byteShift__vec2_float_float_float_float(uv, row, shiftAmt, _rt, resX):
-        uv = rt.copy(uv)
+        uv = rt.copy(uv, "float")
         rh = lineHash__float_float(row, _rt)
         chunkWidth = rt.binary("+", rt.f(8.0), rt.binary("*", rt.swizzle(rh, "x"), rt.f(80.0), 1, "float"), 1, "float")
         chunk = rt.component_wise("floor", rt.binary("/", rt.binary("*", rt.swizzle(uv, "x"), resX, 1, "float"), chunkWidth, 1, "float"), width=1)
@@ -67,8 +67,8 @@ def run_pixel(ctx, out):
             uv = rt.assign_swizzle(uv, "x", rt.component_wise("fract", rt.binary("+", rt.swizzle(uv, "x"), rt.binary("/", shiftPx, resX, 1, "float"), 1, "float"), width=1))
         return uv
     def bitCorrupt__vec3_vec2_float_float_float_float(color, uv, row, bitAmt, _rt, resX):
-        color = rt.copy(color)
-        uv = rt.copy(uv)
+        color = rt.copy(color, "float")
+        uv = rt.copy(uv, "float")
         bh = lineHash__float_float(rt.binary("+", row, rt.f(400.0), 1, "float"), _rt)
         levels = rt.component_wise("mix", rt.f(256.0), rt.f(2.0), rt.binary("*", bitAmt, bitAmt, 1, "float"), width=1)
         color = rt.binary("/", rt.component_wise("floor", rt.binary("+", rt.binary("*", color, levels, 3, "float"), rt.f(0.5), 3, "float"), width=3), levels, 3, "float")
@@ -85,7 +85,7 @@ def run_pixel(ctx, out):
             color = rt.component_wise("fract", rt.binary("*", color, rt.component_wise("mix", rt.f(1.0), scale, shiftStr, width=1), 3, "float"), width=3)
         return color
     def meltDisplace__vec2_float_float_float_float(uv, meltAmt, t, resX, rs):
-        uv = rt.copy(uv)
+        uv = rt.copy(uv, "float")
         col = rt.component_wise("floor", rt.binary("/", rt.binary("*", rt.swizzle(uv, "x"), resX, 1, "float"), rt.f(3.0), 1, "float"), width=1)
         colPhase = rt.swizzle(prng__vec3(rt.construct(3, col, rt.binary("+", _u_seed, rt.f(601.0), 1, "float"), rt.f(0.0))), "x")
         dripHash = prng__vec3(rt.construct(3, col, rt.binary("+", _u_seed, rt.f(600.0), 1, "float"), rt.component_wise("floor", rt.binary("*", rt.binary("+", t, colPhase, 1, "float"), rt.f(8.0), 1, "float"), width=1)))
@@ -98,8 +98,8 @@ def run_pixel(ctx, out):
             uv = rt.assign_swizzle(uv, "x", rt.component_wise("fract", rt.binary("+", rt.swizzle(uv, "x"), wobble, 1, "float"), width=1))
         return uv
     def scatterDisplace__vec2_float_float_float_vec2(uv, scatterAmt, t, rs, tileOff):
-        uv = rt.copy(uv)
-        tileOff = rt.copy(tileOff)
+        uv = rt.copy(uv, "float")
+        tileOff = rt.copy(tileOff, "float")
         scaledCoord = rt.component_wise("floor", rt.binary("/", rt.binary("+", rt.swizzle(ctx.frag_coord, "xy"), tileOff, 2, "float"), rs, 2, "float"), width=2)
         phaseHash = prng__vec3(rt.construct(3, scaledCoord, rt.binary("+", _u_seed, rt.f(700.0), 1, "float")))
         pixTime = rt.component_wise("floor", rt.binary("*", rt.binary("+", t, rt.swizzle(phaseHash, "x"), 1, "float"), rt.f(8.0), 1, "float"), width=1)

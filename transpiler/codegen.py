@@ -150,8 +150,13 @@ class CodeGen:
         L = ["def run_pixel(ctx, out):", "    rt = ctx.rt", "    U = ctx.uniforms", "    T = ctx.textures",
              "    class _G:", "        pass", "    g = _G()"]
         for u in self.uniforms:
-            store = "T" if base_of(u["type"]) == "sampler" else "U"
-            L.append(f"    _u_{py_ident(u['name'])} = {store}[{q(u['name'])}]")
+            if base_of(u["type"]) == "sampler":
+                L.append(f"    _u_{py_ident(u['name'])} = T[{q(u['name'])}]")
+            else:
+                # WebGL zero-initializes unbound uniforms; a vestigial uniform not
+                # in the effect's params is simply absent from U. Default it rather
+                # than KeyError-ing (samplers fall back via _DefaultTex.__missing__).
+                L.append(f"    _u_{py_ident(u['name'])} = U.get({q(u['name'])}, {self._default(u['type'])})")
         for g in self.globals:
             if g["name"] in self.varyings:
                 continue
@@ -196,7 +201,7 @@ class CodeGen:
         L.append(f"{pad}def {fn['mangled']}({', '.join(pynames)}):")
         for p, t in zip(fn["node"]["params"], fn["ptypes"]):
             if p[1] and width_of(t) > 1:
-                L.append(f"{pad}    {py_ident(p[1])} = rt.copy({py_ident(p[1])})")
+                L.append(f"{pad}    {py_ident(p[1])} = rt.copy({py_ident(p[1])}, {q(base_of(t))})")
         out_pynames = [pynames[i] for i in fn.get("out_idxs", [])]
         prev = self.cur_out
         self.cur_out = out_pynames

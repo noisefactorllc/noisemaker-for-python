@@ -5,35 +5,35 @@ def run_pixel(ctx, out):
     class _G:
         pass
     g = _G()
-    _u_resolution = U["resolution"]
-    _u_tileOffset = U["tileOffset"]
-    _u_fullResolution = U["fullResolution"]
-    _u_aspect = U["aspect"]
-    _u_scale = U["scale"]
-    _u_rotation = U["rotation"]
-    _u_thickness = U["thickness"]
-    _u_smoothness = U["smoothness"]
-    _u_symmetry = U["symmetry"]
-    _u_layers = U["layers"]
-    _u_shape = U["shape"]
-    _u_layerSpacing = U["layerSpacing"]
-    _u_twist = U["twist"]
-    _u_shapeGrowth = U["shapeGrowth"]
-    _u_bindu = U["bindu"]
-    _u_animation = U["animation"]
-    _u_speed = U["speed"]
-    _u_pulseDepth = U["pulseDepth"]
-    _u_time = U["time"]
-    _u_fgColor = U["fgColor"]
-    _u_bgColor = U["bgColor"]
+    _u_resolution = U.get("resolution", rt.construct(2, 0.0))
+    _u_tileOffset = U.get("tileOffset", rt.construct(2, 0.0))
+    _u_fullResolution = U.get("fullResolution", rt.construct(2, 0.0))
+    _u_aspect = U.get("aspect", rt.f(0.0))
+    _u_scale = U.get("scale", rt.f(0.0))
+    _u_rotation = U.get("rotation", rt.f(0.0))
+    _u_thickness = U.get("thickness", rt.f(0.0))
+    _u_smoothness = U.get("smoothness", rt.f(0.0))
+    _u_symmetry = U.get("symmetry", 0)
+    _u_layers = U.get("layers", 0)
+    _u_shape = U.get("shape", 0)
+    _u_layerSpacing = U.get("layerSpacing", rt.f(0.0))
+    _u_twist = U.get("twist", rt.f(0.0))
+    _u_shapeGrowth = U.get("shapeGrowth", rt.f(0.0))
+    _u_bindu = U.get("bindu", False)
+    _u_animation = U.get("animation", 0)
+    _u_speed = U.get("speed", rt.f(0.0))
+    _u_pulseDepth = U.get("pulseDepth", rt.f(0.0))
+    _u_time = U.get("time", rt.f(0.0))
+    _u_fgColor = U.get("fgColor", rt.construct(3, 0.0))
+    _u_bgColor = U.get("bgColor", rt.construct(3, 0.0))
     g.fragColor = rt.construct(4, 0.0)
     def rotate2D__vec2_float(p, angle):
-        p = rt.copy(p)
+        p = rt.copy(p, "float")
         c = rt.component_wise("cos", angle, width=1)
         s = rt.component_wise("sin", angle, width=1)
         return rt.construct(2, rt.binary("-", rt.binary("*", rt.swizzle(p, "x"), c, 1, "float"), rt.binary("*", rt.swizzle(p, "y"), s, 1, "float"), 1, "float"), rt.binary("+", rt.binary("*", rt.swizzle(p, "x"), s, 1, "float"), rt.binary("*", rt.swizzle(p, "y"), c, 1, "float"), 1, "float"))
     def sdEquilateralTriangle__vec2_float(p, r):
-        p = rt.copy(p)
+        p = rt.copy(p, "float")
         k = rt.f(1.7320508075688772)
         p = rt.assign_swizzle(p, "x", rt.binary("-", rt.component_wise("abs", rt.swizzle(p, "x"), width=1), r, 1, "float"))
         p = rt.assign_swizzle(p, "y", rt.binary("+", rt.swizzle(p, "y"), rt.binary("/", r, k, 1, "float"), 1, "float"))
@@ -44,7 +44,7 @@ def run_pixel(ctx, out):
     def fillEdge__float(d):
         return rt.component_wise("smoothstep", _u_smoothness, rt.unary("-", _u_smoothness), d, width=1)
     def mandalaMask__vec2(p):
-        p = rt.copy(p)
+        p = rt.copy(p, "float")
         r = rt.length(p)
         theta = rt.binary("-", rt.component_wise("atan", rt.swizzle(p, "y"), rt.swizzle(p, "x"), width=1), rt.binary("*", rt.f(3.14159265359), rt.f(0.5), 1, "float"), 1, "float")
         wedge = rt.binary("/", rt.f(6.28318530718), rt.construct(1, _u_symmetry), 1, "float")

@@ -6,21 +6,21 @@ def run_pixel(ctx, out):
         pass
     g = _G()
     _u_inputTex = T["inputTex"]
-    _u_resolution = U["resolution"]
-    _u_tileOffset = U["tileOffset"]
-    _u_fullResolution = U["fullResolution"]
-    _u_time = U["time"]
-    _u_frequency = U["frequency"]
-    _u_octaves = U["octaves"]
-    _u_displacement = U["displacement"]
-    _u_speed = U["speed"]
-    _u_wrap = U["wrap"]
-    _u_seed = U["seed"]
-    _u_antialias = U["antialias"]
+    _u_resolution = U.get("resolution", rt.construct(2, 0.0))
+    _u_tileOffset = U.get("tileOffset", rt.construct(2, 0.0))
+    _u_fullResolution = U.get("fullResolution", rt.construct(2, 0.0))
+    _u_time = U.get("time", rt.f(0.0))
+    _u_frequency = U.get("frequency", rt.f(0.0))
+    _u_octaves = U.get("octaves", rt.f(0.0))
+    _u_displacement = U.get("displacement", rt.f(0.0))
+    _u_speed = U.get("speed", rt.f(0.0))
+    _u_wrap = U.get("wrap", rt.f(0.0))
+    _u_seed = U.get("seed", rt.f(0.0))
+    _u_antialias = U.get("antialias", False)
     g.fragColor = rt.construct(4, 0.0)
     g.TAU = rt.f(6.28318530717959)
     def pcg__uvec3(v):
-        v = rt.copy(v)
+        v = rt.copy(v, "uint")
         v = rt.binary("+", rt.binary("*", v, rt.i(1664525), 3, "uint"), rt.i(1013904223), 3, "uint")
         v = rt.assign_swizzle(v, "x", rt.binary("+", rt.swizzle(v, "x"), rt.binary("*", rt.swizzle(v, "y"), rt.swizzle(v, "z"), 1, "uint"), 1, "uint"))
         v = rt.assign_swizzle(v, "y", rt.binary("+", rt.swizzle(v, "y"), rt.binary("*", rt.swizzle(v, "z"), rt.swizzle(v, "x"), 1, "uint"), 1, "uint"))
@@ -31,11 +31,11 @@ def run_pixel(ctx, out):
         v = rt.assign_swizzle(v, "z", rt.binary("+", rt.swizzle(v, "z"), rt.binary("*", rt.swizzle(v, "x"), rt.swizzle(v, "y"), 1, "uint"), 1, "uint"))
         return v
     def hash21__vec2(p):
-        p = rt.copy(p)
+        p = rt.copy(p, "float")
         v = rt.construct(3, rt.construct(1, (rt.binary("*", rt.swizzle(p, "x"), rt.f(2.0), 1, "float") if rt.binary(">=", rt.swizzle(p, "x"), rt.f(0.0)) else rt.binary("+", rt.binary("*", rt.unary("-", rt.swizzle(p, "x")), rt.f(2.0), 1, "float"), rt.f(1.0), 1, "float")), base="uint"), rt.construct(1, (rt.binary("*", rt.swizzle(p, "y"), rt.f(2.0), 1, "float") if rt.binary(">=", rt.swizzle(p, "y"), rt.f(0.0)) else rt.binary("+", rt.binary("*", rt.unary("-", rt.swizzle(p, "y")), rt.f(2.0), 1, "float"), rt.f(1.0), 1, "float")), base="uint"), rt.construct(1, _u_seed, base="uint"), base="uint")
         return rt.binary("/", rt.construct(1, rt.swizzle(pcg__uvec3(v), "x")), rt.construct(1, rt.i(4294967295)), 1, "float")
     def noise__vec2(p):
-        p = rt.copy(p)
+        p = rt.copy(p, "float")
         i = rt.component_wise("floor", p, width=2)
         f = rt.component_wise("fract", p, width=2)
         f = rt.binary("*", rt.binary("*", f, f, 2, "float"), rt.binary("-", rt.f(3.0), rt.binary("*", rt.f(2.0), f, 2, "float"), 2, "float"), 2, "float")
@@ -45,7 +45,7 @@ def run_pixel(ctx, out):
         d = hash21__vec2(rt.binary("+", i, rt.construct(2, rt.f(1.0), rt.f(1.0)), 2, "float"))
         return rt.component_wise("mix", rt.component_wise("mix", a, b, rt.swizzle(f, "x"), width=1), rt.component_wise("mix", c, d, rt.swizzle(f, "x"), width=1), rt.swizzle(f, "y"), width=1)
     def simplexNoise__vec2_float_float_float(p, t, phase, radius):
-        p = rt.copy(p)
+        p = rt.copy(p, "float")
         angle = rt.binary("+", rt.binary("*", t, g.TAU, 1, "float"), phase, 1, "float")
         cx = rt.binary("*", rt.component_wise("cos", angle, width=1), radius, 1, "float")
         cy = rt.binary("*", rt.component_wise("sin", angle, width=1), radius, 1, "float")

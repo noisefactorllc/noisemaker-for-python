@@ -7,13 +7,13 @@ def run_pixel(ctx, out):
     g = _G()
     _u_inputTex = T["inputTex"]
     _u_tex = T["tex"]
-    _u_resolution = U["resolution"]
-    _u_tileOffset = U["tileOffset"]
-    _u_fullResolution = U["fullResolution"]
-    _u_shape = U["shape"]
-    _u_power = U["power"]
-    _u_hardness = U["hardness"]
-    _u_blendMode = U["blendMode"]
+    _u_resolution = U.get("resolution", rt.construct(2, 0.0))
+    _u_tileOffset = U.get("tileOffset", rt.construct(2, 0.0))
+    _u_fullResolution = U.get("fullResolution", rt.construct(2, 0.0))
+    _u_shape = U.get("shape", 0)
+    _u_power = U.get("power", rt.f(0.0))
+    _u_hardness = U.get("hardness", rt.f(0.0))
+    _u_blendMode = U.get("blendMode", 0)
     g.fragColor = rt.construct(4, 0.0)
     def clamp01__float(x):
         return rt.component_wise("clamp", x, rt.f(0.0), rt.f(1.0), width=1)
@@ -22,8 +22,8 @@ def run_pixel(ctx, out):
     def blendSoftLight__float_float(base, blend):
         return (rt.binary("+", rt.binary("*", rt.binary("*", rt.f(2.0), base, 1, "float"), blend, 1, "float"), rt.binary("*", rt.binary("*", base, base, 1, "float"), rt.binary("-", rt.f(1.0), rt.binary("*", rt.f(2.0), blend, 1, "float"), 1, "float"), 1, "float"), 1, "float") if rt.binary("<", blend, rt.f(0.5)) else rt.binary("+", rt.binary("*", rt.component_wise("sqrt", base, width=1), rt.binary("-", rt.binary("*", rt.f(2.0), blend, 1, "float"), rt.f(1.0), 1, "float"), 1, "float"), rt.binary("*", rt.binary("*", rt.f(2.0), base, 1, "float"), rt.binary("-", rt.f(1.0), blend, 1, "float"), 1, "float"), 1, "float"))
     def applyBlendMode__vec4_vec4_int(color1, color2, m):
-        color1 = rt.copy(color1)
-        color2 = rt.copy(color2)
+        color1 = rt.copy(color1, "float")
+        color2 = rt.copy(color2, "float")
         if rt.binary("==", m, rt.i(0)):
             return rt.component_wise("min", rt.binary("+", color1, color2, 4, "float"), rt.construct(4, rt.f(1.0)), width=4)
         if rt.binary("==", m, rt.i(1)):
@@ -56,8 +56,8 @@ def run_pixel(ctx, out):
             return rt.construct(4, blendSoftLight__float_float(rt.swizzle(color1, "r"), rt.swizzle(color2, "r")), blendSoftLight__float_float(rt.swizzle(color1, "g"), rt.swizzle(color2, "g")), blendSoftLight__float_float(rt.swizzle(color1, "b"), rt.swizzle(color2, "b")), rt.f(1.0))
         return rt.component_wise("max", rt.binary("-", color1, color2, 4, "float"), rt.construct(4, rt.f(0.0)), width=4)
     def distanceMetric__vec2_vec2_int(p, corner, m):
-        p = rt.copy(p)
-        corner = rt.copy(corner)
+        p = rt.copy(p, "float")
+        corner = rt.copy(corner, "float")
         mm = rt.binary("%", m, rt.i(3), 1, "int")
         if rt.binary("<", mm, rt.i(0)):
             mm = rt.binary("+", mm, rt.i(3), 1, "int")

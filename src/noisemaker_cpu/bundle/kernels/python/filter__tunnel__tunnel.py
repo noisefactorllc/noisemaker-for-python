@@ -6,26 +6,26 @@ def run_pixel(ctx, out):
         pass
     g = _G()
     _u_inputTex = T["inputTex"]
-    _u_tileOffset = U["tileOffset"]
-    _u_fullResolution = U["fullResolution"]
-    _u_time = U["time"]
-    _u_shape = U["shape"]
-    _u_speed = U["speed"]
-    _u_rotation = U["rotation"]
-    _u_scale = U["scale"]
-    _u_center = U["center"]
-    _u_aspectLens = U["aspectLens"]
-    _u_antialias = U["antialias"]
+    _u_tileOffset = U.get("tileOffset", rt.construct(2, 0.0))
+    _u_fullResolution = U.get("fullResolution", rt.construct(2, 0.0))
+    _u_time = U.get("time", rt.f(0.0))
+    _u_shape = U.get("shape", 0)
+    _u_speed = U.get("speed", rt.f(0.0))
+    _u_rotation = U.get("rotation", rt.f(0.0))
+    _u_scale = U.get("scale", rt.f(0.0))
+    _u_center = U.get("center", rt.f(0.0))
+    _u_aspectLens = U.get("aspectLens", False)
+    _u_antialias = U.get("antialias", False)
     g.fragColor = rt.construct(4, 0.0)
     g.PI = rt.f(3.14159265359)
     g.TAU = rt.f(6.28318530718)
     def polygonShape__vec2_int(uv, sides):
-        uv = rt.copy(uv)
+        uv = rt.copy(uv, "float")
         a = rt.binary("+", rt.component_wise("atan", rt.swizzle(uv, "x"), rt.swizzle(uv, "y"), width=1), g.PI, 1, "float")
         r = rt.binary("/", g.TAU, rt.construct(1, sides), 1, "float")
         return rt.binary("*", rt.component_wise("cos", rt.binary("-", rt.binary("*", rt.component_wise("floor", rt.binary("+", rt.f(0.5), rt.binary("/", a, r, 1, "float"), 1, "float"), width=1), r, 1, "float"), a, 1, "float"), width=1), rt.length(uv), 1, "float")
     def smod__vec2_float(v, m):
-        v = rt.copy(v)
+        v = rt.copy(v, "float")
         return rt.binary("*", m, rt.binary("-", rt.binary("-", rt.f(0.75), rt.component_wise("abs", rt.binary("-", rt.component_wise("fract", v, width=2), rt.f(0.5), 2, "float"), width=2), 2, "float"), rt.f(0.25), 2, "float"), 2, "float")
     def main__void():
         texSize = rt.texture_size(_u_inputTex)

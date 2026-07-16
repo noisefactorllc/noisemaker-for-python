@@ -5,8 +5,8 @@ def run_pixel(ctx, out):
     class _G:
         pass
     g = _G()
-    _u_color = U["color"]
-    _u_alpha = U["alpha"]
+    _u_color = U.get("color", rt.construct(3, 0.0))
+    _u_alpha = U.get("alpha", rt.f(0.0))
     g.fragColor = rt.construct(4, 0.0)
     def main__void():
         g.fragColor = rt.construct(4, rt.binary("*", _u_color, _u_alpha, 3, "float"), _u_alpha)

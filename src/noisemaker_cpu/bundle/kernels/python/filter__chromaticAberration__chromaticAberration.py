@@ -6,11 +6,11 @@ def run_pixel(ctx, out):
         pass
     g = _G()
     _u_inputTex = T["inputTex"]
-    _u_resolution = U["resolution"]
-    _u_tileOffset = U["tileOffset"]
-    _u_fullResolution = U["fullResolution"]
-    _u_aberrationAmt = U["aberrationAmt"]
-    _u_passthru = U["passthru"]
+    _u_resolution = U.get("resolution", rt.construct(2, 0.0))
+    _u_tileOffset = U.get("tileOffset", rt.construct(2, 0.0))
+    _u_fullResolution = U.get("fullResolution", rt.construct(2, 0.0))
+    _u_aberrationAmt = U.get("aberrationAmt", rt.f(0.0))
+    _u_passthru = U.get("passthru", rt.f(0.0))
     g.fragColor = rt.construct(4, 0.0)
     def map__float_float_float_float_float(value, inMin, inMax, outMin, outMax):
         return rt.binary("+", outMin, rt.binary("/", rt.binary("*", rt.binary("-", outMax, outMin, 1, "float"), rt.binary("-", value, inMin, 1, "float"), 1, "float"), rt.binary("-", inMax, inMin, 1, "float"), 1, "float"), 1, "float")

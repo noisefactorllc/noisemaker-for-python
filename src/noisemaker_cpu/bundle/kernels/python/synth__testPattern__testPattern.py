@@ -5,11 +5,11 @@ def run_pixel(ctx, out):
     class _G:
         pass
     g = _G()
-    _u_resolution = U["resolution"]
-    _u_tileOffset = U["tileOffset"]
-    _u_fullResolution = U["fullResolution"]
-    _u_gridSize = U["gridSize"]
-    _u_pattern = U["pattern"]
+    _u_resolution = U.get("resolution", rt.construct(2, 0.0))
+    _u_tileOffset = U.get("tileOffset", rt.construct(2, 0.0))
+    _u_fullResolution = U.get("fullResolution", rt.construct(2, 0.0))
+    _u_gridSize = U.get("gridSize", 0)
+    _u_pattern = U.get("pattern", 0)
     g.fragColor = rt.construct(4, 0.0)
     g.GLYPH = rt.array([rt.i(31599), rt.i(9362), rt.i(29671), rt.i(29391), rt.i(23497), rt.i(31183), rt.i(31215), rt.i(29257), rt.i(31727), rt.i(31695)])
     def sampleGlyph__int_int_int(digit, x, y):
@@ -18,7 +18,7 @@ def run_pixel(ctx, out):
         bitIndex = rt.binary("+", rt.binary("*", y, rt.i(3), 1, "int"), rt.binary("-", rt.i(2), x, 1, "int"), 1, "int")
         return rt.binary("==", rt.binary("&", rt.binary(">>", g.GLYPH[int(digit)], bitIndex, 1, "int"), rt.i(1), 1, "int"), rt.i(1))
     def renderNumber__int_vec2(number, cellUV):
-        cellUV = rt.copy(cellUV)
+        cellUV = rt.copy(cellUV, "float")
         numDigits = rt.i(1)
         if rt.binary(">=", number, rt.i(10)):
             numDigits = rt.i(2)
@@ -62,7 +62,7 @@ def run_pixel(ctx, out):
                 return sampleGlyph__int_int_int(digit, gx, gy)
         return False
     def checkerboard__vec2(uv):
-        uv = rt.copy(uv)
+        uv = rt.copy(uv, "float")
         n = rt.component_wise("max", _u_gridSize, rt.i(1), width=1)
         cellX = rt.binary("%", rt.construct(1, rt.binary("*", rt.swizzle(uv, "x"), rt.construct(1, n), 1, "float"), base="int"), n, 1, "int")
         cellY = rt.binary("%", rt.construct(1, rt.binary("*", rt.swizzle(uv, "y"), rt.construct(1, n), 1, "float"), base="int"), n, 1, "int")
@@ -75,19 +75,19 @@ def run_pixel(ctx, out):
         finalColor = (glyphColor if isGlyph else cellColor)
         return rt.construct(4, rt.construct(3, finalColor), rt.f(1.0))
     def colorBars__vec2(uv):
-        uv = rt.copy(uv)
+        uv = rt.copy(uv, "float")
         bar = rt.construct(1, rt.binary("*", rt.swizzle(uv, "x"), rt.f(8.0), 1, "float"), base="int")
         bar = rt.component_wise("clamp", bar, rt.i(0), rt.i(7), width=1)
         colors = rt.array([rt.construct(3, rt.f(1.0), rt.f(1.0), rt.f(1.0)), rt.construct(3, rt.f(1.0), rt.f(1.0), rt.f(0.0)), rt.construct(3, rt.f(0.0), rt.f(1.0), rt.f(1.0)), rt.construct(3, rt.f(0.0), rt.f(1.0), rt.f(0.0)), rt.construct(3, rt.f(1.0), rt.f(0.0), rt.f(1.0)), rt.construct(3, rt.f(1.0), rt.f(0.0), rt.f(0.0)), rt.construct(3, rt.f(0.0), rt.f(0.0), rt.f(1.0)), rt.construct(3, rt.f(0.0), rt.f(0.0), rt.f(0.0))])
         return rt.construct(4, colors[int(bar)], rt.f(1.0))
     def gradient__vec2(uv):
-        uv = rt.copy(uv)
+        uv = rt.copy(uv, "float")
         return rt.construct(4, rt.construct(3, rt.swizzle(uv, "x")), rt.f(1.0))
     def uvMap__vec2(uv):
-        uv = rt.copy(uv)
+        uv = rt.copy(uv, "float")
         return rt.construct(4, rt.swizzle(uv, "x"), rt.swizzle(uv, "y"), rt.f(0.0), rt.f(1.0))
     def gridLines__vec2(uv):
-        uv = rt.copy(uv)
+        uv = rt.copy(uv, "float")
         n = rt.component_wise("max", _u_gridSize, rt.i(1), width=1)
         cellUV = rt.component_wise("fract", rt.binary("*", uv, rt.construct(1, n), 2, "float"), width=2)
         edge = rt.component_wise("min", cellUV, rt.binary("-", rt.f(1.0), cellUV, 2, "float"), width=2)
@@ -100,7 +100,7 @@ def run_pixel(ctx, out):
         b = rt.binary("-", rt.f(2.0), rt.component_wise("abs", rt.binary("-", rt.binary("*", h, rt.f(6.0), 1, "float"), rt.f(4.0), 1, "float"), width=1), 1, "float")
         return rt.component_wise("clamp", rt.construct(3, r, _g, b), rt.f(0.0), rt.f(1.0), width=3)
     def colorGrid__vec2(uv):
-        uv = rt.copy(uv)
+        uv = rt.copy(uv, "float")
         n = rt.component_wise("max", _u_gridSize, rt.i(1), width=1)
         cellX = rt.binary("%", rt.construct(1, rt.binary("*", rt.swizzle(uv, "x"), rt.construct(1, n), 1, "float"), base="int"), n, 1, "int")
         cellY = rt.binary("%", rt.construct(1, rt.binary("*", rt.swizzle(uv, "y"), rt.construct(1, n), 1, "float"), base="int"), n, 1, "int")
@@ -108,7 +108,7 @@ def run_pixel(ctx, out):
         hue = rt.component_wise("fract", rt.binary("*", rt.construct(1, cellIndex), rt.f(0.618033988749895), 1, "float"), width=1)
         return rt.construct(4, hue2rgb__float(hue), rt.f(1.0))
     def dotGrid__vec2(uv):
-        uv = rt.copy(uv)
+        uv = rt.copy(uv, "float")
         n = rt.component_wise("max", _u_gridSize, rt.i(1), width=1)
         scaled = rt.binary("*", uv, rt.construct(1, n), 2, "float")
         nearest = rt.component_wise("round", scaled, width=2)

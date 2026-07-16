@@ -5,15 +5,15 @@ def run_pixel(ctx, out):
     class _G:
         pass
     g = _G()
-    _u_tileOffset = U["tileOffset"]
-    _u_fullResolution = U["fullResolution"]
-    _u_color = U["color"]
-    _u_alpha = U["alpha"]
-    _u_mode = U["mode"]
+    _u_tileOffset = U.get("tileOffset", rt.construct(2, 0.0))
+    _u_fullResolution = U.get("fullResolution", rt.construct(2, 0.0))
+    _u_color = U.get("color", rt.construct(3, 0.0))
+    _u_alpha = U.get("alpha", rt.f(0.0))
+    _u_mode = U.get("mode", rt.f(0.0))
     _u_inputTex = T["inputTex"]
     g.fragColor = rt.construct(4, 0.0)
     def rgb_to_hsv__vec3(rgb):
-        rgb = rt.copy(rgb)
+        rgb = rt.copy(rgb, "float")
         r = rt.swizzle(rgb, "x")
         _g = rt.swizzle(rgb, "y")
         b = rt.swizzle(rgb, "z")
@@ -39,7 +39,7 @@ def run_pixel(ctx, out):
         sat = (rt.binary("/", delta, max_c, 1, "float") if rt.binary("!=", max_c, rt.f(0.0)) else rt.f(0.0))
         return rt.construct(3, hue, sat, max_c)
     def hsv_to_rgb__vec3(hsv):
-        hsv = rt.copy(hsv)
+        hsv = rt.copy(hsv, "float")
         h = rt.swizzle(hsv, "x")
         s = rt.swizzle(hsv, "y")
         v = rt.swizzle(hsv, "z")

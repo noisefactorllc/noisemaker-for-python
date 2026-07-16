@@ -6,14 +6,14 @@ def run_pixel(ctx, out):
         pass
     g = _G()
     _u_inputTex = T["inputTex"]
-    _u_tileOffset = U["tileOffset"]
-    _u_fullResolution = U["fullResolution"]
-    _u_vignetteBrightness = U["vignetteBrightness"]
-    _u_alpha = U["alpha"]
+    _u_tileOffset = U.get("tileOffset", rt.construct(2, 0.0))
+    _u_fullResolution = U.get("fullResolution", rt.construct(2, 0.0))
+    _u_vignetteBrightness = U.get("vignetteBrightness", rt.f(0.0))
+    _u_alpha = U.get("alpha", rt.f(0.0))
     g.fragColor = rt.construct(4, 0.0)
     def computeVignetteMask__vec2_vec2(uv, dims):
-        uv = rt.copy(uv)
-        dims = rt.copy(dims)
+        uv = rt.copy(uv, "float")
+        dims = rt.copy(dims, "float")
         if (bool(rt.binary("<=", rt.swizzle(dims, "x"), rt.f(0.0))) or bool(rt.binary("<=", rt.swizzle(dims, "y"), rt.f(0.0)))):
             return rt.f(0.0)
         delta = rt.component_wise("abs", rt.binary("-", uv, rt.construct(2, rt.f(0.5)), 2, "float"), width=2)

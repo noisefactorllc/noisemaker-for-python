@@ -5,11 +5,11 @@ def run_pixel(ctx, out):
     class _G:
         pass
     g = _G()
-    _u_tileOffset = U["tileOffset"]
-    _u_fullResolution = U["fullResolution"]
+    _u_tileOffset = U.get("tileOffset", rt.construct(2, 0.0))
+    _u_fullResolution = U.get("fullResolution", rt.construct(2, 0.0))
     _u_inputTex = T["inputTex"]
-    _u_amount = U["amount"]
-    _u_colorMode = U["colorMode"]
+    _u_amount = U.get("amount", rt.f(0.0))
+    _u_colorMode = U.get("colorMode", rt.f(0.0))
     g.fragColor = rt.construct(4, 0.0)
     def normalized_sine__float(value):
         return rt.binary("*", rt.binary("+", rt.component_wise("sin", value, width=1), rt.f(1.0), 1, "float"), rt.f(0.5), 1, "float")

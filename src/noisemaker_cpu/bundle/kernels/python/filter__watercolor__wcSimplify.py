@@ -6,12 +6,12 @@ def run_pixel(ctx, out):
         pass
     g = _G()
     _u_inputTex = T["inputTex"]
-    _u_resolution = U["resolution"]
-    _u_detail = U["detail"]
+    _u_resolution = U.get("resolution", rt.construct(2, 0.0))
+    _u_detail = U.get("detail", rt.f(0.0))
     g.fragColor = rt.construct(4, 0.0)
     def sort2__vec3_vec3(a, b):
-        a = rt.copy(a)
-        b = rt.copy(b)
+        a = rt.copy(a, "float")
+        b = rt.copy(b, "float")
         lo = rt.component_wise("min", a, b, width=3)
         hi = rt.component_wise("max", a, b, width=3)
         a = lo

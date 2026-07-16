@@ -147,9 +147,15 @@ class Runtime:
             arr = np.concatenate([arr, np.full(width - arr.shape[0], arr[-1], dtype=F32)])
         return arr
 
-    def copy(self, vec, width=None):
+    def copy(self, vec, base=None):
+        # Pass-by-value copy of a function argument, coerced to the *declared*
+        # parameter's element type. Float params force float32 (GLSL implicit
+        # conversion at the call boundary); int/uint params stay int64 so a uvecN
+        # hash seed keeps full precision instead of being truncated to float32.
         if _is_scalar(vec):
             return f32(vec)
+        if base in ("int", "uint"):
+            return np.array(vec, dtype=np.int64)
         return np.array(vec, dtype=F32)
 
     # ---- swizzles ----
@@ -492,7 +498,10 @@ def _mix(a, b, t):
 
 
 def _smoothstep(e0, e1, x):
-    t = np.clip((x - e0) / (e1 - e0), 0.0, 1.0)
+    # np.divide (not Python /) so e0==e1 yields IEEE nan/inf like JS rather than
+    # raising ZeroDivisionError; clip then resolves it to 0/1. Common at defaults
+    # (e.g. smoothstep with a zero-width band collapses to a step).
+    t = np.clip(np.divide(x - e0, e1 - e0), 0.0, 1.0)
     return t * t * (3.0 - 2.0 * t)
 
 
@@ -537,7 +546,7 @@ _COMPONENT = {
     "mix": _mix,
     "step": lambda edge, x: np.where(x < edge, 0.0, 1.0),
     "smoothstep": _smoothstep,
-    "mod": lambda x, y: x - y * np.floor(x / y),
+    "mod": lambda x, y: x - y * np.floor(np.divide(x, y)),
     "trunc": np.trunc,
     "round": lambda x: np.floor(x + 0.5),
 }

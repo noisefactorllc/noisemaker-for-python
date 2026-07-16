@@ -5,15 +5,15 @@ def run_pixel(ctx, out):
     class _G:
         pass
     g = _G()
-    _u_tileOffset = U["tileOffset"]
-    _u_fullResolution = U["fullResolution"]
+    _u_tileOffset = U.get("tileOffset", rt.construct(2, 0.0))
+    _u_fullResolution = U.get("fullResolution", rt.construct(2, 0.0))
     _u_inputTex = T["inputTex"]
-    _u_mode = U["mode"]
-    _u_rotation = U["rotation"]
-    _u_hueRange = U["hueRange"]
-    _u_saturation = U["saturation"]
-    _u_brightness = U["brightness"]
-    _u_contrast = U["contrast"]
+    _u_mode = U.get("mode", 0)
+    _u_rotation = U.get("rotation", rt.f(0.0))
+    _u_hueRange = U.get("hueRange", rt.f(0.0))
+    _u_saturation = U.get("saturation", rt.f(0.0))
+    _u_brightness = U.get("brightness", rt.f(0.0))
+    _u_contrast = U.get("contrast", rt.f(0.0))
     g.fragColor = rt.construct(4, 0.0)
     g.TAU = rt.f(6.28318530718)
     g.fwdA = rt.construct(9, rt.f(1.0), rt.f(1.0), rt.f(1.0), rt.f(0.3963377774), rt.unary("-", rt.f(0.1055613458)), rt.unary("-", rt.f(0.0894841775)), rt.f(0.2158037573), rt.unary("-", rt.f(0.0638541728)), rt.unary("-", rt.f(1.291485548)))
@@ -21,7 +21,7 @@ def run_pixel(ctx, out):
     def map__float_float_float_float_float(value, inMin, inMax, outMin, outMax):
         return rt.binary("+", outMin, rt.binary("/", rt.binary("*", rt.binary("-", outMax, outMin, 1, "float"), rt.binary("-", value, inMin, 1, "float"), 1, "float"), rt.binary("-", inMax, inMin, 1, "float"), 1, "float"), 1, "float")
     def hsv2rgb__vec3(hsv):
-        hsv = rt.copy(hsv)
+        hsv = rt.copy(hsv, "float")
         h = rt.component_wise("fract", rt.swizzle(hsv, "x"), width=1)
         s = rt.swizzle(hsv, "y")
         v = rt.swizzle(hsv, "z")
@@ -47,7 +47,7 @@ def run_pixel(ctx, out):
                             rgb = rt.construct(3, c, rt.f(0.0), x)
         return rt.binary("+", rgb, m, 3, "float")
     def rgb2hsv__vec3(rgb):
-        rgb = rt.copy(rgb)
+        rgb = rt.copy(rgb, "float")
         r = rt.swizzle(rgb, "r")
         _g = rt.swizzle(rgb, "g")
         b = rt.swizzle(rgb, "b")
@@ -66,11 +66,11 @@ def run_pixel(ctx, out):
         s = (rt.f(0.0) if rt.binary("==", maxC, rt.f(0.0)) else rt.binary("/", delta, maxC, 1, "float"))
         return rt.construct(3, h, s, maxC)
     def linear_srgb_from_oklab__vec3(c):
-        c = rt.copy(c)
+        c = rt.copy(c, "float")
         lms = rt.matrix_mult(g.fwdA, c, 3)
         return rt.matrix_mult(g.fwdB, rt.binary("*", rt.binary("*", lms, lms, 3, "float"), lms, 3, "float"), 3)
     def linearToSrgb__vec3(linear):
-        linear = rt.copy(linear)
+        linear = rt.copy(linear, "float")
         srgb = rt.construct(3, 0.0)
         i = rt.i(0)
         _for0_first = True

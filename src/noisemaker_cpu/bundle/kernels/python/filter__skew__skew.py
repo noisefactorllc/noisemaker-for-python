@@ -6,12 +6,12 @@ def run_pixel(ctx, out):
         pass
     g = _G()
     _u_inputTex = T["inputTex"]
-    _u_skewAmt = U["skewAmt"]
-    _u_rotation = U["rotation"]
-    _u_wrap = U["wrap"]
-    _u_tileOffset = U["tileOffset"]
-    _u_fullResolution = U["fullResolution"]
-    _u_renderScale = U["renderScale"]
+    _u_skewAmt = U.get("skewAmt", rt.f(0.0))
+    _u_rotation = U.get("rotation", rt.f(0.0))
+    _u_wrap = U.get("wrap", rt.f(0.0))
+    _u_tileOffset = U.get("tileOffset", rt.construct(2, 0.0))
+    _u_fullResolution = U.get("fullResolution", rt.construct(2, 0.0))
+    _u_renderScale = U.get("renderScale", rt.f(0.0))
     g.fragColor = rt.construct(4, 0.0)
     g.PI = rt.f(3.14159265359)
     def main__void():

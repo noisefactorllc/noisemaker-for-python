@@ -5,21 +5,21 @@ def run_pixel(ctx, out):
     class _G:
         pass
     g = _G()
-    _u_resolution = U["resolution"]
-    _u_tileOffset = U["tileOffset"]
-    _u_fullResolution = U["fullResolution"]
-    _u_aspect = U["aspect"]
-    _u_sides = U["sides"]
-    _u_radius = U["radius"]
-    _u_smoothing = U["smoothing"]
-    _u_rotation = U["rotation"]
-    _u_fgColor = U["fgColor"]
-    _u_fgAlpha = U["fgAlpha"]
-    _u_bgColor = U["bgColor"]
-    _u_bgAlpha = U["bgAlpha"]
+    _u_resolution = U.get("resolution", rt.construct(2, 0.0))
+    _u_tileOffset = U.get("tileOffset", rt.construct(2, 0.0))
+    _u_fullResolution = U.get("fullResolution", rt.construct(2, 0.0))
+    _u_aspect = U.get("aspect", rt.f(0.0))
+    _u_sides = U.get("sides", 0)
+    _u_radius = U.get("radius", rt.f(0.0))
+    _u_smoothing = U.get("smoothing", rt.f(0.0))
+    _u_rotation = U.get("rotation", rt.f(0.0))
+    _u_fgColor = U.get("fgColor", rt.construct(3, 0.0))
+    _u_fgAlpha = U.get("fgAlpha", rt.f(0.0))
+    _u_bgColor = U.get("bgColor", rt.construct(3, 0.0))
+    _u_bgAlpha = U.get("bgAlpha", rt.f(0.0))
     g.fragColor = rt.construct(4, 0.0)
     def polygon__vec2_float(st, sides):
-        st = rt.copy(st)
+        st = rt.copy(st, "float")
         a = rt.binary("+", rt.component_wise("atan", rt.swizzle(st, "y"), rt.swizzle(st, "x"), width=1), rt.f(3.14159265), 1, "float")
         r = rt.binary("/", rt.f(6.2831853), sides, 1, "float")
         return rt.binary("*", rt.component_wise("cos", rt.binary("-", rt.binary("*", rt.component_wise("floor", rt.binary("+", rt.f(0.5), rt.binary("/", a, r, 1, "float"), 1, "float"), width=1), r, 1, "float"), a, 1, "float"), width=1), rt.length(st), 1, "float")

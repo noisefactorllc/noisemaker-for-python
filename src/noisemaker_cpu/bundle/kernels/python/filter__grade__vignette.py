@@ -6,17 +6,17 @@ def run_pixel(ctx, out):
         pass
     g = _G()
     _u_inputTex = T["inputTex"]
-    _u_tileOffset = U["tileOffset"]
-    _u_fullResolution = U["fullResolution"]
-    _u_vignetteAmount = U["vignetteAmount"]
-    _u_vignetteMidpoint = U["vignetteMidpoint"]
-    _u_vignetteRoundness = U["vignetteRoundness"]
-    _u_vignetteFeather = U["vignetteFeather"]
-    _u_vigHiProtect = U["vigHiProtect"]
+    _u_tileOffset = U.get("tileOffset", rt.construct(2, 0.0))
+    _u_fullResolution = U.get("fullResolution", rt.construct(2, 0.0))
+    _u_vignetteAmount = U.get("vignetteAmount", rt.f(0.0))
+    _u_vignetteMidpoint = U.get("vignetteMidpoint", rt.f(0.0))
+    _u_vignetteRoundness = U.get("vignetteRoundness", rt.f(0.0))
+    _u_vignetteFeather = U.get("vignetteFeather", rt.f(0.0))
+    _u_vigHiProtect = U.get("vigHiProtect", rt.f(0.0))
     g.fragColor = rt.construct(4, 0.0)
     g.LUMA_WEIGHTS = rt.construct(3, rt.f(0.2126), rt.f(0.7152), rt.f(0.0722))
     def srgbToLinear__vec3(srgb):
-        srgb = rt.copy(srgb)
+        srgb = rt.copy(srgb, "float")
         linear = rt.construct(3, 0.0)
         i = rt.i(0)
         _for0_first = True
@@ -32,7 +32,7 @@ def run_pixel(ctx, out):
                 linear[int(i)] = rt.component_wise("pow", rt.binary("/", rt.binary("+", srgb[int(i)], rt.f(0.055), 1, "float"), rt.f(1.055), 1, "float"), rt.f(2.4), width=1)
         return linear
     def linearToSrgb__vec3(linear):
-        linear = rt.copy(linear)
+        linear = rt.copy(linear, "float")
         srgb = rt.construct(3, 0.0)
         i = rt.i(0)
         _for1_first = True
@@ -48,8 +48,8 @@ def run_pixel(ctx, out):
                 srgb[int(i)] = rt.binary("-", rt.binary("*", rt.f(1.055), rt.component_wise("pow", linear[int(i)], rt.binary("/", rt.f(1.0), rt.f(2.4), 1, "float"), width=1), 1, "float"), rt.f(0.055), 1, "float")
         return srgb
     def computeVignette__vec2_vec2_float_float_float(uv, aspectRatio, midpoint, roundness, feather):
-        uv = rt.copy(uv)
-        aspectRatio = rt.copy(aspectRatio)
+        uv = rt.copy(uv, "float")
+        aspectRatio = rt.copy(aspectRatio, "float")
         centered = rt.binary("-", uv, rt.f(0.5), 2, "float")
         scale = rt.construct(2, 0.0)
         if rt.binary(">", roundness, rt.f(0.0)):
@@ -62,7 +62,7 @@ def run_pixel(ctx, out):
         outer = rt.binary("+", midpoint, rt.binary("*", feather, rt.f(0.5), 1, "float"), 1, "float")
         return rt.binary("-", rt.f(1.0), rt.component_wise("smoothstep", inner, outer, dist, width=1), 1, "float")
     def applyVignette__vec3_float_float_float(rgb, vignetteMask, amount, highlightProtect):
-        rgb = rt.copy(rgb)
+        rgb = rt.copy(rgb, "float")
         if rt.binary("<", rt.component_wise("abs", amount, width=1), rt.f(0.001)):
             return rgb
         darken = rt.binary("-", rt.f(1.0), rt.binary("*", rt.binary("-", rt.f(1.0), vignetteMask, 1, "float"), rt.component_wise("abs", amount, width=1), 1, "float"), 1, "float")

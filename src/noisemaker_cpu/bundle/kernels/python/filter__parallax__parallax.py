@@ -7,23 +7,23 @@ def run_pixel(ctx, out):
     g = _G()
     _u_inputTex = T["inputTex"]
     _u_heightMap = T["heightMap"]
-    _u_tileOffset = U["tileOffset"]
-    _u_fullResolution = U["fullResolution"]
-    _u_direction = U["direction"]
-    _u_pivot = U["pivot"]
+    _u_tileOffset = U.get("tileOffset", rt.construct(2, 0.0))
+    _u_fullResolution = U.get("fullResolution", rt.construct(2, 0.0))
+    _u_direction = U.get("direction", rt.construct(3, 0.0))
+    _u_pivot = U.get("pivot", rt.f(0.0))
     g.fragColor = rt.construct(4, 0.0)
     g.MARCH_STEPS = rt.i(32)
     g.SHIFT_SCALE = rt.f(0.15)
     def getLuminosity__vec3(color):
-        color = rt.copy(color)
+        color = rt.copy(color, "float")
         return rt.dot(color, rt.construct(3, rt.f(0.299), rt.f(0.587), rt.f(0.114)))
     def getHeight__vec2(uv):
-        uv = rt.copy(uv)
+        uv = rt.copy(uv, "float")
         mapSize = rt.construct(2, rt.texture_size(_u_heightMap))
         localUV = rt.binary("/", rt.binary("-", rt.binary("*", uv, _u_fullResolution, 2, "float"), _u_tileOffset, 2, "float"), mapSize, 2, "float")
         return getLuminosity__vec3(rt.swizzle(rt.texture(_u_heightMap, localUV), "rgb"))
     def getInput__vec2(uv):
-        uv = rt.copy(uv)
+        uv = rt.copy(uv, "float")
         texSize = rt.construct(2, rt.texture_size(_u_inputTex))
         localUV = rt.binary("/", rt.binary("-", rt.binary("*", uv, _u_fullResolution, 2, "float"), _u_tileOffset, 2, "float"), texSize, 2, "float")
         return rt.texture(_u_inputTex, localUV)

@@ -5,25 +5,25 @@ def run_pixel(ctx, out):
     class _G:
         pass
     g = _G()
-    _u_tileOffset = U["tileOffset"]
-    _u_fullResolution = U["fullResolution"]
+    _u_tileOffset = U.get("tileOffset", rt.construct(2, 0.0))
+    _u_fullResolution = U.get("fullResolution", rt.construct(2, 0.0))
     _u_inputTex = T["inputTex"]
-    _u_temperature = U["temperature"]
-    _u_tint = U["tint"]
-    _u_exposure = U["exposure"]
-    _u_contrast = U["contrast"]
-    _u_highlights = U["highlights"]
-    _u_shadows = U["shadows"]
-    _u_whites = U["whites"]
-    _u_blacks = U["blacks"]
-    _u_saturation = U["saturation"]
-    _u_curveShadows = U["curveShadows"]
-    _u_curveMidtones = U["curveMidtones"]
-    _u_curveHighlights = U["curveHighlights"]
+    _u_temperature = U.get("temperature", rt.f(0.0))
+    _u_tint = U.get("tint", rt.f(0.0))
+    _u_exposure = U.get("exposure", rt.f(0.0))
+    _u_contrast = U.get("contrast", rt.f(0.0))
+    _u_highlights = U.get("highlights", rt.f(0.0))
+    _u_shadows = U.get("shadows", rt.f(0.0))
+    _u_whites = U.get("whites", rt.f(0.0))
+    _u_blacks = U.get("blacks", rt.f(0.0))
+    _u_saturation = U.get("saturation", rt.f(0.0))
+    _u_curveShadows = U.get("curveShadows", rt.f(0.0))
+    _u_curveMidtones = U.get("curveMidtones", rt.f(0.0))
+    _u_curveHighlights = U.get("curveHighlights", rt.f(0.0))
     g.fragColor = rt.construct(4, 0.0)
     g.LUMA_WEIGHTS = rt.construct(3, rt.f(0.2126), rt.f(0.7152), rt.f(0.0722))
     def srgbToLinear__vec3(srgb):
-        srgb = rt.copy(srgb)
+        srgb = rt.copy(srgb, "float")
         linear = rt.construct(3, 0.0)
         i = rt.i(0)
         _for0_first = True
@@ -39,7 +39,7 @@ def run_pixel(ctx, out):
                 linear[int(i)] = rt.component_wise("pow", rt.binary("/", rt.binary("+", srgb[int(i)], rt.f(0.055), 1, "float"), rt.f(1.055), 1, "float"), rt.f(2.4), width=1)
         return linear
     def linearToSrgb__vec3(linear):
-        linear = rt.copy(linear)
+        linear = rt.copy(linear, "float")
         srgb = rt.construct(3, 0.0)
         i = rt.i(0)
         _for1_first = True
@@ -55,7 +55,7 @@ def run_pixel(ctx, out):
                 srgb[int(i)] = rt.binary("-", rt.binary("*", rt.f(1.055), rt.component_wise("pow", linear[int(i)], rt.binary("/", rt.f(1.0), rt.f(2.4), 1, "float"), width=1), 1, "float"), rt.f(0.055), 1, "float")
         return srgb
     def applyWhiteBalance__vec3_float_float(rgb, temp, tint):
-        rgb = rt.copy(rgb)
+        rgb = rt.copy(rgb, "float")
         shift = rt.construct(3, rt.binary("+", rt.f(1.0), rt.binary("*", temp, rt.f(0.5), 1, "float"), 1, "float"), rt.binary("-", rt.f(1.0), rt.binary("*", tint, rt.f(0.5), 1, "float"), 1, "float"), rt.binary("-", rt.f(1.0), rt.binary("*", temp, rt.f(0.5), 1, "float"), 1, "float"))
         return rt.binary("*", rgb, shift, 3, "float")
     def shadowWeight__float(luma):
@@ -69,7 +69,7 @@ def run_pixel(ctx, out):
     def blacksWeight__float(luma):
         return rt.binary("-", rt.f(1.0), rt.component_wise("smoothstep", rt.f(0.0), rt.f(0.3), luma, width=1), 1, "float")
     def applyTonalRanges__vec3_float_float_float_float(rgb, highlights, shadows, whites, blacks):
-        rgb = rt.copy(rgb)
+        rgb = rt.copy(rgb, "float")
         luma = rt.dot(rgb, g.LUMA_WEIGHTS)
         chroma = rt.binary("-", rgb, luma, 3, "float")
         hWeight = highlightWeight__float(luma)
@@ -85,7 +85,7 @@ def run_pixel(ctx, out):
         newLuma = rt.component_wise("max", newLuma, rt.f(0.0), width=1)
         return rt.binary("+", newLuma, chroma, 3, "float")
     def applyContrast__vec3_float(rgb, contrast):
-        rgb = rt.copy(rgb)
+        rgb = rt.copy(rgb, "float")
         if rt.binary("<", rt.component_wise("abs", contrast, width=1), rt.f(0.001)):
             return rgb
         luma = rt.dot(rgb, g.LUMA_WEIGHTS)
@@ -96,7 +96,7 @@ def run_pixel(ctx, out):
         newLuma = rt.component_wise("clamp", newLuma, rt.f(0.0), rt.f(1.5), width=1)
         return rt.binary("+", newLuma, chroma, 3, "float")
     def applyCurve__vec3_float_float_float(rgb, shadowLift, midGamma, highGain):
-        rgb = rt.copy(rgb)
+        rgb = rt.copy(rgb, "float")
         luma = rt.dot(rgb, g.LUMA_WEIGHTS)
         chroma = rt.binary("-", rgb, luma, 3, "float")
         sW = shadowWeight__float(luma)
@@ -110,7 +110,7 @@ def run_pixel(ctx, out):
         newLuma = rt.binary("*", newLuma, gain, 1, "float")
         return rt.component_wise("max", rt.binary("+", newLuma, chroma, 3, "float"), rt.construct(3, rt.f(0.0)), width=3)
     def applySaturation__vec3_float(rgb, satAmount):
-        rgb = rt.copy(rgb)
+        rgb = rt.copy(rgb, "float")
         luma = rt.dot(rgb, g.LUMA_WEIGHTS)
         chroma = rt.binary("-", rgb, luma, 3, "float")
         return rt.binary("+", luma, rt.binary("*", chroma, satAmount, 3, "float"), 3, "float")

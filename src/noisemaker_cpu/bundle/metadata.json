@@ -295,7 +295,8 @@
           "inputs": {},
           "outputs": {
             "fragColor": "outputTex"
-          }
+          },
+          "uniforms": {}
         }
       ]
     },
@@ -420,6 +421,9 @@
           },
           "outputs": {
             "fragColor": "outputTex"
+          },
+          "uniforms": {
+            "mixAmt": "mix"
           }
         }
       ]
@@ -512,6 +516,9 @@
           },
           "outputs": {
             "fragColor": "outputTex"
+          },
+          "uniforms": {
+            "mixAmt": "mix"
           }
         }
       ]
@@ -672,7 +679,8 @@
           },
           "outputs": {
             "fragColor": "outputTex"
-          }
+          },
+          "uniforms": {}
         }
       ]
     },
@@ -806,7 +814,8 @@
           },
           "outputs": {
             "fragColor": "outputTex"
-          }
+          },
+          "uniforms": {}
         }
       ]
     },
@@ -1025,7 +1034,8 @@
           },
           "outputs": {
             "fragColor": "outputTex"
-          }
+          },
+          "uniforms": {}
         }
       ]
     },
@@ -1135,6 +1145,9 @@
           },
           "outputs": {
             "fragColor": "outputTex"
+          },
+          "uniforms": {
+            "mixAmt": "mix"
           }
         }
       ]
@@ -1389,6 +1402,9 @@
           },
           "outputs": {
             "fragColor": "outputTex"
+          },
+          "uniforms": {
+            "splatColor": "color"
           }
         }
       ]
@@ -1488,7 +1504,8 @@
           },
           "outputs": {
             "fragColor": "outputTex"
-          }
+          },
+          "uniforms": {}
         }
       ]
     },
@@ -1531,7 +1548,8 @@
           },
           "outputs": {
             "fragColor": "outputTex"
-          }
+          },
+          "uniforms": {}
         }
       ]
     },
@@ -1637,7 +1655,8 @@
           },
           "outputs": {
             "fragColor": "_brightTex"
-          }
+          },
+          "uniforms": {}
         },
         {
           "name": "ntapGather",
@@ -1648,7 +1667,8 @@
           },
           "outputs": {
             "fragColor": "_bloomTex"
-          }
+          },
+          "uniforms": {}
         },
         {
           "name": "composite",
@@ -1660,7 +1680,8 @@
           },
           "outputs": {
             "fragColor": "outputTex"
-          }
+          },
+          "uniforms": {}
         }
       ]
     },
@@ -1713,7 +1734,8 @@
           },
           "outputs": {
             "fragColor": "_blurTemp"
-          }
+          },
+          "uniforms": {}
         },
         {
           "name": "blurV",
@@ -1724,7 +1746,8 @@
           },
           "outputs": {
             "fragColor": "outputTex"
-          }
+          },
+          "uniforms": {}
         }
       ]
     },
@@ -1800,7 +1823,8 @@
           },
           "outputs": {
             "fragColor": "outputTex"
-          }
+          },
+          "uniforms": {}
         }
       ]
     },
@@ -1950,7 +1974,8 @@
           },
           "outputs": {
             "fragColor": "celShadingColorTex"
-          }
+          },
+          "uniforms": {}
         },
         {
           "name": "edges",
@@ -1961,7 +1986,8 @@
           },
           "outputs": {
             "fragColor": "celShadingEdgeTex"
-          }
+          },
+          "uniforms": {}
         },
         {
           "name": "blend",
@@ -1974,7 +2000,8 @@
           },
           "outputs": {
             "fragColor": "outputTex"
-          }
+          },
+          "uniforms": {}
         }
       ]
     },
@@ -2024,7 +2051,8 @@
           },
           "outputs": {
             "fragColor": "outputTex"
-          }
+          },
+          "uniforms": {}
         }
       ]
     },
@@ -2081,7 +2109,8 @@
           },
           "outputs": {
             "fragColor": "outputTex"
-          }
+          },
+          "uniforms": {}
         }
       ]
     },
@@ -2124,7 +2153,8 @@
           },
           "outputs": {
             "fragColor": "outputTex"
-          }
+          },
+          "uniforms": {}
         }
       ]
     },
@@ -2189,7 +2219,8 @@
           },
           "outputs": {
             "fragColor": "_chBlurH"
-          }
+          },
+          "uniforms": {}
         },
         {
           "name": "blurV",
@@ -2200,7 +2231,8 @@
           },
           "outputs": {
             "fragColor": "_chBlur"
-          }
+          },
+          "uniforms": {}
         },
         {
           "name": "map",
@@ -2212,7 +2244,8 @@
           },
           "outputs": {
             "fragColor": "outputTex"
-          }
+          },
+          "uniforms": {}
         }
       ]
     },
@@ -2270,6 +2303,11 @@
           },
           "outputs": {
             "fragColor": "outputTex"
+          },
+          "uniforms": {
+            "seed": "seed",
+            "scale": "scale",
+            "speed": "speed"
           }
         }
       ]
@@ -2377,7 +2415,8 @@
           },
           "outputs": {
             "color": "outputTex"
-          }
+          },
+          "uniforms": {}
         }
       ]
     },
@@ -2412,7 +2451,8 @@
           },
           "outputs": {
             "fragColor": "outputTex"
-          }
+          },
+          "uniforms": {}
         }
       ]
     },
@@ -2544,7 +2584,8 @@
           },
           "outputs": {
             "fragColor": "outputTex"
-          }
+          },
+          "uniforms": {}
         }
       ]
     },
@@ -2609,7 +2650,8 @@
           },
           "outputs": {
             "fragColor": "outputTex"
-          }
+          },
+          "uniforms": {}
         }
       ]
     },
@@ -2667,6 +2709,11 @@
           },
           "outputs": {
             "fragColor": "outputTex"
+          },
+          "uniforms": {
+            "alpha": "alpha",
+            "speed": "speed",
+            "seed": "seed"
           }
         }
       ]
@@ -2735,6 +2782,12 @@
           },
           "outputs": {
             "fragColor": "outputTex"
+          },
+          "uniforms": {
+            "displacement": "displacement",
+            "speed": "speed",
+            "seed": "seed",
+            "direction": "direction"
           }
         }
       ]
@@ -2768,7 +2821,8 @@
           },
           "outputs": {
             "fragColor": "outputTex"
-          }
+          },
+          "uniforms": {}
         }
       ]
     },
@@ -2811,7 +2865,8 @@
           },
           "outputs": {
             "fragColor": "outputTex"
-          }
+          },
+          "uniforms": {}
         }
       ]
     },
@@ -2924,7 +2979,8 @@
           },
           "outputs": {
             "fragColor": "outputTex"
-          }
+          },
+          "uniforms": {}
         }
       ]
     },
@@ -3090,7 +3146,8 @@
           },
           "outputs": {
             "fragColor": "outputTex"
-          }
+          },
+          "uniforms": {}
         }
       ]
     },
@@ -3176,7 +3233,8 @@
           },
           "outputs": {
             "fragColor": "outputTex"
-          }
+          },
+          "uniforms": {}
         }
       ]
     },
@@ -3255,7 +3313,8 @@
           },
           "outputs": {
             "fragColor": "outputTex"
-          }
+          },
+          "uniforms": {}
         }
       ]
     },
@@ -3319,6 +3378,9 @@
           },
           "outputs": {
             "fragColor": "outputTex"
+          },
+          "uniforms": {
+            "alpha": "alpha"
           }
         }
       ]
@@ -3363,7 +3425,8 @@
           },
           "outputs": {
             "fragColor": "outputTex"
-          }
+          },
+          "uniforms": {}
         }
       ]
     },
@@ -3418,7 +3481,8 @@
           },
           "outputs": {
             "fragColor": "outputTex"
-          }
+          },
+          "uniforms": {}
         }
       ]
     },
@@ -3480,6 +3544,11 @@
           },
           "outputs": {
             "fragColor": "outputTex"
+          },
+          "uniforms": {
+            "shape": "sobelMetric",
+            "alpha": "alpha",
+            "width": "width"
           }
         }
       ]
@@ -3536,7 +3605,8 @@
           },
           "outputs": {
             "fragColor": "outputTex"
-          }
+          },
+          "uniforms": {}
         }
       ]
     },
@@ -4132,7 +4202,8 @@
           },
           "outputs": {
             "fragColor": "_primaryTex"
-          }
+          },
+          "uniforms": {}
         },
         {
           "name": "creative",
@@ -4143,7 +4214,8 @@
           },
           "outputs": {
             "fragColor": "_creativeTex"
-          }
+          },
+          "uniforms": {}
         },
         {
           "name": "wheels",
@@ -4154,7 +4226,8 @@
           },
           "outputs": {
             "fragColor": "_wheelsTex"
-          }
+          },
+          "uniforms": {}
         },
         {
           "name": "hslSecondary",
@@ -4165,7 +4238,8 @@
           },
           "outputs": {
             "fragColor": "_hslTex"
-          }
+          },
+          "uniforms": {}
         },
         {
           "name": "lut",
@@ -4176,7 +4250,8 @@
           },
           "outputs": {
             "fragColor": "_lutTex"
-          }
+          },
+          "uniforms": {}
         },
         {
           "name": "vignette",
@@ -4187,7 +4262,8 @@
           },
           "outputs": {
             "fragColor": "outputTex"
-          }
+          },
+          "uniforms": {}
         }
       ]
     },
@@ -4229,6 +4305,10 @@
           },
           "outputs": {
             "fragColor": "outputTex"
+          },
+          "uniforms": {
+            "alpha": "alpha",
+            "pause": "pause"
           }
         }
       ]
@@ -4275,6 +4355,10 @@
           },
           "outputs": {
             "fragColor": "outputTex"
+          },
+          "uniforms": {
+            "strength": "strength",
+            "seed": "seed"
           }
         }
       ]
@@ -4400,6 +4484,14 @@
           },
           "outputs": {
             "fragColor": "outputTex"
+          },
+          "uniforms": {
+            "strokeLength": "strokeLength",
+            "direction": "direction",
+            "balance": "balance",
+            "pressure": "pressure",
+            "inkColor": "inkColor",
+            "paperColor": "paperColor"
           }
         }
       ]
@@ -4453,7 +4545,8 @@
           },
           "outputs": {
             "fragColor": "_hpBlurH"
-          }
+          },
+          "uniforms": {}
         },
         {
           "name": "blurV",
@@ -4464,7 +4557,8 @@
           },
           "outputs": {
             "fragColor": "_hpBlur"
-          }
+          },
+          "uniforms": {}
         },
         {
           "name": "combine",
@@ -4476,7 +4570,8 @@
           },
           "outputs": {
             "fragColor": "outputTex"
-          }
+          },
+          "uniforms": {}
         }
       ]
     },
@@ -4591,7 +4686,8 @@
           },
           "outputs": {
             "fragColor": "outputTex"
-          }
+          },
+          "uniforms": {}
         }
       ]
     },
@@ -4645,7 +4741,8 @@
           },
           "outputs": {
             "fragColor": "outputTex"
-          }
+          },
+          "uniforms": {}
         }
       ]
     },
@@ -4679,7 +4776,8 @@
           },
           "outputs": {
             "fragColor": "outputTex"
-          }
+          },
+          "uniforms": {}
         }
       ]
     },
@@ -4730,7 +4828,8 @@
           },
           "outputs": {
             "fragColor": "outputTex"
-          }
+          },
+          "uniforms": {}
         }
       ]
     },
@@ -4812,7 +4911,8 @@
           },
           "outputs": {
             "fragColor": "outputTex"
-          }
+          },
+          "uniforms": {}
         }
       ]
     },
@@ -4855,6 +4955,9 @@
           },
           "outputs": {
             "fragColor": "outputTex"
+          },
+          "uniforms": {
+            "displacement": "displacement"
           }
         }
       ]
@@ -4925,6 +5028,12 @@
           },
           "outputs": {
             "fragColor": "outputTex"
+          },
+          "uniforms": {
+            "alpha": "alpha",
+            "color": "color",
+            "speed": "speed",
+            "seed": "seed"
           }
         }
       ]
@@ -5108,7 +5217,8 @@
           },
           "outputs": {
             "fragColor": "outputTex"
-          }
+          },
+          "uniforms": {}
         }
       ]
     },
@@ -5172,7 +5282,8 @@
           },
           "outputs": {
             "fragColor": "_morphTmp"
-          }
+          },
+          "uniforms": {}
         },
         {
           "name": "morphB",
@@ -5183,7 +5294,8 @@
           },
           "outputs": {
             "fragColor": "outputTex"
-          }
+          },
+          "uniforms": {}
         }
       ]
     },
@@ -5327,7 +5439,8 @@
           },
           "outputs": {
             "fragColor": "outputTex"
-          }
+          },
+          "uniforms": {}
         }
       ]
     },
@@ -5347,7 +5460,8 @@
           },
           "outputs": {
             "fragColor": "outputTex"
-          }
+          },
+          "uniforms": {}
         }
       ]
     },
@@ -5383,7 +5497,8 @@
           },
           "outputs": {
             "fragColor": "reduce1"
-          }
+          },
+          "uniforms": {}
         },
         {
           "name": "reduceMinmax",
@@ -5394,7 +5509,8 @@
           },
           "outputs": {
             "fragColor": "reduce2"
-          }
+          },
+          "uniforms": {}
         },
         {
           "name": "statsFinal",
@@ -5405,7 +5521,8 @@
           },
           "outputs": {
             "fragColor": "stats"
-          }
+          },
+          "uniforms": {}
         },
         {
           "name": "apply",
@@ -5417,7 +5534,8 @@
           },
           "outputs": {
             "fragColor": "outputTex"
-          }
+          },
+          "uniforms": {}
         }
       ]
     },
@@ -5522,6 +5640,14 @@
           },
           "outputs": {
             "fragColor": "outputTex"
+          },
+          "uniforms": {
+            "frequency": "frequency",
+            "octaves": "octaves",
+            "displacement": "displacement",
+            "speed": "speed",
+            "seed": "seed",
+            "wrap": "wrap"
           }
         }
       ]
@@ -5620,6 +5746,12 @@
           },
           "outputs": {
             "fragColor": "outputTex"
+          },
+          "uniforms": {
+            "size": "size",
+            "detail": "detail",
+            "textureAmount": "textureAmount",
+            "seed": "seed"
           }
         }
       ]
@@ -5693,6 +5825,12 @@
           },
           "outputs": {
             "fragColor": "outputTex"
+          },
+          "uniforms": {
+            "alpha": "alpha",
+            "seed": "seed",
+            "speed": "speed",
+            "corner": "corner"
           }
         }
       ]
@@ -5761,7 +5899,8 @@
           },
           "outputs": {
             "color": "outlineValueMap"
-          }
+          },
+          "uniforms": {}
         },
         {
           "name": "sobel",
@@ -5772,7 +5911,8 @@
           },
           "outputs": {
             "color": "outlineEdges"
-          }
+          },
+          "uniforms": {}
         },
         {
           "name": "blend",
@@ -5784,7 +5924,8 @@
           },
           "outputs": {
             "color": "outputTex"
-          }
+          },
+          "uniforms": {}
         }
       ]
     },
@@ -5866,7 +6007,8 @@
           },
           "outputs": {
             "fragColor": "outputTex"
-          }
+          },
+          "uniforms": {}
         }
       ]
     },
@@ -5923,7 +6065,8 @@
           },
           "outputs": {
             "fragColor": "outputTex"
-          }
+          },
+          "uniforms": {}
         }
       ]
     },
@@ -5977,7 +6120,8 @@
           },
           "outputs": {
             "fragColor": "outputTex"
-          }
+          },
+          "uniforms": {}
         }
       ]
     },
@@ -6057,7 +6201,8 @@
           },
           "outputs": {
             "fragColor": "_pcBlurH"
-          }
+          },
+          "uniforms": {}
         },
         {
           "name": "blurV",
@@ -6068,7 +6213,8 @@
           },
           "outputs": {
             "fragColor": "_pcBlur"
-          }
+          },
+          "uniforms": {}
         },
         {
           "name": "combine",
@@ -6080,7 +6226,8 @@
           },
           "outputs": {
             "fragColor": "outputTex"
-          }
+          },
+          "uniforms": {}
         }
       ]
     },
@@ -6156,7 +6303,8 @@
           },
           "outputs": {
             "fragColor": "outputTex"
-          }
+          },
+          "uniforms": {}
         }
       ]
     },
@@ -6250,6 +6398,12 @@
           },
           "outputs": {
             "fragColor": "prepared"
+          },
+          "uniforms": {
+            "resolution": "resolution",
+            "angled": "angled",
+            "darkest": "darkest",
+            "wrap": "wrap"
           }
         },
         {
@@ -6261,7 +6415,8 @@
           },
           "outputs": {
             "fragColor": "luminance"
-          }
+          },
+          "uniforms": {}
         },
         {
           "name": "findBrightest",
@@ -6272,7 +6427,8 @@
           },
           "outputs": {
             "fragColor": "brightest"
-          }
+          },
+          "uniforms": {}
         },
         {
           "name": "computeRank",
@@ -6283,7 +6439,8 @@
           },
           "outputs": {
             "fragColor": "rank"
-          }
+          },
+          "uniforms": {}
         },
         {
           "name": "gatherSorted",
@@ -6296,7 +6453,8 @@
           },
           "outputs": {
             "fragColor": "sorted"
-          }
+          },
+          "uniforms": {}
         },
         {
           "name": "finalize",
@@ -6308,6 +6466,13 @@
           },
           "outputs": {
             "fragColor": "outputTex"
+          },
+          "uniforms": {
+            "resolution": "resolution",
+            "angled": "angled",
+            "darkest": "darkest",
+            "wrap": "wrap",
+            "alpha": "alpha"
           }
         }
       ]
@@ -6342,7 +6507,8 @@
           },
           "outputs": {
             "fragColor": "outputTex"
-          }
+          },
+          "uniforms": {}
         }
       ]
     },
@@ -6421,7 +6587,8 @@
           },
           "outputs": {
             "fragColor": "_pwBlurH"
-          }
+          },
+          "uniforms": {}
         },
         {
           "name": "blurV",
@@ -6432,7 +6599,8 @@
           },
           "outputs": {
             "fragColor": "_pwBlur"
-          }
+          },
+          "uniforms": {}
         },
         {
           "name": "spec",
@@ -6444,7 +6612,8 @@
           },
           "outputs": {
             "fragColor": "outputTex"
-          }
+          },
+          "uniforms": {}
         }
       ]
     },
@@ -6530,7 +6699,8 @@
           },
           "outputs": {
             "fragColor": "outputTex"
-          }
+          },
+          "uniforms": {}
         }
       ]
     },
@@ -6611,7 +6781,8 @@
           },
           "outputs": {
             "fragColor": "outputTex"
-          }
+          },
+          "uniforms": {}
         }
       ]
     },
@@ -6665,7 +6836,8 @@
           },
           "outputs": {
             "fragColor": "outputTex"
-          }
+          },
+          "uniforms": {}
         }
       ]
     },
@@ -6750,7 +6922,8 @@
           },
           "outputs": {
             "fragColor": "outputTex"
-          }
+          },
+          "uniforms": {}
         }
       ]
     },
@@ -6792,7 +6965,8 @@
           },
           "outputs": {
             "fragColor": "statsTiles"
-          }
+          },
+          "uniforms": {}
         },
         {
           "name": "reduce",
@@ -6803,7 +6977,8 @@
           },
           "outputs": {
             "fragColor": "global_stats"
-          }
+          },
+          "uniforms": {}
         },
         {
           "name": "apply",
@@ -6815,6 +6990,9 @@
           },
           "outputs": {
             "fragColor": "outputTex"
+          },
+          "uniforms": {
+            "uDisplacement": "displacement"
           }
         }
       ]
@@ -6950,7 +7128,8 @@
           },
           "outputs": {
             "fragColor": "_rlBlurH"
-          }
+          },
+          "uniforms": {}
         },
         {
           "name": "blurV",
@@ -6961,7 +7140,8 @@
           },
           "outputs": {
             "fragColor": "_rlBlur"
-          }
+          },
+          "uniforms": {}
         },
         {
           "name": "shade",
@@ -6973,7 +7153,8 @@
           },
           "outputs": {
             "fragColor": "outputTex"
-          }
+          },
+          "uniforms": {}
         }
       ]
     },
@@ -7054,7 +7235,8 @@
           },
           "outputs": {
             "color": "outputTex"
-          }
+          },
+          "uniforms": {}
         }
       ]
     },
@@ -7126,6 +7308,12 @@
           },
           "outputs": {
             "fragColor": "outputTex"
+          },
+          "uniforms": {
+            "iterations": "iterations",
+            "ridges": "ridges",
+            "alpha": "alpha",
+            "wrap": "wrap"
           }
         }
       ]
@@ -7159,6 +7347,9 @@
           },
           "outputs": {
             "fragColor": "outputTex"
+          },
+          "uniforms": {
+            "level": "level"
           }
         }
       ]
@@ -7221,7 +7412,8 @@
           },
           "outputs": {
             "fragColor": "outputTex"
-          }
+          },
+          "uniforms": {}
         }
       ]
     },
@@ -7302,7 +7494,8 @@
           },
           "outputs": {
             "color": "outputTex"
-          }
+          },
+          "uniforms": {}
         }
       ]
     },
@@ -7384,6 +7577,14 @@
           },
           "outputs": {
             "fragColor": "outputTex"
+          },
+          "uniforms": {
+            "speed": "speed",
+            "timeOffset": "timeOffset",
+            "distortion": "distortion",
+            "noise": "noise",
+            "mode": "mode",
+            "time": "time"
           }
         }
       ]
@@ -7460,7 +7661,8 @@
           },
           "outputs": {
             "fragColor": "_scatterTmp"
-          }
+          },
+          "uniforms": {}
         },
         {
           "name": "scatterSmooth",
@@ -7471,7 +7673,8 @@
           },
           "outputs": {
             "fragColor": "outputTex"
-          }
+          },
+          "uniforms": {}
         }
       ]
     },
@@ -7535,6 +7738,9 @@
           },
           "outputs": {
             "fragColor": "outputTex"
+          },
+          "uniforms": {
+            "alpha": "alpha"
           }
         }
       ]
@@ -7616,7 +7822,8 @@
           },
           "outputs": {
             "color": "outputTex"
-          }
+          },
+          "uniforms": {}
         }
       ]
     },
@@ -7678,7 +7885,8 @@
           },
           "outputs": {
             "fragColor": "outputTex"
-          }
+          },
+          "uniforms": {}
         }
       ]
     },
@@ -7711,7 +7919,8 @@
           },
           "outputs": {
             "fragColor": "outputTex"
-          }
+          },
+          "uniforms": {}
         }
       ]
     },
@@ -7744,6 +7953,9 @@
           },
           "outputs": {
             "fragColor": "outputTex"
+          },
+          "uniforms": {
+            "displacement": "displacement"
           }
         }
       ]
@@ -7791,6 +8003,10 @@
           },
           "outputs": {
             "fragColor": "outputTex"
+          },
+          "uniforms": {
+            "amount": "amount",
+            "colorMode": "colorMode"
           }
         }
       ]
@@ -7849,7 +8065,8 @@
           },
           "outputs": {
             "fragColor": "outputTex"
-          }
+          },
+          "uniforms": {}
         }
       ]
     },
@@ -7959,7 +8176,8 @@
           },
           "outputs": {
             "fragColor": "_smoothEdges"
-          }
+          },
+          "uniforms": {}
         },
         {
           "name": "smoothBlend",
@@ -7971,7 +8189,8 @@
           },
           "outputs": {
             "fragColor": "outputTex"
-          }
+          },
+          "uniforms": {}
         }
       ]
     },
@@ -8018,7 +8237,8 @@
           },
           "outputs": {
             "fragColor": "outputTex"
-          }
+          },
+          "uniforms": {}
         }
       ]
     },
@@ -8072,6 +8292,11 @@
           },
           "outputs": {
             "fragColor": "outputTex"
+          },
+          "uniforms": {
+            "alpha": "alpha",
+            "pause": "pause",
+            "density": "density"
           }
         }
       ]
@@ -8118,7 +8343,8 @@
           },
           "outputs": {
             "fragColor": "outputTex"
-          }
+          },
+          "uniforms": {}
         }
       ]
     },
@@ -8188,6 +8414,12 @@
           },
           "outputs": {
             "fragColor": "outputTex"
+          },
+          "uniforms": {
+            "color": "color",
+            "density": "density",
+            "alpha": "alpha",
+            "seed": "seed"
           }
         }
       ]
@@ -8242,7 +8474,8 @@
           },
           "outputs": {
             "fragColor": "outputTex"
-          }
+          },
+          "uniforms": {}
         }
       ]
     },
@@ -8331,7 +8564,8 @@
           },
           "outputs": {
             "fragColor": "outputTex"
-          }
+          },
+          "uniforms": {}
         }
       ]
     },
@@ -8400,6 +8634,12 @@
           },
           "outputs": {
             "fragColor": "outputTex"
+          },
+          "uniforms": {
+            "speed": "speed",
+            "alpha": "alpha",
+            "rows": "rows",
+            "seed": "seed"
           }
         }
       ]
@@ -8491,7 +8731,8 @@
           },
           "outputs": {
             "fragColor": "_stBlurH"
-          }
+          },
+          "uniforms": {}
         },
         {
           "name": "blurV",
@@ -8502,7 +8743,8 @@
           },
           "outputs": {
             "fragColor": "_stBlur"
-          }
+          },
+          "uniforms": {}
         },
         {
           "name": "threshold",
@@ -8514,7 +8756,8 @@
           },
           "outputs": {
             "fragColor": "outputTex"
-          }
+          },
+          "uniforms": {}
         }
       ]
     },
@@ -8558,7 +8801,8 @@
           },
           "outputs": {
             "fragColor": "outputTex"
-          }
+          },
+          "uniforms": {}
         }
       ]
     },
@@ -8668,7 +8912,8 @@
           },
           "outputs": {
             "fragColor": "outputTex"
-          }
+          },
+          "uniforms": {}
         }
       ]
     },
@@ -8732,6 +8977,9 @@
           },
           "outputs": {
             "fragColor": "outputTex"
+          },
+          "uniforms": {
+            "alpha": "alpha"
           }
         }
       ]
@@ -8834,6 +9082,11 @@
           },
           "outputs": {
             "fragColor": "_stkTmp"
+          },
+          "uniforms": {
+            "strokeLength": "strokeLength",
+            "balance": "balance",
+            "intensity": "intensity"
           }
         },
         {
@@ -8846,6 +9099,9 @@
           },
           "outputs": {
             "fragColor": "outputTex"
+          },
+          "uniforms": {
+            "sharpness": "sharpness"
           }
         }
       ]
@@ -9307,7 +9563,8 @@
           },
           "outputs": {
             "fragColor": "outputTex"
-          }
+          },
+          "uniforms": {}
         }
       ]
     },
@@ -9556,7 +9813,8 @@
           },
           "outputs": {
             "fragColor": "outputTex"
-          }
+          },
+          "uniforms": {}
         }
       ]
     },
@@ -9698,6 +9956,10 @@
           },
           "outputs": {
             "fragColor": "outputTex"
+          },
+          "uniforms": {
+            "matteColor": "matteColor",
+            "matteOpacity": "matteOpacity"
           }
         }
       ]
@@ -9741,7 +10003,8 @@
           },
           "outputs": {
             "color": "outputTex"
-          }
+          },
+          "uniforms": {}
         }
       ]
     },
@@ -9852,7 +10115,8 @@
           },
           "outputs": {
             "fragColor": "outputTex"
-          }
+          },
+          "uniforms": {}
         }
       ]
     },
@@ -9912,7 +10176,8 @@
           },
           "outputs": {
             "color": "outputTex"
-          }
+          },
+          "uniforms": {}
         }
       ]
     },
@@ -9975,7 +10240,8 @@
           },
           "outputs": {
             "fragColor": "outputTex"
-          }
+          },
+          "uniforms": {}
         }
       ]
     },
@@ -10078,7 +10344,8 @@
           },
           "outputs": {
             "fragColor": "outputTex"
-          }
+          },
+          "uniforms": {}
         }
       ]
     },
@@ -10145,7 +10412,8 @@
           },
           "outputs": {
             "fragColor": "_usmBlurH"
-          }
+          },
+          "uniforms": {}
         },
         {
           "name": "blurV",
@@ -10156,7 +10424,8 @@
           },
           "outputs": {
             "fragColor": "_usmBlur"
-          }
+          },
+          "uniforms": {}
         },
         {
           "name": "combine",
@@ -10168,7 +10437,8 @@
           },
           "outputs": {
             "fragColor": "outputTex"
-          }
+          },
+          "uniforms": {}
         }
       ]
     },
@@ -10201,6 +10471,9 @@
           },
           "outputs": {
             "fragColor": "outputTex"
+          },
+          "uniforms": {
+            "alpha": "alpha"
           }
         }
       ]
@@ -10246,7 +10519,8 @@
           },
           "outputs": {
             "fragColor": "outputTex"
-          }
+          },
+          "uniforms": {}
         }
       ]
     },
@@ -10335,7 +10609,8 @@
           },
           "outputs": {
             "fragColor": "outputTex"
-          }
+          },
+          "uniforms": {}
         }
       ]
     },
@@ -10395,7 +10670,8 @@
           },
           "outputs": {
             "fragColor": "global_wc_state"
-          }
+          },
+          "uniforms": {}
         },
         {
           "name": "wcSimplify",
@@ -10406,7 +10682,8 @@
           },
           "outputs": {
             "fragColor": "global_wc_state"
-          }
+          },
+          "uniforms": {}
         },
         {
           "name": "wcComposite",
@@ -10418,7 +10695,8 @@
           },
           "outputs": {
             "fragColor": "outputTex"
-          }
+          },
+          "uniforms": {}
         }
       ]
     },
@@ -10507,7 +10785,8 @@
           },
           "outputs": {
             "fragColor": "outputTex"
-          }
+          },
+          "uniforms": {}
         }
       ]
     },
@@ -10571,6 +10850,12 @@
           },
           "outputs": {
             "fragColor": "outputTex"
+          },
+          "uniforms": {
+            "speed": "speed",
+            "range": "range",
+            "time": "time",
+            "wrap": "wrap"
           }
         }
       ]
@@ -10662,7 +10947,8 @@
           "inputs": {},
           "outputs": {
             "fragColor": "wormhole_accum"
-          }
+          },
+          "uniforms": {}
         },
         {
           "name": "blend",
@@ -10674,6 +10960,9 @@
           },
           "outputs": {
             "fragColor": "outputTex"
+          },
+          "uniforms": {
+            "alpha": "alpha"
           }
         }
       ]
@@ -10707,7 +10996,8 @@
           },
           "outputs": {
             "fragColor": "outputTex"
-          }
+          },
+          "uniforms": {}
         }
       ]
     },
@@ -10760,6 +11050,10 @@
           },
           "outputs": {
             "fragColor": "outputTex"
+          },
+          "uniforms": {
+            "mixAmt": "mix",
+            "maskMode": "maskMode"
           }
         }
       ]
@@ -10814,6 +11108,9 @@
           },
           "outputs": {
             "fragColor": "outputTex"
+          },
+          "uniforms": {
+            "mixAmt": "mix"
           }
         }
       ]
@@ -10881,6 +11178,9 @@
           },
           "outputs": {
             "fragColor": "outputTex"
+          },
+          "uniforms": {
+            "mixAmt": "mix"
           }
         }
       ]
@@ -10981,7 +11281,8 @@
           },
           "outputs": {
             "fragColor": "outputTex"
-          }
+          },
+          "uniforms": {}
         }
       ]
     },
@@ -11074,6 +11375,10 @@
           },
           "outputs": {
             "fragColor": "outputTex"
+          },
+          "uniforms": {
+            "shape": "shape",
+            "power": "mix"
           }
         }
       ]
@@ -11151,7 +11456,8 @@
           },
           "outputs": {
             "fragColor": "outputTex"
-          }
+          },
+          "uniforms": {}
         }
       ]
     },
@@ -11275,7 +11581,8 @@
           },
           "outputs": {
             "fragColor": "outputTex"
-          }
+          },
+          "uniforms": {}
         }
       ]
     },
@@ -11353,7 +11660,8 @@
           },
           "outputs": {
             "fragColor": "outputTex"
-          }
+          },
+          "uniforms": {}
         }
       ]
     },
@@ -11460,7 +11768,8 @@
           },
           "outputs": {
             "fragColor": "outputTex"
-          }
+          },
+          "uniforms": {}
         }
       ]
     },
@@ -11616,7 +11925,8 @@
           },
           "outputs": {
             "fragColor": "outputTex"
-          }
+          },
+          "uniforms": {}
         }
       ]
     },
@@ -11752,7 +12062,8 @@
           },
           "outputs": {
             "fragColor": "outputTex"
-          }
+          },
+          "uniforms": {}
         }
       ]
     },
@@ -11845,7 +12156,8 @@
           },
           "outputs": {
             "fragColor": "outputTex"
-          }
+          },
+          "uniforms": {}
         }
       ]
     },
@@ -12037,7 +12349,8 @@
           },
           "outputs": {
             "fragColor": "outputTex"
-          }
+          },
+          "uniforms": {}
         }
       ]
     },
@@ -12131,7 +12444,8 @@
           },
           "outputs": {
             "fragColor": "outputTex"
-          }
+          },
+          "uniforms": {}
         }
       ]
     },
@@ -12301,7 +12615,8 @@
           "inputs": {},
           "outputs": {
             "color": "outputTex"
-          }
+          },
+          "uniforms": {}
         }
       ]
     },
@@ -12404,6 +12719,10 @@
           "inputs": {},
           "outputs": {
             "fragColor": "outputTex"
+          },
+          "uniforms": {
+            "cellSmooth": "cellSmooth",
+            "speed": "speed"
           }
         }
       ]
@@ -12504,7 +12823,8 @@
           "inputs": {},
           "outputs": {
             "fragColor": "outputTex"
-          }
+          },
+          "uniforms": {}
         }
       ]
     },
@@ -12613,7 +12933,8 @@
           "inputs": {},
           "outputs": {
             "fragColor": "outputTex"
-          }
+          },
+          "uniforms": {}
         }
       ]
     },
@@ -12795,7 +13116,8 @@
           "inputs": {},
           "outputs": {
             "color": "outputTex"
-          }
+          },
+          "uniforms": {}
         }
       ]
     },
@@ -13118,7 +13440,8 @@
           "inputs": {},
           "outputs": {
             "fragColor": "outputTex"
-          }
+          },
+          "uniforms": {}
         }
       ]
     },
@@ -13347,7 +13670,8 @@
           "inputs": {},
           "outputs": {
             "color": "outputTex"
-          }
+          },
+          "uniforms": {}
         }
       ]
     },
@@ -13558,7 +13882,8 @@
           "inputs": {},
           "outputs": {
             "fragColor": "outputTex"
-          }
+          },
+          "uniforms": {}
         }
       ]
     },
@@ -13725,7 +14050,8 @@
           },
           "outputs": {
             "fragColor": "outputTex"
-          }
+          },
+          "uniforms": {}
         }
       ]
     },
@@ -13920,7 +14246,8 @@
           "inputs": {},
           "outputs": {
             "fragColor": "outputTex"
-          }
+          },
+          "uniforms": {}
         }
       ]
     },
@@ -14161,7 +14488,8 @@
           "inputs": {},
           "outputs": {
             "fragColor": "outputTex"
-          }
+          },
+          "uniforms": {}
         }
       ]
     },
@@ -14241,7 +14569,8 @@
           "inputs": {},
           "outputs": {
             "color": "outputTex"
-          }
+          },
+          "uniforms": {}
         }
       ]
     },
@@ -14430,7 +14759,8 @@
           "inputs": {},
           "outputs": {
             "color": "outputTex"
-          }
+          },
+          "uniforms": {}
         }
       ]
     },
@@ -14549,7 +14879,8 @@
           "inputs": {},
           "outputs": {
             "color": "outputTex"
-          }
+          },
+          "uniforms": {}
         }
       ]
     },
@@ -14742,7 +15073,8 @@
           "inputs": {},
           "outputs": {
             "color": "outputTex"
-          }
+          },
+          "uniforms": {}
         }
       ]
     },
@@ -14937,7 +15269,8 @@
           "inputs": {},
           "outputs": {
             "fragColor": "outputTex"
-          }
+          },
+          "uniforms": {}
         }
       ]
     },
@@ -14981,7 +15314,8 @@
           "inputs": {},
           "outputs": {
             "color": "outputTex"
-          }
+          },
+          "uniforms": {}
         }
       ]
     },
@@ -15141,7 +15475,8 @@
           },
           "outputs": {
             "fragColor": "outputTex"
-          }
+          },
+          "uniforms": {}
         }
       ]
     },
@@ -15198,7 +15533,8 @@
           "inputs": {},
           "outputs": {
             "color": "outputTex"
-          }
+          },
+          "uniforms": {}
         }
       ]
     }

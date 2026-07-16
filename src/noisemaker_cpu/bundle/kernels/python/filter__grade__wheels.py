@@ -5,17 +5,17 @@ def run_pixel(ctx, out):
     class _G:
         pass
     g = _G()
-    _u_tileOffset = U["tileOffset"]
-    _u_fullResolution = U["fullResolution"]
+    _u_tileOffset = U.get("tileOffset", rt.construct(2, 0.0))
+    _u_fullResolution = U.get("fullResolution", rt.construct(2, 0.0))
     _u_inputTex = T["inputTex"]
-    _u_wheelShadows = U["wheelShadows"]
-    _u_wheelMidtones = U["wheelMidtones"]
-    _u_wheelHighlights = U["wheelHighlights"]
-    _u_wheelBalance = U["wheelBalance"]
+    _u_wheelShadows = U.get("wheelShadows", rt.construct(3, 0.0))
+    _u_wheelMidtones = U.get("wheelMidtones", rt.construct(3, 0.0))
+    _u_wheelHighlights = U.get("wheelHighlights", rt.construct(3, 0.0))
+    _u_wheelBalance = U.get("wheelBalance", rt.f(0.0))
     g.fragColor = rt.construct(4, 0.0)
     g.LUMA_WEIGHTS = rt.construct(3, rt.f(0.2126), rt.f(0.7152), rt.f(0.0722))
     def srgbToLinear__vec3(srgb):
-        srgb = rt.copy(srgb)
+        srgb = rt.copy(srgb, "float")
         linear = rt.construct(3, 0.0)
         i = rt.i(0)
         _for0_first = True
@@ -31,7 +31,7 @@ def run_pixel(ctx, out):
                 linear[int(i)] = rt.component_wise("pow", rt.binary("/", rt.binary("+", srgb[int(i)], rt.f(0.055), 1, "float"), rt.f(1.055), 1, "float"), rt.f(2.4), width=1)
         return linear
     def linearToSrgb__vec3(linear):
-        linear = rt.copy(linear)
+        linear = rt.copy(linear, "float")
         srgb = rt.construct(3, 0.0)
         i = rt.i(0)
         _for1_first = True
@@ -58,10 +58,10 @@ def run_pixel(ctx, out):
         boundary = rt.binary("+", rt.f(0.67), rt.binary("*", balance, rt.f(0.15), 1, "float"), 1, "float")
         return rt.component_wise("smoothstep", rt.binary("-", boundary, rt.f(0.33), 1, "float"), rt.f(1.0), luma, width=1)
     def applyWheels__vec3_vec3_vec3_vec3_float(rgb, shadowWheel, midWheel, highWheel, balance):
-        rgb = rt.copy(rgb)
-        shadowWheel = rt.copy(shadowWheel)
-        midWheel = rt.copy(midWheel)
-        highWheel = rt.copy(highWheel)
+        rgb = rt.copy(rgb, "float")
+        shadowWheel = rt.copy(shadowWheel, "float")
+        midWheel = rt.copy(midWheel, "float")
+        highWheel = rt.copy(highWheel, "float")
         shadowOffset = rt.binary("*", rt.binary("-", shadowWheel, rt.f(0.5), 3, "float"), rt.f(2.0), 3, "float")
         midOffset = rt.binary("*", rt.binary("-", midWheel, rt.f(0.5), 3, "float"), rt.f(2.0), 3, "float")
         highOffset = rt.binary("*", rt.binary("-", highWheel, rt.f(0.5), 3, "float"), rt.f(2.0), 3, "float")

@@ -5,14 +5,14 @@ def run_pixel(ctx, out):
     class _G:
         pass
     g = _G()
-    _u_tileOffset = U["tileOffset"]
-    _u_fullResolution = U["fullResolution"]
+    _u_tileOffset = U.get("tileOffset", rt.construct(2, 0.0))
+    _u_fullResolution = U.get("fullResolution", rt.construct(2, 0.0))
     _u_inputTex = T["inputTex"]
-    _u_amount = U["amount"]
-    _u_renderScale = U["renderScale"]
+    _u_amount = U.get("amount", rt.f(0.0))
+    _u_renderScale = U.get("renderScale", rt.f(0.0))
     g.fragColor = rt.construct(4, 0.0)
     def desaturate__vec3(color):
-        color = rt.copy(color)
+        color = rt.copy(color, "float")
         avg = rt.binary("+", rt.binary("+", rt.binary("*", rt.f(0.2126), rt.swizzle(color, "r"), 1, "float"), rt.binary("*", rt.f(0.7152), rt.swizzle(color, "g"), 1, "float"), 1, "float"), rt.binary("*", rt.f(0.0722), rt.swizzle(color, "b"), 1, "float"), 1, "float")
         return rt.construct(3, avg)
     def main__void():

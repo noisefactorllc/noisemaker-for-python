@@ -5,33 +5,33 @@ def run_pixel(ctx, out):
     class _G:
         pass
     g = _G()
-    _u_resolution = U["resolution"]
-    _u_tileOffset = U["tileOffset"]
-    _u_fullResolution = U["fullResolution"]
-    _u_aspect = U["aspect"]
-    _u_scale = U["scale"]
-    _u_rotation = U["rotation"]
-    _u_thickness = U["thickness"]
-    _u_smoothness = U["smoothness"]
-    _u_geometry = U["geometry"]
-    _u_rings = U["rings"]
-    _u_starPoints = U["starPoints"]
-    _u_animation = U["animation"]
-    _u_speed = U["speed"]
-    _u_pulseDepth = U["pulseDepth"]
-    _u_time = U["time"]
-    _u_fgColor = U["fgColor"]
-    _u_bgColor = U["bgColor"]
+    _u_resolution = U.get("resolution", rt.construct(2, 0.0))
+    _u_tileOffset = U.get("tileOffset", rt.construct(2, 0.0))
+    _u_fullResolution = U.get("fullResolution", rt.construct(2, 0.0))
+    _u_aspect = U.get("aspect", rt.f(0.0))
+    _u_scale = U.get("scale", rt.f(0.0))
+    _u_rotation = U.get("rotation", rt.f(0.0))
+    _u_thickness = U.get("thickness", rt.f(0.0))
+    _u_smoothness = U.get("smoothness", rt.f(0.0))
+    _u_geometry = U.get("geometry", 0)
+    _u_rings = U.get("rings", 0)
+    _u_starPoints = U.get("starPoints", 0)
+    _u_animation = U.get("animation", 0)
+    _u_speed = U.get("speed", rt.f(0.0))
+    _u_pulseDepth = U.get("pulseDepth", rt.f(0.0))
+    _u_time = U.get("time", rt.f(0.0))
+    _u_fgColor = U.get("fgColor", rt.construct(3, 0.0))
+    _u_bgColor = U.get("bgColor", rt.construct(3, 0.0))
     g.fragColor = rt.construct(4, 0.0)
     def rotate2D__vec2_float(p, angle):
-        p = rt.copy(p)
+        p = rt.copy(p, "float")
         c = rt.component_wise("cos", angle, width=1)
         s = rt.component_wise("sin", angle, width=1)
         return rt.construct(2, rt.binary("-", rt.binary("*", rt.swizzle(p, "x"), c, 1, "float"), rt.binary("*", rt.swizzle(p, "y"), s, 1, "float"), 1, "float"), rt.binary("+", rt.binary("*", rt.swizzle(p, "x"), s, 1, "float"), rt.binary("*", rt.swizzle(p, "y"), c, 1, "float"), 1, "float"))
     def lineSegmentSDF__vec2_vec2_vec2(p, a, b):
-        p = rt.copy(p)
-        a = rt.copy(a)
-        b = rt.copy(b)
+        p = rt.copy(p, "float")
+        a = rt.copy(a, "float")
+        b = rt.copy(b, "float")
         pa = rt.binary("-", p, a, 2, "float")
         ba = rt.binary("-", b, a, 2, "float")
         h = rt.component_wise("clamp", rt.binary("/", rt.dot(pa, ba), rt.dot(ba, ba), 1, "float"), rt.f(0.0), rt.f(1.0), width=1)
@@ -43,7 +43,7 @@ def run_pixel(ctx, out):
     def unfoldVis__float(t_e):
         return rt.component_wise("max", rt.f(0.0), rt.component_wise("sin", rt.binary("*", rt.binary("*", rt.binary("-", _u_time, rt.binary("*", t_e, rt.f(0.5), 1, "float"), 1, "float"), rt.f(6.28318530718), 1, "float"), rt.component_wise("floor", _u_speed, width=1), 1, "float"), width=1), width=1)
     def flowerMask__vec2_int_float(p, ringsN, figureScale):
-        p = rt.copy(p)
+        p = rt.copy(p, "float")
         lineWidth = rt.binary("+", rt.f(0.04), rt.binary("*", _u_thickness, rt.f(0.12), 1, "float"), 1, "float")
         circleRadius = rt.f(1.0)
         p = rt.binary("*", p, figureScale, 2, "float")
@@ -83,7 +83,7 @@ def run_pixel(ctx, out):
                 m = rt.component_wise("max", m, rt.binary("*", outlineEdge__float_float(d, lineWidth), vis, 1, "float"), width=1)
         return m
     def fruitMask__vec2_bool(p, drawLines):
-        p = rt.copy(p)
+        p = rt.copy(p, "float")
         lineWidth = rt.binary("+", rt.f(0.04), rt.binary("*", _u_thickness, rt.f(0.12), 1, "float"), 1, "float")
         p = rt.binary("*", p, rt.f(0.5), 2, "float")
         centers = rt.new_array(rt.i(13), 2)
@@ -155,7 +155,7 @@ def run_pixel(ctx, out):
                     m = rt.component_wise("max", m, rt.binary("*", outlineEdge__float_float(dL, rt.binary("*", lineWidth, rt.f(0.5), 1, "float")), lineVis, 1, "float"), width=1)
         return m
     def vesicaMask__vec2(p):
-        p = rt.copy(p)
+        p = rt.copy(p, "float")
         lineWidth = rt.binary("+", rt.f(0.04), rt.binary("*", _u_thickness, rt.f(0.12), 1, "float"), 1, "float")
         p = rt.binary("*", p, rt.f(0.25), 2, "float")
         r = rt.f(1.5)
@@ -177,7 +177,7 @@ def run_pixel(ctx, out):
         m = rt.component_wise("max", m, rt.binary("*", outlineEdge__float_float(dB, lineWidth), visB, 1, "float"), width=1)
         return m
     def triquetraMask__vec2(p):
-        p = rt.copy(p)
+        p = rt.copy(p, "float")
         lineWidth = rt.binary("+", rt.f(0.04), rt.binary("*", _u_thickness, rt.f(0.12), 1, "float"), 1, "float")
         p = rt.binary("*", p, rt.f(0.3), 2, "float")
         r = rt.f(2.25)
@@ -208,7 +208,7 @@ def run_pixel(ctx, out):
         m = rt.component_wise("max", m, rt.binary("*", outlineEdge__float_float(rt.component_wise("max", d1, d2, width=1), lineWidth), v12, 1, "float"), width=1)
         return m
     def borromeanMask__vec2(p):
-        p = rt.copy(p)
+        p = rt.copy(p, "float")
         lineWidth = rt.binary("+", rt.f(0.04), rt.binary("*", _u_thickness, rt.f(0.12), 1, "float"), 1, "float")
         p = rt.binary("*", p, rt.f(0.32), 2, "float")
         r = rt.f(1.5)
@@ -234,7 +234,7 @@ def run_pixel(ctx, out):
             m = rt.component_wise("max", m, rt.binary("*", outlineEdge__float_float(d, lineWidth), vis, 1, "float"), width=1)
         return m
     def starPolygonMask__vec2_int(p, n):
-        p = rt.copy(p)
+        p = rt.copy(p, "float")
         lineWidth = rt.binary("+", rt.f(0.04), rt.binary("*", _u_thickness, rt.f(0.12), 1, "float"), 1, "float")
         p = rt.binary("*", p, rt.f(0.32), 2, "float")
         radius = rt.f(2.8)

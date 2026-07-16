@@ -7,11 +7,11 @@ def run_pixel(ctx, out):
     g = _G()
     _u_inputTex = T["inputTex"]
     _u_blurTex = T["blurTex"]
-    _u_resolution = U["resolution"]
-    _u_mono = U["mono"]
+    _u_resolution = U.get("resolution", rt.construct(2, 0.0))
+    _u_mono = U.get("mono", False)
     g.fragColor = rt.construct(4, 0.0)
     def lum__vec3(c):
-        c = rt.copy(c)
+        c = rt.copy(c, "float")
         return rt.dot(c, rt.construct(3, rt.f(0.2126), rt.f(0.7152), rt.f(0.0722)))
     def main__void():
         uv = rt.binary("/", rt.swizzle(ctx.frag_coord, "xy"), _u_resolution, 2, "float")

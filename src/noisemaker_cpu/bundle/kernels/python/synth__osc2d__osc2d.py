@@ -5,16 +5,16 @@ def run_pixel(ctx, out):
     class _G:
         pass
     g = _G()
-    _u_resolution = U["resolution"]
-    _u_tileOffset = U["tileOffset"]
-    _u_fullResolution = U["fullResolution"]
-    _u_aspect = U["aspect"]
-    _u_time = U["time"]
-    _u_oscType = U["oscType"]
-    _u_frequency = U["frequency"]
-    _u_speed = U["speed"]
-    _u_rotation = U["rotation"]
-    _u_seed = U["seed"]
+    _u_resolution = U.get("resolution", rt.construct(2, 0.0))
+    _u_tileOffset = U.get("tileOffset", rt.construct(2, 0.0))
+    _u_fullResolution = U.get("fullResolution", rt.construct(2, 0.0))
+    _u_aspect = U.get("aspect", rt.f(0.0))
+    _u_time = U.get("time", rt.f(0.0))
+    _u_oscType = U.get("oscType", 0)
+    _u_frequency = U.get("frequency", 0)
+    _u_speed = U.get("speed", rt.f(0.0))
+    _u_rotation = U.get("rotation", rt.f(0.0))
+    _u_seed = U.get("seed", 0)
     g.fragColor = rt.construct(4, 0.0)
     g.PI = rt.f(3.141592653589793)
     g.TAU = rt.f(6.283185307179586)
@@ -35,7 +35,7 @@ def run_pixel(ctx, out):
     def periodicValue__float_float(t, v):
         return rt.binary("*", rt.binary("+", rt.component_wise("sin", rt.binary("*", rt.binary("-", t, v, 1, "float"), g.TAU, 1, "float"), width=1), rt.f(1.0), 1, "float"), rt.f(0.5), 1, "float")
     def rotate2D__vec2_float(p, angle):
-        p = rt.copy(p)
+        p = rt.copy(p, "float")
         s = rt.component_wise("sin", angle, width=1)
         c = rt.component_wise("cos", angle, width=1)
         return rt.construct(2, rt.binary("-", rt.binary("*", rt.swizzle(p, "x"), c, 1, "float"), rt.binary("*", rt.swizzle(p, "y"), s, 1, "float"), 1, "float"), rt.binary("+", rt.binary("*", rt.swizzle(p, "x"), s, 1, "float"), rt.binary("*", rt.swizzle(p, "y"), c, 1, "float"), 1, "float"))

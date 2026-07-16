@@ -10,7 +10,7 @@ def run_pixel(ctx, out):
     def srgb_to_lin__float(value):
         return (rt.binary("/", value, rt.f(12.92), 1, "float") if rt.binary("<=", value, rt.f(0.04045)) else rt.component_wise("pow", rt.binary("/", rt.binary("+", value, rt.f(0.055), 1, "float"), rt.f(1.055), 1, "float"), rt.f(2.4), width=1))
     def oklab_l__vec3(rgb):
-        rgb = rt.copy(rgb)
+        rgb = rt.copy(rgb, "float")
         r = srgb_to_lin__float(rt.component_wise("clamp", rt.swizzle(rgb, "r"), rt.f(0.0), rt.f(1.0), width=1))
         _g = srgb_to_lin__float(rt.component_wise("clamp", rt.swizzle(rgb, "g"), rt.f(0.0), rt.f(1.0), width=1))
         b = srgb_to_lin__float(rt.component_wise("clamp", rt.swizzle(rgb, "b"), rt.f(0.0), rt.f(1.0), width=1))

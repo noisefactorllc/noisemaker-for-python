@@ -5,29 +5,29 @@ def run_pixel(ctx, out):
     class _G:
         pass
     g = _G()
-    _u_OCTAVES = U["OCTAVES"]
-    _u_RIDGES = U["RIDGES"]
-    _u_OUTPUT_MODE = U["OUTPUT_MODE"]
-    _u_resolution = U["resolution"]
-    _u_tileOffset = U["tileOffset"]
-    _u_fullResolution = U["fullResolution"]
-    _u_time = U["time"]
-    _u_scale = U["scale"]
-    _u_seed = U["seed"]
-    _u_speed = U["speed"]
-    _u_intensity = U["intensity"]
+    _u_OCTAVES = U.get("OCTAVES", 0)
+    _u_RIDGES = U.get("RIDGES", 0)
+    _u_OUTPUT_MODE = U.get("OUTPUT_MODE", 0)
+    _u_resolution = U.get("resolution", rt.construct(2, 0.0))
+    _u_tileOffset = U.get("tileOffset", rt.construct(2, 0.0))
+    _u_fullResolution = U.get("fullResolution", rt.construct(2, 0.0))
+    _u_time = U.get("time", rt.f(0.0))
+    _u_scale = U.get("scale", rt.f(0.0))
+    _u_seed = U.get("seed", 0)
+    _u_speed = U.get("speed", rt.f(0.0))
+    _u_intensity = U.get("intensity", rt.f(0.0))
     g.fragColor = rt.construct(4, 0.0)
     def permute__vec3(x):
-        x = rt.copy(x)
+        x = rt.copy(x, "float")
         return rt.component_wise("mod", rt.binary("*", rt.binary("+", rt.binary("*", x, rt.f(34.0), 3, "float"), rt.f(10.0), 3, "float"), x, 3, "float"), rt.f(289.0), width=3)
     def permute__vec4(x):
-        x = rt.copy(x)
+        x = rt.copy(x, "float")
         return rt.component_wise("mod", rt.binary("*", rt.binary("+", rt.binary("*", x, rt.f(34.0), 4, "float"), rt.f(10.0), 4, "float"), x, 4, "float"), rt.f(289.0), width=4)
     def taylorInvSqrt__vec4(r):
-        r = rt.copy(r)
+        r = rt.copy(r, "float")
         return rt.binary("-", rt.f(1.79284291400159), rt.binary("*", rt.f(0.85373472095314), r, 4, "float"), 4, "float")
     def simplex3D__vec3(v):
-        v = rt.copy(v)
+        v = rt.copy(v, "float")
         C = rt.construct(2, rt.binary("/", rt.f(1.0), rt.f(6.0), 1, "float"), rt.binary("/", rt.f(1.0), rt.f(3.0), 1, "float"))
         D = rt.construct(4, rt.f(0.0), rt.f(0.5), rt.f(1.0), rt.f(2.0))
         v = rt.binary("+", v, rt.binary("*", rt.construct(1, _u_seed), rt.f(0.1271), 1, "float"), 3, "float")
@@ -70,7 +70,7 @@ def run_pixel(ctx, out):
         m = rt.binary("*", m, m, 4, "float")
         return rt.binary("*", rt.f(42.0), rt.dot(rt.binary("*", m, m, 4, "float"), rt.construct(4, rt.dot(p0, x0), rt.dot(p1, x1), rt.dot(p2, x2), rt.dot(p3, x3))), 1, "float")
     def fbmSimplex3D__vec3(p):
-        p = rt.copy(p)
+        p = rt.copy(p, "float")
         sum = rt.f(0.0)
         amp = rt.f(1.0)
         freq = rt.f(1.0)
@@ -90,7 +90,7 @@ def run_pixel(ctx, out):
             amp = rt.binary("*", amp, rt.f(0.5), 1, "float")
         return rt.binary("/", sum, maxAmp, 1, "float")
     def curlNoise3D__vec3(p):
-        p = rt.copy(p)
+        p = rt.copy(p, "float")
         eps = rt.f(1.0)
         a = rt.binary("*", rt.binary("/", rt.binary("+", rt.binary("*", rt.component_wise("sin", rt.binary("*", _u_time, rt.f(6.28318), 1, "float"), width=1), _u_speed, 1, "float"), rt.f(1.0), 1, "float"), rt.construct(1, _u_OCTAVES), 1, "float"), rt.f(0.2), 1, "float")
         b = rt.binary("*", rt.binary("/", rt.binary("+", rt.binary("*", rt.component_wise("cos", rt.binary("*", _u_time, rt.f(6.28318), 1, "float"), width=1), _u_speed, 1, "float"), rt.f(1.0), 1, "float"), rt.construct(1, _u_OCTAVES), 1, "float"), rt.f(0.2), 1, "float")

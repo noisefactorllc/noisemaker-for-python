@@ -7,22 +7,22 @@ def run_pixel(ctx, out):
     g = _G()
     _u_inputTex = T["inputTex"]
     _u_tex = T["tex"]
-    _u_resolution = U["resolution"]
-    _u_tileOffset = U["tileOffset"]
-    _u_fullResolution = U["fullResolution"]
-    _u_renderScale = U["renderScale"]
-    _u_maskSource = U["maskSource"]
-    _u_sourceChannel = U["sourceChannel"]
-    _u_threshold = U["threshold"]
-    _u_color = U["color"]
-    _u_offsetX = U["offsetX"]
-    _u_offsetY = U["offsetY"]
-    _u_blur = U["blur"]
-    _u_spread = U["spread"]
-    _u_wrap = U["wrap"]
+    _u_resolution = U.get("resolution", rt.construct(2, 0.0))
+    _u_tileOffset = U.get("tileOffset", rt.construct(2, 0.0))
+    _u_fullResolution = U.get("fullResolution", rt.construct(2, 0.0))
+    _u_renderScale = U.get("renderScale", rt.f(0.0))
+    _u_maskSource = U.get("maskSource", 0)
+    _u_sourceChannel = U.get("sourceChannel", 0)
+    _u_threshold = U.get("threshold", rt.f(0.0))
+    _u_color = U.get("color", rt.construct(3, 0.0))
+    _u_offsetX = U.get("offsetX", rt.f(0.0))
+    _u_offsetY = U.get("offsetY", rt.f(0.0))
+    _u_blur = U.get("blur", rt.f(0.0))
+    _u_spread = U.get("spread", rt.f(0.0))
+    _u_wrap = U.get("wrap", 0)
     g.fragColor = rt.construct(4, 0.0)
     def getChannel__vec4_int(color, channel):
-        color = rt.copy(color)
+        color = rt.copy(color, "float")
         if rt.binary("==", channel, rt.i(0)):
             return rt.swizzle(color, "r")
         if rt.binary("==", channel, rt.i(1)):

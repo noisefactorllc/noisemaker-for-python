@@ -5,36 +5,36 @@ def run_pixel(ctx, out):
     class _G:
         pass
     g = _G()
-    _u_MODE = U["MODE"]
+    _u_MODE = U.get("MODE", 0)
     _u_inputTex = T["inputTex"]
-    _u_resolution = U["resolution"]
-    _u_tileOffset = U["tileOffset"]
-    _u_strokeLength = U["strokeLength"]
-    _u_balance = U["balance"]
-    _u_intensity = U["intensity"]
+    _u_resolution = U.get("resolution", rt.construct(2, 0.0))
+    _u_tileOffset = U.get("tileOffset", rt.construct(2, 0.0))
+    _u_strokeLength = U.get("strokeLength", rt.f(0.0))
+    _u_balance = U.get("balance", rt.f(0.0))
+    _u_intensity = U.get("intensity", rt.f(0.0))
     g.fragColor = rt.construct(4, 0.0)
     g.MAX_TAPS = rt.i(24)
     def hash12__vec2(p):
-        p = rt.copy(p)
+        p = rt.copy(p, "float")
         p3 = rt.component_wise("fract", rt.binary("*", rt.construct(3, rt.swizzle(p, "xyx")), rt.f(0.1031), 3, "float"), width=3)
         p3 = rt.binary("+", p3, rt.dot(p3, rt.binary("+", rt.swizzle(p3, "yzx"), rt.f(33.33), 3, "float")), 3, "float")
         return rt.component_wise("fract", rt.binary("*", rt.binary("+", rt.swizzle(p3, "x"), rt.swizzle(p3, "y"), 1, "float"), rt.swizzle(p3, "z"), 1, "float"), width=1)
     def valueNoise2__vec2(p):
-        p = rt.copy(p)
+        p = rt.copy(p, "float")
         i = rt.component_wise("floor", p, width=2)
         f = rt.component_wise("fract", p, width=2)
         u = rt.binary("*", rt.binary("*", f, f, 2, "float"), rt.binary("-", rt.f(3.0), rt.binary("*", rt.f(2.0), f, 2, "float"), 2, "float"), 2, "float")
         return rt.component_wise("mix", rt.component_wise("mix", hash12__vec2(i), hash12__vec2(rt.binary("+", i, rt.construct(2, rt.f(1.0), rt.f(0.0)), 2, "float")), rt.swizzle(u, "x"), width=1), rt.component_wise("mix", hash12__vec2(rt.binary("+", i, rt.construct(2, rt.f(0.0), rt.f(1.0)), 2, "float")), hash12__vec2(rt.binary("+", i, rt.construct(2, rt.f(1.0)), 2, "float")), rt.swizzle(u, "x"), width=1), rt.swizzle(u, "y"), width=1)
     def hash22__vec2(p):
-        p = rt.copy(p)
+        p = rt.copy(p, "float")
         p3 = rt.component_wise("fract", rt.binary("*", rt.construct(3, rt.swizzle(p, "xyx")), rt.construct(3, rt.f(0.1031), rt.f(0.103), rt.f(0.0973)), 3, "float"), width=3)
         p3 = rt.binary("+", p3, rt.dot(p3, rt.binary("+", rt.swizzle(p3, "yzx"), rt.f(33.33), 3, "float")), 3, "float")
         return rt.component_wise("fract", rt.binary("*", rt.binary("+", rt.swizzle(p3, "xx"), rt.swizzle(p3, "yz"), 2, "float"), rt.swizzle(p3, "zy"), 2, "float"), width=2)
     def lum__vec3(c):
-        c = rt.copy(c)
+        c = rt.copy(c, "float")
         return rt.dot(c, rt.construct(3, rt.f(0.2126), rt.f(0.7152), rt.f(0.0722)))
     def lumGradient__vec2(uv):
-        uv = rt.copy(uv)
+        uv = rt.copy(uv, "float")
         px = rt.binary("/", rt.f(1.0), _u_resolution, 2, "float")
         tl = lum__vec3(rt.swizzle(rt.texture(_u_inputTex, rt.binary("+", uv, rt.binary("*", px, rt.construct(2, rt.unary("-", rt.f(1.0)), rt.f(1.0)), 2, "float"), 2, "float")), "rgb"))
         l = lum__vec3(rt.swizzle(rt.texture(_u_inputTex, rt.binary("+", uv, rt.binary("*", px, rt.construct(2, rt.unary("-", rt.f(1.0)), rt.f(0.0)), 2, "float"), 2, "float")), "rgb"))
@@ -46,21 +46,21 @@ def run_pixel(ctx, out):
         b = lum__vec3(rt.swizzle(rt.texture(_u_inputTex, rt.binary("+", uv, rt.binary("*", px, rt.construct(2, rt.f(0.0), rt.unary("-", rt.f(1.0))), 2, "float"), 2, "float")), "rgb"))
         return rt.construct(2, rt.binary("-", rt.binary("-", rt.binary("-", rt.binary("+", rt.binary("+", tr, rt.binary("*", rt.f(2.0), r, 1, "float"), 1, "float"), br, 1, "float"), tl, 1, "float"), rt.binary("*", rt.f(2.0), l, 1, "float"), 1, "float"), bl, 1, "float"), rt.binary("-", rt.binary("-", rt.binary("-", rt.binary("+", rt.binary("+", tl, rt.binary("*", rt.f(2.0), t, 1, "float"), 1, "float"), tr, 1, "float"), bl, 1, "float"), rt.binary("*", rt.f(2.0), b, 1, "float"), 1, "float"), br, 1, "float"))
     def rotate2D__vec2_float(v, angleDeg):
-        v = rt.copy(v)
+        v = rt.copy(v, "float")
         a = rt.component_wise("radians", angleDeg, width=1)
         co = rt.component_wise("cos", a, width=1)
         si = rt.component_wise("sin", a, width=1)
         return rt.matrix_mult(rt.construct(4, co, rt.unary("-", si), si, co), v, 2)
     def strokeVariation__vec2_vec2_float(gc, dirUnit, runBase):
-        gc = rt.copy(gc)
-        dirUnit = rt.copy(dirUnit)
+        gc = rt.copy(gc, "float")
+        dirUnit = rt.copy(dirUnit, "float")
         across = rt.construct(2, rt.unary("-", rt.swizzle(dirUnit, "y")), rt.swizzle(dirUnit, "x"))
         strokeSpace = rt.construct(2, rt.binary("/", rt.dot(gc, dirUnit), rt.component_wise("max", runBase, rt.f(3.0), width=1), 1, "float"), rt.binary("/", rt.dot(gc, across), rt.f(3.5), 1, "float"))
         return rt.binary("+", rt.f(0.72), rt.binary("*", rt.f(0.56), valueNoise2__vec2(rt.binary("*", strokeSpace, rt.f(0.65), 2, "float")), 1, "float"), 1, "float")
     def brushStrokeField__vec2_vec2_vec2_float(uv, gc, dirUnit, runBase):
-        uv = rt.copy(uv)
-        gc = rt.copy(gc)
-        dirUnit = rt.copy(dirUnit)
+        uv = rt.copy(uv, "float")
+        gc = rt.copy(gc, "float")
+        dirUnit = rt.copy(dirUnit, "float")
         across = rt.construct(2, rt.unary("-", rt.swizzle(dirUnit, "y")), rt.swizzle(dirUnit, "x"))
         oriented = rt.construct(2, rt.dot(gc, dirUnit), rt.dot(gc, across))
         spacing = rt.construct(2, rt.component_wise("max", rt.binary("*", runBase, rt.f(0.7), 1, "float"), rt.f(4.0), width=1), rt.f(4.5))
@@ -107,11 +107,11 @@ def run_pixel(ctx, out):
         pigment = (rt.binary("/", pigmentSum, pigmentWeight, 3, "float") if rt.binary(">", pigmentWeight, rt.f(0.0001)) else rt.swizzle(srcSample__vec2(uv), "rgb"))
         return rt.construct(4, pigment, rt.component_wise("clamp", field, rt.f(0.0), rt.f(1.0), width=1))
     def sprayJitter__vec2_float(gc, tap):
-        gc = rt.copy(gc)
+        gc = rt.copy(gc, "float")
         p = rt.binary("/", gc, rt.f(7.0), 2, "float")
         return rt.binary("-", rt.construct(2, valueNoise2__vec2(rt.binary("+", p, rt.construct(2, rt.binary("*", tap, rt.f(0.73), 1, "float"), rt.f(7.0)), 2, "float")), valueNoise2__vec2(rt.binary("+", rt.binary("+", p, rt.construct(2, rt.f(11.0), rt.binary("*", tap, rt.f(0.79), 1, "float")), 2, "float"), rt.f(37.1), 2, "float"))), rt.f(0.5), 2, "float")
     def srcSample__vec2(sampleUV):
-        sampleUV = rt.copy(sampleUV)
+        sampleUV = rt.copy(sampleUV, "float")
         if rt.binary("==", _u_MODE, rt.i(3)):
             px = rt.binary("/", rt.f(1.0), _u_resolution, 2, "float")
             s = rt.texture(_u_inputTex, sampleUV)
@@ -124,9 +124,9 @@ def run_pixel(ctx, out):
         else:
             return rt.texture(_u_inputTex, sampleUV)
     def smear__vec2_vec2_vec2_float_float(uv, gc, dirUnit, L, jitterPx):
-        uv = rt.copy(uv)
-        gc = rt.copy(gc)
-        dirUnit = rt.copy(dirUnit)
+        uv = rt.copy(uv, "float")
+        gc = rt.copy(gc, "float")
+        dirUnit = rt.copy(dirUnit, "float")
         px = rt.binary("/", rt.f(1.0), _u_resolution, 2, "float")
         sum = srcSample__vec2(uv)
         wsum = rt.f(1.0)

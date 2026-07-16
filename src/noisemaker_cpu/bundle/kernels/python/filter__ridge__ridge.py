@@ -5,13 +5,13 @@ def run_pixel(ctx, out):
     class _G:
         pass
     g = _G()
-    _u_tileOffset = U["tileOffset"]
-    _u_fullResolution = U["fullResolution"]
+    _u_tileOffset = U.get("tileOffset", rt.construct(2, 0.0))
+    _u_fullResolution = U.get("fullResolution", rt.construct(2, 0.0))
     _u_inputTex = T["inputTex"]
-    _u_level = U["level"]
+    _u_level = U.get("level", rt.f(0.0))
     g.fragColor = rt.construct(4, 0.0)
     def ridge_transform__vec4_float(value, lvl):
-        value = rt.copy(value)
+        value = rt.copy(value, "float")
         denom = rt.component_wise("max", lvl, rt.binary("-", rt.f(1.0), lvl, 1, "float"), width=1)
         result = rt.binary("-", rt.construct(4, rt.f(1.0)), rt.binary("/", rt.component_wise("abs", rt.binary("-", value, rt.construct(4, lvl), 4, "float"), width=4), denom, 4, "float"), 4, "float")
         return rt.component_wise("clamp", result, rt.construct(4, rt.f(0.0)), rt.construct(4, rt.f(1.0)), width=4)

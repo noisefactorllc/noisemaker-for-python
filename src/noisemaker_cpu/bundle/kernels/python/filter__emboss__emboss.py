@@ -5,24 +5,24 @@ def run_pixel(ctx, out):
     class _G:
         pass
     g = _G()
-    _u_STYLE = U["STYLE"]
-    _u_tileOffset = U["tileOffset"]
-    _u_fullResolution = U["fullResolution"]
+    _u_STYLE = U.get("STYLE", 0)
+    _u_tileOffset = U.get("tileOffset", rt.construct(2, 0.0))
+    _u_fullResolution = U.get("fullResolution", rt.construct(2, 0.0))
     _u_inputTex = T["inputTex"]
-    _u_amount = U["amount"]
-    _u_angle = U["angle"]
-    _u_height = U["height"]
-    _u_colorAmount = U["colorAmount"]
-    _u_renderScale = U["renderScale"]
+    _u_amount = U.get("amount", rt.f(0.0))
+    _u_angle = U.get("angle", rt.f(0.0))
+    _u_height = U.get("height", rt.f(0.0))
+    _u_colorAmount = U.get("colorAmount", rt.f(0.0))
+    _u_renderScale = U.get("renderScale", rt.f(0.0))
     g.fragColor = rt.construct(4, 0.0)
     g.LUMA = rt.construct(3, rt.f(0.2126), rt.f(0.7152), rt.f(0.0722))
     def sampleGlobal__vec2(globalUV):
-        globalUV = rt.copy(globalUV)
+        globalUV = rt.copy(globalUV, "float")
         localUV = rt.binary("/", rt.binary("-", rt.binary("*", globalUV, _u_fullResolution, 2, "float"), _u_tileOffset, 2, "float"), rt.construct(2, rt.texture_size(_u_inputTex)), 2, "float")
         return rt.swizzle(rt.texture(_u_inputTex, localUV), "rgb")
     def colorDefaultEmboss__vec2_vec2(uv, texelSize):
-        uv = rt.copy(uv)
-        texelSize = rt.copy(texelSize)
+        uv = rt.copy(uv, "float")
+        texelSize = rt.copy(texelSize, "float")
         kernel = rt.new_array(rt.i(9), 1)
         kernel[int(rt.i(0))] = rt.unary("-", rt.f(2.0))
         kernel[int(rt.i(1))] = rt.unary("-", rt.f(1.0))
@@ -56,8 +56,8 @@ def run_pixel(ctx, out):
             conv = rt.binary("+", conv, rt.binary("*", texSample, kernel[int(i)], 3, "float"), 3, "float")
         return conv
     def colorGeneralEmboss__vec2_vec2(uv, texelSize):
-        uv = rt.copy(uv)
-        texelSize = rt.copy(texelSize)
+        uv = rt.copy(uv, "float")
+        texelSize = rt.copy(texelSize, "float")
         kernel = rt.new_array(rt.i(9), 1)
         kernel[int(rt.i(0))] = rt.unary("-", rt.f(2.0))
         kernel[int(rt.i(1))] = rt.unary("-", rt.f(1.0))
@@ -97,8 +97,8 @@ def run_pixel(ctx, out):
             conv = rt.binary("+", conv, rt.binary("*", texSample, kernel[int(i)], 3, "float"), 3, "float")
         return conv
     def grayEmboss__vec2_vec3(uv, centerRGB):
-        uv = rt.copy(uv)
-        centerRGB = rt.copy(centerRGB)
+        uv = rt.copy(uv, "float")
+        centerRGB = rt.copy(centerRGB, "float")
         theta = rt.component_wise("radians", _u_angle, width=1)
         direction = rt.construct(2, rt.component_wise("cos", theta, width=1), rt.component_wise("sin", theta, width=1))
         offsetUV = rt.binary("/", rt.binary("*", direction, rt.binary("*", _u_height, _u_renderScale, 1, "float"), 2, "float"), _u_fullResolution, 2, "float")

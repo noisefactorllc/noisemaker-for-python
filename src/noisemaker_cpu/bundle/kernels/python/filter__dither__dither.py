@@ -6,16 +6,16 @@ def run_pixel(ctx, out):
         pass
     g = _G()
     _u_inputTex = T["inputTex"]
-    _u_tileOffset = U["tileOffset"]
-    _u_fullResolution = U["fullResolution"]
-    _u_ditherType = U["ditherType"]
-    _u_threshold = U["threshold"]
-    _u_matrixScale = U["matrixScale"]
-    _u_renderScale = U["renderScale"]
-    _u_palette = U["palette"]
-    _u_levels = U["levels"]
-    _u_time = U["time"]
-    _u_mixAmount = U["mixAmount"]
+    _u_tileOffset = U.get("tileOffset", rt.construct(2, 0.0))
+    _u_fullResolution = U.get("fullResolution", rt.construct(2, 0.0))
+    _u_ditherType = U.get("ditherType", 0)
+    _u_threshold = U.get("threshold", rt.f(0.0))
+    _u_matrixScale = U.get("matrixScale", rt.f(0.0))
+    _u_renderScale = U.get("renderScale", rt.f(0.0))
+    _u_palette = U.get("palette", 0)
+    _u_levels = U.get("levels", 0)
+    _u_time = U.get("time", rt.f(0.0))
+    _u_mixAmount = U.get("mixAmount", rt.f(0.0))
     g.fragColor = rt.construct(4, 0.0)
     g.DITHER_BAYER_2X2 = rt.i(0)
     g.DITHER_BAYER_4X4 = rt.i(1)
@@ -181,7 +181,7 @@ def run_pixel(ctx, out):
             return rt.binary("/", rt.f(53.0), rt.f(64.0), 1, "float")
         return rt.binary("/", rt.f(21.0), rt.f(64.0), 1, "float")
     def pcg__uvec3(v):
-        v = rt.copy(v)
+        v = rt.copy(v, "uint")
         v = rt.binary("+", rt.binary("*", v, rt.i(1664525), 3, "uint"), rt.i(1013904223), 3, "uint")
         v = rt.assign_swizzle(v, "x", rt.binary("+", rt.swizzle(v, "x"), rt.binary("*", rt.swizzle(v, "y"), rt.swizzle(v, "z"), 1, "uint"), 1, "uint"))
         v = rt.assign_swizzle(v, "y", rt.binary("+", rt.swizzle(v, "y"), rt.binary("*", rt.swizzle(v, "z"), rt.swizzle(v, "x"), 1, "uint"), 1, "uint"))
@@ -192,27 +192,27 @@ def run_pixel(ctx, out):
         v = rt.assign_swizzle(v, "z", rt.binary("+", rt.swizzle(v, "z"), rt.binary("*", rt.swizzle(v, "x"), rt.swizzle(v, "y"), 1, "uint"), 1, "uint"))
         return v
     def hash__vec2(p):
-        p = rt.copy(p)
+        p = rt.copy(p, "float")
         v = pcg__uvec3(rt.construct(3, rt.construct(1, (rt.binary("*", rt.swizzle(p, "x"), rt.f(2.0), 1, "float") if rt.binary(">=", rt.swizzle(p, "x"), rt.f(0.0)) else rt.binary("+", rt.binary("*", rt.unary("-", rt.swizzle(p, "x")), rt.f(2.0), 1, "float"), rt.f(1.0), 1, "float")), base="uint"), rt.construct(1, (rt.binary("*", rt.swizzle(p, "y"), rt.f(2.0), 1, "float") if rt.binary(">=", rt.swizzle(p, "y"), rt.f(0.0)) else rt.binary("+", rt.binary("*", rt.unary("-", rt.swizzle(p, "y")), rt.f(2.0), 1, "float"), rt.f(1.0), 1, "float")), base="uint"), rt.i(0), base="uint"))
         return rt.binary("/", rt.construct(1, rt.swizzle(v, "x")), rt.construct(1, rt.i(4294967295)), 1, "float")
     def dotPattern__vec2_float(uv, scale):
-        uv = rt.copy(uv)
+        uv = rt.copy(uv, "float")
         p = rt.binary("*", uv, scale, 2, "float")
         c = rt.binary("+", rt.component_wise("floor", p, width=2), rt.f(0.5), 2, "float")
         d = rt.length(rt.binary("-", rt.component_wise("fract", p, width=2), rt.f(0.5), 2, "float"))
         return rt.component_wise("smoothstep", rt.f(0.5), rt.f(0.0), d, width=1)
     def linePattern__vec2_float(uv, scale):
-        uv = rt.copy(uv)
+        uv = rt.copy(uv, "float")
         p = rt.binary("*", rt.swizzle(uv, "y"), scale, 1, "float")
         return rt.binary("*", rt.component_wise("abs", rt.binary("-", rt.component_wise("fract", p, width=1), rt.f(0.5), 1, "float"), width=1), rt.f(2.0), 1, "float")
     def crosshatchPattern__vec2_float(uv, scale):
-        uv = rt.copy(uv)
+        uv = rt.copy(uv, "float")
         p = rt.binary("*", uv, scale, 2, "float")
         line1 = rt.binary("*", rt.component_wise("abs", rt.binary("-", rt.component_wise("fract", rt.binary("+", rt.swizzle(p, "x"), rt.swizzle(p, "y"), 1, "float"), width=1), rt.f(0.5), 1, "float"), width=1), rt.f(2.0), 1, "float")
         line2 = rt.binary("*", rt.component_wise("abs", rt.binary("-", rt.component_wise("fract", rt.binary("-", rt.swizzle(p, "x"), rt.swizzle(p, "y"), 1, "float"), width=1), rt.f(0.5), 1, "float"), width=1), rt.f(2.0), 1, "float")
         return rt.component_wise("min", line1, line2, width=1)
     def getDitherThreshold__vec2_int_float(pixelCoord, type, scale):
-        pixelCoord = rt.copy(pixelCoord)
+        pixelCoord = rt.copy(pixelCoord, "float")
         scaledCoord = rt.component_wise("floor", rt.binary("/", pixelCoord, scale, 2, "float"), width=2)
         x = rt.construct(1, rt.swizzle(scaledCoord, "x"), base="int")
         y = rt.construct(1, rt.swizzle(scaledCoord, "y"), base="int")
@@ -238,18 +238,18 @@ def run_pixel(ctx, out):
                                     return hash__vec2(rt.binary("+", scaledCoord, rt.binary("*", _u_time, rt.f(0.001), 1, "float"), 2, "float"))
         return rt.f(0.5)
     def quantizeWithDither__vec3_float_float_float(color, levels, ditherValue, thresh):
-        color = rt.copy(color)
+        color = rt.copy(color, "float")
         adjustedDither = rt.binary("+", rt.binary("-", ditherValue, rt.f(0.5), 1, "float"), thresh, 1, "float")
         dithered = rt.binary("+", color, rt.binary("/", adjustedDither, levels, 1, "float"), 3, "float")
         return rt.binary("/", rt.component_wise("floor", rt.binary("*", dithered, levels, 3, "float"), width=3), rt.binary("-", levels, rt.f(1.0), 1, "float"), 3, "float")
     def colorDistance__vec3_vec3(a, b):
-        a = rt.copy(a)
-        b = rt.copy(b)
+        a = rt.copy(a, "float")
+        b = rt.copy(b, "float")
         diff = rt.binary("-", a, b, 3, "float")
         return rt.dot(diff, diff)
     def findClosest4__vec3_vec3(color, pal):
-        color = rt.copy(color)
-        pal = rt.copy(pal)
+        color = rt.copy(color, "float")
+        pal = rt.copy(pal, "float")
         closest = pal[int(rt.i(0))]
         minDist = colorDistance__vec3_vec3(color, pal[int(rt.i(0))])
         i = rt.i(1)
@@ -266,8 +266,8 @@ def run_pixel(ctx, out):
                 closest = pal[int(i)]
         return closest
     def findClosest15__vec3_vec3(color, pal):
-        color = rt.copy(color)
-        pal = rt.copy(pal)
+        color = rt.copy(color, "float")
+        pal = rt.copy(pal, "float")
         closest = pal[int(rt.i(0))]
         minDist = colorDistance__vec3_vec3(color, pal[int(rt.i(0))])
         i = rt.i(1)
@@ -284,8 +284,8 @@ def run_pixel(ctx, out):
                 closest = pal[int(i)]
         return closest
     def findClosest16__vec3_vec3(color, pal):
-        color = rt.copy(color)
-        pal = rt.copy(pal)
+        color = rt.copy(color, "float")
+        pal = rt.copy(pal, "float")
         closest = pal[int(rt.i(0))]
         minDist = colorDistance__vec3_vec3(color, pal[int(rt.i(0))])
         i = rt.i(1)
@@ -302,7 +302,7 @@ def run_pixel(ctx, out):
                 closest = pal[int(i)]
         return closest
     def findClosestPaletteColor__vec3_int(color, paletteType):
-        color = rt.copy(color)
+        color = rt.copy(color, "float")
         if rt.binary("==", paletteType, g.PALETTE_MONOCHROME):
             luma = rt.dot(color, rt.construct(3, rt.f(0.299), rt.f(0.587), rt.f(0.114)))
             return rt.construct(3, (rt.f(1.0) if rt.binary(">", luma, rt.f(0.5)) else rt.f(0.0)))
@@ -332,12 +332,12 @@ def run_pixel(ctx, out):
                                             return findClosest16__vec3_vec3(color, g.EGA)
         return color
     def ditherWithPalette__vec3_float_float_int(color, ditherValue, thresh, paletteType):
-        color = rt.copy(color)
+        color = rt.copy(color, "float")
         dithered = rt.binary("+", color, rt.binary("*", rt.binary("+", rt.binary("-", ditherValue, rt.f(0.5), 1, "float"), thresh, 1, "float"), rt.f(0.25), 1, "float"), 3, "float")
         dithered = rt.component_wise("clamp", dithered, rt.f(0.0), rt.f(1.0), width=3)
         return findClosestPaletteColor__vec3_int(dithered, paletteType)
     def fsQuantize__vec3(v):
-        v = rt.copy(v)
+        v = rt.copy(v, "float")
         if rt.binary("==", _u_palette, g.PALETTE_INPUT):
             maxLevel = rt.binary("-", rt.construct(1, _u_levels), rt.f(1.0), 1, "float")
             return rt.binary("/", rt.component_wise("floor", rt.binary("+", rt.binary("*", v, maxLevel, 3, "float"), rt.f(0.5), 3, "float"), width=3), maxLevel, 3, "float")
@@ -347,19 +347,19 @@ def run_pixel(ctx, out):
             return rt.binary("/", rt.f(1.0), rt.construct(1, _u_levels), 1, "float")
         return rt.f(0.25)
     def fsSeedNoise__ivec2_int(blockOrigin, lane):
-        blockOrigin = rt.copy(blockOrigin)
+        blockOrigin = rt.copy(blockOrigin, "int")
         v = pcg__uvec3(rt.construct(3, rt.construct(1, rt.binary("+", rt.swizzle(blockOrigin, "x"), rt.i(1), 1, "int"), base="uint"), rt.construct(1, rt.binary("+", rt.swizzle(blockOrigin, "y"), rt.i(1), 1, "int"), base="uint"), rt.construct(1, rt.binary("+", lane, rt.i(1), 1, "int"), base="uint"), base="uint"))
         return rt.binary("-", rt.binary("/", rt.construct(3, v), rt.construct(1, rt.i(4294967295)), 3, "float"), rt.f(0.5), 3, "float")
     def fsFetchCell__ivec2_float_ivec2(cell, cellSize, texSize):
-        cell = rt.copy(cell)
-        texSize = rt.copy(texSize)
+        cell = rt.copy(cell, "int")
+        texSize = rt.copy(texSize, "int")
         pGlobal = rt.binary("*", rt.binary("+", rt.construct(2, cell), rt.f(0.5), 2, "float"), cellSize, 2, "float")
         pLocal = rt.binary("-", rt.construct(2, rt.component_wise("floor", pGlobal, width=2), base="int"), rt.construct(2, _u_tileOffset, base="int"), 2, "int")
         pLocal = rt.component_wise("clamp", pLocal, rt.construct(2, rt.i(0), base="int"), rt.binary("-", texSize, rt.i(1), 2, "int"), width=2)
         return rt.swizzle(rt.texel_fetch(_u_inputTex, pLocal, rt.i(0)), "rgb")
     def errorDiffusion__vec2_float_ivec2(globalCoord, cellSize, texSize):
-        globalCoord = rt.copy(globalCoord)
-        texSize = rt.copy(texSize)
+        globalCoord = rt.copy(globalCoord, "float")
+        texSize = rt.copy(texSize, "int")
         cell = rt.construct(2, rt.component_wise("floor", rt.binary("/", globalCoord, cellSize, 2, "float"), width=2), base="int")
         blockOrigin = rt.binary("*", rt.binary("/", cell, g.FS_BLOCK, 2, "int"), g.FS_BLOCK, 2, "int")
         lx = rt.binary("-", rt.swizzle(cell, "x"), rt.swizzle(blockOrigin, "x"), 1, "int")

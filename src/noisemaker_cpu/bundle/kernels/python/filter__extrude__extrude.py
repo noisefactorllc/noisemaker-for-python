@@ -5,15 +5,15 @@ def run_pixel(ctx, out):
     class _G:
         pass
     g = _G()
-    _u_EXTRUDE_TYPE = U["EXTRUDE_TYPE"]
-    _u_DEPTH_SOURCE = U["DEPTH_SOURCE"]
+    _u_EXTRUDE_TYPE = U.get("EXTRUDE_TYPE", 0)
+    _u_DEPTH_SOURCE = U.get("DEPTH_SOURCE", 0)
     _u_inputTex = T["inputTex"]
-    _u_resolution = U["resolution"]
-    _u_tileOffset = U["tileOffset"]
-    _u_fullResolution = U["fullResolution"]
-    _u_size = U["size"]
-    _u_depth = U["depth"]
-    _u_solidFront = U["solidFront"]
+    _u_resolution = U.get("resolution", rt.construct(2, 0.0))
+    _u_tileOffset = U.get("tileOffset", rt.construct(2, 0.0))
+    _u_fullResolution = U.get("fullResolution", rt.construct(2, 0.0))
+    _u_size = U.get("size", rt.f(0.0))
+    _u_depth = U.get("depth", rt.f(0.0))
+    _u_solidFront = U.get("solidFront", False)
     g.fragColor = rt.construct(4, 0.0)
     g.TOP_SIGN = rt.f(1.0)
     g.SHADE_TOP = rt.f(0.8875)
@@ -22,18 +22,18 @@ def run_pixel(ctx, out):
     g.SHADE_RIGHT = rt.f(0.580144)
     g.EPS = rt.f(0.0001)
     def hash12__vec2(p):
-        p = rt.copy(p)
+        p = rt.copy(p, "float")
         p3 = rt.component_wise("fract", rt.binary("*", rt.construct(3, rt.swizzle(p, "xyx")), rt.f(0.1031), 3, "float"), width=3)
         p3 = rt.binary("+", p3, rt.dot(p3, rt.binary("+", rt.swizzle(p3, "yzx"), rt.f(33.33), 3, "float")), 3, "float")
         return rt.component_wise("fract", rt.binary("*", rt.binary("+", rt.swizzle(p3, "x"), rt.swizzle(p3, "y"), 1, "float"), rt.swizzle(p3, "z"), 1, "float"), width=1)
     def lum__vec3(c):
-        c = rt.copy(c)
+        c = rt.copy(c, "float")
         return rt.dot(c, rt.construct(3, rt.f(0.2126), rt.f(0.7152), rt.f(0.0722)))
     def toSampleUV__vec2(globalPixelPos):
-        globalPixelPos = rt.copy(globalPixelPos)
+        globalPixelPos = rt.copy(globalPixelPos, "float")
         return rt.component_wise("clamp", rt.binary("/", rt.binary("-", globalPixelPos, _u_tileOffset, 2, "float"), _u_resolution, 2, "float"), rt.f(0.0), rt.f(1.0), width=2)
     def cellAvgColor3x3__vec2(centerPx):
-        centerPx = rt.copy(centerPx)
+        centerPx = rt.copy(centerPx, "float")
         sp = rt.binary("*", _u_size, rt.f(0.25), 1, "float")
         sum = rt.construct(4, rt.f(0.0))
         j = rt.unary("-", rt.i(1))
@@ -56,17 +56,17 @@ def run_pixel(ctx, out):
                 sum = rt.binary("+", sum, rt.texture(_u_inputTex, toSampleUV__vec2(p)), 4, "float")
         return rt.binary("*", sum, rt.binary("/", rt.f(1.0), rt.f(9.0), 1, "float"), 4, "float")
     def cellHeight__vec2_vec2(cellC, cellIdxF):
-        cellC = rt.copy(cellC)
-        cellIdxF = rt.copy(cellIdxF)
+        cellC = rt.copy(cellC, "float")
+        cellIdxF = rt.copy(cellIdxF, "float")
         if rt.binary("==", _u_DEPTH_SOURCE, rt.i(1)):
             return hash12__vec2(cellIdxF)
         else:
             return lum__vec3(rt.swizzle(cellAvgColor3x3__vec2(cellC), "rgb"))
     def baryWeights__vec2_vec2_vec2_vec2(p, a, b, c):
-        p = rt.copy(p)
-        a = rt.copy(a)
-        b = rt.copy(b)
-        c = rt.copy(c)
+        p = rt.copy(p, "float")
+        a = rt.copy(a, "float")
+        b = rt.copy(b, "float")
+        c = rt.copy(c, "float")
         v0 = rt.binary("-", b, a, 2, "float")
         v1 = rt.binary("-", c, a, 2, "float")
         v2 = rt.binary("-", p, a, 2, "float")
@@ -83,10 +83,10 @@ def run_pixel(ctx, out):
         u = rt.binary("-", rt.binary("-", rt.f(1.0), v, 1, "float"), w, 1, "float")
         return rt.construct(3, u, v, w)
     def pyramidTriHit__vec2_vec2_vec2_vec2(P, cellC, apex, halfCell):
-        P = rt.copy(P)
-        cellC = rt.copy(cellC)
-        apex = rt.copy(apex)
-        halfCell = rt.copy(halfCell)
+        P = rt.copy(P, "float")
+        cellC = rt.copy(cellC, "float")
+        apex = rt.copy(apex, "float")
+        halfCell = rt.copy(halfCell, "float")
         topC = rt.binary("+", cellC, rt.binary("*", g.TOP_SIGN, rt.construct(2, rt.f(0.0), rt.swizzle(halfCell, "y")), 2, "float"), 2, "float")
         botC = rt.binary("-", cellC, rt.binary("*", g.TOP_SIGN, rt.construct(2, rt.f(0.0), rt.swizzle(halfCell, "y")), 2, "float"), 2, "float")
         leftX = rt.binary("-", rt.swizzle(cellC, "x"), rt.swizzle(halfCell, "x"), 1, "float")
@@ -109,8 +109,8 @@ def run_pixel(ctx, out):
             return rt.i(3)
         return rt.unary("-", rt.i(1))
     def sideShade__vec2_vec2(P, cellC):
-        P = rt.copy(P)
-        cellC = rt.copy(cellC)
+        P = rt.copy(P, "float")
+        cellC = rt.copy(cellC, "float")
         d = rt.binary("-", P, cellC, 2, "float")
         dyUp = rt.binary("*", rt.swizzle(d, "y"), g.TOP_SIGN, 1, "float")
         if rt.binary(">", rt.component_wise("abs", rt.swizzle(d, "x"), width=1), rt.component_wise("abs", dyUp, width=1)):

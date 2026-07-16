@@ -6,21 +6,21 @@ def run_pixel(ctx, out):
         pass
     g = _G()
     _u_inputTex = T["inputTex"]
-    _u_resolution = U["resolution"]
-    _u_tileOffset = U["tileOffset"]
-    _u_fullResolution = U["fullResolution"]
-    _u_renderScale = U["renderScale"]
-    _u_alpha = U["alpha"]
+    _u_resolution = U.get("resolution", rt.construct(2, 0.0))
+    _u_tileOffset = U.get("tileOffset", rt.construct(2, 0.0))
+    _u_fullResolution = U.get("fullResolution", rt.construct(2, 0.0))
+    _u_renderScale = U.get("renderScale", rt.f(0.0))
+    _u_alpha = U.get("alpha", rt.f(0.0))
     g.fragColor = rt.construct(4, 0.0)
     g.TAP_COUNT = rt.i(32)
     g.RADIUS = rt.f(48.0)
     g.GOLDEN_ANGLE = rt.f(2.39996323)
     g.BRIGHTNESS_ADJUST = rt.f(0.15)
     def clamp01__vec3(v):
-        v = rt.copy(v)
+        v = rt.copy(v, "float")
         return rt.component_wise("clamp", v, rt.construct(3, rt.f(0.0)), rt.construct(3, rt.f(1.0)), width=3)
     def chebyshev_mask__vec2(uv):
-        uv = rt.copy(uv)
+        uv = rt.copy(uv, "float")
         centered = rt.binary("*", rt.component_wise("abs", rt.binary("-", uv, rt.construct(2, rt.f(0.5)), 2, "float"), width=2), rt.f(2.0), 2, "float")
         return rt.component_wise("max", rt.swizzle(centered, "x"), rt.swizzle(centered, "y"), width=1)
     def main__void():

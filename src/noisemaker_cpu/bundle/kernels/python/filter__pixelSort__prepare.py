@@ -6,16 +6,16 @@ def run_pixel(ctx, out):
         pass
     g = _G()
     _u_inputTex = T["inputTex"]
-    _u_resolution = U["resolution"]
-    _u_angled = U["angled"]
-    _u_time = U["time"]
-    _u_darkest = U["darkest"]
-    _u_wrap = U["wrap"]
+    _u_resolution = U.get("resolution", rt.construct(2, 0.0))
+    _u_angled = U.get("angled", rt.f(0.0))
+    _u_time = U.get("time", rt.f(0.0))
+    _u_darkest = U.get("darkest", False)
+    _u_wrap = U.get("wrap", rt.f(0.0))
     g.fragColor = rt.construct(4, 0.0)
     g.PI = rt.f(3.141592653589793)
     def applyWrap__vec2_vec2(coord, size):
-        coord = rt.copy(coord)
-        size = rt.copy(size)
+        coord = rt.copy(coord, "float")
+        size = rt.copy(size, "float")
         uv = rt.binary("/", coord, size, 2, "float")
         mode = rt.construct(1, _u_wrap, base="int")
         if rt.binary("==", mode, rt.i(0)):

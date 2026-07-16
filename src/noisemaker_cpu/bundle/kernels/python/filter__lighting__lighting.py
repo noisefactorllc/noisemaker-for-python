@@ -7,32 +7,32 @@ def run_pixel(ctx, out):
     g = _G()
     _u_inputTex = T["inputTex"]
     _u_heightMap = T["heightMap"]
-    _u_tileOffset = U["tileOffset"]
-    _u_fullResolution = U["fullResolution"]
-    _u_diffuseColor = U["diffuseColor"]
-    _u_specularColor = U["specularColor"]
-    _u_specularIntensity = U["specularIntensity"]
-    _u_shininess = U["shininess"]
-    _u_ambientColor = U["ambientColor"]
-    _u_lightDirection = U["lightDirection"]
-    _u_normalStrength = U["normalStrength"]
-    _u_smoothing = U["smoothing"]
-    _u_renderScale = U["renderScale"]
-    _u_reflection = U["reflection"]
-    _u_refraction = U["refraction"]
-    _u_aberration = U["aberration"]
+    _u_tileOffset = U.get("tileOffset", rt.construct(2, 0.0))
+    _u_fullResolution = U.get("fullResolution", rt.construct(2, 0.0))
+    _u_diffuseColor = U.get("diffuseColor", rt.construct(3, 0.0))
+    _u_specularColor = U.get("specularColor", rt.construct(3, 0.0))
+    _u_specularIntensity = U.get("specularIntensity", rt.f(0.0))
+    _u_shininess = U.get("shininess", rt.f(0.0))
+    _u_ambientColor = U.get("ambientColor", rt.construct(3, 0.0))
+    _u_lightDirection = U.get("lightDirection", rt.construct(3, 0.0))
+    _u_normalStrength = U.get("normalStrength", rt.f(0.0))
+    _u_smoothing = U.get("smoothing", rt.f(0.0))
+    _u_renderScale = U.get("renderScale", rt.f(0.0))
+    _u_reflection = U.get("reflection", rt.f(0.0))
+    _u_refraction = U.get("refraction", rt.f(0.0))
+    _u_aberration = U.get("aberration", rt.f(0.0))
     g.fragColor = rt.construct(4, 0.0)
     def getLuminosity__vec3(color):
-        color = rt.copy(color)
+        color = rt.copy(color, "float")
         return rt.dot(color, rt.construct(3, rt.f(0.299), rt.f(0.587), rt.f(0.114)))
     def getHeight__vec2(uv):
-        uv = rt.copy(uv)
+        uv = rt.copy(uv, "float")
         mapSize = rt.construct(2, rt.texture_size(_u_heightMap))
         localUV = rt.binary("/", rt.binary("-", rt.binary("*", uv, _u_fullResolution, 2, "float"), _u_tileOffset, 2, "float"), mapSize, 2, "float")
         return getLuminosity__vec3(rt.swizzle(rt.texture(_u_heightMap, localUV), "rgb"))
     def calculateNormal__vec2_vec2(uv, texelSize):
-        uv = rt.copy(uv)
-        texelSize = rt.copy(texelSize)
+        uv = rt.copy(uv, "float")
+        texelSize = rt.copy(texelSize, "float")
         sampleSize = rt.binary("*", rt.binary("*", texelSize, _u_smoothing, 2, "float"), _u_renderScale, 2, "float")
         sobel_x = rt.new_array(rt.i(9), 1)
         sobel_x[int(rt.i(0))] = rt.unary("-", rt.f(1.0))
@@ -82,14 +82,14 @@ def run_pixel(ctx, out):
         normal = rt.normalize(rt.construct(3, rt.unary("-", dx), rt.unary("-", dy), rt.f(1.0)))
         return normal
     def applyRefraction__vec2_vec3(uv, normal):
-        uv = rt.copy(uv)
-        normal = rt.copy(normal)
+        uv = rt.copy(uv, "float")
+        normal = rt.copy(normal, "float")
         refractionOffset = rt.binary("*", rt.swizzle(normal, "xy"), rt.binary("*", _u_refraction, rt.f(0.0125), 1, "float"), 2, "float")
         return rt.texture(_u_inputTex, rt.binary("/", rt.binary("-", rt.binary("*", rt.binary("+", uv, refractionOffset, 2, "float"), _u_fullResolution, 2, "float"), _u_tileOffset, 2, "float"), rt.construct(2, rt.texture_size(_u_inputTex)), 2, "float"))
     def applyReflection__vec2_vec2_vec3(uv, globalUV, normal):
-        uv = rt.copy(uv)
-        globalUV = rt.copy(globalUV)
-        normal = rt.copy(normal)
+        uv = rt.copy(uv, "float")
+        globalUV = rt.copy(globalUV, "float")
+        normal = rt.copy(normal, "float")
         incident = rt.construct(3, rt.normalize(rt.binary("-", globalUV, rt.f(0.5), 2, "float")), rt.f(100.0))
         reflectionVec = rt.reflect(incident, normal)
         reflectionOffset = rt.binary("*", rt.swizzle(reflectionVec, "xy"), rt.binary("*", _u_reflection, rt.f(5e-05), 1, "float"), 2, "float")

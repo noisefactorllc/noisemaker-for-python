@@ -6,17 +6,17 @@ def run_pixel(ctx, out):
         pass
     g = _G()
     _u_inputTex = T["inputTex"]
-    _u_kernel = U["kernel"]
-    _u_size = U["size"]
-    _u_renderScale = U["renderScale"]
-    _u_blend = U["blend"]
-    _u_invert = U["invert"]
-    _u_channel = U["channel"]
-    _u_threshold = U["threshold"]
-    _u_amount = U["amount"]
-    _u_mixAmt = U["mixAmt"]
-    _u_level = U["level"]
-    _u_contourSide = U["contourSide"]
+    _u_kernel = U.get("kernel", rt.f(0.0))
+    _u_size = U.get("size", rt.f(0.0))
+    _u_renderScale = U.get("renderScale", rt.f(0.0))
+    _u_blend = U.get("blend", rt.f(0.0))
+    _u_invert = U.get("invert", rt.f(0.0))
+    _u_channel = U.get("channel", rt.f(0.0))
+    _u_threshold = U.get("threshold", rt.f(0.0))
+    _u_amount = U.get("amount", rt.f(0.0))
+    _u_mixAmt = U.get("mixAmt", rt.f(0.0))
+    _u_level = U.get("level", rt.f(0.0))
+    _u_contourSide = U.get("contourSide", rt.f(0.0))
     g.fragColor = rt.construct(4, 0.0)
     g.LUMA = rt.construct(3, rt.f(0.2126), rt.f(0.7152), rt.f(0.0722))
     def getWeight__int_int_int(dx, dy, kernelType):
@@ -29,8 +29,8 @@ def run_pixel(ctx, out):
         else:
             return rt.unary("-", rt.f(1.0))
     def applyBlend__vec4_vec4_int(edge, orig, mode):
-        edge = rt.copy(edge)
-        orig = rt.copy(orig)
+        edge = rt.copy(edge, "float")
+        orig = rt.copy(orig, "float")
         if rt.binary("==", mode, rt.i(0)):
             return rt.component_wise("min", rt.binary("+", orig, edge, 4, "float"), rt.construct(4, rt.f(1.0)), width=4)
         if rt.binary("==", mode, rt.i(1)):
@@ -54,9 +54,9 @@ def run_pixel(ctx, out):
             return rt.binary("-", rt.f(1.0), rt.binary("*", rt.binary("-", rt.f(1.0), orig, 4, "float"), rt.binary("-", rt.f(1.0), edge, 4, "float"), 4, "float"), 4, "float")
         return edge
     def contourConv__vec2_vec2_vec3_float_bool_bool(fragCoord, texelSize, centerRGB, lvl, useLuma, upperSide):
-        fragCoord = rt.copy(fragCoord)
-        texelSize = rt.copy(texelSize)
-        centerRGB = rt.copy(centerRGB)
+        fragCoord = rt.copy(fragCoord, "float")
+        texelSize = rt.copy(texelSize, "float")
+        centerRGB = rt.copy(centerRGB, "float")
         northRGB = rt.swizzle(rt.texture(_u_inputTex, rt.binary("*", rt.binary("+", fragCoord, rt.construct(2, rt.f(0.0), rt.f(1.0)), 2, "float"), texelSize, 2, "float")), "rgb")
         southRGB = rt.swizzle(rt.texture(_u_inputTex, rt.binary("*", rt.binary("+", fragCoord, rt.construct(2, rt.f(0.0), rt.unary("-", rt.f(1.0))), 2, "float"), texelSize, 2, "float")), "rgb")
         eastRGB = rt.swizzle(rt.texture(_u_inputTex, rt.binary("*", rt.binary("+", fragCoord, rt.construct(2, rt.f(1.0), rt.f(0.0)), 2, "float"), texelSize, 2, "float")), "rgb")

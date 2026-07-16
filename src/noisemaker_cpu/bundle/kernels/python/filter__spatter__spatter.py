@@ -6,17 +6,17 @@ def run_pixel(ctx, out):
         pass
     g = _G()
     _u_inputTex = T["inputTex"]
-    _u_resolution = U["resolution"]
-    _u_tileOffset = U["tileOffset"]
-    _u_fullResolution = U["fullResolution"]
-    _u_time = U["time"]
-    _u_color = U["color"]
-    _u_density = U["density"]
-    _u_alpha = U["alpha"]
-    _u_seed = U["seed"]
+    _u_resolution = U.get("resolution", rt.construct(2, 0.0))
+    _u_tileOffset = U.get("tileOffset", rt.construct(2, 0.0))
+    _u_fullResolution = U.get("fullResolution", rt.construct(2, 0.0))
+    _u_time = U.get("time", rt.f(0.0))
+    _u_color = U.get("color", rt.construct(3, 0.0))
+    _u_density = U.get("density", rt.f(0.0))
+    _u_alpha = U.get("alpha", rt.f(0.0))
+    _u_seed = U.get("seed", 0)
     g.fragColor = rt.construct(4, 0.0)
     def pcg3__uvec3(v):
-        v = rt.copy(v)
+        v = rt.copy(v, "uint")
         v = rt.binary("+", rt.binary("*", v, rt.i(1664525), 3, "uint"), rt.i(1013904223), 3, "uint")
         v = rt.assign_swizzle(v, "x", rt.binary("+", rt.swizzle(v, "x"), rt.binary("*", rt.swizzle(v, "y"), rt.swizzle(v, "z"), 1, "uint"), 1, "uint"))
         v = rt.assign_swizzle(v, "y", rt.binary("+", rt.swizzle(v, "y"), rt.binary("*", rt.swizzle(v, "z"), rt.swizzle(v, "x"), 1, "uint"), 1, "uint"))
@@ -31,7 +31,7 @@ def run_pixel(ctx, out):
     def hashf__uint(h):
         return rt.binary("/", rt.construct(1, rt.swizzle(pcg3__uvec3(rt.construct(3, h, rt.i(0), rt.i(0), base="uint")), "x")), rt.construct(1, rt.i(4294967295)), 1, "float")
     def gridVal__ivec2_uint(p, sd):
-        p = rt.copy(p)
+        p = rt.copy(p, "int")
         h = pcg3__uvec3(rt.construct(3, rt.construct(1, rt.binary("+", rt.swizzle(p, "x"), rt.i(32768), 1, "int"), base="uint"), rt.construct(1, rt.binary("+", rt.swizzle(p, "y"), rt.i(32768), 1, "int"), base="uint"), sd, base="uint"))
         return rt.binary("/", rt.construct(1, rt.swizzle(h, "x")), rt.construct(1, rt.i(4294967295)), 1, "float")
     def cubic__float_float_float_float_float(a, b, c, d, t):
@@ -39,7 +39,7 @@ def run_pixel(ctx, out):
         t3 = rt.binary("*", t2, t, 1, "float")
         return rt.binary("*", rt.f(0.5), rt.binary("+", rt.binary("+", rt.binary("+", rt.binary("*", rt.f(2.0), b, 1, "float"), rt.binary("*", rt.binary("+", rt.unary("-", a), c, 1, "float"), t, 1, "float"), 1, "float"), rt.binary("*", rt.binary("-", rt.binary("+", rt.binary("-", rt.binary("*", rt.f(2.0), a, 1, "float"), rt.binary("*", rt.f(5.0), b, 1, "float"), 1, "float"), rt.binary("*", rt.f(4.0), c, 1, "float"), 1, "float"), d, 1, "float"), t2, 1, "float"), 1, "float"), rt.binary("*", rt.binary("+", rt.binary("-", rt.binary("+", rt.unary("-", a), rt.binary("*", rt.f(3.0), b, 1, "float"), 1, "float"), rt.binary("*", rt.f(3.0), c, 1, "float"), 1, "float"), d, 1, "float"), t3, 1, "float"), 1, "float"), 1, "float")
     def bicubicExpGrid__vec2_uint(pos, sd):
-        pos = rt.copy(pos)
+        pos = rt.copy(pos, "float")
         c = rt.construct(2, rt.component_wise("floor", pos, width=2), base="int")
         f = rt.component_wise("fract", pos, width=2)
         r0 = cubic__float_float_float_float_float(rt.component_wise("pow", gridVal__ivec2_uint(rt.binary("+", c, rt.construct(2, rt.unary("-", rt.i(1)), rt.unary("-", rt.i(1)), base="int"), 2, "int"), sd), rt.f(4.0), width=1), rt.component_wise("pow", gridVal__ivec2_uint(rt.binary("+", c, rt.construct(2, rt.i(0), rt.unary("-", rt.i(1)), base="int"), 2, "int"), sd), rt.f(4.0), width=1), rt.component_wise("pow", gridVal__ivec2_uint(rt.binary("+", c, rt.construct(2, rt.i(1), rt.unary("-", rt.i(1)), base="int"), 2, "int"), sd), rt.f(4.0), width=1), rt.component_wise("pow", gridVal__ivec2_uint(rt.binary("+", c, rt.construct(2, rt.i(2), rt.unary("-", rt.i(1)), base="int"), 2, "int"), sd), rt.f(4.0), width=1), rt.swizzle(f, "x"))
@@ -48,7 +48,7 @@ def run_pixel(ctx, out):
         r3 = cubic__float_float_float_float_float(rt.component_wise("pow", gridVal__ivec2_uint(rt.binary("+", c, rt.construct(2, rt.unary("-", rt.i(1)), rt.i(2), base="int"), 2, "int"), sd), rt.f(4.0), width=1), rt.component_wise("pow", gridVal__ivec2_uint(rt.binary("+", c, rt.construct(2, rt.i(0), rt.i(2), base="int"), 2, "int"), sd), rt.f(4.0), width=1), rt.component_wise("pow", gridVal__ivec2_uint(rt.binary("+", c, rt.construct(2, rt.i(1), rt.i(2), base="int"), 2, "int"), sd), rt.f(4.0), width=1), rt.component_wise("pow", gridVal__ivec2_uint(rt.binary("+", c, rt.construct(2, rt.i(2), rt.i(2), base="int"), 2, "int"), sd), rt.f(4.0), width=1), rt.swizzle(f, "x"))
         return rt.component_wise("clamp", cubic__float_float_float_float_float(r0, r1, r2, r3, rt.swizzle(f, "y")), rt.f(0.0), rt.f(1.0), width=1)
     def bilinearExpGrid__vec2_uint(pos, sd):
-        pos = rt.copy(pos)
+        pos = rt.copy(pos, "float")
         c = rt.construct(2, rt.component_wise("floor", pos, width=2), base="int")
         f = rt.component_wise("fract", pos, width=2)
         v00 = rt.component_wise("pow", gridVal__ivec2_uint(c, sd), rt.f(4.0), width=1)
@@ -57,7 +57,7 @@ def run_pixel(ctx, out):
         v11 = rt.component_wise("pow", gridVal__ivec2_uint(rt.binary("+", c, rt.construct(2, rt.i(1), rt.i(1), base="int"), 2, "int"), sd), rt.f(4.0), width=1)
         return rt.component_wise("mix", rt.component_wise("mix", v00, v10, rt.swizzle(f, "x"), width=1), rt.component_wise("mix", v01, v11, rt.swizzle(f, "x"), width=1), rt.swizzle(f, "y"), width=1)
     def cosineExpGrid__vec2_uint(pos, sd):
-        pos = rt.copy(pos)
+        pos = rt.copy(pos, "float")
         c = rt.construct(2, rt.component_wise("floor", pos, width=2), base="int")
         f = rt.component_wise("fract", pos, width=2)
         t = rt.binary("*", rt.binary("-", rt.f(1.0), rt.component_wise("cos", rt.binary("*", f, rt.f(3.14159265), 2, "float"), width=2), 2, "float"), rt.f(0.5), 2, "float")
@@ -67,8 +67,8 @@ def run_pixel(ctx, out):
         v11 = rt.component_wise("pow", gridVal__ivec2_uint(rt.binary("+", c, rt.construct(2, rt.i(1), rt.i(1), base="int"), 2, "int"), sd), rt.f(4.0), width=1)
         return rt.component_wise("mix", rt.component_wise("mix", v00, v10, rt.swizzle(t, "x"), width=1), rt.component_wise("mix", v01, v11, rt.swizzle(t, "x"), width=1), rt.swizzle(t, "y"), width=1)
     def expFbm6Bicubic__vec2_vec2_uint(uv, freq, sd):
-        uv = rt.copy(uv)
-        freq = rt.copy(freq)
+        uv = rt.copy(uv, "float")
+        freq = rt.copy(freq, "float")
         a = rt.f(0.0)
         a = rt.binary("+", a, rt.binary("*", bicubicExpGrid__vec2_uint(rt.binary("*", uv, freq, 2, "float"), sd), rt.f(0.5), 1, "float"), 1, "float")
         a = rt.binary("+", a, rt.binary("*", bicubicExpGrid__vec2_uint(rt.binary("*", rt.binary("*", uv, freq, 2, "float"), rt.f(2.0), 2, "float"), rt.binary("+", sd, rt.i(10000), 1, "uint")), rt.f(0.25), 1, "float"), 1, "float")
@@ -78,8 +78,8 @@ def run_pixel(ctx, out):
         a = rt.binary("+", a, rt.binary("*", bicubicExpGrid__vec2_uint(rt.binary("*", rt.binary("*", uv, freq, 2, "float"), rt.f(32.0), 2, "float"), rt.binary("+", sd, rt.i(50000), 1, "uint")), rt.f(0.015625), 1, "float"), 1, "float")
         return rt.binary("/", a, rt.f(0.984375), 1, "float")
     def expFbm4Bilinear__vec2_vec2_uint(uv, freq, sd):
-        uv = rt.copy(uv)
-        freq = rt.copy(freq)
+        uv = rt.copy(uv, "float")
+        freq = rt.copy(freq, "float")
         a = rt.f(0.0)
         a = rt.binary("+", a, rt.binary("*", bilinearExpGrid__vec2_uint(rt.binary("*", uv, freq, 2, "float"), sd), rt.f(0.5), 1, "float"), 1, "float")
         a = rt.binary("+", a, rt.binary("*", bilinearExpGrid__vec2_uint(rt.binary("*", rt.binary("*", uv, freq, 2, "float"), rt.f(2.0), 2, "float"), rt.binary("+", sd, rt.i(10000), 1, "uint")), rt.f(0.25), 1, "float"), 1, "float")
@@ -87,8 +87,8 @@ def run_pixel(ctx, out):
         a = rt.binary("+", a, rt.binary("*", bilinearExpGrid__vec2_uint(rt.binary("*", rt.binary("*", uv, freq, 2, "float"), rt.f(8.0), 2, "float"), rt.binary("+", sd, rt.i(30000), 1, "uint")), rt.f(0.0625), 1, "float"), 1, "float")
         return rt.binary("/", a, rt.f(0.9375), 1, "float")
     def expRidgedFbm3Cosine__vec2_vec2_uint(uv, freq, sd):
-        uv = rt.copy(uv)
-        freq = rt.copy(freq)
+        uv = rt.copy(uv, "float")
+        freq = rt.copy(freq, "float")
         a = rt.f(0.0)
         v = rt.f(0.0)
         v = cosineExpGrid__vec2_uint(rt.binary("*", uv, freq, 2, "float"), sd)

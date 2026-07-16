@@ -25,8 +25,12 @@ class Ctx:
 
     def __init__(self, rt, uniforms=None, textures=None, resolution=None, time=0.0, seed=1):
         self.rt = rt
-        self.uniforms = uniforms or {}
-        self.textures = textures or {}
+        # Preserve a passed-in mapping even when it is empty/falsy: renderer hands
+        # us a _DefaultTex (a dict subclass whose __missing__ returns a blank
+        # surface for unbound samplers). An empty _DefaultTex is falsy, so
+        # `textures or {}` would drop the __missing__ override and re-raise KeyError.
+        self.uniforms = uniforms if uniforms is not None else {}
+        self.textures = textures if textures is not None else {}
         self.resolution = resolution
         self.time = f32_or(time)
         self.seed = seed

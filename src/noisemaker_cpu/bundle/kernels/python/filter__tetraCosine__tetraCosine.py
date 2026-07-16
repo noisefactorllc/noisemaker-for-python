@@ -5,31 +5,31 @@ def run_pixel(ctx, out):
     class _G:
         pass
     g = _G()
-    _u_tileOffset = U["tileOffset"]
-    _u_fullResolution = U["fullResolution"]
+    _u_tileOffset = U.get("tileOffset", rt.construct(2, 0.0))
+    _u_fullResolution = U.get("fullResolution", rt.construct(2, 0.0))
     _u_inputTex = T["inputTex"]
-    _u_colorMode = U["colorMode"]
-    _u_offsetR = U["offsetR"]
-    _u_offsetG = U["offsetG"]
-    _u_offsetB = U["offsetB"]
-    _u_ampR = U["ampR"]
-    _u_ampG = U["ampG"]
-    _u_ampB = U["ampB"]
-    _u_freqR = U["freqR"]
-    _u_freqG = U["freqG"]
-    _u_freqB = U["freqB"]
-    _u_phaseR = U["phaseR"]
-    _u_phaseG = U["phaseG"]
-    _u_phaseB = U["phaseB"]
-    _u_repeat = U["repeat"]
-    _u_offset = U["offset"]
-    _u_alpha = U["alpha"]
-    _u_rotation = U["rotation"]
-    _u_time = U["time"]
+    _u_colorMode = U.get("colorMode", 0)
+    _u_offsetR = U.get("offsetR", rt.f(0.0))
+    _u_offsetG = U.get("offsetG", rt.f(0.0))
+    _u_offsetB = U.get("offsetB", rt.f(0.0))
+    _u_ampR = U.get("ampR", rt.f(0.0))
+    _u_ampG = U.get("ampG", rt.f(0.0))
+    _u_ampB = U.get("ampB", rt.f(0.0))
+    _u_freqR = U.get("freqR", rt.f(0.0))
+    _u_freqG = U.get("freqG", rt.f(0.0))
+    _u_freqB = U.get("freqB", rt.f(0.0))
+    _u_phaseR = U.get("phaseR", rt.f(0.0))
+    _u_phaseG = U.get("phaseG", rt.f(0.0))
+    _u_phaseB = U.get("phaseB", rt.f(0.0))
+    _u_repeat = U.get("repeat", rt.f(0.0))
+    _u_offset = U.get("offset", rt.f(0.0))
+    _u_alpha = U.get("alpha", rt.f(0.0))
+    _u_rotation = U.get("rotation", 0)
+    _u_time = U.get("time", rt.f(0.0))
     g.fragColor = rt.construct(4, 0.0)
     g.TAU = rt.f(6.283185307179586)
     def hsv2rgb__vec3(hsv):
-        hsv = rt.copy(hsv)
+        hsv = rt.copy(hsv, "float")
         h = rt.swizzle(hsv, "x")
         s = rt.swizzle(hsv, "y")
         v = rt.swizzle(hsv, "z")
@@ -56,7 +56,7 @@ def run_pixel(ctx, out):
                             rgb = rt.construct(3, c, rt.f(0.0), x)
         return rt.binary("+", rgb, rt.construct(3, m), 3, "float")
     def oklab2linear__vec3(lab):
-        lab = rt.copy(lab)
+        lab = rt.copy(lab, "float")
         L = rt.swizzle(lab, "x")
         a = rt.swizzle(lab, "y")
         b = rt.swizzle(lab, "z")
@@ -68,19 +68,19 @@ def run_pixel(ctx, out):
         s = rt.binary("*", rt.binary("*", s_, s_, 1, "float"), s_, 1, "float")
         return rt.construct(3, rt.binary("+", rt.binary("-", rt.binary("*", rt.f(4.0767416621), l, 1, "float"), rt.binary("*", rt.f(3.3077115913), m, 1, "float"), 1, "float"), rt.binary("*", rt.f(0.2309699292), s, 1, "float"), 1, "float"), rt.binary("-", rt.binary("+", rt.binary("*", rt.unary("-", rt.f(1.2684380046)), l, 1, "float"), rt.binary("*", rt.f(2.6097574011), m, 1, "float"), 1, "float"), rt.binary("*", rt.f(0.3413193965), s, 1, "float"), 1, "float"), rt.binary("+", rt.binary("-", rt.binary("*", rt.unary("-", rt.f(0.0041960863)), l, 1, "float"), rt.binary("*", rt.f(0.7034186147), m, 1, "float"), 1, "float"), rt.binary("*", rt.f(1.707614701), s, 1, "float"), 1, "float"))
     def linear2srgb__vec3(linear):
-        linear = rt.copy(linear)
+        linear = rt.copy(linear, "float")
         low = rt.binary("*", linear, rt.f(12.92), 3, "float")
         high = rt.binary("-", rt.binary("*", rt.f(1.055), rt.component_wise("pow", rt.component_wise("max", linear, rt.construct(3, rt.f(0.0)), width=3), rt.construct(3, rt.binary("/", rt.f(1.0), rt.f(2.4), 1, "float")), width=3), 3, "float"), rt.f(0.055), 3, "float")
         return rt.component_wise("mix", high, low, rt.component_wise("step", linear, rt.construct(3, rt.f(0.0031308)), width=3), width=3)
     def oklab2rgb__vec3(lab):
-        lab = rt.copy(lab)
+        lab = rt.copy(lab, "float")
         L = rt.swizzle(lab, "x")
         a = rt.binary("*", rt.binary("-", rt.swizzle(lab, "y"), rt.f(0.5), 1, "float"), rt.f(0.8), 1, "float")
         b = rt.binary("*", rt.binary("-", rt.swizzle(lab, "z"), rt.f(0.5), 1, "float"), rt.f(0.8), 1, "float")
         linear_rgb = oklab2linear__vec3(rt.construct(3, L, a, b))
         return rt.component_wise("clamp", linear2srgb__vec3(linear_rgb), rt.f(0.0), rt.f(1.0), width=3)
     def oklch2rgb__vec3(lch):
-        lch = rt.copy(lch)
+        lch = rt.copy(lch, "float")
         L = rt.swizzle(lch, "x")
         C = rt.binary("*", rt.swizzle(lch, "y"), rt.f(0.4), 1, "float")
         H = rt.binary("*", rt.swizzle(lch, "z"), g.TAU, 1, "float")
@@ -89,10 +89,10 @@ def run_pixel(ctx, out):
         linear_rgb = oklab2linear__vec3(rt.construct(3, L, a, b))
         return rt.component_wise("clamp", linear2srgb__vec3(linear_rgb), rt.f(0.0), rt.f(1.0), width=3)
     def cosinePalette__float_vec3_vec3_vec3_vec3(t, offset, amp, freq, phase):
-        offset = rt.copy(offset)
-        amp = rt.copy(amp)
-        freq = rt.copy(freq)
-        phase = rt.copy(phase)
+        offset = rt.copy(offset, "float")
+        amp = rt.copy(amp, "float")
+        freq = rt.copy(freq, "float")
+        phase = rt.copy(phase, "float")
         return rt.component_wise("clamp", rt.binary("+", offset, rt.binary("*", amp, rt.component_wise("cos", rt.binary("*", g.TAU, rt.binary("+", rt.binary("*", freq, t, 3, "float"), phase, 3, "float"), 3, "float"), width=3), 3, "float"), 3, "float"), rt.f(0.0), rt.f(1.0), width=3)
     def main__void():
         globalCoord = rt.binary("+", rt.swizzle(ctx.frag_coord, "xy"), _u_tileOffset, 2, "float")

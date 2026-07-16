@@ -6,7 +6,7 @@ def run_pixel(ctx, out):
         pass
     g = _G()
     _u_inputTex = T["inputTex"]
-    _u_mode = U["mode"]
+    _u_mode = U.get("mode", 0)
     g.fragColor = rt.construct(4, 0.0)
     def main__void():
         texSize = rt.texture_size(_u_inputTex)

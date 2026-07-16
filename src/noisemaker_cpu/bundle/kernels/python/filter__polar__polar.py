@@ -6,24 +6,24 @@ def run_pixel(ctx, out):
         pass
     g = _G()
     _u_inputTex = T["inputTex"]
-    _u_tileOffset = U["tileOffset"]
-    _u_fullResolution = U["fullResolution"]
-    _u_time = U["time"]
-    _u_polarMode = U["polarMode"]
-    _u_speed = U["speed"]
-    _u_rotation = U["rotation"]
-    _u_scale = U["scale"]
-    _u_aspectLens = U["aspectLens"]
-    _u_antialias = U["antialias"]
+    _u_tileOffset = U.get("tileOffset", rt.construct(2, 0.0))
+    _u_fullResolution = U.get("fullResolution", rt.construct(2, 0.0))
+    _u_time = U.get("time", rt.f(0.0))
+    _u_polarMode = U.get("polarMode", 0)
+    _u_speed = U.get("speed", rt.f(0.0))
+    _u_rotation = U.get("rotation", rt.f(0.0))
+    _u_scale = U.get("scale", rt.f(0.0))
+    _u_aspectLens = U.get("aspectLens", False)
+    _u_antialias = U.get("antialias", False)
     g.fragColor = rt.construct(4, 0.0)
     g.TAU = rt.f(6.28318530718)
     def smod__float_float(v, m):
         return rt.binary("*", m, rt.binary("-", rt.binary("-", rt.f(0.75), rt.component_wise("abs", rt.binary("-", rt.component_wise("fract", v, width=1), rt.f(0.5), 1, "float"), width=1), 1, "float"), rt.f(0.25), 1, "float"), 1, "float")
     def smod2__vec2_float(v, m):
-        v = rt.copy(v)
+        v = rt.copy(v, "float")
         return rt.binary("*", m, rt.binary("-", rt.binary("-", rt.f(0.75), rt.component_wise("abs", rt.binary("-", rt.component_wise("fract", v, width=2), rt.f(0.5), 2, "float"), width=2), 2, "float"), rt.f(0.25), 2, "float"), 2, "float")
     def polarCoords__vec2_float(uv, aspect):
-        uv = rt.copy(uv)
+        uv = rt.copy(uv, "float")
         uv = rt.binary("-", uv, rt.f(0.5), 2, "float")
         if _u_aspectLens:
             uv = rt.assign_swizzle(uv, "x", rt.binary("*", rt.swizzle(uv, "x"), aspect, 1, "float"))
@@ -32,7 +32,7 @@ def run_pixel(ctx, out):
         coord = rt.assign_swizzle(coord, "y", smod__float_float(rt.binary("+", rt.swizzle(coord, "y"), rt.binary("*", _u_time, _u_speed, 1, "float"), 1, "float"), rt.f(1.0)))
         return coord
     def vortexCoords__vec2_float(uv, aspect):
-        uv = rt.copy(uv)
+        uv = rt.copy(uv, "float")
         uv = rt.binary("-", uv, rt.f(0.5), 2, "float")
         if _u_aspectLens:
             uv = rt.assign_swizzle(uv, "x", rt.binary("*", rt.swizzle(uv, "x"), aspect, 1, "float"))

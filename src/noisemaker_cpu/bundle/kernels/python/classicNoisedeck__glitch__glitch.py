@@ -6,23 +6,23 @@ def run_pixel(ctx, out):
         pass
     g = _G()
     _u_inputTex = T["inputTex"]
-    _u_resolution = U["resolution"]
-    _u_tileOffset = U["tileOffset"]
-    _u_fullResolution = U["fullResolution"]
-    _u_time = U["time"]
-    _u_seed = U["seed"]
-    _u_aspectLens = U["aspectLens"]
-    _u_xChonk = U["xChonk"]
-    _u_yChonk = U["yChonk"]
-    _u_glitchiness = U["glitchiness"]
-    _u_scanlinesAmt = U["scanlinesAmt"]
-    _u_snowAmt = U["snowAmt"]
-    _u_vignetteAmt = U["vignetteAmt"]
-    _u_aberration = U["aberration"]
-    _u_distortion = U["distortion"]
+    _u_resolution = U.get("resolution", rt.construct(2, 0.0))
+    _u_tileOffset = U.get("tileOffset", rt.construct(2, 0.0))
+    _u_fullResolution = U.get("fullResolution", rt.construct(2, 0.0))
+    _u_time = U.get("time", rt.f(0.0))
+    _u_seed = U.get("seed", 0)
+    _u_aspectLens = U.get("aspectLens", False)
+    _u_xChonk = U.get("xChonk", rt.f(0.0))
+    _u_yChonk = U.get("yChonk", rt.f(0.0))
+    _u_glitchiness = U.get("glitchiness", rt.f(0.0))
+    _u_scanlinesAmt = U.get("scanlinesAmt", rt.f(0.0))
+    _u_snowAmt = U.get("snowAmt", rt.f(0.0))
+    _u_vignetteAmt = U.get("vignetteAmt", rt.f(0.0))
+    _u_aberration = U.get("aberration", rt.f(0.0))
+    _u_distortion = U.get("distortion", rt.f(0.0))
     g.fragColor = rt.construct(4, 0.0)
     def pcg__uvec3(v):
-        v = rt.copy(v)
+        v = rt.copy(v, "uint")
         v = rt.binary("+", rt.binary("*", v, rt.construct(1, rt.i(1664525), base="uint"), 3, "uint"), rt.construct(1, rt.i(1013904223), base="uint"), 3, "uint")
         v = rt.assign_swizzle(v, "x", rt.binary("+", rt.swizzle(v, "x"), rt.binary("*", rt.swizzle(v, "y"), rt.swizzle(v, "z"), 1, "uint"), 1, "uint"))
         v = rt.assign_swizzle(v, "y", rt.binary("+", rt.swizzle(v, "y"), rt.binary("*", rt.swizzle(v, "z"), rt.swizzle(v, "x"), 1, "uint"), 1, "uint"))
@@ -33,13 +33,13 @@ def run_pixel(ctx, out):
         v = rt.assign_swizzle(v, "z", rt.binary("+", rt.swizzle(v, "z"), rt.binary("*", rt.swizzle(v, "x"), rt.swizzle(v, "y"), 1, "uint"), 1, "uint"))
         return v
     def prng__vec3(p):
-        p = rt.copy(p)
+        p = rt.copy(p, "float")
         return rt.binary("/", rt.construct(3, pcg__uvec3(rt.construct(3, p, base="uint"))), rt.construct(1, rt.construct(1, rt.i(4294967295), base="uint")), 3, "float")
     def f__vec2(st):
-        st = rt.copy(st)
+        st = rt.copy(st, "float")
         return rt.swizzle(prng__vec3(rt.construct(3, rt.component_wise("floor", st, width=2), rt.construct(1, _u_seed))), "x")
     def bicubic__vec2(p):
-        p = rt.copy(p)
+        p = rt.copy(p, "float")
         x = rt.swizzle(p, "x")
         y = rt.swizzle(p, "y")
         x1 = rt.component_wise("floor", x, width=1)
@@ -76,16 +76,16 @@ def run_pixel(ctx, out):
     def periodicFunction__float(p):
         return map__float_float_float_float_float(rt.component_wise("sin", rt.binary("*", p, rt.f(6.28318530718), 1, "float"), width=1), rt.unary("-", rt.f(1.0)), rt.f(1.0), rt.f(0.0), rt.f(1.0))
     def scanlines__vec4_vec2(color, st):
-        color = rt.copy(color)
-        st = rt.copy(st)
+        color = rt.copy(color, "float")
+        st = rt.copy(st, "float")
         centerDistance = rt.binary("*", rt.binary("*", rt.length(rt.binary("-", rt.f(0.5), st, 2, "float")), rt.f(3.14159265359), 1, "float"), rt.f(0.5), 1, "float")
         noise = rt.binary("*", periodicFunction__float(rt.binary("-", bicubic__vec2(rt.binary("*", st, rt.f(4.0), 2, "float")), _u_time, 1, "float")), map__float_float_float_float_float(_u_scanlinesAmt, rt.f(0.0), rt.f(100.0), rt.f(0.0), rt.f(0.5)), 1, "float")
         hatch = rt.binary("*", rt.binary("+", rt.component_wise("sin", rt.binary("*", rt.binary("*", rt.component_wise("mix", rt.swizzle(st, "y"), rt.binary("+", rt.swizzle(st, "y"), noise, 1, "float"), rt.component_wise("pow", centerDistance, rt.f(8.0), width=1), width=1), rt.swizzle(_u_fullResolution, "y"), 1, "float"), rt.f(1.5), 1, "float"), width=1), rt.f(1.0), 1, "float"), rt.f(0.5), 1, "float")
         color = rt.assign_swizzle(color, "rgb", rt.component_wise("mix", rt.swizzle(color, "rgb"), rt.binary("*", rt.swizzle(color, "rgb"), hatch, 3, "float"), map__float_float_float_float_float(_u_scanlinesAmt, rt.f(0.0), rt.f(100.0), rt.f(0.0), rt.f(0.5)), width=3))
         return color
     def snow__vec4_vec2(color, st):
-        color = rt.copy(color)
-        st = rt.copy(st)
+        color = rt.copy(color, "float")
+        st = rt.copy(st, "float")
         st = rt.binary("+", rt.swizzle(ctx.frag_coord, "xy"), _u_tileOffset, 2, "float")
         amt = rt.binary("/", _u_snowAmt, rt.f(100.0), 1, "float")
         noise = rt.swizzle(prng__vec3(rt.construct(3, st, rt.binary("*", _u_time, rt.f(1000.0), 1, "float"))), "x")
@@ -100,10 +100,10 @@ def run_pixel(ctx, out):
                 mask = rt.component_wise("mix", mask, rt.f(1.0), map__float_float_float_float_float(amt, rt.f(0.75), rt.f(1.0), rt.f(0.0), rt.f(1.0)), width=1)
         return rt.construct(4, rt.component_wise("mix", rt.swizzle(color, "rgb"), rt.construct(3, noise), mask, width=3), rt.swizzle(color, "a"))
     def offsets__vec2(st):
-        st = rt.copy(st)
+        st = rt.copy(st, "float")
         return rt.swizzle(prng__vec3(rt.construct(3, rt.component_wise("floor", st, width=2), rt.f(0.0))), "x")
     def glitch__vec2(st):
-        st = rt.copy(st)
+        st = rt.copy(st, "float")
         freq = rt.construct(2, rt.f(1.0))
         freq = rt.assign_swizzle(freq, "x", rt.binary("*", rt.swizzle(freq, "x"), map__float_float_float_float_float(_u_xChonk, rt.f(1.0), rt.f(100.0), rt.f(50.0), rt.f(1.0)), 1, "float"))
         freq = rt.assign_swizzle(freq, "y", rt.binary("*", rt.swizzle(freq, "y"), map__float_float_float_float_float(_u_yChonk, rt.f(1.0), rt.f(100.0), rt.f(50.0), rt.f(1.0)), 1, "float"))

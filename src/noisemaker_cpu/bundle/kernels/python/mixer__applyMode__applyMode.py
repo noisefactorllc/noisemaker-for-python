@@ -7,16 +7,16 @@ def run_pixel(ctx, out):
     g = _G()
     _u_inputTex = T["inputTex"]
     _u_tex = T["tex"]
-    _u_resolution = U["resolution"]
-    _u_tileOffset = U["tileOffset"]
-    _u_fullResolution = U["fullResolution"]
-    _u_mode = U["mode"]
-    _u_mixAmt = U["mixAmt"]
+    _u_resolution = U.get("resolution", rt.construct(2, 0.0))
+    _u_tileOffset = U.get("tileOffset", rt.construct(2, 0.0))
+    _u_fullResolution = U.get("fullResolution", rt.construct(2, 0.0))
+    _u_mode = U.get("mode", 0)
+    _u_mixAmt = U.get("mixAmt", rt.f(0.0))
     g.fragColor = rt.construct(4, 0.0)
     def map__float_float_float_float_float(value, inMin, inMax, outMin, outMax):
         return rt.binary("+", outMin, rt.binary("/", rt.binary("*", rt.binary("-", outMax, outMin, 1, "float"), rt.binary("-", value, inMin, 1, "float"), 1, "float"), rt.binary("-", inMax, inMin, 1, "float"), 1, "float"), 1, "float")
     def rgb2hsv__vec3(c):
-        c = rt.copy(c)
+        c = rt.copy(c, "float")
         K = rt.construct(4, rt.f(0.0), rt.binary("/", rt.unary("-", rt.f(1.0)), rt.f(3.0), 1, "float"), rt.binary("/", rt.f(2.0), rt.f(3.0), 1, "float"), rt.unary("-", rt.f(1.0)))
         p = rt.component_wise("mix", rt.construct(4, rt.swizzle(c, "bg"), rt.swizzle(K, "wz")), rt.construct(4, rt.swizzle(c, "gb"), rt.swizzle(K, "xy")), rt.component_wise("step", rt.swizzle(c, "b"), rt.swizzle(c, "g"), width=1), width=4)
         q = rt.component_wise("mix", rt.construct(4, rt.swizzle(p, "xyw"), rt.swizzle(c, "r")), rt.construct(4, rt.swizzle(c, "r"), rt.swizzle(p, "yzx")), rt.component_wise("step", rt.swizzle(p, "x"), rt.swizzle(c, "r"), width=1), width=4)
@@ -24,7 +24,7 @@ def run_pixel(ctx, out):
         e = rt.f(1e-10)
         return rt.construct(3, rt.component_wise("abs", rt.binary("+", rt.swizzle(q, "z"), rt.binary("/", rt.binary("-", rt.swizzle(q, "w"), rt.swizzle(q, "y"), 1, "float"), rt.binary("+", rt.binary("*", rt.f(6.0), d, 1, "float"), e, 1, "float"), 1, "float"), 1, "float"), width=1), rt.binary("/", d, rt.binary("+", rt.swizzle(q, "x"), e, 1, "float"), 1, "float"), rt.swizzle(q, "x"))
     def hsv2rgb__vec3(c):
-        c = rt.copy(c)
+        c = rt.copy(c, "float")
         K = rt.construct(4, rt.f(1.0), rt.binary("/", rt.f(2.0), rt.f(3.0), 1, "float"), rt.binary("/", rt.f(1.0), rt.f(3.0), 1, "float"), rt.f(3.0))
         p = rt.component_wise("abs", rt.binary("-", rt.binary("*", rt.component_wise("fract", rt.binary("+", rt.swizzle(c, "xxx"), rt.swizzle(K, "xyz"), 3, "float"), width=3), rt.f(6.0), 3, "float"), rt.swizzle(K, "www"), 3, "float"), width=3)
         return rt.binary("*", rt.swizzle(c, "z"), rt.component_wise("mix", rt.swizzle(K, "xxx"), rt.component_wise("clamp", rt.binary("-", p, rt.swizzle(K, "xxx"), 3, "float"), rt.f(0.0), rt.f(1.0), width=3), rt.swizzle(c, "y"), width=3), 3, "float")

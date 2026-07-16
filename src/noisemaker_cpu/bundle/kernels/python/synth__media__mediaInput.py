@@ -6,23 +6,23 @@ def run_pixel(ctx, out):
         pass
     g = _G()
     _u_imageTex = T["imageTex"]
-    _u_imageSize = U["imageSize"]
-    _u_resolution = U["resolution"]
-    _u_time = U["time"]
-    _u_position = U["position"]
-    _u_rotation = U["rotation"]
-    _u_scaleAmt = U["scaleAmt"]
-    _u_offsetX = U["offsetX"]
-    _u_offsetY = U["offsetY"]
-    _u_tiling = U["tiling"]
-    _u_flip = U["flip"]
-    _u_bgColor = U["bgColor"]
-    _u_bgAlpha = U["bgAlpha"]
+    _u_imageSize = U.get("imageSize", rt.construct(2, 0.0))
+    _u_resolution = U.get("resolution", rt.construct(2, 0.0))
+    _u_time = U.get("time", rt.f(0.0))
+    _u_position = U.get("position", 0)
+    _u_rotation = U.get("rotation", rt.f(0.0))
+    _u_scaleAmt = U.get("scaleAmt", rt.f(0.0))
+    _u_offsetX = U.get("offsetX", rt.f(0.0))
+    _u_offsetY = U.get("offsetY", rt.f(0.0))
+    _u_tiling = U.get("tiling", 0)
+    _u_flip = U.get("flip", 0)
+    _u_bgColor = U.get("bgColor", rt.construct(3, 0.0))
+    _u_bgAlpha = U.get("bgAlpha", rt.f(0.0))
     g.fragColor = rt.construct(4, 0.0)
     def map__float_float_float_float_float(value, inMin, inMax, outMin, outMax):
         return rt.binary("+", outMin, rt.binary("/", rt.binary("*", rt.binary("-", outMax, outMin, 1, "float"), rt.binary("-", value, inMin, 1, "float"), 1, "float"), rt.binary("-", inMax, inMin, 1, "float"), 1, "float"), 1, "float")
     def rotate2D__vec2_float(st, rot):
-        st = rt.copy(st)
+        st = rt.copy(st, "float")
         rot = map__float_float_float_float_float(rot, rt.unary("-", rt.f(180.0)), rt.f(180.0), rt.f(0.5), rt.unary("-", rt.f(0.5)))
         angle = rt.binary("*", rt.binary("*", rot, rt.f(6.28318530718), 1, "float"), rt.unary("-", rt.f(1.0)), 1, "float")
         size = _u_imageSize
@@ -32,7 +32,7 @@ def run_pixel(ctx, out):
         st = rt.binary("+", st, rt.construct(2, rt.binary("*", rt.f(0.5), aspect, 1, "float"), rt.f(0.5)), 2, "float")
         return st
     def tile__vec2(st):
-        st = rt.copy(st)
+        st = rt.copy(st, "float")
         if rt.binary("==", _u_tiling, rt.i(0)):
             return st
         else:
@@ -46,7 +46,7 @@ def run_pixel(ctx, out):
                         return rt.construct(2, rt.swizzle(st, "x"), rt.component_wise("fract", rt.swizzle(st, "y"), width=1))
         return st
     def getImage__vec2(st):
-        st = rt.copy(st)
+        st = rt.copy(st, "float")
         size = _u_imageSize
         st = rt.binary("/", rt.swizzle(ctx.frag_coord, "xy"), size, 2, "float")
         st = rt.assign_swizzle(st, "y", rt.binary("-", rt.f(1.0), rt.swizzle(st, "y"), 1, "float"))

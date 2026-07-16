@@ -7,20 +7,20 @@ def run_pixel(ctx, out):
     g = _G()
     _u_inputTex = T["inputTex"]
     _u_tex = T["tex"]
-    _u_resolution = U["resolution"]
-    _u_tileOffset = U["tileOffset"]
-    _u_fullResolution = U["fullResolution"]
-    _u_mapSource = U["mapSource"]
-    _u_channel = U["channel"]
-    _u_scale = U["scale"]
-    _u_offset = U["offset"]
-    _u_wrap = U["wrap"]
+    _u_resolution = U.get("resolution", rt.construct(2, 0.0))
+    _u_tileOffset = U.get("tileOffset", rt.construct(2, 0.0))
+    _u_fullResolution = U.get("fullResolution", rt.construct(2, 0.0))
+    _u_mapSource = U.get("mapSource", 0)
+    _u_channel = U.get("channel", 0)
+    _u_scale = U.get("scale", rt.f(0.0))
+    _u_offset = U.get("offset", rt.f(0.0))
+    _u_wrap = U.get("wrap", 0)
     g.fragColor = rt.construct(4, 0.0)
     def mirrorWrap__float(t):
         m = rt.component_wise("mod", t, rt.f(2.0), width=1)
         return (rt.binary("-", rt.f(2.0), m, 1, "float") if rt.binary(">", m, rt.f(1.0)) else m)
     def applyWrap__vec2_int(uv, wrapMode):
-        uv = rt.copy(uv)
+        uv = rt.copy(uv, "float")
         if rt.binary("==", wrapMode, rt.i(0)):
             return rt.component_wise("clamp", uv, rt.f(0.0), rt.f(1.0), width=2)
         else:

@@ -5,27 +5,27 @@ def run_pixel(ctx, out):
     class _G:
         pass
     g = _G()
-    _u_resolution = U["resolution"]
-    _u_tileOffset = U["tileOffset"]
-    _u_fullResolution = U["fullResolution"]
-    _u_time = U["time"]
-    _u_cReal = U["cReal"]
-    _u_cImag = U["cImag"]
-    _u_poi = U["poi"]
-    _u_outputMode = U["outputMode"]
-    _u_centerX = U["centerX"]
-    _u_centerY = U["centerY"]
-    _u_rotation = U["rotation"]
-    _u_iterations = U["iterations"]
-    _u_stripeFreq = U["stripeFreq"]
-    _u_trapShape = U["trapShape"]
-    _u_lightAngle = U["lightAngle"]
-    _u_cPath = U["cPath"]
-    _u_cSpeed = U["cSpeed"]
-    _u_cRadius = U["cRadius"]
-    _u_invert = U["invert"]
-    _u_zoomSpeed = U["zoomSpeed"]
-    _u_zoomDepth = U["zoomDepth"]
+    _u_resolution = U.get("resolution", rt.construct(2, 0.0))
+    _u_tileOffset = U.get("tileOffset", rt.construct(2, 0.0))
+    _u_fullResolution = U.get("fullResolution", rt.construct(2, 0.0))
+    _u_time = U.get("time", rt.f(0.0))
+    _u_cReal = U.get("cReal", rt.f(0.0))
+    _u_cImag = U.get("cImag", rt.f(0.0))
+    _u_poi = U.get("poi", 0)
+    _u_outputMode = U.get("outputMode", 0)
+    _u_centerX = U.get("centerX", rt.f(0.0))
+    _u_centerY = U.get("centerY", rt.f(0.0))
+    _u_rotation = U.get("rotation", rt.f(0.0))
+    _u_iterations = U.get("iterations", 0)
+    _u_stripeFreq = U.get("stripeFreq", rt.f(0.0))
+    _u_trapShape = U.get("trapShape", 0)
+    _u_lightAngle = U.get("lightAngle", rt.f(0.0))
+    _u_cPath = U.get("cPath", 0)
+    _u_cSpeed = U.get("cSpeed", rt.f(0.0))
+    _u_cRadius = U.get("cRadius", rt.f(0.0))
+    _u_invert = U.get("invert", False)
+    _u_zoomSpeed = U.get("zoomSpeed", rt.f(0.0))
+    _u_zoomDepth = U.get("zoomDepth", rt.f(0.0))
     g.fragColor = rt.construct(4, 0.0)
     g.PI = rt.f(3.14159265359)
     g.TAU = rt.f(6.28318530718)
@@ -64,21 +64,21 @@ def run_pixel(ctx, out):
             return rt.construct(2, rt.binary("+", rt.unary("-", rt.f(1.0)), rt.binary("*", rt.component_wise("cos", theta, width=1), rt.f(0.25), 1, "float"), 1, "float"), rt.binary("*", rt.component_wise("sin", theta, width=1), rt.f(0.25), 1, "float"))
         return rt.construct(2, rt.f(0.0))
     def cmul__vec2_vec2(a, b):
-        a = rt.copy(a)
-        b = rt.copy(b)
+        a = rt.copy(a, "float")
+        b = rt.copy(b, "float")
         return rt.construct(2, rt.binary("-", rt.binary("*", rt.swizzle(a, "x"), rt.swizzle(b, "x"), 1, "float"), rt.binary("*", rt.swizzle(a, "y"), rt.swizzle(b, "y"), 1, "float"), 1, "float"), rt.binary("+", rt.binary("*", rt.swizzle(a, "x"), rt.swizzle(b, "y"), 1, "float"), rt.binary("*", rt.swizzle(a, "y"), rt.swizzle(b, "x"), 1, "float"), 1, "float"))
     def df64_from__float(a):
         return rt.construct(2, a, rt.f(0.0))
     def df64_add__vec2_vec2(a, b):
-        a = rt.copy(a)
-        b = rt.copy(b)
+        a = rt.copy(a, "float")
+        b = rt.copy(b, "float")
         s = rt.binary("+", rt.swizzle(a, "x"), rt.swizzle(b, "x"), 1, "float")
         v = rt.binary("-", s, rt.swizzle(a, "x"), 1, "float")
         e = rt.binary("+", rt.binary("-", rt.swizzle(a, "x"), rt.binary("-", s, v, 1, "float"), 1, "float"), rt.binary("-", rt.swizzle(b, "x"), v, 1, "float"), 1, "float")
         return rt.construct(2, s, rt.binary("+", rt.binary("+", e, rt.swizzle(a, "y"), 1, "float"), rt.swizzle(b, "y"), 1, "float"))
     def df64_sub__vec2_vec2(a, b):
-        a = rt.copy(a)
-        b = rt.copy(b)
+        a = rt.copy(a, "float")
+        b = rt.copy(b, "float")
         return df64_add__vec2_vec2(a, rt.construct(2, rt.unary("-", rt.swizzle(b, "x")), rt.unary("-", rt.swizzle(b, "y"))))
     def df64_split__float_float_float(a, hi, lo):
         t = rt.binary("*", g.df64_split_const, a, 1, "float")
@@ -86,8 +86,8 @@ def run_pixel(ctx, out):
         lo = rt.binary("-", a, hi, 1, "float")
         return (None, hi, lo)
     def df64_mul__vec2_vec2(a, b):
-        a = rt.copy(a)
-        b = rt.copy(b)
+        a = rt.copy(a, "float")
+        b = rt.copy(b, "float")
         p = rt.binary("*", rt.swizzle(a, "x"), rt.swizzle(b, "x"), 1, "float")
         ahi = rt.f(0.0)
         alo = rt.f(0.0)
@@ -99,7 +99,7 @@ def run_pixel(ctx, out):
         e = rt.binary("+", e, rt.binary("+", rt.binary("*", rt.swizzle(a, "x"), rt.swizzle(b, "y"), 1, "float"), rt.binary("*", rt.swizzle(a, "y"), rt.swizzle(b, "x"), 1, "float"), 1, "float"), 1, "float")
         return rt.construct(2, p, e)
     def df64_mul_f__vec2_float(a, b):
-        a = rt.copy(a)
+        a = rt.copy(a, "float")
         p = rt.binary("*", rt.swizzle(a, "x"), b, 1, "float")
         ahi = rt.f(0.0)
         alo = rt.f(0.0)
@@ -117,9 +117,9 @@ def run_pixel(ctx, out):
             return getAnimatedC__int_float_float(_u_cPath, rt.binary("*", _u_time, _u_cSpeed, 1, "float"), _u_cRadius)
         return rt.construct(2, _u_cReal, _u_cImag)
     def transformCoords__vec2_float_vec2_vec2(fragCoord, zm, reDF, imDF):
-        fragCoord = rt.copy(fragCoord)
-        reDF = rt.copy(reDF)
-        imDF = rt.copy(imDF)
+        fragCoord = rt.copy(fragCoord, "float")
+        reDF = rt.copy(reDF, "float")
+        imDF = rt.copy(imDF, "float")
         uv = rt.binary("/", rt.binary("-", fragCoord, rt.binary("*", rt.f(0.5), _u_fullResolution, 2, "float"), 2, "float"), rt.component_wise("min", rt.swizzle(_u_fullResolution, "x"), rt.swizzle(_u_fullResolution, "y"), width=1), 2, "float")
         angle = rt.binary("/", rt.binary("*", rt.unary("-", _u_rotation), g.TAU, 1, "float"), rt.f(360.0), 1, "float")
         cs = rt.component_wise("cos", angle, width=1)
@@ -130,9 +130,9 @@ def run_pixel(ctx, out):
         imDF = df64_add__vec2_vec2(df64_mul_f__vec2_float(df64_from__float(rt.swizzle(uv, "y")), scale), df64_from__float(_u_centerY))
         return (None, reDF, imDF)
     def juliaIterate__vec2_vec2_vec2_int_float_int(z0Re, z0Im, c, maxIter, freq, trap):
-        z0Re = rt.copy(z0Re)
-        z0Im = rt.copy(z0Im)
-        c = rt.copy(c)
+        z0Re = rt.copy(z0Re, "float")
+        z0Im = rt.copy(z0Im, "float")
+        c = rt.copy(c, "float")
         r = [rt.f(0.0), rt.f(0.0), rt.f(0.0), rt.f(0.0), rt.f(0.0), rt.f(0.0), rt.f(0.0)]
         zRe = z0Re
         zIm = z0Im
@@ -227,8 +227,8 @@ def run_pixel(ctx, out):
             return rt.f(0.0)
         return rt.component_wise("clamp", rt.binary("-", rt.f(1.0), r[6], 1, "float"), rt.f(0.0), rt.f(1.0), width=1)
     def iterateSmooth__vec2_vec2_int_float(fragCoord, c, maxIter, zm):
-        fragCoord = rt.copy(fragCoord)
-        c = rt.copy(c)
+        fragCoord = rt.copy(fragCoord, "float")
+        c = rt.copy(c, "float")
         reDF = rt.construct(2, 0.0)
         imDF = rt.construct(2, 0.0)
         _retc, reDF, imDF = transformCoords__vec2_float_vec2_vec2(fragCoord, zm, reDF, imDF)
@@ -262,8 +262,8 @@ def run_pixel(ctx, out):
         nu = rt.binary("/", rt.component_wise("log", rt.binary("/", log_zn, g.LOG2, 1, "float"), width=1), g.LOG2, 1, "float")
         return rt.component_wise("clamp", rt.binary("/", rt.binary("-", rt.binary("+", i, rt.f(1.0), 1, "float"), nu, 1, "float"), rt.construct(1, maxIter), 1, "float"), rt.f(0.0), rt.f(1.0), width=1)
     def outputNormalMap__vec2_vec2_int_float_float(fragCoord, c, maxIter, angle, zm):
-        fragCoord = rt.copy(fragCoord)
-        c = rt.copy(c)
+        fragCoord = rt.copy(fragCoord, "float")
+        c = rt.copy(c, "float")
         d0 = iterateSmooth__vec2_vec2_int_float(fragCoord, c, maxIter, zm)
         d1 = iterateSmooth__vec2_vec2_int_float(rt.binary("+", fragCoord, rt.construct(2, rt.f(1.0), rt.f(0.0)), 2, "float"), c, maxIter, zm)
         d2 = iterateSmooth__vec2_vec2_int_float(rt.binary("+", fragCoord, rt.construct(2, rt.f(0.0), rt.f(1.0)), 2, "float"), c, maxIter, zm)

@@ -22,7 +22,7 @@ def run_pixel(ctx, out):
         sign_value = (rt.f(1.0) if rt.binary(">=", value, rt.f(0.0)) else rt.unary("-", rt.f(1.0)))
         return rt.binary("*", sign_value, rt.component_wise("pow", rt.component_wise("abs", value, width=1), rt.binary("/", rt.f(1.0), rt.f(3.0), 1, "float"), width=1), 1, "float")
     def oklab_l_component__vec3(rgb):
-        rgb = rt.copy(rgb)
+        rgb = rt.copy(rgb, "float")
         r_lin = srgb_to_linear__float(clamp01__float(rt.swizzle(rgb, "x")))
         g_lin = srgb_to_linear__float(clamp01__float(rt.swizzle(rgb, "y")))
         b_lin = srgb_to_linear__float(clamp01__float(rt.swizzle(rgb, "z")))
@@ -35,7 +35,7 @@ def run_pixel(ctx, out):
         lightness = rt.binary("-", rt.binary("+", rt.binary("*", rt.f(0.2104542553), l_c, 1, "float"), rt.binary("*", rt.f(0.793617785), m_c, 1, "float"), 1, "float"), rt.binary("*", rt.f(0.0040720468), s_c, 1, "float"), 1, "float")
         return clamp01__float(lightness)
     def value_map_component__vec4(texel):
-        texel = rt.copy(texel)
+        texel = rt.copy(texel, "float")
         return oklab_l_component__vec3(rt.swizzle(texel, "xyz"))
     def main__void():
         fragCoord = rt.construct(2, rt.swizzle(ctx.frag_coord, "xy"), base="int")

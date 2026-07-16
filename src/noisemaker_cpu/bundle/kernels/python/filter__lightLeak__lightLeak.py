@@ -6,19 +6,19 @@ def run_pixel(ctx, out):
         pass
     g = _G()
     _u_inputTex = T["inputTex"]
-    _u_resolution = U["resolution"]
-    _u_tileOffset = U["tileOffset"]
-    _u_fullResolution = U["fullResolution"]
-    _u_alpha = U["alpha"]
-    _u_color = U["color"]
-    _u_speed = U["speed"]
-    _u_seed = U["seed"]
-    _u_time = U["time"]
+    _u_resolution = U.get("resolution", rt.construct(2, 0.0))
+    _u_tileOffset = U.get("tileOffset", rt.construct(2, 0.0))
+    _u_fullResolution = U.get("fullResolution", rt.construct(2, 0.0))
+    _u_alpha = U.get("alpha", rt.f(0.0))
+    _u_color = U.get("color", rt.construct(3, 0.0))
+    _u_speed = U.get("speed", rt.f(0.0))
+    _u_seed = U.get("seed", 0)
+    _u_time = U.get("time", rt.f(0.0))
     g.TAU = rt.f(6.283185307179586)
     g.POINT_COUNT = rt.i(6)
     g.fragColor = rt.construct(4, 0.0)
     def pcg__uvec3(v):
-        v = rt.copy(v)
+        v = rt.copy(v, "uint")
         v = rt.binary("+", rt.binary("*", v, rt.i(1664525), 3, "uint"), rt.i(1013904223), 3, "uint")
         v = rt.assign_swizzle(v, "x", rt.binary("+", rt.swizzle(v, "x"), rt.binary("*", rt.swizzle(v, "y"), rt.swizzle(v, "z"), 1, "uint"), 1, "uint"))
         v = rt.assign_swizzle(v, "y", rt.binary("+", rt.swizzle(v, "y"), rt.binary("*", rt.swizzle(v, "z"), rt.swizzle(v, "x"), 1, "uint"), 1, "uint"))
@@ -29,20 +29,20 @@ def run_pixel(ctx, out):
         v = rt.assign_swizzle(v, "z", rt.binary("+", rt.swizzle(v, "z"), rt.binary("*", rt.swizzle(v, "x"), rt.swizzle(v, "y"), 1, "uint"), 1, "uint"))
         return v
     def hash31__vec3(p):
-        p = rt.copy(p)
+        p = rt.copy(p, "float")
         v = rt.construct(3, rt.construct(1, (rt.binary("*", rt.swizzle(p, "x"), rt.f(2.0), 1, "float") if rt.binary(">=", rt.swizzle(p, "x"), rt.f(0.0)) else rt.binary("+", rt.binary("*", rt.unary("-", rt.swizzle(p, "x")), rt.f(2.0), 1, "float"), rt.f(1.0), 1, "float")), base="uint"), rt.construct(1, (rt.binary("*", rt.swizzle(p, "y"), rt.f(2.0), 1, "float") if rt.binary(">=", rt.swizzle(p, "y"), rt.f(0.0)) else rt.binary("+", rt.binary("*", rt.unary("-", rt.swizzle(p, "y")), rt.f(2.0), 1, "float"), rt.f(1.0), 1, "float")), base="uint"), rt.construct(1, (rt.binary("*", rt.swizzle(p, "z"), rt.f(2.0), 1, "float") if rt.binary(">=", rt.swizzle(p, "z"), rt.f(0.0)) else rt.binary("+", rt.binary("*", rt.unary("-", rt.swizzle(p, "z")), rt.f(2.0), 1, "float"), rt.f(1.0), 1, "float")), base="uint"), base="uint")
         return rt.binary("/", rt.construct(1, rt.swizzle(pcg__uvec3(v), "x")), rt.construct(1, rt.i(4294967295)), 1, "float")
     def hash33__vec3(p):
-        p = rt.copy(p)
+        p = rt.copy(p, "float")
         v = rt.construct(3, rt.construct(1, (rt.binary("*", rt.swizzle(p, "x"), rt.f(2.0), 1, "float") if rt.binary(">=", rt.swizzle(p, "x"), rt.f(0.0)) else rt.binary("+", rt.binary("*", rt.unary("-", rt.swizzle(p, "x")), rt.f(2.0), 1, "float"), rt.f(1.0), 1, "float")), base="uint"), rt.construct(1, (rt.binary("*", rt.swizzle(p, "y"), rt.f(2.0), 1, "float") if rt.binary(">=", rt.swizzle(p, "y"), rt.f(0.0)) else rt.binary("+", rt.binary("*", rt.unary("-", rt.swizzle(p, "y")), rt.f(2.0), 1, "float"), rt.f(1.0), 1, "float")), base="uint"), rt.construct(1, (rt.binary("*", rt.swizzle(p, "z"), rt.f(2.0), 1, "float") if rt.binary(">=", rt.swizzle(p, "z"), rt.f(0.0)) else rt.binary("+", rt.binary("*", rt.unary("-", rt.swizzle(p, "z")), rt.f(2.0), 1, "float"), rt.f(1.0), 1, "float")), base="uint"), base="uint")
         h = pcg__uvec3(v)
         return rt.construct(3, rt.binary("/", rt.construct(1, rt.swizzle(h, "x")), rt.construct(1, rt.i(4294967295)), 1, "float"), rt.binary("/", rt.construct(1, rt.swizzle(h, "y")), rt.construct(1, rt.i(4294967295)), 1, "float"), rt.binary("/", rt.construct(1, rt.swizzle(h, "z")), rt.construct(1, rt.i(4294967295)), 1, "float"))
     def luminance__vec3(c):
-        c = rt.copy(c)
+        c = rt.copy(c, "float")
         return rt.dot(c, rt.construct(3, rt.f(0.299), rt.f(0.587), rt.f(0.114)))
     def voronoiCell__vec2_float_float_vec3_float(uv, seed_f, t, cell_color, cell_dist):
-        uv = rt.copy(uv)
-        cell_color = rt.copy(cell_color)
+        uv = rt.copy(uv, "float")
+        cell_color = rt.copy(cell_color, "float")
         best_dist = rt.f(1000000000.0)
         best_index = rt.i(0)
         drift = rt.f(0.05)
@@ -69,7 +69,7 @@ def run_pixel(ctx, out):
         cell_dist = best_dist
         return (None, cell_color, cell_dist)
     def centerMask__vec2(uv):
-        uv = rt.copy(uv)
+        uv = rt.copy(uv, "float")
         centered = rt.component_wise("abs", rt.binary("-", uv, rt.f(0.5), 2, "float"), width=2)
         dist = rt.component_wise("max", rt.swizzle(centered, "x"), rt.swizzle(centered, "y"), width=1)
         return rt.component_wise("clamp", rt.binary("*", dist, rt.f(2.0), 1, "float"), rt.f(0.0), rt.f(1.0), width=1)

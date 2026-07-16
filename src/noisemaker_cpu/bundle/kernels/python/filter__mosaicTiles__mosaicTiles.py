@@ -5,30 +5,30 @@ def run_pixel(ctx, out):
     class _G:
         pass
     g = _G()
-    _u_MODE = U["MODE"]
+    _u_MODE = U.get("MODE", 0)
     _u_inputTex = T["inputTex"]
-    _u_resolution = U["resolution"]
-    _u_tileOffset = U["tileOffset"]
-    _u_tileSize = U["tileSize"]
-    _u_groutWidth = U["groutWidth"]
-    _u_relief = U["relief"]
-    _u_maxOffset = U["maxOffset"]
-    _u_gapFill = U["gapFill"]
-    _u_backgroundColor = U["backgroundColor"]
-    _u_seed = U["seed"]
+    _u_resolution = U.get("resolution", rt.construct(2, 0.0))
+    _u_tileOffset = U.get("tileOffset", rt.construct(2, 0.0))
+    _u_tileSize = U.get("tileSize", rt.f(0.0))
+    _u_groutWidth = U.get("groutWidth", rt.f(0.0))
+    _u_relief = U.get("relief", rt.f(0.0))
+    _u_maxOffset = U.get("maxOffset", rt.f(0.0))
+    _u_gapFill = U.get("gapFill", 0)
+    _u_backgroundColor = U.get("backgroundColor", rt.construct(3, 0.0))
+    _u_seed = U.get("seed", 0)
     g.fragColor = rt.construct(4, 0.0)
     def hash12__vec2(p):
-        p = rt.copy(p)
+        p = rt.copy(p, "float")
         p3 = rt.component_wise("fract", rt.binary("*", rt.construct(3, rt.swizzle(p, "xyx")), rt.f(0.1031), 3, "float"), width=3)
         p3 = rt.binary("+", p3, rt.dot(p3, rt.binary("+", rt.swizzle(p3, "yzx"), rt.f(33.33), 3, "float")), 3, "float")
         return rt.component_wise("fract", rt.binary("*", rt.binary("+", rt.swizzle(p3, "x"), rt.swizzle(p3, "y"), 1, "float"), rt.swizzle(p3, "z"), 1, "float"), width=1)
     def hash22__vec2(p):
-        p = rt.copy(p)
+        p = rt.copy(p, "float")
         p3 = rt.component_wise("fract", rt.binary("*", rt.construct(3, rt.swizzle(p, "xyx")), rt.construct(3, rt.f(0.1031), rt.f(0.103), rt.f(0.0973)), 3, "float"), width=3)
         p3 = rt.binary("+", p3, rt.dot(p3, rt.binary("+", rt.swizzle(p3, "yzx"), rt.f(33.33), 3, "float")), 3, "float")
         return rt.component_wise("fract", rt.binary("*", rt.binary("+", rt.swizzle(p3, "xx"), rt.swizzle(p3, "yz"), 2, "float"), rt.swizzle(p3, "zy"), 2, "float"), width=2)
     def vnoise__vec2(p):
-        p = rt.copy(p)
+        p = rt.copy(p, "float")
         i = rt.component_wise("floor", p, width=2)
         f = rt.component_wise("fract", p, width=2)
         u = rt.binary("*", rt.binary("*", f, f, 2, "float"), rt.binary("-", rt.f(3.0), rt.binary("*", rt.f(2.0), f, 2, "float"), 2, "float"), 2, "float")
@@ -40,10 +40,10 @@ def run_pixel(ctx, out):
         L = rt.normalize(rt.construct(3, rt.component_wise("cos", a, width=1), rt.component_wise("sin", a, width=1), rt.f(0.75)))
         return rt.component_wise("clamp", rt.dot(n, L), rt.f(0.0), rt.f(1.0), width=1)
     def mosaicWarp__vec2_float_float(gc, tileSizePx, seedVal):
-        gc = rt.copy(gc)
+        gc = rt.copy(gc, "float")
         return rt.binary("*", rt.binary("*", vnoise__vec2(rt.binary("+", rt.binary("/", gc, tileSizePx, 2, "float"), rt.binary("*", seedVal, rt.f(101.7), 1, "float"), 2, "float")), rt.f(0.25), 1, "float"), tileSizePx, 1, "float")
     def mosaicGroutMask__vec2_float_float_float(gc, tileSizePx, groutWidthPct, seedVal):
-        gc = rt.copy(gc)
+        gc = rt.copy(gc, "float")
         warp = mosaicWarp__vec2_float_float(gc, tileSizePx, seedVal)
         cellFrac = rt.component_wise("fract", rt.binary("/", rt.binary("+", gc, rt.construct(2, warp), 2, "float"), tileSizePx, 2, "float"), width=2)
         edgeDistPx = rt.binary("*", rt.component_wise("min", rt.component_wise("min", rt.swizzle(cellFrac, "x"), rt.binary("-", rt.f(1.0), rt.swizzle(cellFrac, "x"), 1, "float"), width=1), rt.component_wise("min", rt.swizzle(cellFrac, "y"), rt.binary("-", rt.f(1.0), rt.swizzle(cellFrac, "y"), 1, "float"), width=1), width=1), tileSizePx, 1, "float")

@@ -6,11 +6,11 @@ def run_pixel(ctx, out):
         pass
     g = _G()
     _u_inputTex = T["inputTex"]
-    _u_resolution = U["resolution"]
-    _u_fullResolution = U["fullResolution"]
-    _u_tileOffset = U["tileOffset"]
-    _u_strength = U["strength"]
-    _u_seed = U["seed"]
+    _u_resolution = U.get("resolution", rt.construct(2, 0.0))
+    _u_fullResolution = U.get("fullResolution", rt.construct(2, 0.0))
+    _u_tileOffset = U.get("tileOffset", rt.construct(2, 0.0))
+    _u_strength = U.get("strength", rt.f(0.0))
+    _u_seed = U.get("seed", rt.f(0.0))
     g.fragColor = rt.construct(4, 0.0)
     def clamp01__float(v):
         return rt.component_wise("clamp", v, rt.f(0.0), rt.f(1.0), width=1)
@@ -23,7 +23,7 @@ def run_pixel(ctx, out):
             return rt.construct(2, freq, rt.binary("/", rt.binary("*", freq, w, 1, "float"), h, 1, "float"))
         return rt.construct(2, rt.binary("/", rt.binary("*", freq, h, 1, "float"), w, 1, "float"), freq)
     def pcg__uvec3(v):
-        v = rt.copy(v)
+        v = rt.copy(v, "uint")
         v = rt.binary("+", rt.binary("*", v, rt.i(1664525), 3, "uint"), rt.i(1013904223), 3, "uint")
         v = rt.assign_swizzle(v, "x", rt.binary("+", rt.swizzle(v, "x"), rt.binary("*", rt.swizzle(v, "y"), rt.swizzle(v, "z"), 1, "uint"), 1, "uint"))
         v = rt.assign_swizzle(v, "y", rt.binary("+", rt.swizzle(v, "y"), rt.binary("*", rt.swizzle(v, "z"), rt.swizzle(v, "x"), 1, "uint"), 1, "uint"))
@@ -34,17 +34,17 @@ def run_pixel(ctx, out):
         v = rt.assign_swizzle(v, "z", rt.binary("+", rt.swizzle(v, "z"), rt.binary("*", rt.swizzle(v, "x"), rt.swizzle(v, "y"), 1, "uint"), 1, "uint"))
         return v
     def hash21__vec2(p):
-        p = rt.copy(p)
+        p = rt.copy(p, "float")
         v = pcg__uvec3(rt.construct(3, rt.float_bits_to_uint(rt.swizzle(p, "x")), rt.float_bits_to_uint(rt.swizzle(p, "y")), rt.i(0), base="uint"))
         return rt.binary("/", rt.construct(1, rt.swizzle(v, "x")), rt.construct(1, rt.i(4294967295)), 1, "float")
     def hash31__vec3(p):
-        p = rt.copy(p)
+        p = rt.copy(p, "float")
         v = pcg__uvec3(rt.construct(3, rt.float_bits_to_uint(rt.swizzle(p, "x")), rt.float_bits_to_uint(rt.swizzle(p, "y")), rt.float_bits_to_uint(rt.swizzle(p, "z")), base="uint"))
         return rt.binary("/", rt.construct(1, rt.swizzle(v, "x")), rt.construct(1, rt.i(4294967295)), 1, "float")
     def fade__float(t):
         return rt.binary("*", rt.binary("*", t, t, 1, "float"), rt.binary("-", rt.f(3.0), rt.binary("*", rt.f(2.0), t, 1, "float"), 1, "float"), 1, "float")
     def value_noise__vec2_float(coord, s):
-        coord = rt.copy(coord)
+        coord = rt.copy(coord, "float")
         cell = rt.component_wise("floor", coord, width=2)
         f = rt.component_wise("fract", coord, width=2)
         tl = hash31__vec3(rt.construct(3, cell, s))
@@ -58,8 +58,8 @@ def run_pixel(ctx, out):
         radius = rt.binary("*", rt.f(0.35), rt.binary("+", rt.f(0.25), rt.binary("*", rt.f(0.75), rt.component_wise("sin", rt.binary("*", s, rt.f(1.37), 1, "float"), width=1), 1, "float"), 1, "float"), 1, "float")
         return rt.binary("*", rt.construct(2, rt.component_wise("cos", angle, width=1), rt.component_wise("sin", angle, width=1)), radius, 2, "float")
     def simple_multires__vec2_vec2_float(uv, base_freq, s):
-        uv = rt.copy(uv)
-        base_freq = rt.copy(base_freq)
+        uv = rt.copy(uv, "float")
+        base_freq = rt.copy(base_freq, "float")
         freq = base_freq
         amp = rt.f(0.5)
         total = rt.f(0.0)
@@ -80,17 +80,17 @@ def run_pixel(ctx, out):
             amp = rt.binary("*", amp, rt.f(0.5), 1, "float")
         return clamp01__float(rt.binary("/", accum, rt.component_wise("max", total, rt.f(0.001), width=1), 1, "float"))
     def refracted_field__vec2_vec2_vec2_float_float(uv, base_freq, px, disp, s):
-        uv = rt.copy(uv)
-        base_freq = rt.copy(base_freq)
-        px = rt.copy(px)
+        uv = rt.copy(uv, "float")
+        base_freq = rt.copy(base_freq, "float")
+        px = rt.copy(px, "float")
         base_mask = simple_multires__vec2_vec2_float(uv, base_freq, s)
         off_mask = simple_multires__vec2_vec2_float(rt.component_wise("fract", rt.binary("+", uv, rt.f(0.5), 2, "float"), width=2), base_freq, rt.binary("+", s, rt.f(19.0), 1, "float"))
         off_vec = rt.construct(2, rt.binary("*", rt.binary("*", rt.binary("-", rt.binary("*", base_mask, rt.f(2.0), 1, "float"), rt.f(1.0), 1, "float"), disp, 1, "float"), rt.swizzle(px, "x"), 1, "float"), rt.binary("*", rt.binary("*", rt.binary("-", rt.binary("*", off_mask, rt.f(2.0), 1, "float"), rt.f(1.0), 1, "float"), disp, 1, "float"), rt.swizzle(px, "y"), 1, "float"))
         return simple_multires__vec2_vec2_float(rt.component_wise("fract", rt.binary("+", uv, off_vec, 2, "float"), width=2), base_freq, rt.binary("+", s, rt.f(41.0), 1, "float"))
     def chebyshev_gradient__vec2_vec2_vec2_float_float(uv, base_freq, px, disp, s):
-        uv = rt.copy(uv)
-        base_freq = rt.copy(base_freq)
-        px = rt.copy(px)
+        uv = rt.copy(uv, "float")
+        base_freq = rt.copy(base_freq, "float")
+        px = rt.copy(px, "float")
         ox = rt.construct(2, rt.swizzle(px, "x"), rt.f(0.0))
         oy = rt.construct(2, rt.f(0.0), rt.swizzle(px, "y"))
         r = refracted_field__vec2_vec2_vec2_float_float(rt.component_wise("fract", rt.binary("+", uv, ox, 2, "float"), width=2), base_freq, px, disp, s)
@@ -101,14 +101,14 @@ def run_pixel(ctx, out):
         dy = rt.binary("*", rt.binary("-", u, d, 1, "float"), rt.f(0.5), 1, "float")
         return clamp01__float(rt.binary("*", rt.component_wise("max", rt.component_wise("abs", dx, width=1), rt.component_wise("abs", dy, width=1), width=1), rt.f(4.0), 1, "float"))
     def exponential_noise__vec2_vec2_float(uv, freq, s):
-        uv = rt.copy(uv)
-        freq = rt.copy(freq)
+        uv = rt.copy(uv, "float")
+        freq = rt.copy(freq, "float")
         off = seed_offset__float(rt.binary("+", s, rt.f(7.0), 1, "float"))
         return rt.component_wise("pow", clamp01__float(value_noise__vec2_float(rt.binary("+", rt.binary("*", uv, freq, 2, "float"), off, 2, "float"), rt.binary("+", s, rt.f(13.0), 1, "float"))), rt.f(4.0), width=1)
     def refracted_exponential__vec2_vec2_vec2_float_float(uv, freq, px, disp, s):
-        uv = rt.copy(uv)
-        freq = rt.copy(freq)
-        px = rt.copy(px)
+        uv = rt.copy(uv, "float")
+        freq = rt.copy(freq, "float")
+        px = rt.copy(px, "float")
         base = exponential_noise__vec2_vec2_float(uv, freq, s)
         ox = exponential_noise__vec2_vec2_float(uv, freq, rt.binary("+", s, rt.f(23.0), 1, "float"))
         oy = exponential_noise__vec2_vec2_float(rt.component_wise("fract", rt.binary("+", uv, rt.f(0.5), 2, "float"), width=2), freq, rt.binary("+", s, rt.f(47.0), 1, "float"))

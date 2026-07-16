@@ -6,21 +6,21 @@ def run_pixel(ctx, out):
         pass
     g = _G()
     _u_inputTex = T["inputTex"]
-    _u_resolution = U["resolution"]
-    _u_tileOffset = U["tileOffset"]
-    _u_fullResolution = U["fullResolution"]
-    _u_time = U["time"]
-    _u_aberrationAmt = U["aberrationAmt"]
-    _u_hueRotation = U["hueRotation"]
-    _u_hueRange = U["hueRange"]
-    _u_modulate = U["modulate"]
-    _u_saturation = U["saturation"]
-    _u_passthru = U["passthru"]
+    _u_resolution = U.get("resolution", rt.construct(2, 0.0))
+    _u_tileOffset = U.get("tileOffset", rt.construct(2, 0.0))
+    _u_fullResolution = U.get("fullResolution", rt.construct(2, 0.0))
+    _u_time = U.get("time", rt.f(0.0))
+    _u_aberrationAmt = U.get("aberrationAmt", rt.f(0.0))
+    _u_hueRotation = U.get("hueRotation", rt.f(0.0))
+    _u_hueRange = U.get("hueRange", rt.f(0.0))
+    _u_modulate = U.get("modulate", False)
+    _u_saturation = U.get("saturation", rt.f(0.0))
+    _u_passthru = U.get("passthru", rt.f(0.0))
     g.fragColor = rt.construct(4, 0.0)
     def map__float_float_float_float_float(value, inMin, inMax, outMin, outMax):
         return rt.binary("+", outMin, rt.binary("/", rt.binary("*", rt.binary("-", outMax, outMin, 1, "float"), rt.binary("-", value, inMin, 1, "float"), 1, "float"), rt.binary("-", inMax, inMin, 1, "float"), 1, "float"), 1, "float")
     def hsv2rgb__vec3(hsv):
-        hsv = rt.copy(hsv)
+        hsv = rt.copy(hsv, "float")
         h = rt.component_wise("fract", rt.swizzle(hsv, "x"), width=1)
         s = rt.swizzle(hsv, "y")
         v = rt.swizzle(hsv, "z")
@@ -49,7 +49,7 @@ def run_pixel(ctx, out):
                                 rgb = rt.construct(3, rt.f(0.0), rt.f(0.0), rt.f(0.0))
         return rt.binary("+", rgb, rt.construct(3, m, m, m), 3, "float")
     def rgb2hsv__vec3(rgb):
-        rgb = rt.copy(rgb)
+        rgb = rt.copy(rgb, "float")
         r = rt.swizzle(rgb, "r")
         _g = rt.swizzle(rgb, "g")
         b = rt.swizzle(rgb, "b")
@@ -70,7 +70,7 @@ def run_pixel(ctx, out):
         v = max
         return rt.construct(3, h, s, v)
     def saturate__vec3(color):
-        color = rt.copy(color)
+        color = rt.copy(color, "float")
         sat = map__float_float_float_float_float(_u_saturation, rt.unary("-", rt.f(100.0)), rt.f(100.0), rt.unary("-", rt.f(1.0)), rt.f(1.0))
         avg = rt.binary("/", rt.binary("+", rt.binary("+", rt.swizzle(color, "r"), rt.swizzle(color, "g"), 1, "float"), rt.swizzle(color, "b"), 1, "float"), rt.f(3.0), 1, "float")
         color = rt.binary("-", color, rt.binary("*", rt.binary("-", avg, color, 3, "float"), sat, 3, "float"), 3, "float")

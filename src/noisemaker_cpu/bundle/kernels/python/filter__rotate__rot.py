@@ -6,10 +6,10 @@ def run_pixel(ctx, out):
         pass
     g = _G()
     _u_inputTex = T["inputTex"]
-    _u_rotation = U["rotation"]
-    _u_wrap = U["wrap"]
-    _u_speed = U["speed"]
-    _u_time = U["time"]
+    _u_rotation = U.get("rotation", rt.f(0.0))
+    _u_wrap = U.get("wrap", 0)
+    _u_speed = U.get("speed", 0)
+    _u_time = U.get("time", rt.f(0.0))
     g.fragColor = rt.construct(4, 0.0)
     g.TAU = rt.f(6.283185307179586)
     def rotate2D__float(angle):

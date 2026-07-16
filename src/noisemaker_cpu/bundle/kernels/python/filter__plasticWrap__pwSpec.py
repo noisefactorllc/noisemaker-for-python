@@ -7,13 +7,13 @@ def run_pixel(ctx, out):
     g = _G()
     _u_inputTex = T["inputTex"]
     _u_blurTex = T["blurTex"]
-    _u_resolution = U["resolution"]
-    _u_highlight = U["highlight"]
-    _u_smoothness = U["smoothness"]
-    _u_lightDirection = U["lightDirection"]
+    _u_resolution = U.get("resolution", rt.construct(2, 0.0))
+    _u_highlight = U.get("highlight", rt.f(0.0))
+    _u_smoothness = U.get("smoothness", rt.f(0.0))
+    _u_lightDirection = U.get("lightDirection", rt.construct(3, 0.0))
     g.fragColor = rt.construct(4, 0.0)
     def lum__vec3(c):
-        c = rt.copy(c)
+        c = rt.copy(c, "float")
         return rt.dot(c, rt.construct(3, rt.f(0.2126), rt.f(0.7152), rt.f(0.0722)))
     def main__void():
         uv = rt.binary("/", rt.swizzle(ctx.frag_coord, "xy"), _u_resolution, 2, "float")

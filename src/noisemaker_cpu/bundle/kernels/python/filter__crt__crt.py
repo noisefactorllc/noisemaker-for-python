@@ -6,14 +6,14 @@ def run_pixel(ctx, out):
         pass
     g = _G()
     _u_inputTex = T["inputTex"]
-    _u_resolution = U["resolution"]
-    _u_tileOffset = U["tileOffset"]
-    _u_fullResolution = U["fullResolution"]
-    _u_time = U["time"]
-    _u_speed = U["speed"]
-    _u_seed = U["seed"]
-    _u_alpha = U["alpha"]
-    _u_renderScale = U["renderScale"]
+    _u_resolution = U.get("resolution", rt.construct(2, 0.0))
+    _u_tileOffset = U.get("tileOffset", rt.construct(2, 0.0))
+    _u_fullResolution = U.get("fullResolution", rt.construct(2, 0.0))
+    _u_time = U.get("time", rt.f(0.0))
+    _u_speed = U.get("speed", rt.f(0.0))
+    _u_seed = U.get("seed", 0)
+    _u_alpha = U.get("alpha", rt.f(0.0))
+    _u_renderScale = U.get("renderScale", rt.f(0.0))
     g.PI = rt.f(3.141592653589793)
     g.TAU = rt.f(6.283185307179586)
     g.INV_THREE = rt.f(0.3333333333333333)
@@ -45,19 +45,19 @@ def run_pixel(ctx, out):
     def periodic_value__float_float(time, value):
         return normalized_sine__float(rt.binary("*", rt.binary("-", time, value, 1, "float"), g.TAU, 1, "float"))
     def mod289_vec3__vec3(x):
-        x = rt.copy(x)
+        x = rt.copy(x, "float")
         return rt.binary("-", x, rt.binary("*", rt.component_wise("floor", rt.binary("*", x, rt.binary("/", rt.f(1.0), rt.f(289.0), 1, "float"), 3, "float"), width=3), rt.f(289.0), 3, "float"), 3, "float")
     def mod289_vec4__vec4(x):
-        x = rt.copy(x)
+        x = rt.copy(x, "float")
         return rt.binary("-", x, rt.binary("*", rt.component_wise("floor", rt.binary("*", x, rt.binary("/", rt.f(1.0), rt.f(289.0), 1, "float"), 4, "float"), width=4), rt.f(289.0), 4, "float"), 4, "float")
     def permute__vec4(x):
-        x = rt.copy(x)
+        x = rt.copy(x, "float")
         return mod289_vec4__vec4(rt.binary("*", rt.binary("+", rt.binary("*", x, rt.f(34.0), 4, "float"), rt.f(1.0), 4, "float"), x, 4, "float"))
     def taylor_inv_sqrt__vec4(r):
-        r = rt.copy(r)
+        r = rt.copy(r, "float")
         return rt.binary("-", rt.f(1.79284291400159), rt.binary("*", rt.f(0.85373472095314), r, 4, "float"), 4, "float")
     def simplex_noise__vec3(v):
-        v = rt.copy(v)
+        v = rt.copy(v, "float")
         C = rt.construct(2, rt.binary("/", rt.f(1.0), rt.f(6.0), 1, "float"), rt.binary("/", rt.f(1.0), rt.f(3.0), 1, "float"))
         D = rt.construct(4, rt.f(0.0), rt.f(0.5), rt.f(1.0), rt.f(2.0))
         i0 = rt.component_wise("floor", rt.binary("+", v, rt.dot(v, rt.construct(3, rt.swizzle(C, "y"))), 3, "float"), width=3)
@@ -112,7 +112,7 @@ def run_pixel(ctx, out):
             result = rt.binary("+", result, limit, 1, "float")
         return result
     def singularity_mask__vec2_float_float(uv, width, height):
-        uv = rt.copy(uv)
+        uv = rt.copy(uv, "float")
         if (bool(rt.binary("<=", width, rt.f(0.0))) or bool(rt.binary("<=", height, rt.f(0.0)))):
             return rt.f(0.0)
         delta = rt.component_wise("abs", rt.binary("-", uv, rt.construct(2, rt.f(0.5), rt.f(0.5)), 2, "float"), width=2)
@@ -125,7 +125,7 @@ def run_pixel(ctx, out):
         masked = rt.component_wise("sqrt", normalized, width=1)
         return rt.component_wise("pow", masked, rt.f(5.0), width=1)
     def animated_simplex_value__vec2_float_float(uv, time, speed):
-        uv = rt.copy(uv)
+        uv = rt.copy(uv, "float")
         angle = rt.binary("*", time, g.TAU, 1, "float")
         z_base = rt.binary("*", rt.component_wise("cos", angle, width=1), speed, 1, "float")
         s = rt.binary("*", rt.construct(1, _u_seed), rt.f(73.0), 1, "float")
@@ -140,8 +140,8 @@ def run_pixel(ctx, out):
             value = clamp01__float(periodic_value__float_float(scaled_time, value))
         return clamp01__float(value)
     def compute_lens_offsets__vec2_float_float_vec2_float_float_float(sample_pos, width, height, freq, time, speed, displacement):
-        sample_pos = rt.copy(sample_pos)
-        freq = rt.copy(freq)
+        sample_pos = rt.copy(sample_pos, "float")
+        freq = rt.copy(freq, "float")
         width_safe = rt.component_wise("max", width, rt.f(1.0), width=1)
         height_safe = rt.component_wise("max", height, rt.f(1.0), width=1)
         freq_x = rt.component_wise("max", rt.swizzle(freq, "y"), rt.f(1.0), width=1)
@@ -158,17 +158,17 @@ def run_pixel(ctx, out):
     def fade__float(value):
         return rt.binary("*", rt.binary("*", value, value, 1, "float"), rt.binary("-", rt.f(3.0), rt.binary("*", rt.f(2.0), value, 1, "float"), 1, "float"), 1, "float")
     def fade_vec3__vec3(v):
-        v = rt.copy(v)
+        v = rt.copy(v, "float")
         return rt.construct(3, fade__float(rt.swizzle(v, "x")), fade__float(rt.swizzle(v, "y")), fade__float(rt.swizzle(v, "z")))
     def lerp__float_float_float(a, b, t):
         return rt.binary("+", a, rt.binary("*", rt.binary("-", b, a, 1, "float"), t, 1, "float"), 1, "float")
     def hash3__ivec3_float(coord, seed):
-        coord = rt.copy(coord)
+        coord = rt.copy(coord, "int")
         base = rt.construct(3, coord)
         dot_value = rt.binary("+", rt.dot(base, rt.construct(3, rt.f(12.9898), rt.f(78.233), rt.f(37.719))), rt.binary("*", seed, rt.f(0.001), 1, "float"), 1, "float")
         return rt.component_wise("fract", rt.binary("*", rt.component_wise("sin", dot_value, width=1), rt.f(43758.5453), 1, "float"), width=1)
     def value_noise_3d__vec3_float(coord, seed):
-        coord = rt.copy(coord)
+        coord = rt.copy(coord, "float")
         cell = rt.construct(3, rt.component_wise("floor", coord, width=3))
         cell_i = rt.construct(3, cell, base="int")
         local = rt.component_wise("fract", coord, width=3)
@@ -211,7 +211,7 @@ def run_pixel(ctx, out):
         clamped = rt.component_wise("clamp", value, rt.f(0.0), max_index, width=1)
         return rt.construct(1, clamped, base="uint")
     def rgb_to_hsv__vec3(rgb):
-        rgb = rt.copy(rgb)
+        rgb = rt.copy(rgb, "float")
         c_max = rt.component_wise("max", rt.component_wise("max", rt.swizzle(rgb, "x"), rt.swizzle(rgb, "y"), width=1), rt.swizzle(rgb, "z"), width=1)
         c_min = rt.component_wise("min", rt.component_wise("min", rt.swizzle(rgb, "x"), rt.swizzle(rgb, "y"), width=1), rt.swizzle(rgb, "z"), width=1)
         delta = rt.binary("-", c_max, c_min, 1, "float")
@@ -231,7 +231,7 @@ def run_pixel(ctx, out):
         saturation = (rt.binary("/", delta, c_max, 1, "float") if rt.binary("!=", c_max, rt.f(0.0)) else rt.f(0.0))
         return rt.construct(3, hue, saturation, c_max)
     def hsv_to_rgb__vec3(hsv):
-        hsv = rt.copy(hsv)
+        hsv = rt.copy(hsv, "float")
         h = rt.swizzle(hsv, "x")
         s = rt.swizzle(hsv, "y")
         v = rt.swizzle(hsv, "z")
@@ -248,14 +248,14 @@ def run_pixel(ctx, out):
         b = clamp01__float(rt.binary("*", rt.binary("+", one_minus_s, sb, 1, "float"), v, 1, "float"))
         return rt.construct(3, r, _g, b)
     def adjust_hue__vec3_float(color, amount):
-        color = rt.copy(color)
+        color = rt.copy(color, "float")
         hsv = rgb_to_hsv__vec3(color)
         hsv = rt.assign_swizzle(hsv, "x", wrap_unit__float(rt.binary("+", rt.swizzle(hsv, "x"), amount, 1, "float")))
         hsv = rt.assign_swizzle(hsv, "y", clamp01__float(rt.swizzle(hsv, "y")))
         hsv = rt.assign_swizzle(hsv, "z", clamp01__float(rt.swizzle(hsv, "z")))
         return rt.component_wise("clamp", rt.construct(3, hsv_to_rgb__vec3(hsv)), rt.construct(3, rt.f(0.0)), rt.construct(3, rt.f(1.0)), width=3)
     def adjust_saturation__vec3_float(color, amount):
-        color = rt.copy(color)
+        color = rt.copy(color, "float")
         hsv = rgb_to_hsv__vec3(color)
         hsv = rt.assign_swizzle(hsv, "y", clamp01__float(rt.binary("*", rt.swizzle(hsv, "y"), amount, 1, "float")))
         hsv = rt.assign_swizzle(hsv, "z", clamp01__float(rt.swizzle(hsv, "z")))
@@ -270,12 +270,12 @@ def run_pixel(ctx, out):
         noise1 = value_noise_3d__vec3_float(rt.construct(3, rt.f(1.0), rt.f(0.0), time_scaled), noise_seed)
         return rt.construct(2, noise0, noise1)
     def get_scanline_value_interpolated__float_float_vec2_float(y, height, base_values, pixels_per_bar):
-        base_values = rt.copy(base_values)
+        base_values = rt.copy(base_values, "float")
         y_scaled = rt.binary("/", y, pixels_per_bar, 1, "float")
         scanline_index = rt.binary("%", rt.construct(1, rt.component_wise("floor", y_scaled, width=1), base="int"), rt.i(2), 1, "int")
         return (rt.swizzle(base_values, "x") if rt.binary("==", scanline_index, rt.i(0)) else rt.swizzle(base_values, "y"))
     def sample_scanline_bilinear__float_float_float_float_vec2_float(sample_x, sample_y, width, height, base_values, pixels_per_bar):
-        base_values = rt.copy(base_values)
+        base_values = rt.copy(base_values, "float")
         wrapped_x = rt.binary("-", sample_x, rt.binary("*", rt.component_wise("floor", rt.binary("/", sample_x, width, 1, "float"), width=1), width, 1, "float"), 1, "float")
         wrapped_y = rt.binary("-", sample_y, rt.binary("*", rt.component_wise("floor", rt.binary("/", sample_y, height, 1, "float"), width=1), height, 1, "float"), 1, "float")
         if rt.binary("<", wrapped_x, rt.f(0.0)):

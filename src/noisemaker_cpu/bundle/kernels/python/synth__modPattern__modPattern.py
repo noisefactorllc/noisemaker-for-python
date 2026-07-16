@@ -5,26 +5,26 @@ def run_pixel(ctx, out):
     class _G:
         pass
     g = _G()
-    _u_resolution = U["resolution"]
-    _u_tileOffset = U["tileOffset"]
-    _u_fullResolution = U["fullResolution"]
-    _u_time = U["time"]
-    _u_shape1 = U["shape1"]
-    _u_scale1 = U["scale1"]
-    _u_repeat1 = U["repeat1"]
-    _u_shape2 = U["shape2"]
-    _u_scale2 = U["scale2"]
-    _u_repeat2 = U["repeat2"]
-    _u_shape3 = U["shape3"]
-    _u_scale3 = U["scale3"]
-    _u_repeat3 = U["repeat3"]
-    _u_blend = U["blend"]
-    _u_smoothing = U["smoothing"]
-    _u_speed = U["speed"]
-    _u_animMode = U["animMode"]
+    _u_resolution = U.get("resolution", rt.construct(2, 0.0))
+    _u_tileOffset = U.get("tileOffset", rt.construct(2, 0.0))
+    _u_fullResolution = U.get("fullResolution", rt.construct(2, 0.0))
+    _u_time = U.get("time", rt.f(0.0))
+    _u_shape1 = U.get("shape1", 0)
+    _u_scale1 = U.get("scale1", rt.f(0.0))
+    _u_repeat1 = U.get("repeat1", rt.f(0.0))
+    _u_shape2 = U.get("shape2", 0)
+    _u_scale2 = U.get("scale2", rt.f(0.0))
+    _u_repeat2 = U.get("repeat2", rt.f(0.0))
+    _u_shape3 = U.get("shape3", 0)
+    _u_scale3 = U.get("scale3", rt.f(0.0))
+    _u_repeat3 = U.get("repeat3", rt.f(0.0))
+    _u_blend = U.get("blend", 0)
+    _u_smoothing = U.get("smoothing", rt.f(0.0))
+    _u_speed = U.get("speed", rt.f(0.0))
+    _u_animMode = U.get("animMode", 0)
     g.fragColor = rt.construct(4, 0.0)
     def shape__int_vec2(shapeIndex, p):
-        p = rt.copy(p)
+        p = rt.copy(p, "float")
         v = rt.f(0.0)
         if rt.binary("<", shapeIndex, rt.i(1)):
             v = rt.component_wise("max", rt.swizzle(p, "x"), rt.swizzle(p, "y"), width=1)
@@ -41,10 +41,10 @@ def run_pixel(ctx, out):
             return rt.component_wise("smoothstep", rt.f(0.0), edgeWidth, rt.binary("-", rt.f(1.0), f, 1, "float"), width=1)
         return f
     def smoothFract__vec2(v):
-        v = rt.copy(v)
+        v = rt.copy(v, "float")
         return rt.construct(2, smoothFract__float(rt.swizzle(v, "x")), smoothFract__float(rt.swizzle(v, "y")))
     def smoothFract__vec3(v):
-        v = rt.copy(v)
+        v = rt.copy(v, "float")
         return rt.construct(3, smoothFract__float(rt.swizzle(v, "x")), smoothFract__float(rt.swizzle(v, "y")), smoothFract__float(rt.swizzle(v, "z")))
     def main__void():
         globalCoord = rt.binary("+", rt.swizzle(ctx.frag_coord, "xy"), _u_tileOffset, 2, "float")

@@ -5,24 +5,24 @@ def run_pixel(ctx, out):
     class _G:
         pass
     g = _G()
-    _u_tileOffset = U["tileOffset"]
-    _u_fullResolution = U["fullResolution"]
+    _u_tileOffset = U.get("tileOffset", rt.construct(2, 0.0))
+    _u_fullResolution = U.get("fullResolution", rt.construct(2, 0.0))
     _u_inputTex = T["inputTex"]
     _u_edgeTex = T["edgeTex"]
-    _u_smoothType = U["smoothType"]
-    _u_strength = U["strength"]
-    _u_threshold = U["threshold"]
-    _u_radius = U["radius"]
-    _u_samples = U["samples"]
-    _u_searchSteps = U["searchSteps"]
+    _u_smoothType = U.get("smoothType", 0)
+    _u_strength = U.get("strength", rt.f(0.0))
+    _u_threshold = U.get("threshold", rt.f(0.0))
+    _u_radius = U.get("radius", rt.f(0.0))
+    _u_samples = U.get("samples", 0)
+    _u_searchSteps = U.get("searchSteps", 0)
     g.fragColor = rt.construct(4, 0.0)
     g.LUMA_WEIGHTS = rt.construct(3, rt.f(0.299), rt.f(0.587), rt.f(0.114))
     def luminance__vec3(rgb):
-        rgb = rt.copy(rgb)
+        rgb = rt.copy(rgb, "float")
         return rt.dot(rgb, g.LUMA_WEIGHTS)
     def sampleBilinear__vec2_ivec2(uv, texSize):
-        uv = rt.copy(uv)
-        texSize = rt.copy(texSize)
+        uv = rt.copy(uv, "float")
+        texSize = rt.copy(texSize, "int")
         texCoord = rt.binary("-", rt.binary("*", uv, rt.construct(2, texSize), 2, "float"), rt.f(0.5), 2, "float")
         base = rt.construct(2, rt.component_wise("floor", texCoord, width=2), base="int")
         f = rt.binary("-", texCoord, rt.construct(2, base), 2, "float")
@@ -67,9 +67,9 @@ def run_pixel(ctx, out):
             return sampleOffset4x__int(i)
         return sampleOffset8x__int(i)
     def msaaBlend__vec2_vec2_ivec2(uv, texelSize, texSize):
-        uv = rt.copy(uv)
-        texelSize = rt.copy(texelSize)
-        texSize = rt.copy(texSize)
+        uv = rt.copy(uv, "float")
+        texelSize = rt.copy(texelSize, "float")
+        texSize = rt.copy(texSize, "int")
         coord = rt.construct(2, rt.swizzle(ctx.frag_coord, "xy"), base="int")
         maxC = rt.binary("-", texSize, rt.i(1), 2, "int")
         center = rt.texel_fetch(_u_inputTex, coord, rt.i(0))
@@ -97,9 +97,9 @@ def run_pixel(ctx, out):
             sum = rt.binary("+", sum, sampleBilinear__vec2_ivec2(rt.binary("+", uv, rt.binary("*", offset, texelSize, 2, "float"), 2, "float"), texSize), 4, "float")
         return rt.binary("/", sum, rt.construct(1, count), 4, "float")
     def searchEdge__ivec2_ivec2_ivec2_int(coord, dir, maxC, component):
-        coord = rt.copy(coord)
-        dir = rt.copy(dir)
-        maxC = rt.copy(maxC)
+        coord = rt.copy(coord, "int")
+        dir = rt.copy(dir, "int")
+        maxC = rt.copy(maxC, "int")
         i = rt.i(1)
         _for1_first = True
         for _for1 in range(1048576):
@@ -116,7 +116,7 @@ def run_pixel(ctx, out):
                 return rt.construct(1, rt.binary("-", i, rt.i(1), 1, "int"))
         return rt.construct(1, _u_searchSteps)
     def smaaBlend__ivec2(texSize):
-        texSize = rt.copy(texSize)
+        texSize = rt.copy(texSize, "int")
         coord = rt.construct(2, rt.swizzle(ctx.frag_coord, "xy"), base="int")
         maxC = rt.binary("-", texSize, rt.i(1), 2, "int")
         edges = rt.texel_fetch(_u_edgeTex, coord, rt.i(0))
@@ -142,7 +142,7 @@ def run_pixel(ctx, out):
             blended = rt.component_wise("mix", blended, neighbor, weight, width=4)
         return blended
     def edgeBlur__ivec2(texSize):
-        texSize = rt.copy(texSize)
+        texSize = rt.copy(texSize, "int")
         coord = rt.construct(2, rt.swizzle(ctx.frag_coord, "xy"), base="int")
         maxC = rt.binary("-", texSize, rt.i(1), 2, "int")
         edges = rt.texel_fetch(_u_edgeTex, coord, rt.i(0))

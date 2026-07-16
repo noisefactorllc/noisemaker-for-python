@@ -5,28 +5,28 @@ def run_pixel(ctx, out):
     class _G:
         pass
     g = _G()
-    _u_resolution = U["resolution"]
-    _u_tileOffset = U["tileOffset"]
-    _u_fullResolution = U["fullResolution"]
-    _u_time = U["time"]
-    _u_degree = U["degree"]
-    _u_relaxation = U["relaxation"]
-    _u_iterations = U["iterations"]
-    _u_tolerance = U["tolerance"]
-    _u_poi = U["poi"]
-    _u_centerHiX = U["centerHiX"]
-    _u_centerHiY = U["centerHiY"]
-    _u_centerLoX = U["centerLoX"]
-    _u_centerLoY = U["centerLoY"]
-    _u_zoomSpeed = U["zoomSpeed"]
-    _u_zoomDepth = U["zoomDepth"]
-    _u_degreeSpeed = U["degreeSpeed"]
-    _u_degreeRange = U["degreeRange"]
-    _u_relaxSpeed = U["relaxSpeed"]
-    _u_relaxRange = U["relaxRange"]
-    _u_rotation = U["rotation"]
-    _u_outputMode = U["outputMode"]
-    _u_invert = U["invert"]
+    _u_resolution = U.get("resolution", rt.construct(2, 0.0))
+    _u_tileOffset = U.get("tileOffset", rt.construct(2, 0.0))
+    _u_fullResolution = U.get("fullResolution", rt.construct(2, 0.0))
+    _u_time = U.get("time", rt.f(0.0))
+    _u_degree = U.get("degree", rt.f(0.0))
+    _u_relaxation = U.get("relaxation", rt.f(0.0))
+    _u_iterations = U.get("iterations", rt.f(0.0))
+    _u_tolerance = U.get("tolerance", rt.f(0.0))
+    _u_poi = U.get("poi", rt.f(0.0))
+    _u_centerHiX = U.get("centerHiX", rt.f(0.0))
+    _u_centerHiY = U.get("centerHiY", rt.f(0.0))
+    _u_centerLoX = U.get("centerLoX", rt.f(0.0))
+    _u_centerLoY = U.get("centerLoY", rt.f(0.0))
+    _u_zoomSpeed = U.get("zoomSpeed", rt.f(0.0))
+    _u_zoomDepth = U.get("zoomDepth", rt.f(0.0))
+    _u_degreeSpeed = U.get("degreeSpeed", rt.f(0.0))
+    _u_degreeRange = U.get("degreeRange", rt.f(0.0))
+    _u_relaxSpeed = U.get("relaxSpeed", rt.f(0.0))
+    _u_relaxRange = U.get("relaxRange", rt.f(0.0))
+    _u_rotation = U.get("rotation", rt.f(0.0))
+    _u_outputMode = U.get("outputMode", rt.f(0.0))
+    _u_invert = U.get("invert", rt.f(0.0))
     g.fragColor = rt.construct(4, 0.0)
     g.PI = rt.f(3.14159265359)
     g.TAU = rt.f(6.28318530718)
@@ -51,47 +51,47 @@ def run_pixel(ctx, out):
         e = rt.binary("+", rt.binary("+", rt.binary("+", rt.binary("-", rt.binary("*", ah, bh, 1, "float"), p, 1, "float"), rt.binary("*", ah, bl, 1, "float"), 1, "float"), rt.binary("*", al, bh, 1, "float"), 1, "float"), rt.binary("*", al, bl, 1, "float"), 1, "float")
         return rt.construct(2, p, e)
     def df64_add__vec2_vec2(a, b):
-        a = rt.copy(a)
-        b = rt.copy(b)
+        a = rt.copy(a, "float")
+        b = rt.copy(b, "float")
         s = df64_two_sum__float_float(rt.swizzle(a, "x"), rt.swizzle(b, "x"))
         s = rt.assign_swizzle(s, "y", rt.binary("+", rt.swizzle(s, "y"), rt.binary("+", rt.swizzle(a, "y"), rt.swizzle(b, "y"), 1, "float"), 1, "float"))
         return df64_quick_two_sum__float_float(rt.swizzle(s, "x"), rt.swizzle(s, "y"))
     def df64_sub__vec2_vec2(a, b):
-        a = rt.copy(a)
-        b = rt.copy(b)
+        a = rt.copy(a, "float")
+        b = rt.copy(b, "float")
         return df64_add__vec2_vec2(a, rt.construct(2, rt.unary("-", rt.swizzle(b, "x")), rt.unary("-", rt.swizzle(b, "y"))))
     def df64_mul__vec2_vec2(a, b):
-        a = rt.copy(a)
-        b = rt.copy(b)
+        a = rt.copy(a, "float")
+        b = rt.copy(b, "float")
         p = df64_two_prod__float_float(rt.swizzle(a, "x"), rt.swizzle(b, "x"))
         p = rt.assign_swizzle(p, "y", rt.binary("+", rt.swizzle(p, "y"), rt.binary("+", rt.binary("*", rt.swizzle(a, "x"), rt.swizzle(b, "y"), 1, "float"), rt.binary("*", rt.swizzle(a, "y"), rt.swizzle(b, "x"), 1, "float"), 1, "float"), 1, "float"))
         return df64_quick_two_sum__float_float(rt.swizzle(p, "x"), rt.swizzle(p, "y"))
     def df64_mul_f__vec2_float(a, b):
-        a = rt.copy(a)
+        a = rt.copy(a, "float")
         p = df64_two_prod__float_float(rt.swizzle(a, "x"), b)
         p = rt.assign_swizzle(p, "y", rt.binary("+", rt.swizzle(p, "y"), rt.binary("*", rt.swizzle(a, "y"), b, 1, "float"), 1, "float"))
         return df64_quick_two_sum__float_float(rt.swizzle(p, "x"), rt.swizzle(p, "y"))
     def df64_from__float(a):
         return rt.construct(2, a, rt.f(0.0))
     def df64_to_float__vec2(a):
-        a = rt.copy(a)
+        a = rt.copy(a, "float")
         return rt.binary("+", rt.swizzle(a, "x"), rt.swizzle(a, "y"), 1, "float")
     def df64_cmul__vec2_vec2_vec2_vec2_vec2_vec2(ar, ai, br, bi, rr, ri):
-        ar = rt.copy(ar)
-        ai = rt.copy(ai)
-        br = rt.copy(br)
-        bi = rt.copy(bi)
-        rr = rt.copy(rr)
-        ri = rt.copy(ri)
+        ar = rt.copy(ar, "float")
+        ai = rt.copy(ai, "float")
+        br = rt.copy(br, "float")
+        bi = rt.copy(bi, "float")
+        rr = rt.copy(rr, "float")
+        ri = rt.copy(ri, "float")
         rr = df64_sub__vec2_vec2(df64_mul__vec2_vec2(ar, br), df64_mul__vec2_vec2(ai, bi))
         ri = df64_add__vec2_vec2(df64_mul__vec2_vec2(ar, bi), df64_mul__vec2_vec2(ai, br))
         return (None, rr, ri)
     def transformCoords_df64__vec2_vec2_vec2_float_float_vec2_vec2(fragCoord, cX_df, cY_df, z_zoom, rot, re_df, im_df):
-        fragCoord = rt.copy(fragCoord)
-        cX_df = rt.copy(cX_df)
-        cY_df = rt.copy(cY_df)
-        re_df = rt.copy(re_df)
-        im_df = rt.copy(im_df)
+        fragCoord = rt.copy(fragCoord, "float")
+        cX_df = rt.copy(cX_df, "float")
+        cY_df = rt.copy(cY_df, "float")
+        re_df = rt.copy(re_df, "float")
+        im_df = rt.copy(im_df, "float")
         uv = rt.binary("/", rt.binary("-", fragCoord, rt.binary("*", rt.f(0.5), _u_fullResolution, 2, "float"), 2, "float"), rt.component_wise("min", rt.swizzle(_u_fullResolution, "x"), rt.swizzle(_u_fullResolution, "y"), width=1), 2, "float")
         angle = rt.binary("/", rt.binary("*", rt.unary("-", rot), g.TAU, 1, "float"), rt.f(360.0), 1, "float")
         c = rt.component_wise("cos", angle, width=1)

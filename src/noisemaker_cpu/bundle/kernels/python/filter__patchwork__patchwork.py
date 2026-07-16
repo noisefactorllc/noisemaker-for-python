@@ -6,21 +6,21 @@ def run_pixel(ctx, out):
         pass
     g = _G()
     _u_inputTex = T["inputTex"]
-    _u_resolution = U["resolution"]
-    _u_tileOffset = U["tileOffset"]
-    _u_fullResolution = U["fullResolution"]
-    _u_squareSize = U["squareSize"]
-    _u_relief = U["relief"]
-    _u_lightAngle = U["lightAngle"]
+    _u_resolution = U.get("resolution", rt.construct(2, 0.0))
+    _u_tileOffset = U.get("tileOffset", rt.construct(2, 0.0))
+    _u_fullResolution = U.get("fullResolution", rt.construct(2, 0.0))
+    _u_squareSize = U.get("squareSize", rt.f(0.0))
+    _u_relief = U.get("relief", rt.f(0.0))
+    _u_lightAngle = U.get("lightAngle", rt.f(0.0))
     g.fragColor = rt.construct(4, 0.0)
     def lum__vec3(c):
-        c = rt.copy(c)
+        c = rt.copy(c, "float")
         return rt.dot(c, rt.construct(3, rt.f(0.2126), rt.f(0.7152), rt.f(0.0722)))
     def toSampleUV__vec2(globalPixelPos):
-        globalPixelPos = rt.copy(globalPixelPos)
+        globalPixelPos = rt.copy(globalPixelPos, "float")
         return rt.component_wise("clamp", rt.binary("/", rt.binary("-", globalPixelPos, _u_tileOffset, 2, "float"), _u_resolution, 2, "float"), rt.f(0.0), rt.f(1.0), width=2)
     def cellAvgColor3x3__vec2(centerPx):
-        centerPx = rt.copy(centerPx)
+        centerPx = rt.copy(centerPx, "float")
         sp = rt.binary("*", _u_squareSize, rt.f(0.25), 1, "float")
         sum = rt.construct(4, rt.f(0.0))
         j = rt.unary("-", rt.i(1))

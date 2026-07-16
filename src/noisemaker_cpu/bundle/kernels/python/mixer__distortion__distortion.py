@@ -7,23 +7,23 @@ def run_pixel(ctx, out):
     g = _G()
     _u_inputTex = T["inputTex"]
     _u_tex = T["tex"]
-    _u_resolution = U["resolution"]
-    _u_tileOffset = U["tileOffset"]
-    _u_fullResolution = U["fullResolution"]
-    _u_mode = U["mode"]
-    _u_mapSource = U["mapSource"]
-    _u_intensity = U["intensity"]
-    _u_wrap = U["wrap"]
-    _u_smoothing = U["smoothing"]
-    _u_aberration = U["aberration"]
-    _u_antialias = U["antialias"]
+    _u_resolution = U.get("resolution", rt.construct(2, 0.0))
+    _u_tileOffset = U.get("tileOffset", rt.construct(2, 0.0))
+    _u_fullResolution = U.get("fullResolution", rt.construct(2, 0.0))
+    _u_mode = U.get("mode", 0)
+    _u_mapSource = U.get("mapSource", 0)
+    _u_intensity = U.get("intensity", rt.f(0.0))
+    _u_wrap = U.get("wrap", 0)
+    _u_smoothing = U.get("smoothing", rt.f(0.0))
+    _u_aberration = U.get("aberration", rt.f(0.0))
+    _u_antialias = U.get("antialias", False)
     g.fragColor = rt.construct(4, 0.0)
     def getLuminosity__vec3(color):
-        color = rt.copy(color)
+        color = rt.copy(color, "float")
         return rt.dot(color, rt.construct(3, rt.f(0.299), rt.f(0.587), rt.f(0.114)))
     def calculateNormal__vec2_vec2_sampler2D(uv, texelSize, mapTex):
-        uv = rt.copy(uv)
-        texelSize = rt.copy(texelSize)
+        uv = rt.copy(uv, "float")
+        texelSize = rt.copy(texelSize, "float")
         sampleSize = rt.binary("*", texelSize, _u_smoothing, 2, "float")
         sobel_x = rt.new_array(rt.i(9), 1)
         sobel_x[int(rt.i(0))] = rt.unary("-", rt.f(1.0))
@@ -75,7 +75,7 @@ def run_pixel(ctx, out):
         normal = rt.normalize(rt.construct(3, rt.unary("-", dx), rt.unary("-", dy), rt.f(1.0)))
         return normal
     def wrapCoords__vec2(st):
-        st = rt.copy(st)
+        st = rt.copy(st, "float")
         if rt.binary("==", _u_wrap, rt.i(0)):
             st = rt.component_wise("abs", rt.binary("-", rt.component_wise("mod", st, rt.f(2.0), width=2), rt.f(1.0), 2, "float"), width=2)
             st = rt.binary("-", rt.f(1.0), st, 2, "float")
@@ -87,7 +87,7 @@ def run_pixel(ctx, out):
                     st = rt.component_wise("clamp", st, rt.f(0.0), rt.f(1.0), width=2)
         return st
     def applyDisplacement__vec2_sampler2D_sampler2D(uv, mapTex, targetTex):
-        uv = rt.copy(uv)
+        uv = rt.copy(uv, "float")
         mapColor = rt.texture(mapTex, uv)
         len = rt.length(rt.swizzle(mapColor, "rgb"))
         offset = rt.construct(2, 0.0)
@@ -106,8 +106,8 @@ def run_pixel(ctx, out):
         else:
             return rt.texture(targetTex, displacedUV)
     def applyRefraction__vec2_vec2_sampler2D_sampler2D(uv, texelSize, mapTex, targetTex):
-        uv = rt.copy(uv)
-        texelSize = rt.copy(texelSize)
+        uv = rt.copy(uv, "float")
+        texelSize = rt.copy(texelSize, "float")
         normal = calculateNormal__vec2_vec2_sampler2D(uv, texelSize, mapTex)
         refractionOffset = rt.binary("*", rt.swizzle(normal, "xy"), rt.binary("*", _u_intensity, rt.f(0.0125), 1, "float"), 2, "float")
         refractedUV = wrapCoords__vec2(rt.binary("+", uv, refractionOffset, 2, "float"))
@@ -123,9 +123,9 @@ def run_pixel(ctx, out):
         else:
             return rt.texture(targetTex, refractedUV)
     def applyReflection__vec2_vec2_vec2_sampler2D_sampler2D(uv, globalUV, texelSize, mapTex, targetTex):
-        uv = rt.copy(uv)
-        globalUV = rt.copy(globalUV)
-        texelSize = rt.copy(texelSize)
+        uv = rt.copy(uv, "float")
+        globalUV = rt.copy(globalUV, "float")
+        texelSize = rt.copy(texelSize, "float")
         normal = calculateNormal__vec2_vec2_sampler2D(uv, texelSize, mapTex)
         incident = rt.construct(3, rt.normalize(rt.binary("-", globalUV, rt.f(0.5), 2, "float")), rt.f(100.0))
         reflectionVec = rt.reflect(incident, normal)

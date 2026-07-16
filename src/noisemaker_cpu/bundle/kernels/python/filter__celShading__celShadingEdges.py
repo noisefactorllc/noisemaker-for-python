@@ -5,15 +5,15 @@ def run_pixel(ctx, out):
     class _G:
         pass
     g = _G()
-    _u_tileOffset = U["tileOffset"]
-    _u_fullResolution = U["fullResolution"]
+    _u_tileOffset = U.get("tileOffset", rt.construct(2, 0.0))
+    _u_fullResolution = U.get("fullResolution", rt.construct(2, 0.0))
     _u_colorTex = T["colorTex"]
-    _u_edgeWidth = U["edgeWidth"]
-    _u_edgeThreshold = U["edgeThreshold"]
-    _u_renderScale = U["renderScale"]
+    _u_edgeWidth = U.get("edgeWidth", rt.f(0.0))
+    _u_edgeThreshold = U.get("edgeThreshold", rt.f(0.0))
+    _u_renderScale = U.get("renderScale", rt.f(0.0))
     g.fragColor = rt.construct(4, 0.0)
     def getLuminosity__vec3(color):
-        color = rt.copy(color)
+        color = rt.copy(color, "float")
         return rt.dot(color, rt.construct(3, rt.f(0.299), rt.f(0.587), rt.f(0.114)))
     def wrapCoord__int_int(value, size):
         if rt.binary("<=", size, rt.i(0)):

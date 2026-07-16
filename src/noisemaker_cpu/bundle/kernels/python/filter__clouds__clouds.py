@@ -6,25 +6,25 @@ def run_pixel(ctx, out):
         pass
     g = _G()
     _u_inputTex = T["inputTex"]
-    _u_tileOffset = U["tileOffset"]
-    _u_fullResolution = U["fullResolution"]
-    _u_seed = U["seed"]
-    _u_scale = U["scale"]
-    _u_speed = U["speed"]
-    _u_time = U["time"]
+    _u_tileOffset = U.get("tileOffset", rt.construct(2, 0.0))
+    _u_fullResolution = U.get("fullResolution", rt.construct(2, 0.0))
+    _u_seed = U.get("seed", rt.f(0.0))
+    _u_scale = U.get("scale", rt.f(0.0))
+    _u_speed = U.get("speed", 0)
+    _u_time = U.get("time", rt.f(0.0))
     g.fragColor = rt.construct(4, 0.0)
     g.TAU = rt.f(6.28318530718)
     def mod289__vec3(x):
-        x = rt.copy(x)
+        x = rt.copy(x, "float")
         return rt.binary("-", x, rt.binary("*", rt.component_wise("floor", rt.binary("*", x, rt.binary("/", rt.f(1.0), rt.f(289.0), 1, "float"), 3, "float"), width=3), rt.f(289.0), 3, "float"), 3, "float")
     def mod289__vec2(x):
-        x = rt.copy(x)
+        x = rt.copy(x, "float")
         return rt.binary("-", x, rt.binary("*", rt.component_wise("floor", rt.binary("*", x, rt.binary("/", rt.f(1.0), rt.f(289.0), 1, "float"), 2, "float"), width=2), rt.f(289.0), 2, "float"), 2, "float")
     def permute__vec3(x):
-        x = rt.copy(x)
+        x = rt.copy(x, "float")
         return mod289__vec3(rt.binary("*", rt.binary("+", rt.binary("*", x, rt.f(34.0), 3, "float"), rt.f(1.0), 3, "float"), x, 3, "float"))
     def simplex2d__vec2(v):
-        v = rt.copy(v)
+        v = rt.copy(v, "float")
         C = rt.construct(4, rt.f(0.211324865405187), rt.f(0.366025403784439), rt.unary("-", rt.f(0.577350269189626)), rt.f(0.024390243902439))
         i = rt.component_wise("floor", rt.binary("+", v, rt.dot(v, rt.swizzle(C, "yy")), 2, "float"), width=2)
         x0 = rt.binary("+", rt.binary("-", v, i, 2, "float"), rt.dot(i, rt.swizzle(C, "xx")), 2, "float")
@@ -46,7 +46,7 @@ def run_pixel(ctx, out):
         _g = rt.assign_swizzle(_g, "yz", rt.binary("+", rt.binary("*", rt.swizzle(a0, "yz"), rt.swizzle(x12, "xz"), 2, "float"), rt.binary("*", rt.swizzle(h, "yz"), rt.swizzle(x12, "yw"), 2, "float"), 2, "float"))
         return rt.binary("*", rt.f(130.0), rt.dot(m, _g), 1, "float")
     def cloudNoise__vec2_float_int_float_float(uv, baseFreq, octaves, animPhase, animSpeed):
-        uv = rt.copy(uv)
+        uv = rt.copy(uv, "float")
         accum = rt.f(0.0)
         totalAmp = rt.f(0.0)
         i = rt.i(0)

@@ -6,13 +6,13 @@ def run_pixel(ctx, out):
         pass
     g = _G()
     _u_inputTex = T["inputTex"]
-    _u_resolution = U["resolution"]
-    _u_tileOffset = U["tileOffset"]
-    _u_fullResolution = U["fullResolution"]
-    _u_renderScale = U["renderScale"]
-    _u_alpha = U["alpha"]
-    _u_time = U["time"]
-    _u_pause = U["pause"]
+    _u_resolution = U.get("resolution", rt.construct(2, 0.0))
+    _u_tileOffset = U.get("tileOffset", rt.construct(2, 0.0))
+    _u_fullResolution = U.get("fullResolution", rt.construct(2, 0.0))
+    _u_renderScale = U.get("renderScale", rt.f(0.0))
+    _u_alpha = U.get("alpha", rt.f(0.0))
+    _u_time = U.get("time", rt.f(0.0))
+    _u_pause = U.get("pause", rt.f(0.0))
     g.PI = rt.f(3.141592653589793)
     g.TAU = rt.f(6.283185307179586)
     g.UINT32_TO_FLOAT = rt.binary("/", rt.f(1.0), rt.f(4294967296.0), 1, "float")
@@ -28,7 +28,7 @@ def run_pixel(ctx, out):
     def clamp01__float(value):
         return rt.component_wise("clamp", value, rt.f(0.0), rt.f(1.0), width=1)
     def pcg3d__uvec3(v_in):
-        v_in = rt.copy(v_in)
+        v_in = rt.copy(v_in, "uint")
         v = rt.binary("+", rt.binary("*", v_in, rt.i(1664525), 3, "uint"), rt.i(1013904223), 3, "uint")
         v = rt.assign_swizzle(v, "x", rt.binary("+", rt.swizzle(v, "x"), rt.binary("*", rt.swizzle(v, "y"), rt.swizzle(v, "z"), 1, "uint"), 1, "uint"))
         v = rt.assign_swizzle(v, "y", rt.binary("+", rt.swizzle(v, "y"), rt.binary("*", rt.swizzle(v, "z"), rt.swizzle(v, "x"), 1, "uint"), 1, "uint"))
@@ -39,7 +39,7 @@ def run_pixel(ctx, out):
         v = rt.assign_swizzle(v, "z", rt.binary("+", rt.swizzle(v, "z"), rt.binary("*", rt.swizzle(v, "x"), rt.swizzle(v, "y"), 1, "uint"), 1, "uint"))
         return v
     def random_from_cell_3d__ivec3_uint(cell, seed):
-        cell = rt.copy(cell)
+        cell = rt.copy(cell, "int")
         hashed = rt.construct(3, rt.binary("^", rt.construct(1, rt.swizzle(cell, "x"), base="uint"), seed, 1, "uint"), rt.binary("^", rt.construct(1, rt.swizzle(cell, "y"), base="uint"), rt.binary("+", rt.binary("*", seed, rt.i(2654435769), 1, "uint"), rt.i(2135587861), 1, "uint"), 1, "uint"), rt.binary("^", rt.construct(1, rt.swizzle(cell, "z"), base="uint"), rt.binary("+", rt.binary("*", seed, rt.i(1663821211), 1, "uint"), rt.i(1542469173), 1, "uint"), 1, "uint"), base="uint")
         noise = rt.pcg3d(hashed)
         return rt.binary("*", rt.construct(1, rt.swizzle(noise, "x")), g.UINT32_TO_FLOAT, 1, "float")
@@ -64,16 +64,16 @@ def run_pixel(ctx, out):
         term3 = rt.binary("+", rt.binary("*", a2, t, 1, "float"), a3, 1, "float")
         return rt.binary("+", rt.binary("+", term1, term2, 1, "float"), term3, 1, "float")
     def sample_bicubic_layer__ivec2_vec2_int_uint(cell, frac, z_cell, base_seed):
-        cell = rt.copy(cell)
-        frac = rt.copy(frac)
+        cell = rt.copy(cell, "int")
+        frac = rt.copy(frac, "float")
         row0 = blend_cubic__float_float_float_float_float(random_from_cell_3d__ivec3_uint(rt.construct(3, rt.binary("-", rt.swizzle(cell, "x"), rt.i(1), 1, "int"), rt.binary("-", rt.swizzle(cell, "y"), rt.i(1), 1, "int"), z_cell, base="int"), base_seed), random_from_cell_3d__ivec3_uint(rt.construct(3, rt.binary("+", rt.swizzle(cell, "x"), rt.i(0), 1, "int"), rt.binary("-", rt.swizzle(cell, "y"), rt.i(1), 1, "int"), z_cell, base="int"), base_seed), random_from_cell_3d__ivec3_uint(rt.construct(3, rt.binary("+", rt.swizzle(cell, "x"), rt.i(1), 1, "int"), rt.binary("-", rt.swizzle(cell, "y"), rt.i(1), 1, "int"), z_cell, base="int"), base_seed), random_from_cell_3d__ivec3_uint(rt.construct(3, rt.binary("+", rt.swizzle(cell, "x"), rt.i(2), 1, "int"), rt.binary("-", rt.swizzle(cell, "y"), rt.i(1), 1, "int"), z_cell, base="int"), base_seed), rt.swizzle(frac, "x"))
         row1 = blend_cubic__float_float_float_float_float(random_from_cell_3d__ivec3_uint(rt.construct(3, rt.binary("-", rt.swizzle(cell, "x"), rt.i(1), 1, "int"), rt.binary("+", rt.swizzle(cell, "y"), rt.i(0), 1, "int"), z_cell, base="int"), base_seed), random_from_cell_3d__ivec3_uint(rt.construct(3, rt.binary("+", rt.swizzle(cell, "x"), rt.i(0), 1, "int"), rt.binary("+", rt.swizzle(cell, "y"), rt.i(0), 1, "int"), z_cell, base="int"), base_seed), random_from_cell_3d__ivec3_uint(rt.construct(3, rt.binary("+", rt.swizzle(cell, "x"), rt.i(1), 1, "int"), rt.binary("+", rt.swizzle(cell, "y"), rt.i(0), 1, "int"), z_cell, base="int"), base_seed), random_from_cell_3d__ivec3_uint(rt.construct(3, rt.binary("+", rt.swizzle(cell, "x"), rt.i(2), 1, "int"), rt.binary("+", rt.swizzle(cell, "y"), rt.i(0), 1, "int"), z_cell, base="int"), base_seed), rt.swizzle(frac, "x"))
         row2 = blend_cubic__float_float_float_float_float(random_from_cell_3d__ivec3_uint(rt.construct(3, rt.binary("-", rt.swizzle(cell, "x"), rt.i(1), 1, "int"), rt.binary("+", rt.swizzle(cell, "y"), rt.i(1), 1, "int"), z_cell, base="int"), base_seed), random_from_cell_3d__ivec3_uint(rt.construct(3, rt.binary("+", rt.swizzle(cell, "x"), rt.i(0), 1, "int"), rt.binary("+", rt.swizzle(cell, "y"), rt.i(1), 1, "int"), z_cell, base="int"), base_seed), random_from_cell_3d__ivec3_uint(rt.construct(3, rt.binary("+", rt.swizzle(cell, "x"), rt.i(1), 1, "int"), rt.binary("+", rt.swizzle(cell, "y"), rt.i(1), 1, "int"), z_cell, base="int"), base_seed), random_from_cell_3d__ivec3_uint(rt.construct(3, rt.binary("+", rt.swizzle(cell, "x"), rt.i(2), 1, "int"), rt.binary("+", rt.swizzle(cell, "y"), rt.i(1), 1, "int"), z_cell, base="int"), base_seed), rt.swizzle(frac, "x"))
         row3 = blend_cubic__float_float_float_float_float(random_from_cell_3d__ivec3_uint(rt.construct(3, rt.binary("-", rt.swizzle(cell, "x"), rt.i(1), 1, "int"), rt.binary("+", rt.swizzle(cell, "y"), rt.i(2), 1, "int"), z_cell, base="int"), base_seed), random_from_cell_3d__ivec3_uint(rt.construct(3, rt.binary("+", rt.swizzle(cell, "x"), rt.i(0), 1, "int"), rt.binary("+", rt.swizzle(cell, "y"), rt.i(2), 1, "int"), z_cell, base="int"), base_seed), random_from_cell_3d__ivec3_uint(rt.construct(3, rt.binary("+", rt.swizzle(cell, "x"), rt.i(1), 1, "int"), rt.binary("+", rt.swizzle(cell, "y"), rt.i(2), 1, "int"), z_cell, base="int"), base_seed), random_from_cell_3d__ivec3_uint(rt.construct(3, rt.binary("+", rt.swizzle(cell, "x"), rt.i(2), 1, "int"), rt.binary("+", rt.swizzle(cell, "y"), rt.i(2), 1, "int"), z_cell, base="int"), base_seed), rt.swizzle(frac, "x"))
         return blend_cubic__float_float_float_float_float(row0, row1, row2, row3, rt.swizzle(frac, "y"))
     def sample_raw_value_noise__vec2_vec2_uint_float_float_uint(uv, freq, base_seed, time_value, speed_value, spline_order):
-        uv = rt.copy(uv)
-        freq = rt.copy(freq)
+        uv = rt.copy(uv, "float")
+        freq = rt.copy(freq, "float")
         scaled_freq = rt.component_wise("max", freq, rt.construct(2, rt.f(1.0), rt.f(1.0)), width=2)
         scaled_uv = rt.binary("*", uv, scaled_freq, 2, "float")
         cell_f = rt.component_wise("floor", scaled_uv, width=2)
@@ -112,8 +112,8 @@ def run_pixel(ctx, out):
         slice3 = sample_bicubic_layer__ivec2_vec2_int_uint(cell, frac, rt.binary("+", time_cell, rt.i(2), 1, "int"), base_seed)
         return blend_cubic__float_float_float_float_float(slice0, slice1, slice2, slice3, time_frac)
     def sample_value_noise__vec2_vec2_uint_float_float_uint(uv, freq, seed, time_value, speed_value, spline_order):
-        uv = rt.copy(uv)
-        freq = rt.copy(freq)
+        uv = rt.copy(uv, "float")
+        freq = rt.copy(freq, "float")
         base_seed = seed
         base_value = sample_raw_value_noise__vec2_vec2_uint_float_float_uint(uv, freq, base_seed, time_value, speed_value, spline_order)
         if (bool(rt.binary("==", speed_value, rt.f(0.0))) or bool(rt.binary("==", time_value, rt.f(0.0)))):
@@ -123,8 +123,8 @@ def run_pixel(ctx, out):
         scaled_time = rt.binary("*", periodic_value__float_float(time_value, time_field), speed_value, 1, "float")
         return periodic_value__float_float(scaled_time, base_value)
     def sample_grain_noise__uvec2_vec2_float_float(pixel_coords, dims, time_value, speed_value):
-        pixel_coords = rt.copy(pixel_coords)
-        dims = rt.copy(dims)
+        pixel_coords = rt.copy(pixel_coords, "uint")
+        dims = rt.copy(dims, "float")
         width = rt.component_wise("max", rt.swizzle(dims, "x"), rt.f(1.0), width=1)
         height = rt.component_wise("max", rt.swizzle(dims, "y"), rt.f(1.0), width=1)
         uv = rt.construct(2, rt.binary("/", rt.construct(1, rt.swizzle(pixel_coords, "x")), width, 1, "float"), rt.binary("/", rt.construct(1, rt.swizzle(pixel_coords, "y")), height, 1, "float"))

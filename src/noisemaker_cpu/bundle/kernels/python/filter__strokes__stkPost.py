@@ -5,14 +5,14 @@ def run_pixel(ctx, out):
     class _G:
         pass
     g = _G()
-    _u_MODE = U["MODE"]
+    _u_MODE = U.get("MODE", 0)
     _u_inputTex = T["inputTex"]
     _u_smearTex = T["smearTex"]
-    _u_resolution = U["resolution"]
-    _u_sharpness = U["sharpness"]
+    _u_resolution = U.get("resolution", rt.construct(2, 0.0))
+    _u_sharpness = U.get("sharpness", rt.f(0.0))
     g.fragColor = rt.construct(4, 0.0)
     def tent3x3__vec2(uv):
-        uv = rt.copy(uv)
+        uv = rt.copy(uv, "float")
         px = rt.binary("/", rt.f(1.0), _u_resolution, 2, "float")
         sum = rt.construct(3, rt.f(0.0))
         wsum = rt.f(0.0)

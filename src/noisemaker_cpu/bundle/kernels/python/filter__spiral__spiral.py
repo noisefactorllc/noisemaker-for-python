@@ -6,19 +6,19 @@ def run_pixel(ctx, out):
         pass
     g = _G()
     _u_inputTex = T["inputTex"]
-    _u_resolution = U["resolution"]
-    _u_tileOffset = U["tileOffset"]
-    _u_fullResolution = U["fullResolution"]
-    _u_time = U["time"]
-    _u_strength = U["strength"]
-    _u_speed = U["speed"]
-    _u_aspectLens = U["aspectLens"]
-    _u_wrap = U["wrap"]
-    _u_rotation = U["rotation"]
-    _u_antialias = U["antialias"]
+    _u_resolution = U.get("resolution", rt.construct(2, 0.0))
+    _u_tileOffset = U.get("tileOffset", rt.construct(2, 0.0))
+    _u_fullResolution = U.get("fullResolution", rt.construct(2, 0.0))
+    _u_time = U.get("time", rt.f(0.0))
+    _u_strength = U.get("strength", rt.f(0.0))
+    _u_speed = U.get("speed", 0)
+    _u_aspectLens = U.get("aspectLens", False)
+    _u_wrap = U.get("wrap", 0)
+    _u_rotation = U.get("rotation", rt.f(0.0))
+    _u_antialias = U.get("antialias", False)
     g.fragColor = rt.construct(4, 0.0)
     def rotate2D__vec2_float_float(st, rot, aspectRatio):
-        st = rt.copy(st)
+        st = rt.copy(st, "float")
         st = rt.assign_swizzle(st, "x", rt.binary("*", rt.swizzle(st, "x"), aspectRatio, 1, "float"))
         angle = rt.binary("*", rot, rt.f(3.14159265359), 1, "float")
         st = rt.binary("-", st, rt.construct(2, rt.binary("*", rt.f(0.5), aspectRatio, 1, "float"), rt.f(0.5)), 2, "float")

@@ -6,8 +6,8 @@ def run_pixel(ctx, out):
         pass
     g = _G()
     _u_inputTex = T["inputTex"]
-    _u_resolution = U["resolution"]
-    _u_radius = U["radius"]
+    _u_resolution = U.get("resolution", rt.construct(2, 0.0))
+    _u_radius = U.get("radius", rt.f(0.0))
     g.fragColor = rt.construct(4, 0.0)
     def main__void():
         uv = rt.binary("/", rt.swizzle(ctx.frag_coord, "xy"), _u_resolution, 2, "float")

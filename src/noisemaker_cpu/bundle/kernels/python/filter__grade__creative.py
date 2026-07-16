@@ -5,18 +5,18 @@ def run_pixel(ctx, out):
     class _G:
         pass
     g = _G()
-    _u_tileOffset = U["tileOffset"]
-    _u_fullResolution = U["fullResolution"]
+    _u_tileOffset = U.get("tileOffset", rt.construct(2, 0.0))
+    _u_fullResolution = U.get("fullResolution", rt.construct(2, 0.0))
     _u_inputTex = T["inputTex"]
-    _u_vibrance = U["vibrance"]
-    _u_fadedFilm = U["fadedFilm"]
-    _u_shadowTint = U["shadowTint"]
-    _u_highlightTint = U["highlightTint"]
-    _u_splitToneBalance = U["splitToneBalance"]
+    _u_vibrance = U.get("vibrance", rt.f(0.0))
+    _u_fadedFilm = U.get("fadedFilm", rt.f(0.0))
+    _u_shadowTint = U.get("shadowTint", rt.construct(3, 0.0))
+    _u_highlightTint = U.get("highlightTint", rt.construct(3, 0.0))
+    _u_splitToneBalance = U.get("splitToneBalance", rt.f(0.0))
     g.fragColor = rt.construct(4, 0.0)
     g.LUMA_WEIGHTS = rt.construct(3, rt.f(0.2126), rt.f(0.7152), rt.f(0.0722))
     def srgbToLinear__vec3(srgb):
-        srgb = rt.copy(srgb)
+        srgb = rt.copy(srgb, "float")
         linear = rt.construct(3, 0.0)
         i = rt.i(0)
         _for0_first = True
@@ -32,7 +32,7 @@ def run_pixel(ctx, out):
                 linear[int(i)] = rt.component_wise("pow", rt.binary("/", rt.binary("+", srgb[int(i)], rt.f(0.055), 1, "float"), rt.f(1.055), 1, "float"), rt.f(2.4), width=1)
         return linear
     def linearToSrgb__vec3(linear):
-        linear = rt.copy(linear)
+        linear = rt.copy(linear, "float")
         srgb = rt.construct(3, 0.0)
         i = rt.i(0)
         _for1_first = True
@@ -48,7 +48,7 @@ def run_pixel(ctx, out):
                 srgb[int(i)] = rt.binary("-", rt.binary("*", rt.f(1.055), rt.component_wise("pow", linear[int(i)], rt.binary("/", rt.f(1.0), rt.f(2.4), 1, "float"), width=1), 1, "float"), rt.f(0.055), 1, "float")
         return srgb
     def applyVibrance__vec3_float(rgb, vibrance):
-        rgb = rt.copy(rgb)
+        rgb = rt.copy(rgb, "float")
         if rt.binary("<", rt.component_wise("abs", vibrance, width=1), rt.f(0.001)):
             return rgb
         luma = rt.dot(rgb, g.LUMA_WEIGHTS)
@@ -64,7 +64,7 @@ def run_pixel(ctx, out):
         finalGain = rt.component_wise("mix", rt.f(1.0), vibranceGain, skinFactor, width=1)
         return rt.binary("+", luma, rt.binary("*", chroma, finalGain, 3, "float"), 3, "float")
     def applyFadedFilm__vec3_float(rgb, amount):
-        rgb = rt.copy(rgb)
+        rgb = rt.copy(rgb, "float")
         if rt.binary("<", amount, rt.f(0.001)):
             return rgb
         lifted = rt.component_wise("mix", rgb, rt.construct(3, rt.f(0.2)), rt.binary("*", amount, rt.f(0.5), 1, "float"), width=3)
@@ -75,9 +75,9 @@ def run_pixel(ctx, out):
         newLuma = rt.binary("+", rt.binary("*", rt.binary("-", luma, pivot, 1, "float"), contrastFactor, 1, "float"), pivot, 1, "float")
         return rt.binary("+", newLuma, rt.binary("*", chroma, rt.binary("-", rt.f(1.0), rt.binary("*", amount, rt.f(0.2), 1, "float"), 1, "float"), 3, "float"), 3, "float")
     def applySplitTone__vec3_vec3_vec3_float(rgb, shadowTint, highlightTint, balance):
-        rgb = rt.copy(rgb)
-        shadowTint = rt.copy(shadowTint)
-        highlightTint = rt.copy(highlightTint)
+        rgb = rt.copy(rgb, "float")
+        shadowTint = rt.copy(shadowTint, "float")
+        highlightTint = rt.copy(highlightTint, "float")
         shadowShift = rt.binary("*", rt.binary("-", shadowTint, rt.f(0.5), 3, "float"), rt.f(2.0), 3, "float")
         highlightShift = rt.binary("*", rt.binary("-", highlightTint, rt.f(0.5), 3, "float"), rt.f(2.0), 3, "float")
         if (bool(rt.binary("<", rt.length(shadowShift), rt.f(0.01))) and bool(rt.binary("<", rt.length(highlightShift), rt.f(0.01)))):

@@ -6,12 +6,12 @@ def run_pixel(ctx, out):
         pass
     g = _G()
     _u_inputTex = T["inputTex"]
-    _u_resolution = U["resolution"]
-    _u_tileOffset = U["tileOffset"]
-    _u_fullResolution = U["fullResolution"]
-    _u_strength = U["strength"]
-    _u_sharpness = U["sharpness"]
-    _u_threshold = U["threshold"]
+    _u_resolution = U.get("resolution", rt.construct(2, 0.0))
+    _u_tileOffset = U.get("tileOffset", rt.construct(2, 0.0))
+    _u_fullResolution = U.get("fullResolution", rt.construct(2, 0.0))
+    _u_strength = U.get("strength", rt.f(0.0))
+    _u_sharpness = U.get("sharpness", rt.f(0.0))
+    _u_threshold = U.get("threshold", rt.f(0.0))
     g.CHANNEL_COUNT = rt.i(4)
     g.EPSILON = rt.f(1e-10)
     g.LUMA_WEIGHTS = rt.construct(3, rt.f(0.299), rt.f(0.587), rt.f(0.114))
@@ -36,13 +36,13 @@ def run_pixel(ctx, out):
             return wrapped
         return rt.binary("-", period, wrapped, 1, "int")
     def load_texel__ivec2_ivec2(coord, size):
-        coord = rt.copy(coord)
-        size = rt.copy(size)
+        coord = rt.copy(coord, "int")
+        size = rt.copy(size, "int")
         reflected_x = reflect_coord__int_int(rt.swizzle(coord, "x"), rt.swizzle(size, "x"))
         reflected_y = reflect_coord__int_int(rt.swizzle(coord, "y"), rt.swizzle(size, "y"))
         return rt.texel_fetch(_u_inputTex, rt.construct(2, reflected_x, reflected_y, base="int"), rt.i(0))
     def luminance_from_rgb__vec3(rgb):
-        rgb = rt.copy(rgb)
+        rgb = rt.copy(rgb, "float")
         return rt.dot(rgb, g.LUMA_WEIGHTS)
     def weight_from_luma__float_float(center_luma, neighbor_luma):
         return rt.component_wise("exp", rt.binary("*", rt.unary("-", _u_sharpness), rt.component_wise("abs", rt.binary("-", center_luma, neighbor_luma, 1, "float"), width=1), 1, "float"), width=1)

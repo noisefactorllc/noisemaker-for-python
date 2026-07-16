@@ -5,35 +5,35 @@ def run_pixel(ctx, out):
     class _G:
         pass
     g = _G()
-    _u_tileOffset = U["tileOffset"]
-    _u_fullResolution = U["fullResolution"]
+    _u_tileOffset = U.get("tileOffset", rt.construct(2, 0.0))
+    _u_fullResolution = U.get("fullResolution", rt.construct(2, 0.0))
     _u_inputTex = T["inputTex"]
-    _u_symmetry = U["symmetry"]
-    _u_scale = U["scale"]
-    _u_offsetX = U["offsetX"]
-    _u_offsetY = U["offsetY"]
-    _u_angle = U["angle"]
-    _u_repeat = U["repeat"]
-    _u_aspectLens = U["aspectLens"]
+    _u_symmetry = U.get("symmetry", 0)
+    _u_scale = U.get("scale", rt.f(0.0))
+    _u_offsetX = U.get("offsetX", rt.f(0.0))
+    _u_offsetY = U.get("offsetY", rt.f(0.0))
+    _u_angle = U.get("angle", rt.f(0.0))
+    _u_repeat = U.get("repeat", rt.f(0.0))
+    _u_aspectLens = U.get("aspectLens", False)
     g.fragColor = rt.construct(4, 0.0)
     g.PI = rt.f(3.14159265359)
     g.TAU = rt.f(6.28318530718)
     def rot__vec2_float(p, a):
-        p = rt.copy(p)
+        p = rt.copy(p, "float")
         c = rt.component_wise("cos", a, width=1)
         s = rt.component_wise("sin", a, width=1)
         return rt.construct(2, rt.binary("-", rt.binary("*", rt.swizzle(p, "x"), c, 1, "float"), rt.binary("*", rt.swizzle(p, "y"), s, 1, "float"), 1, "float"), rt.binary("+", rt.binary("*", rt.swizzle(p, "x"), s, 1, "float"), rt.binary("*", rt.swizzle(p, "y"), c, 1, "float"), 1, "float"))
     def mirrorFold__float(t):
         return rt.binary("-", rt.f(1.0), rt.component_wise("abs", rt.binary("-", rt.binary("*", rt.f(2.0), rt.component_wise("fract", rt.binary("*", t, rt.f(0.5), 1, "float"), width=1), 1, "float"), rt.f(1.0), 1, "float"), width=1), 1, "float")
     def hexCoord__vec2(uv):
-        uv = rt.copy(uv)
+        uv = rt.copy(uv, "float")
         s = rt.construct(2, rt.f(1.0), rt.f(1.7320508))
         h = rt.binary("*", s, rt.f(0.5), 2, "float")
         a = rt.binary("-", rt.component_wise("mod", uv, s, width=2), h, 2, "float")
         b = rt.binary("-", rt.component_wise("mod", rt.binary("+", uv, h, 2, "float"), s, width=2), h, 2, "float")
         return (a if rt.binary("<", rt.dot(a, a), rt.dot(b, b)) else b)
     def rotationalFold__vec2_int(uv, n):
-        uv = rt.copy(uv)
+        uv = rt.copy(uv, "float")
         fn = rt.construct(1, n)
         sectorAngle = rt.binary("/", g.TAU, fn, 1, "float")
         p = rt.binary("-", uv, rt.f(0.5), 2, "float")

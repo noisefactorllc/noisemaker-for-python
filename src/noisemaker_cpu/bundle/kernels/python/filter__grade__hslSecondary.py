@@ -5,25 +5,25 @@ def run_pixel(ctx, out):
     class _G:
         pass
     g = _G()
-    _u_tileOffset = U["tileOffset"]
-    _u_fullResolution = U["fullResolution"]
+    _u_tileOffset = U.get("tileOffset", rt.construct(2, 0.0))
+    _u_fullResolution = U.get("fullResolution", rt.construct(2, 0.0))
     _u_inputTex = T["inputTex"]
-    _u_hslEnable = U["hslEnable"]
-    _u_hslHueCenter = U["hslHueCenter"]
-    _u_hslHueRange = U["hslHueRange"]
-    _u_hslSatMin = U["hslSatMin"]
-    _u_hslSatMax = U["hslSatMax"]
-    _u_hslLumMin = U["hslLumMin"]
-    _u_hslLumMax = U["hslLumMax"]
-    _u_hslFeather = U["hslFeather"]
-    _u_hslHueShift = U["hslHueShift"]
-    _u_hslSatAdjust = U["hslSatAdjust"]
-    _u_hslLumAdjust = U["hslLumAdjust"]
+    _u_hslEnable = U.get("hslEnable", 0)
+    _u_hslHueCenter = U.get("hslHueCenter", rt.f(0.0))
+    _u_hslHueRange = U.get("hslHueRange", rt.f(0.0))
+    _u_hslSatMin = U.get("hslSatMin", rt.f(0.0))
+    _u_hslSatMax = U.get("hslSatMax", rt.f(0.0))
+    _u_hslLumMin = U.get("hslLumMin", rt.f(0.0))
+    _u_hslLumMax = U.get("hslLumMax", rt.f(0.0))
+    _u_hslFeather = U.get("hslFeather", rt.f(0.0))
+    _u_hslHueShift = U.get("hslHueShift", rt.f(0.0))
+    _u_hslSatAdjust = U.get("hslSatAdjust", rt.f(0.0))
+    _u_hslLumAdjust = U.get("hslLumAdjust", rt.f(0.0))
     g.fragColor = rt.construct(4, 0.0)
     g.LUMA_WEIGHTS = rt.construct(3, rt.f(0.2126), rt.f(0.7152), rt.f(0.0722))
     g.PI = rt.f(3.14159265359)
     def srgbToLinear__vec3(srgb):
-        srgb = rt.copy(srgb)
+        srgb = rt.copy(srgb, "float")
         linear = rt.construct(3, 0.0)
         i = rt.i(0)
         _for0_first = True
@@ -39,7 +39,7 @@ def run_pixel(ctx, out):
                 linear[int(i)] = rt.component_wise("pow", rt.binary("/", rt.binary("+", srgb[int(i)], rt.f(0.055), 1, "float"), rt.f(1.055), 1, "float"), rt.f(2.4), width=1)
         return linear
     def linearToSrgb__vec3(linear):
-        linear = rt.copy(linear)
+        linear = rt.copy(linear, "float")
         srgb = rt.construct(3, 0.0)
         i = rt.i(0)
         _for1_first = True
@@ -55,7 +55,7 @@ def run_pixel(ctx, out):
                 srgb[int(i)] = rt.binary("-", rt.binary("*", rt.f(1.055), rt.component_wise("pow", linear[int(i)], rt.binary("/", rt.f(1.0), rt.f(2.4), 1, "float"), width=1), 1, "float"), rt.f(0.055), 1, "float")
         return srgb
     def rgbToHsl__vec3(rgb):
-        rgb = rt.copy(rgb)
+        rgb = rt.copy(rgb, "float")
         maxC = rt.component_wise("max", rt.component_wise("max", rt.swizzle(rgb, "r"), rt.swizzle(rgb, "g"), width=1), rt.swizzle(rgb, "b"), width=1)
         minC = rt.component_wise("min", rt.component_wise("min", rt.swizzle(rgb, "r"), rt.swizzle(rgb, "g"), width=1), rt.swizzle(rgb, "b"), width=1)
         delta = rt.binary("-", maxC, minC, 1, "float")
@@ -74,7 +74,7 @@ def run_pixel(ctx, out):
             h = rt.binary("/", h, rt.f(6.0), 1, "float")
         return rt.construct(3, h, s, l)
     def hslToRgb__vec3(hsl):
-        hsl = rt.copy(hsl)
+        hsl = rt.copy(hsl, "float")
         h = rt.swizzle(hsl, "x")
         s = rt.swizzle(hsl, "y")
         l = rt.swizzle(hsl, "z")
@@ -105,7 +105,7 @@ def run_pixel(ctx, out):
                         rgb[int(i)] = p
         return rgb
     def computeHslKey__vec3_float_float_float_float_float_float_float(hsl, hueCenter, hueRange, satMin, satMax, lumMin, lumMax, feather):
-        hsl = rt.copy(hsl)
+        hsl = rt.copy(hsl, "float")
         hueDist = rt.component_wise("abs", rt.binary("-", rt.swizzle(hsl, "x"), hueCenter, 1, "float"), width=1)
         hueDist = rt.component_wise("min", hueDist, rt.binary("-", rt.f(1.0), hueDist, 1, "float"), width=1)
         hueKey = rt.binary("-", rt.f(1.0), rt.component_wise("smoothstep", rt.binary("-", hueRange, feather, 1, "float"), rt.binary("+", hueRange, feather, 1, "float"), hueDist, width=1), 1, "float")
@@ -113,7 +113,7 @@ def run_pixel(ctx, out):
         lumKey = rt.binary("*", rt.component_wise("smoothstep", rt.binary("-", lumMin, feather, 1, "float"), rt.binary("+", lumMin, feather, 1, "float"), rt.swizzle(hsl, "z"), width=1), rt.binary("-", rt.f(1.0), rt.component_wise("smoothstep", rt.binary("-", lumMax, feather, 1, "float"), rt.binary("+", lumMax, feather, 1, "float"), rt.swizzle(hsl, "z"), width=1), 1, "float"), 1, "float")
         return rt.binary("*", rt.binary("*", hueKey, satKey, 1, "float"), lumKey, 1, "float")
     def applyHslCorrection__vec3_float_float_float(hsl, hueShift, satAdjust, lumAdjust):
-        hsl = rt.copy(hsl)
+        hsl = rt.copy(hsl, "float")
         corrected = hsl
         corrected = rt.assign_swizzle(corrected, "x", rt.component_wise("fract", rt.binary("+", rt.swizzle(corrected, "x"), hueShift, 1, "float"), width=1))
         corrected = rt.assign_swizzle(corrected, "y", rt.component_wise("clamp", rt.binary("+", rt.swizzle(corrected, "y"), satAdjust, 1, "float"), rt.f(0.0), rt.f(1.0), width=1))

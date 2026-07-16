@@ -7,9 +7,9 @@ def run_pixel(ctx, out):
     g = _G()
     _u_inputTex = T["inputTex"]
     _u_blurTex = T["blurTex"]
-    _u_resolution = U["resolution"]
-    _u_amount = U["amount"]
-    _u_threshold = U["threshold"]
+    _u_resolution = U.get("resolution", rt.construct(2, 0.0))
+    _u_amount = U.get("amount", rt.f(0.0))
+    _u_threshold = U.get("threshold", rt.f(0.0))
     g.fragColor = rt.construct(4, 0.0)
     def main__void():
         uv = rt.binary("/", rt.swizzle(ctx.frag_coord, "xy"), _u_resolution, 2, "float")

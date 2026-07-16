@@ -5,35 +5,35 @@ def run_pixel(ctx, out):
     class _G:
         pass
     g = _G()
-    _u_resolution = U["resolution"]
-    _u_tileOffset = U["tileOffset"]
-    _u_fullResolution = U["fullResolution"]
-    _u_aspect = U["aspect"]
-    _u_patternType = U["patternType"]
-    _u_scale = U["scale"]
-    _u_thickness = U["thickness"]
-    _u_smoothness = U["smoothness"]
-    _u_rotation = U["rotation"]
-    _u_skew = U["skew"]
-    _u_animation = U["animation"]
-    _u_speed = U["speed"]
-    _u_time = U["time"]
-    _u_fgColor = U["fgColor"]
-    _u_bgColor = U["bgColor"]
+    _u_resolution = U.get("resolution", rt.construct(2, 0.0))
+    _u_tileOffset = U.get("tileOffset", rt.construct(2, 0.0))
+    _u_fullResolution = U.get("fullResolution", rt.construct(2, 0.0))
+    _u_aspect = U.get("aspect", rt.f(0.0))
+    _u_patternType = U.get("patternType", 0)
+    _u_scale = U.get("scale", rt.f(0.0))
+    _u_thickness = U.get("thickness", rt.f(0.0))
+    _u_smoothness = U.get("smoothness", rt.f(0.0))
+    _u_rotation = U.get("rotation", rt.f(0.0))
+    _u_skew = U.get("skew", rt.f(0.0))
+    _u_animation = U.get("animation", 0)
+    _u_speed = U.get("speed", rt.f(0.0))
+    _u_time = U.get("time", rt.f(0.0))
+    _u_fgColor = U.get("fgColor", rt.construct(3, 0.0))
+    _u_bgColor = U.get("bgColor", rt.construct(3, 0.0))
     g.fragColor = rt.construct(4, 0.0)
     def rotate2D__vec2_float(p, angle):
-        p = rt.copy(p)
+        p = rt.copy(p, "float")
         c = rt.component_wise("cos", angle, width=1)
         s = rt.component_wise("sin", angle, width=1)
         return rt.construct(2, rt.binary("-", rt.binary("*", rt.swizzle(p, "x"), c, 1, "float"), rt.binary("*", rt.swizzle(p, "y"), s, 1, "float"), 1, "float"), rt.binary("+", rt.binary("*", rt.swizzle(p, "x"), s, 1, "float"), rt.binary("*", rt.swizzle(p, "y"), c, 1, "float"), 1, "float"))
     def stripes__vec2_float(p, t):
-        p = rt.copy(p)
+        p = rt.copy(p, "float")
         stripe = rt.component_wise("fract", rt.swizzle(p, "x"), width=1)
         edge1 = rt.component_wise("smoothstep", rt.binary("-", rt.binary("-", rt.f(0.5), rt.binary("*", t, rt.f(0.5), 1, "float"), 1, "float"), _u_smoothness, 1, "float"), rt.binary("+", rt.binary("-", rt.f(0.5), rt.binary("*", t, rt.f(0.5), 1, "float"), 1, "float"), _u_smoothness, 1, "float"), stripe, width=1)
         edge2 = rt.component_wise("smoothstep", rt.binary("-", rt.binary("+", rt.f(0.5), rt.binary("*", t, rt.f(0.5), 1, "float"), 1, "float"), _u_smoothness, 1, "float"), rt.binary("+", rt.binary("+", rt.f(0.5), rt.binary("*", t, rt.f(0.5), 1, "float"), 1, "float"), _u_smoothness, 1, "float"), stripe, width=1)
         return rt.binary("-", edge1, edge2, 1, "float")
     def checkerboard__vec2_float(p, sm):
-        p = rt.copy(p)
+        p = rt.copy(p, "float")
         f = rt.component_wise("fract", p, width=2)
         d = rt.component_wise("min", rt.component_wise("min", rt.swizzle(f, "x"), rt.binary("-", rt.f(1.0), rt.swizzle(f, "x"), 1, "float"), width=1), rt.component_wise("min", rt.swizzle(f, "y"), rt.binary("-", rt.f(1.0), rt.swizzle(f, "y"), 1, "float"), width=1), width=1)
         cell = rt.component_wise("floor", p, width=2)
@@ -41,23 +41,23 @@ def run_pixel(ctx, out):
         edge = rt.component_wise("smoothstep", rt.f(0.0), rt.binary("*", sm, rt.f(0.5), 1, "float"), d, width=1)
         return rt.component_wise("mix", rt.binary("-", rt.f(1.0), check, 1, "float"), check, edge, width=1)
     def grid__vec2_float(p, t):
-        p = rt.copy(p)
+        p = rt.copy(p, "float")
         f = rt.component_wise("fract", p, width=2)
         lineX = rt.component_wise("smoothstep", rt.binary("-", rt.binary("*", t, rt.f(0.5), 1, "float"), _u_smoothness, 1, "float"), rt.binary("+", rt.binary("*", t, rt.f(0.5), 1, "float"), _u_smoothness, 1, "float"), rt.component_wise("abs", rt.binary("-", rt.swizzle(f, "x"), rt.f(0.5), 1, "float"), width=1), width=1)
         lineY = rt.component_wise("smoothstep", rt.binary("-", rt.binary("*", t, rt.f(0.5), 1, "float"), _u_smoothness, 1, "float"), rt.binary("+", rt.binary("*", t, rt.f(0.5), 1, "float"), _u_smoothness, 1, "float"), rt.component_wise("abs", rt.binary("-", rt.swizzle(f, "y"), rt.f(0.5), 1, "float"), width=1), width=1)
         return rt.binary("-", rt.f(1.0), rt.component_wise("min", lineX, lineY, width=1), 1, "float")
     def dots__vec2_float(p, t):
-        p = rt.copy(p)
+        p = rt.copy(p, "float")
         f = rt.binary("-", rt.component_wise("fract", p, width=2), rt.f(0.5), 2, "float")
         d = rt.length(f)
         radius = rt.binary("*", t, rt.f(0.5), 1, "float")
         return rt.binary("-", rt.f(1.0), rt.component_wise("smoothstep", rt.binary("-", radius, _u_smoothness, 1, "float"), rt.binary("+", radius, _u_smoothness, 1, "float"), d, width=1), 1, "float")
     def hexDist__vec2(p):
-        p = rt.copy(p)
+        p = rt.copy(p, "float")
         p = rt.component_wise("abs", p, width=2)
         return rt.component_wise("max", rt.binary("+", rt.binary("*", rt.swizzle(p, "x"), rt.f(0.5), 1, "float"), rt.binary("*", rt.swizzle(p, "y"), rt.binary("/", rt.f(1.7320508075688772), rt.f(2.0), 1, "float"), 1, "float"), 1, "float"), rt.swizzle(p, "x"), width=1)
     def hexagons__vec2_float(p, t):
-        p = rt.copy(p)
+        p = rt.copy(p, "float")
         s = rt.construct(2, rt.f(1.0), rt.f(1.7320508075688772))
         h = rt.binary("*", s, rt.f(0.5), 2, "float")
         a = rt.binary("-", rt.component_wise("mod", p, s, width=2), h, 2, "float")
@@ -67,13 +67,13 @@ def run_pixel(ctx, out):
         edge = rt.binary("*", rt.f(0.5), t, 1, "float")
         return rt.component_wise("smoothstep", rt.binary("+", edge, _u_smoothness, 1, "float"), rt.binary("-", edge, _u_smoothness, 1, "float"), d, width=1)
     def concentricRings__vec2_float_float(p, t, timeOffset):
-        p = rt.copy(p)
+        p = rt.copy(p, "float")
         d = rt.component_wise("fract", rt.binary("+", rt.length(p), timeOffset, 1, "float"), width=1)
         edge1 = rt.component_wise("smoothstep", rt.binary("-", rt.binary("-", rt.f(0.5), rt.binary("*", t, rt.f(0.5), 1, "float"), 1, "float"), _u_smoothness, 1, "float"), rt.binary("+", rt.binary("-", rt.f(0.5), rt.binary("*", t, rt.f(0.5), 1, "float"), 1, "float"), _u_smoothness, 1, "float"), d, width=1)
         edge2 = rt.component_wise("smoothstep", rt.binary("-", rt.binary("+", rt.f(0.5), rt.binary("*", t, rt.f(0.5), 1, "float"), 1, "float"), _u_smoothness, 1, "float"), rt.binary("+", rt.binary("+", rt.f(0.5), rt.binary("*", t, rt.f(0.5), 1, "float"), 1, "float"), _u_smoothness, 1, "float"), d, width=1)
         return rt.binary("-", edge1, edge2, 1, "float")
     def radialLines__vec2_float_float(p, t, timeOffset):
-        p = rt.copy(p)
+        p = rt.copy(p, "float")
         lineCount = rt.component_wise("floor", _u_scale, width=1)
         angle = rt.binary("+", rt.component_wise("atan", rt.swizzle(p, "y"), rt.swizzle(p, "x"), width=1), rt.binary("*", timeOffset, rt.f(6.28318530718), 1, "float"), 1, "float")
         d = rt.component_wise("fract", rt.binary("*", rt.binary("/", angle, rt.f(6.28318530718), 1, "float"), lineCount, 1, "float"), width=1)
@@ -81,7 +81,7 @@ def run_pixel(ctx, out):
         edge2 = rt.component_wise("smoothstep", rt.binary("-", rt.binary("+", rt.f(0.5), rt.binary("*", t, rt.f(0.5), 1, "float"), 1, "float"), _u_smoothness, 1, "float"), rt.binary("+", rt.binary("+", rt.f(0.5), rt.binary("*", t, rt.f(0.5), 1, "float"), 1, "float"), _u_smoothness, 1, "float"), d, width=1)
         return rt.binary("-", edge1, edge2, 1, "float")
     def triangularGrid__vec2_float(p, t):
-        p = rt.copy(p)
+        p = rt.copy(p, "float")
         skewed = rt.construct(2, rt.binary("-", rt.swizzle(p, "x"), rt.binary("/", rt.swizzle(p, "y"), rt.f(1.7320508075688772), 1, "float"), 1, "float"), rt.binary("/", rt.binary("*", rt.swizzle(p, "y"), rt.f(2.0), 1, "float"), rt.f(1.7320508075688772), 1, "float"))
         cell = rt.component_wise("floor", skewed, width=2)
         f = rt.component_wise("fract", skewed, width=2)
@@ -93,7 +93,7 @@ def run_pixel(ctx, out):
         edge = rt.binary("*", rt.binary("-", rt.f(1.0), t, 1, "float"), rt.f(0.4), 1, "float")
         return rt.component_wise("smoothstep", rt.binary("-", edge, _u_smoothness, 1, "float"), rt.binary("+", edge, _u_smoothness, 1, "float"), d, width=1)
     def spiralPattern__vec2_float_float(p, t, timeOffset):
-        p = rt.copy(p)
+        p = rt.copy(p, "float")
         dist = rt.length(p)
         angle = rt.binary("+", rt.component_wise("atan", rt.swizzle(p, "y"), rt.swizzle(p, "x"), width=1), rt.binary("*", timeOffset, rt.f(6.28318530718), 1, "float"), 1, "float")
         d = rt.component_wise("fract", rt.binary("+", rt.binary("/", angle, rt.f(6.28318530718), 1, "float"), dist, 1, "float"), width=1)
@@ -101,13 +101,13 @@ def run_pixel(ctx, out):
         edge2 = rt.component_wise("smoothstep", rt.binary("-", rt.binary("+", rt.f(0.5), rt.binary("*", t, rt.f(0.5), 1, "float"), 1, "float"), _u_smoothness, 1, "float"), rt.binary("+", rt.binary("+", rt.f(0.5), rt.binary("*", t, rt.f(0.5), 1, "float"), 1, "float"), _u_smoothness, 1, "float"), d, width=1)
         return rt.binary("-", edge1, edge2, 1, "float")
     def heartSDF__vec2(p):
-        p = rt.copy(p)
+        p = rt.copy(p, "float")
         p = rt.assign_swizzle(p, "x", rt.component_wise("abs", rt.swizzle(p, "x"), width=1))
         if rt.binary(">", rt.binary("+", rt.swizzle(p, "y"), rt.swizzle(p, "x"), 1, "float"), rt.f(1.0)):
             return rt.binary("-", rt.component_wise("sqrt", rt.dot(rt.binary("-", p, rt.construct(2, rt.f(0.25), rt.f(0.75)), 2, "float"), rt.binary("-", p, rt.construct(2, rt.f(0.25), rt.f(0.75)), 2, "float")), width=1), rt.binary("/", rt.component_wise("sqrt", rt.f(2.0), width=1), rt.f(4.0), 1, "float"), 1, "float")
         return rt.binary("*", rt.component_wise("sqrt", rt.component_wise("min", rt.dot(rt.binary("-", p, rt.construct(2, rt.f(0.0), rt.f(1.0)), 2, "float"), rt.binary("-", p, rt.construct(2, rt.f(0.0), rt.f(1.0)), 2, "float")), rt.dot(rt.binary("-", p, rt.binary("*", rt.f(0.5), rt.component_wise("max", rt.binary("+", rt.swizzle(p, "x"), rt.swizzle(p, "y"), 1, "float"), rt.f(0.0), width=1), 1, "float"), 2, "float"), rt.binary("-", p, rt.binary("*", rt.f(0.5), rt.component_wise("max", rt.binary("+", rt.swizzle(p, "x"), rt.swizzle(p, "y"), 1, "float"), rt.f(0.0), width=1), 1, "float"), 2, "float")), width=1), width=1), rt.component_wise("sign", rt.binary("-", rt.swizzle(p, "x"), rt.swizzle(p, "y"), 1, "float"), width=1), 1, "float")
     def hearts__vec2_float(p, t):
-        p = rt.copy(p)
+        p = rt.copy(p, "float")
         cell = rt.binary("-", rt.component_wise("fract", p, width=2), rt.f(0.5), 2, "float")
         cell = rt.assign_swizzle(cell, "y", rt.binary("+", rt.swizzle(cell, "y"), rt.f(0.25), 1, "float"))
         d = heartSDF__vec2(rt.binary("*", cell, rt.f(2.4), 2, "float"))
@@ -115,7 +115,7 @@ def run_pixel(ctx, out):
         sm = rt.component_wise("min", _u_smoothness, rt.binary("+", radius, rt.f(0.15), 1, "float"), width=1)
         return rt.binary("-", rt.f(1.0), rt.component_wise("smoothstep", rt.binary("-", rt.unary("-", radius), sm, 1, "float"), rt.binary("+", rt.unary("-", radius), sm, 1, "float"), d, width=1), 1, "float")
     def waves__vec2_float(p, t):
-        p = rt.copy(p)
+        p = rt.copy(p, "float")
         y = rt.binary("-", rt.component_wise("fract", rt.swizzle(p, "y"), width=1), rt.f(0.5), 1, "float")
         y = rt.binary("-", y, rt.binary("*", rt.component_wise("cos", rt.binary("*", rt.swizzle(p, "x"), rt.f(6.28318530718), 1, "float"), width=1), rt.f(0.15), 1, "float"), 1, "float")
         dist = rt.component_wise("abs", y, width=1)
@@ -123,7 +123,7 @@ def run_pixel(ctx, out):
         sm = rt.component_wise("min", _u_smoothness, rt.binary("+", halfW, rt.f(0.01), 1, "float"), width=1)
         return rt.binary("-", rt.f(1.0), rt.component_wise("smoothstep", rt.binary("-", halfW, sm, 1, "float"), rt.binary("+", halfW, sm, 1, "float"), dist, width=1), 1, "float")
     def zigzag__vec2_float(p, t):
-        p = rt.copy(p)
+        p = rt.copy(p, "float")
         f = rt.component_wise("fract", p, width=2)
         lineY = rt.binary("-", rt.f(1.0), rt.binary("*", rt.f(2.0), rt.component_wise("abs", rt.binary("-", rt.swizzle(f, "x"), rt.f(0.5), 1, "float"), width=1), 1, "float"), 1, "float")
         dist = rt.component_wise("abs", rt.binary("-", rt.binary("-", rt.swizzle(f, "y"), rt.binary("*", lineY, rt.f(0.5), 1, "float"), 1, "float"), rt.f(0.25), 1, "float"), width=1)

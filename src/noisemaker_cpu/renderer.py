@@ -149,6 +149,7 @@ def render_effect(effect_id, params=None, inputs=None, width=256, height=256, se
 
     rt = Runtime()
     result = None
+    attachments = {}  # attach-name -> Surface produced by an earlier pass this render
     for p in eff["passes"]:
         textures = _DefaultTex(blank)
         for sampler, surf in surface_params.items():
@@ -156,13 +157,23 @@ def render_effect(effect_id, params=None, inputs=None, width=256, height=256, se
                 surf.filter = "linear"
                 textures[sampler] = surf
         for sampler_name, source in (p.get("inputs") or {}).items():
-            surf = inputs.get(source) or inputs.get(sampler_name) or result
+            # An earlier pass's named attachment wins over a same-named external
+            # input (e.g. `inputTex` reused as an intermediate attach name).
+            surf = attachments.get(source) or inputs.get(source) or inputs.get(sampler_name) or result
             if surf is not None:
                 surf.filter = "linear"
                 textures[sampler_name] = surf
+        # Pass-level uniform aliases: the definition may expose a param under one
+        # name (e.g. `color`) while this pass's GLSL declares another (`splatColor`).
+        pass_uniforms = dict(uniforms)
+        for glsl_name, param_name in (p.get("uniforms") or {}).items():
+            if param_name in effect_uniforms:
+                pass_uniforms[glsl_name] = effect_uniforms[param_name]
+            elif param_name in uniforms:
+                pass_uniforms[glsl_name] = uniforms[param_name]
         ctx = Ctx(
             rt,
-            uniforms=dict(uniforms),
+            uniforms=pass_uniforms,
             textures=textures,
             resolution=np.array([float(width), float(height)], dtype=F32),
             time=time,
@@ -171,4 +182,6 @@ def render_effect(effect_id, params=None, inputs=None, width=256, height=256, se
         kernel = _kernel_for(p["key"])
         runner = run_pass_deriv if getattr(kernel, "uses_derivatives", False) else run_pass
         result = runner(kernel, ctx, width, height)
+        for attach_name in (p.get("outputs") or {}).values():
+            attachments[attach_name] = result
     return result

@@ -6,30 +6,30 @@ def run_pixel(ctx, out):
         pass
     g = _G()
     _u_inputTex = T["inputTex"]
-    _u_resolution = U["resolution"]
-    _u_tileOffset = U["tileOffset"]
-    _u_fullResolution = U["fullResolution"]
-    _u_time = U["time"]
-    _u_enabled = U["enabled"]
-    _u_useSpecks = U["useSpecks"]
-    _u_splatSource = U["splatSource"]
-    _u_scale = U["scale"]
-    _u_cutoff = U["cutoff"]
-    _u_speed = U["speed"]
-    _u_seed = U["seed"]
-    _u_splatColor = U["splatColor"]
-    _u_mode = U["mode"]
-    _u_speckScale = U["speckScale"]
-    _u_speckCutoff = U["speckCutoff"]
-    _u_speckSpeed = U["speckSpeed"]
-    _u_speckSeed = U["speckSeed"]
-    _u_speckColor = U["speckColor"]
-    _u_speckMode = U["speckMode"]
+    _u_resolution = U.get("resolution", rt.construct(2, 0.0))
+    _u_tileOffset = U.get("tileOffset", rt.construct(2, 0.0))
+    _u_fullResolution = U.get("fullResolution", rt.construct(2, 0.0))
+    _u_time = U.get("time", rt.f(0.0))
+    _u_enabled = U.get("enabled", False)
+    _u_useSpecks = U.get("useSpecks", False)
+    _u_splatSource = U.get("splatSource", 0)
+    _u_scale = U.get("scale", rt.f(0.0))
+    _u_cutoff = U.get("cutoff", rt.f(0.0))
+    _u_speed = U.get("speed", rt.f(0.0))
+    _u_seed = U.get("seed", rt.f(0.0))
+    _u_splatColor = U.get("splatColor", rt.construct(3, 0.0))
+    _u_mode = U.get("mode", 0)
+    _u_speckScale = U.get("speckScale", rt.f(0.0))
+    _u_speckCutoff = U.get("speckCutoff", rt.f(0.0))
+    _u_speckSpeed = U.get("speckSpeed", rt.f(0.0))
+    _u_speckSeed = U.get("speckSeed", rt.f(0.0))
+    _u_speckColor = U.get("speckColor", rt.construct(3, 0.0))
+    _u_speckMode = U.get("speckMode", 0)
     g.fragColor = rt.construct(4, 0.0)
     def map__float_float_float_float_float(value, inMin, inMax, outMin, outMax):
         return rt.binary("+", outMin, rt.binary("/", rt.binary("*", rt.binary("-", outMax, outMin, 1, "float"), rt.binary("-", value, inMin, 1, "float"), 1, "float"), rt.binary("-", inMax, inMin, 1, "float"), 1, "float"), 1, "float")
     def pcg__uvec3(v):
-        v = rt.copy(v)
+        v = rt.copy(v, "uint")
         v = rt.binary("+", rt.binary("*", v, rt.construct(1, rt.i(1664525), base="uint"), 3, "uint"), rt.construct(1, rt.i(1013904223), base="uint"), 3, "uint")
         v = rt.assign_swizzle(v, "x", rt.binary("+", rt.swizzle(v, "x"), rt.binary("*", rt.swizzle(v, "y"), rt.swizzle(v, "z"), 1, "uint"), 1, "uint"))
         v = rt.assign_swizzle(v, "y", rt.binary("+", rt.swizzle(v, "y"), rt.binary("*", rt.swizzle(v, "z"), rt.swizzle(v, "x"), 1, "uint"), 1, "uint"))
@@ -40,7 +40,7 @@ def run_pixel(ctx, out):
         v = rt.assign_swizzle(v, "z", rt.binary("+", rt.swizzle(v, "z"), rt.binary("*", rt.swizzle(v, "x"), rt.swizzle(v, "y"), 1, "uint"), 1, "uint"))
         return v
     def prng__vec3(p):
-        p = rt.copy(p)
+        p = rt.copy(p, "float")
         p = rt.assign_swizzle(p, "x", (rt.binary("*", rt.swizzle(p, "x"), rt.f(2.0), 1, "float") if rt.binary(">=", rt.swizzle(p, "x"), rt.f(0.0)) else rt.binary("+", rt.binary("*", rt.unary("-", rt.swizzle(p, "x")), rt.f(2.0), 1, "float"), rt.f(1.0), 1, "float")))
         p = rt.assign_swizzle(p, "y", (rt.binary("*", rt.swizzle(p, "y"), rt.f(2.0), 1, "float") if rt.binary(">=", rt.swizzle(p, "y"), rt.f(0.0)) else rt.binary("+", rt.binary("*", rt.unary("-", rt.swizzle(p, "y")), rt.f(2.0), 1, "float"), rt.f(1.0), 1, "float")))
         p = rt.assign_swizzle(p, "z", (rt.binary("*", rt.swizzle(p, "z"), rt.f(2.0), 1, "float") if rt.binary(">=", rt.swizzle(p, "z"), rt.f(0.0)) else rt.binary("+", rt.binary("*", rt.unary("-", rt.swizzle(p, "z")), rt.f(2.0), 1, "float"), rt.f(1.0), 1, "float")))
@@ -50,16 +50,16 @@ def run_pixel(ctx, out):
     def smoothlerp__float_float_float(x, a, b):
         return rt.binary("+", a, rt.binary("*", smootherstep__float(x), rt.binary("-", b, a, 1, "float"), 1, "float"), 1, "float")
     def grid__vec2_vec2_float(st, cell, speed):
-        st = rt.copy(st)
-        cell = rt.copy(cell)
+        st = rt.copy(st, "float")
+        cell = rt.copy(cell, "float")
         angle = rt.binary("*", rt.swizzle(prng__vec3(rt.construct(3, cell, rt.f(1.0))), "r"), rt.f(6.28318530718), 1, "float")
         angle = rt.binary("+", angle, rt.binary("*", rt.binary("*", _u_time, rt.f(6.28318530718), 1, "float"), speed, 1, "float"), 1, "float")
         gradient = rt.construct(2, rt.component_wise("cos", angle, width=1), rt.component_wise("sin", angle, width=1))
         dist = rt.binary("-", st, cell, 2, "float")
         return rt.dot(gradient, dist)
     def perlin__vec2_vec2_float(st, scale, speed):
-        st = rt.copy(st)
-        scale = rt.copy(scale)
+        st = rt.copy(st, "float")
+        scale = rt.copy(scale, "float")
         st = rt.binary("-", st, rt.f(0.5), 2, "float")
         st = rt.binary("*", st, scale, 2, "float")
         st = rt.binary("+", st, rt.f(0.5), 2, "float")
@@ -73,20 +73,20 @@ def run_pixel(ctx, out):
         val = smoothlerp__float_float_float(rt.binary("-", rt.swizzle(st, "y"), rt.swizzle(cell, "y"), 1, "float"), upper, lower)
         return rt.binary("+", rt.binary("*", val, rt.f(0.5), 1, "float"), rt.f(0.5), 1, "float")
     def splat__vec2_vec2(st, scale):
-        st = rt.copy(st)
-        scale = rt.copy(scale)
+        st = rt.copy(st, "float")
+        scale = rt.copy(scale, "float")
         st = rt.assign_swizzle(st, "x", rt.binary("+", rt.swizzle(st, "x"), rt.binary("-", rt.binary("*", perlin__vec2_vec2_float(rt.binary("+", rt.binary("+", st, _u_seed, 2, "float"), rt.f(50.0), 2, "float"), rt.construct(2, rt.f(2.0), rt.f(3.0)), rt.f(0.0)), rt.f(0.5), 1, "float"), rt.f(0.5), 1, "float"), 1, "float"))
         st = rt.assign_swizzle(st, "y", rt.binary("+", rt.swizzle(st, "y"), rt.binary("-", rt.binary("*", perlin__vec2_vec2_float(rt.binary("+", rt.binary("+", st, _u_seed, 2, "float"), rt.f(60.0), 2, "float"), rt.construct(2, rt.f(2.0), rt.f(3.0)), rt.f(0.0)), rt.f(0.5), 1, "float"), rt.f(0.5), 1, "float"), 1, "float"))
         d = rt.binary("+", rt.binary("+", perlin__vec2_vec2_float(st, rt.binary("*", rt.construct(2, rt.f(4.0)), scale, 2, "float"), _u_speed), rt.binary("*", perlin__vec2_vec2_float(rt.binary("+", st, rt.f(10.0), 2, "float"), rt.binary("*", rt.construct(2, rt.f(8.0)), scale, 2, "float"), _u_speed), rt.f(0.5), 1, "float"), 1, "float"), rt.binary("*", perlin__vec2_vec2_float(rt.binary("+", st, rt.f(20.0), 2, "float"), rt.binary("*", rt.construct(2, rt.f(16.0)), scale, 2, "float"), _u_speed), rt.f(0.25), 1, "float"), 1, "float")
         return rt.component_wise("step", map__float_float_float_float_float(_u_cutoff, rt.f(0.0), rt.f(100.0), rt.f(0.85), rt.f(0.99)), d, width=1)
     def speckle__vec2_vec2(st, scale):
-        st = rt.copy(st)
-        scale = rt.copy(scale)
+        st = rt.copy(st, "float")
+        scale = rt.copy(scale, "float")
         d = rt.binary("+", perlin__vec2_vec2_float(st, scale, _u_speckSpeed), rt.binary("*", perlin__vec2_vec2_float(rt.binary("+", st, rt.f(10.0), 2, "float"), rt.binary("*", scale, rt.f(2.0), 2, "float"), _u_speckSpeed), rt.f(0.5), 1, "float"), 1, "float")
         d = rt.binary("/", d, rt.f(1.5), 1, "float")
         return rt.component_wise("step", map__float_float_float_float_float(_u_speckCutoff, rt.f(0.0), rt.f(100.0), rt.f(0.6), rt.f(0.7)), d, width=1)
     def shape__vec2_int_float(st, sides, blend):
-        st = rt.copy(st)
+        st = rt.copy(st, "float")
         st = rt.binary("-", rt.binary("*", st, rt.f(2.0), 2, "float"), rt.construct(2, rt.binary("/", rt.swizzle(_u_fullResolution, "x"), rt.swizzle(_u_fullResolution, "y"), 1, "float"), rt.f(1.0)), 2, "float")
         a = rt.binary("+", rt.component_wise("atan", rt.swizzle(st, "x"), rt.swizzle(st, "y"), width=1), rt.f(3.14159265359), 1, "float")
         r = rt.binary("/", rt.f(6.28318530718), rt.construct(1, sides), 1, "float")

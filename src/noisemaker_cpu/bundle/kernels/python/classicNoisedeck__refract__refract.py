@@ -6,21 +6,21 @@ def run_pixel(ctx, out):
         pass
     g = _G()
     _u_inputTex = T["inputTex"]
-    _u_resolution = U["resolution"]
-    _u_tileOffset = U["tileOffset"]
-    _u_fullResolution = U["fullResolution"]
-    _u_time = U["time"]
-    _u_mode = U["mode"]
-    _u_amount = U["amount"]
-    _u_direction = U["direction"]
-    _u_blendMode = U["blendMode"]
-    _u_mixAmt = U["mixAmt"]
-    _u_wrap = U["wrap"]
+    _u_resolution = U.get("resolution", rt.construct(2, 0.0))
+    _u_tileOffset = U.get("tileOffset", rt.construct(2, 0.0))
+    _u_fullResolution = U.get("fullResolution", rt.construct(2, 0.0))
+    _u_time = U.get("time", rt.f(0.0))
+    _u_mode = U.get("mode", 0)
+    _u_amount = U.get("amount", rt.f(0.0))
+    _u_direction = U.get("direction", rt.f(0.0))
+    _u_blendMode = U.get("blendMode", 0)
+    _u_mixAmt = U.get("mixAmt", rt.f(0.0))
+    _u_wrap = U.get("wrap", 0)
     g.fragColor = rt.construct(4, 0.0)
     def map__float_float_float_float_float(value, inMin, inMax, outMin, outMax):
         return rt.binary("+", outMin, rt.binary("/", rt.binary("*", rt.binary("-", outMax, outMin, 1, "float"), rt.binary("-", value, inMin, 1, "float"), 1, "float"), rt.binary("-", inMax, inMin, 1, "float"), 1, "float"), 1, "float")
     def convolve__vec2_float_bool(uv, kernel, divide):
-        uv = rt.copy(uv)
+        uv = rt.copy(uv, "float")
         localUV = rt.binary("/", rt.binary("-", rt.binary("*", uv, _u_fullResolution, 2, "float"), _u_tileOffset, 2, "float"), rt.construct(2, rt.texture_size(_u_inputTex)), 2, "float")
         steps = rt.binary("/", rt.f(1.0), rt.construct(2, rt.texture_size(_u_inputTex)), 2, "float")
         offset = rt.new_array(rt.i(9), 2)
@@ -50,11 +50,11 @@ def run_pixel(ctx, out):
             conv = rt.assign_swizzle(conv, "rgb", rt.binary("/", rt.swizzle(conv, "rgb"), kernelWeight, 3, "float"))
         return rt.component_wise("clamp", rt.swizzle(conv, "rgb"), rt.f(0.0), rt.f(1.0), width=3)
     def desaturate__vec3(color):
-        color = rt.copy(color)
+        color = rt.copy(color, "float")
         return rt.binary("+", rt.binary("+", rt.binary("*", rt.f(0.2126), rt.swizzle(color, "r"), 1, "float"), rt.binary("*", rt.f(0.7152), rt.swizzle(color, "g"), 1, "float"), 1, "float"), rt.binary("*", rt.f(0.0722), rt.swizzle(color, "b"), 1, "float"), 1, "float")
     def derivX__vec3_vec2_bool(color, uv, divide):
-        color = rt.copy(color)
-        uv = rt.copy(uv)
+        color = rt.copy(color, "float")
+        uv = rt.copy(uv, "float")
         dcolor = rt.construct(3, desaturate__vec3(color))
         deriv_x = rt.new_array(rt.i(9), 1)
         deriv_x[int(rt.i(0))] = rt.f(0.0)
@@ -69,8 +69,8 @@ def run_pixel(ctx, out):
         s1 = convolve__vec2_float_bool(uv, deriv_x, divide)
         return s1
     def derivY__vec3_vec2_bool(color, uv, divide):
-        color = rt.copy(color)
-        uv = rt.copy(uv)
+        color = rt.copy(color, "float")
+        uv = rt.copy(uv, "float")
         dcolor = rt.construct(3, desaturate__vec3(color))
         deriv_y = rt.new_array(rt.i(9), 1)
         deriv_y[int(rt.i(0))] = rt.f(0.0)
@@ -91,8 +91,8 @@ def run_pixel(ctx, out):
     def blendSoftLight__float_float(base, blend):
         return (rt.binary("+", rt.binary("*", rt.binary("*", rt.f(2.0), base, 1, "float"), blend, 1, "float"), rt.binary("*", rt.binary("*", base, base, 1, "float"), rt.binary("-", rt.f(1.0), rt.binary("*", rt.f(2.0), blend, 1, "float"), 1, "float"), 1, "float"), 1, "float") if rt.binary("<", blend, rt.f(0.5)) else rt.binary("+", rt.binary("*", rt.component_wise("sqrt", base, width=1), rt.binary("-", rt.binary("*", rt.f(2.0), blend, 1, "float"), rt.f(1.0), 1, "float"), 1, "float"), rt.binary("*", rt.binary("*", rt.f(2.0), base, 1, "float"), rt.binary("-", rt.f(1.0), blend, 1, "float"), 1, "float"), 1, "float"))
     def blend__vec4_vec4(color1, color2):
-        color1 = rt.copy(color1)
-        color2 = rt.copy(color2)
+        color1 = rt.copy(color1, "float")
+        color2 = rt.copy(color2, "float")
         color = rt.construct(4, 0.0)
         middle = rt.construct(4, 0.0)
         amt = map__float_float_float_float_float(_u_mixAmt, rt.f(0.0), rt.f(100.0), rt.f(0.0), rt.f(1.0))

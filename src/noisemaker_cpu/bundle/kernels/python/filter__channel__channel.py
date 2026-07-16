@@ -5,12 +5,12 @@ def run_pixel(ctx, out):
     class _G:
         pass
     g = _G()
-    _u_tileOffset = U["tileOffset"]
-    _u_fullResolution = U["fullResolution"]
+    _u_tileOffset = U.get("tileOffset", rt.construct(2, 0.0))
+    _u_fullResolution = U.get("fullResolution", rt.construct(2, 0.0))
     _u_inputTex = T["inputTex"]
-    _u_channel = U["channel"]
-    _u_scale = U["scale"]
-    _u_offset = U["offset"]
+    _u_channel = U.get("channel", 0)
+    _u_scale = U.get("scale", rt.f(0.0))
+    _u_offset = U.get("offset", rt.f(0.0))
     g.fragColor = rt.construct(4, 0.0)
     def main__void():
         globalCoord = rt.binary("+", rt.swizzle(ctx.frag_coord, "xy"), _u_tileOffset, 2, "float")

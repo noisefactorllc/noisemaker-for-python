@@ -7,23 +7,23 @@ def run_pixel(ctx, out):
     g = _G()
     _u_inputTex = T["inputTex"]
     _u_tex = T["tex"]
-    _u_resolution = U["resolution"]
-    _u_tileOffset = U["tileOffset"]
-    _u_fullResolution = U["fullResolution"]
-    _u_focalDistance = U["focalDistance"]
-    _u_aperture = U["aperture"]
-    _u_sampleBias = U["sampleBias"]
-    _u_depthSource = U["depthSource"]
+    _u_resolution = U.get("resolution", rt.construct(2, 0.0))
+    _u_tileOffset = U.get("tileOffset", rt.construct(2, 0.0))
+    _u_fullResolution = U.get("fullResolution", rt.construct(2, 0.0))
+    _u_focalDistance = U.get("focalDistance", rt.f(0.0))
+    _u_aperture = U.get("aperture", rt.f(0.0))
+    _u_sampleBias = U.get("sampleBias", rt.f(0.0))
+    _u_depthSource = U.get("depthSource", 0)
     g.fragColor = rt.construct(4, 0.0)
     def getLuminosity__vec3(color):
-        color = rt.copy(color)
+        color = rt.copy(color, "float")
         return rt.dot(color, rt.construct(3, rt.f(0.2126), rt.f(0.7152), rt.f(0.0722)))
     def computeBlurFactor__float(depth):
         focalPlane = rt.binary("*", _u_focalDistance, rt.f(0.01), 1, "float")
         blur = rt.binary("*", rt.component_wise("abs", rt.binary("-", depth, focalPlane, 1, "float"), width=1), _u_aperture, 1, "float")
         return rt.component_wise("clamp", blur, rt.f(0.0), rt.f(1.0), width=1)
     def applyFocusBlur__sampler2D_sampler2D_vec2(sceneTex, depthTex, uv):
-        uv = rt.copy(uv)
+        uv = rt.copy(uv, "float")
         depthSample = rt.texture(depthTex, rt.binary("/", rt.swizzle(ctx.frag_coord, "xy"), rt.construct(2, rt.texture_size(depthTex)), 2, "float"))
         depth = getLuminosity__vec3(rt.swizzle(depthSample, "rgb"))
         blurRadius = rt.binary("*", computeBlurFactor__float(depth), _u_sampleBias, 1, "float")

@@ -7,17 +7,17 @@ def run_pixel(ctx, out):
     g = _G()
     _u_inputTex = T["inputTex"]
     _u_blurTex = T["blurTex"]
-    _u_resolution = U["resolution"]
-    _u_darkness = U["darkness"]
-    _u_inkColor = U["inkColor"]
-    _u_paperColor = U["paperColor"]
+    _u_resolution = U.get("resolution", rt.construct(2, 0.0))
+    _u_darkness = U.get("darkness", rt.f(0.0))
+    _u_inkColor = U.get("inkColor", rt.construct(3, 0.0))
+    _u_paperColor = U.get("paperColor", rt.construct(3, 0.0))
     g.fragColor = rt.construct(4, 0.0)
     def lum__vec3(c):
-        c = rt.copy(c)
+        c = rt.copy(c, "float")
         return rt.dot(c, rt.construct(3, rt.f(0.2126), rt.f(0.7152), rt.f(0.0722)))
     def tonemap2__float_vec3_vec3(t, ink, paper):
-        ink = rt.copy(ink)
-        paper = rt.copy(paper)
+        ink = rt.copy(ink, "float")
+        paper = rt.copy(paper, "float")
         return rt.component_wise("mix", ink, paper, rt.component_wise("clamp", t, rt.f(0.0), rt.f(1.0), width=1), width=3)
     def main__void():
         uv = rt.binary("/", rt.swizzle(ctx.frag_coord, "xy"), _u_resolution, 2, "float")

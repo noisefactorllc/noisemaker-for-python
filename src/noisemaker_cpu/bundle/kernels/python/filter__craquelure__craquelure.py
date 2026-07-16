@@ -6,31 +6,31 @@ def run_pixel(ctx, out):
         pass
     g = _G()
     _u_inputTex = T["inputTex"]
-    _u_resolution = U["resolution"]
-    _u_tileOffset = U["tileOffset"]
-    _u_spacing = U["spacing"]
-    _u_depth = U["depth"]
-    _u_brightness = U["brightness"]
-    _u_seed = U["seed"]
+    _u_resolution = U.get("resolution", rt.construct(2, 0.0))
+    _u_tileOffset = U.get("tileOffset", rt.construct(2, 0.0))
+    _u_spacing = U.get("spacing", rt.f(0.0))
+    _u_depth = U.get("depth", rt.f(0.0))
+    _u_brightness = U.get("brightness", rt.f(0.0))
+    _u_seed = U.get("seed", 0)
     g.fragColor = rt.construct(4, 0.0)
     def hash12__vec2(p):
-        p = rt.copy(p)
+        p = rt.copy(p, "float")
         p3 = rt.component_wise("fract", rt.binary("*", rt.construct(3, rt.swizzle(p, "xyx")), rt.f(0.1031), 3, "float"), width=3)
         p3 = rt.binary("+", p3, rt.dot(p3, rt.binary("+", rt.swizzle(p3, "yzx"), rt.f(33.33), 3, "float")), 3, "float")
         return rt.component_wise("fract", rt.binary("*", rt.binary("+", rt.swizzle(p3, "x"), rt.swizzle(p3, "y"), 1, "float"), rt.swizzle(p3, "z"), 1, "float"), width=1)
     def hash22__vec2(p):
-        p = rt.copy(p)
+        p = rt.copy(p, "float")
         p3 = rt.component_wise("fract", rt.binary("*", rt.construct(3, rt.swizzle(p, "xyx")), rt.construct(3, rt.f(0.1031), rt.f(0.103), rt.f(0.0973)), 3, "float"), width=3)
         p3 = rt.binary("+", p3, rt.dot(p3, rt.binary("+", rt.swizzle(p3, "yzx"), rt.f(33.33), 3, "float")), 3, "float")
         return rt.component_wise("fract", rt.binary("*", rt.binary("+", rt.swizzle(p3, "xx"), rt.swizzle(p3, "yz"), 2, "float"), rt.swizzle(p3, "zy"), 2, "float"), width=2)
     def vnoise__vec2(p):
-        p = rt.copy(p)
+        p = rt.copy(p, "float")
         i = rt.component_wise("floor", p, width=2)
         f = rt.component_wise("fract", p, width=2)
         u = rt.binary("*", rt.binary("*", f, f, 2, "float"), rt.binary("-", rt.f(3.0), rt.binary("*", rt.f(2.0), f, 2, "float"), 2, "float"), 2, "float")
         return rt.component_wise("mix", rt.component_wise("mix", hash12__vec2(i), hash12__vec2(rt.binary("+", i, rt.construct(2, rt.f(1.0), rt.f(0.0)), 2, "float")), rt.swizzle(u, "x"), width=1), rt.component_wise("mix", hash12__vec2(rt.binary("+", i, rt.construct(2, rt.f(0.0), rt.f(1.0)), 2, "float")), hash12__vec2(rt.binary("+", i, rt.construct(2, rt.f(1.0), rt.f(1.0)), 2, "float")), rt.swizzle(u, "x"), width=1), rt.swizzle(u, "y"), width=1)
     def voronoiF1F2__vec2_float_float(p, jitter, seedVal):
-        p = rt.copy(p)
+        p = rt.copy(p, "float")
         _g = rt.component_wise("floor", p, width=2)
         f = rt.binary("-", p, _g, 2, "float")
         best = rt.f(1000000000.0)
@@ -68,7 +68,7 @@ def run_pixel(ctx, out):
         L = rt.normalize(rt.construct(3, rt.component_wise("cos", a, width=1), rt.component_wise("sin", a, width=1), rt.f(0.75)))
         return rt.component_wise("clamp", rt.dot(n, L), rt.f(0.0), rt.f(1.0), width=1)
     def crackMask__vec2_float_float_float(gc, spacingPx, depthPct, seedVal):
-        gc = rt.copy(gc)
+        gc = rt.copy(gc, "float")
         wob = rt.binary("*", rt.construct(2, vnoise__vec2(rt.binary("/", gc, rt.f(6.0), 2, "float")), vnoise__vec2(rt.binary("+", rt.binary("/", gc, rt.f(6.0), 2, "float"), rt.construct(2, rt.f(37.7), rt.f(91.3)), 2, "float"))), rt.f(2.0), 2, "float")
         p = rt.binary("/", rt.binary("+", gc, wob, 2, "float"), spacingPx, 2, "float")
         f1f2 = voronoiF1F2__vec2_float_float(p, rt.f(1.0), seedVal)

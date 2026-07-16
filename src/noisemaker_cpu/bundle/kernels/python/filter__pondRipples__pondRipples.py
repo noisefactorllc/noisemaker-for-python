@@ -5,15 +5,15 @@ def run_pixel(ctx, out):
     class _G:
         pass
     g = _G()
-    _u_STYLE = U["STYLE"]
-    _u_WRAP = U["WRAP"]
+    _u_STYLE = U.get("STYLE", 0)
+    _u_WRAP = U.get("WRAP", 0)
     _u_inputTex = T["inputTex"]
-    _u_resolution = U["resolution"]
-    _u_tileOffset = U["tileOffset"]
-    _u_fullResolution = U["fullResolution"]
-    _u_amount = U["amount"]
-    _u_ridges = U["ridges"]
-    _u_antialias = U["antialias"]
+    _u_resolution = U.get("resolution", rt.construct(2, 0.0))
+    _u_tileOffset = U.get("tileOffset", rt.construct(2, 0.0))
+    _u_fullResolution = U.get("fullResolution", rt.construct(2, 0.0))
+    _u_amount = U.get("amount", rt.f(0.0))
+    _u_ridges = U.get("ridges", 0)
+    _u_antialias = U.get("antialias", False)
     g.fragColor = rt.construct(4, 0.0)
     def main__void():
         aspectRatio = rt.binary("/", rt.swizzle(_u_fullResolution, "x"), rt.swizzle(_u_fullResolution, "y"), 1, "float")

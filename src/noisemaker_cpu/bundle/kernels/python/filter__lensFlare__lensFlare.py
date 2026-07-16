@@ -5,29 +5,29 @@ def run_pixel(ctx, out):
     class _G:
         pass
     g = _G()
-    _u_LENS_TYPE = U["LENS_TYPE"]
+    _u_LENS_TYPE = U.get("LENS_TYPE", 0)
     _u_inputTex = T["inputTex"]
-    _u_resolution = U["resolution"]
-    _u_tileOffset = U["tileOffset"]
-    _u_fullResolution = U["fullResolution"]
-    _u_brightness = U["brightness"]
-    _u_centerX = U["centerX"]
-    _u_centerY = U["centerY"]
-    _u_tint = U["tint"]
+    _u_resolution = U.get("resolution", rt.construct(2, 0.0))
+    _u_tileOffset = U.get("tileOffset", rt.construct(2, 0.0))
+    _u_fullResolution = U.get("fullResolution", rt.construct(2, 0.0))
+    _u_brightness = U.get("brightness", rt.f(0.0))
+    _u_centerX = U.get("centerX", rt.f(0.0))
+    _u_centerY = U.get("centerY", rt.f(0.0))
+    _u_tint = U.get("tint", rt.construct(3, 0.0))
     g.fragColor = rt.construct(4, 0.0)
     def flareAxis__vec2_vec2_float_float(flarePos, mirrorPos, t, aspectRatio):
-        flarePos = rt.copy(flarePos)
-        mirrorPos = rt.copy(mirrorPos)
+        flarePos = rt.copy(flarePos, "float")
+        mirrorPos = rt.copy(mirrorPos, "float")
         a = rt.component_wise("mix", flarePos, mirrorPos, t, width=2)
         a = rt.assign_swizzle(a, "x", rt.binary("*", rt.swizzle(a, "x"), aspectRatio, 1, "float"))
         return a
     def coreGlow__float(d):
         return rt.binary("+", rt.binary("*", rt.component_wise("exp", rt.binary("*", rt.binary("*", rt.unary("-", d), d, 1, "float"), rt.f(900.0), 1, "float"), width=1), rt.f(1.2), 1, "float"), rt.binary("*", rt.component_wise("exp", rt.binary("*", rt.unary("-", d), rt.f(8.0), 1, "float"), width=1), rt.f(0.4), 1, "float"), 1, "float")
     def anamorphicStreak__vec2(delta):
-        delta = rt.copy(delta)
+        delta = rt.copy(delta, "float")
         return rt.component_wise("exp", rt.unary("-", rt.binary("+", rt.binary("*", rt.binary("*", rt.swizzle(delta, "y"), rt.swizzle(delta, "y"), 1, "float"), rt.f(4000.0), 1, "float"), rt.binary("*", rt.binary("*", rt.swizzle(delta, "x"), rt.swizzle(delta, "x"), 1, "float"), rt.f(18.0), 1, "float"), 1, "float")), width=1)
     def sixPointStar__vec2_float(delta, d):
-        delta = rt.copy(delta)
+        delta = rt.copy(delta, "float")
         phi = rt.component_wise("atan", rt.swizzle(delta, "y"), rt.swizzle(delta, "x"), width=1)
         return rt.binary("*", rt.binary("*", rt.component_wise("pow", rt.component_wise("max", rt.f(0.0), rt.component_wise("cos", rt.binary("*", rt.f(6.0), phi, 1, "float"), width=1), width=1), rt.f(40.0), width=1), rt.component_wise("exp", rt.binary("*", rt.unary("-", d), rt.f(5.0), 1, "float"), width=1), 1, "float"), rt.f(0.5), 1, "float")
     def haloRainbow__float(dc):
@@ -43,7 +43,7 @@ def run_pixel(ctx, out):
         inner = rt.binary("-", rt.f(1.0), rt.component_wise("smoothstep", rt.binary("*", size, rt.f(0.3), 1, "float"), rt.binary("*", size, rt.f(0.6), 1, "float"), dist, width=1), 1, "float")
         return rt.binary("-", outer, inner, 1, "float")
     def hexDist__vec2(p):
-        p = rt.copy(p)
+        p = rt.copy(p, "float")
         a0 = rt.construct(2, rt.f(1.0), rt.f(0.0))
         a1 = rt.construct(2, rt.f(0.5), rt.f(0.8660254038))
         a2 = rt.construct(2, rt.unary("-", rt.f(0.5)), rt.f(0.8660254038))
@@ -52,7 +52,7 @@ def run_pixel(ctx, out):
         d2 = rt.component_wise("abs", rt.dot(p, a2), width=1)
         return rt.component_wise("max", d0, rt.component_wise("max", d1, d2, width=1), width=1)
     def hexGhost__vec2_float(delta, size):
-        delta = rt.copy(delta)
+        delta = rt.copy(delta, "float")
         return rt.binary("-", rt.f(1.0), rt.component_wise("smoothstep", rt.binary("*", size, rt.f(0.6), 1, "float"), size, hexDist__vec2(delta), width=1), 1, "float")
     def main__void():
         aspectRatio = rt.binary("/", rt.swizzle(_u_fullResolution, "x"), rt.swizzle(_u_fullResolution, "y"), 1, "float")
