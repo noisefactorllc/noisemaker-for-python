@@ -219,6 +219,39 @@ def _normalize_js_literals(text: str) -> str:
     return "".join(out)
 
 
+def _sanitize_bare_identifiers(text: str) -> str:
+    """Replace value-position bare identifiers with 0 so json5 can parse an
+    object whose UI-metadata fields reference minified module-scope constants
+    (e.g. `max: s`, `step: e`). Keys (identifier followed by `:`) and
+    true/false/null are preserved; string/template contents are never touched.
+    The rendering-relevant fields (type/default/uniform/define/texture/choices/
+    enum) are string/number/object literals and are unaffected."""
+    out: list[str] = []
+    i, n = 0, len(text)
+    while i < n:
+        c = text[i]
+        if c in "\"'`":
+            start = i
+            i = _skip_string(text, i)
+            out.append(text[start:i])
+            continue
+        if c.isalpha() or c in "_$":
+            j = i
+            while j < n and (text[j].isalnum() or text[j] in "_$"):
+                j += 1
+            ident = text[i:j]
+            k = j
+            while k < n and text[k] in " \t\n\r":
+                k += 1
+            is_key = k < n and text[k] == ":"
+            out.append(ident if (is_key or ident in ("true", "false", "null")) else "0")
+            i = j
+            continue
+        out.append(c)
+        i += 1
+    return "".join(out)
+
+
 def _find_value_start(text: str, key: str) -> int | None:
     """Locate `key`'s value in `text`. Handles both bundle conventions seen
     on the CDN: the common object-literal `key: value` and the class-field
@@ -231,17 +264,23 @@ def _find_value_start(text: str, key: str) -> int | None:
     return m.end() if m else None
 
 
-def _read_literal(text: str, start: int | None) -> Any:
+def _read_literal(text: str, start: int | None, sanitize: bool = False) -> Any:
     """Read the single JS value (string, object, or array literal) at
     `start` and return it as a Python value via json5. Returns None if
     `start` is None, or doesn't point at a literal this function
     recognizes (e.g. a bare identifier referencing a module-scope
-    variable -- see the module docstring's "Known limitation")."""
+    variable -- see the module docstring's "Known limitation").
+
+    ``sanitize`` replaces value-position bare identifiers with 0 (for the
+    ``globals`` object, whose UI-metadata fields may reference minified
+    constants that json5 can't parse; rendering-relevant fields are literals)."""
     if start is None or start >= len(text):
         return None
     c = text[start]
     if c in "{[":
         raw = _normalize_js_literals(_extract_balanced(text, start))
+        if sanitize:
+            raw = _sanitize_bare_identifiers(raw)
         return json5.loads(raw)
     if c in "\"'":
         end = _skip_string(text, start)
@@ -276,7 +315,7 @@ def _parse_field(region: str, effect_id: str, key: str, default: Any) -> Any:
     if start is None:
         return default
     try:
-        value = _read_literal(region, start)
+        value = _read_literal(region, start, sanitize=(key == "globals"))
     except Exception as exc:  # json5 decode error, unbalanced brackets, etc.
         raise ValueError(
             f"CDN effect {effect_id!r}: could not parse {key!r} as a JSON5 "

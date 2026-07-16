@@ -205,6 +205,12 @@
     "classicNoisedeck/moodscape:moodscape": "8d884897009a6b2fd5d02d31eb762ae39f94a6de79444ff63bf51283c32acf90",
     "classicNoisedeck/kaleido:kaleido": "988b44da4926ec5371c8e2838cf225510283c992cb0c64ac5b87384cf1e0b7f4",
     "filter/wind:wind": "3540e81343c42ae16e3d56508efecf81e2d380ad328ac44264482de07aeda0e7",
-    "synth/noise:noise": "0ddec990a1965f56f993b47302e5b34ec93b77e82a548d86ecf54780f7d16a83"
+    "synth/noise:noise": "0ddec990a1965f56f993b47302e5b34ec93b77e82a548d86ecf54780f7d16a83",
+    "classicNoisedeck/cellNoise:cellNoise": "51bc2ee0d435564d7ee663db1f3a2c1201bb382d623455bccf2ab04a946a9ae8",
+    "classicNoisedeck/colorLab:colorLab": "ed5e4f1c4514c08e24a0d657a25f95fbafcf8b631daebffa072d573168d6de89",
+    "classicNoisedeck/fractal:fractal": "d041e8b1fc4e9aff5b674fff5a42db40510b0af4412c23e2f5f4224dcfdf91db",
+    "classicNoisedeck/noise:noise": "d6cec1c6b4f7debb497911e64b94424e4d55b17b784b302075d413ad2db23e58",
+    "classicNoisedeck/shapeMixer:shapeMixer": "803d99590ec1c3ec2a04757419bb633fdb3a63851177e1733fba3a0a7a575444",
+    "classicNoisedeck/shapes:shapes": "8ed7c5eddd75595b09b89934a872cf60c6fa4390de20ea2a767bb0dc22260ab1"
   }
 }
