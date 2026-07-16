@@ -5,56 +5,43 @@ def run_pixel(ctx, out):
     class _G:
         pass
     g = _G()
-    _u_RADIUS = U["RADIUS"]
+    _u_RADIUS = U.get("RADIUS", 0)
     _u_inputTex = T["inputTex"]
-    _u_threshold = U["threshold"]
-    def cpu_ivec2__float(value):
-        return rt.construct(2, value)
-    def cpu_ivec2__vec2(value):
-        value = rt.copy(value)
-        return value
-    def cpu_ivec2__float_float(v0, v1):
-        return rt.construct(2, v0, v1)
-    def cpu_uvec2__float(value):
-        return rt.construct(2, value)
-    def cpu_uvec2__vec2(value):
-        value = rt.copy(value)
-        return value
-    def cpu_uvec2__float_float(v0, v1):
-        return rt.construct(2, v0, v1)
-    def lessRecord__vec2_int_vec2_int(a, blueA, b, blueB):
-        a = rt.copy(a)
-        b = rt.copy(b)
+    _u_threshold = U.get("threshold", rt.f(0.0))
+    g.fragColor = rt.construct(4, 0.0)
+    def lessRecord__uvec2_uint_uvec2_uint(a, blueA, b, blueB):
+        a = rt.copy(a, "uint")
+        b = rt.copy(b, "uint")
         if rt.binary("!=", rt.swizzle(a, "x"), rt.swizzle(b, "x")):
             return rt.binary("<", rt.swizzle(a, "x"), rt.swizzle(b, "x"))
         if rt.binary("!=", rt.swizzle(a, "y"), rt.swizzle(b, "y")):
             return rt.binary("<", rt.swizzle(a, "y"), rt.swizzle(b, "y"))
         return rt.binary("<", blueA, blueB)
     def packRecordMajor__vec4(sampleColor):
-        sampleColor = rt.copy(sampleColor)
+        sampleColor = rt.copy(sampleColor, "float")
         brightness = rt.dot(rt.swizzle(sampleColor, "rgb"), rt.construct(3, rt.f(0.2126), rt.f(0.7152), rt.f(0.0722)))
         packedRg = rt.pack_half_2x16(rt.swizzle(sampleColor, "rg"))
-        orderedRg = rt.binary("|", rt.binary("<<", rt.binary("&", packedRg, rt.i(0xfff), 1, "int"), rt.i(16), 1, "int"), rt.binary(">>", packedRg, rt.i(16), 1, "int"), 1, "int")
-        return cpu_uvec2__float_float(rt.float_bits_to_uint(brightness), orderedRg)
+        orderedRg = rt.binary("|", rt.binary("<<", rt.binary("&", packedRg, rt.i(65535), 1, "uint"), rt.i(16), 1, "uint"), rt.binary(">>", packedRg, rt.i(16), 1, "uint"), 1, "uint")
+        return rt.construct(2, rt.float_bits_to_uint(brightness), orderedRg, base="uint")
     def packRecordBlue__vec4(sampleColor):
-        sampleColor = rt.copy(sampleColor)
-        return rt.binary("&", rt.pack_half_2x16(rt.construct(2, rt.swizzle(sampleColor, "b"), rt.f(0.0))), rt.i(0xfff), 1, "uint")
-    def unpackRecordRgb__vec2_int(major, blue):
-        major = rt.copy(major)
-        packedRg = rt.binary("|", rt.binary("<<", rt.swizzle(major, "y"), rt.i(16), 1, "int"), rt.binary(">>", rt.swizzle(major, "y"), rt.i(16), 1, "int"), 1, "int")
+        sampleColor = rt.copy(sampleColor, "float")
+        return rt.binary("&", rt.pack_half_2x16(rt.construct(2, rt.swizzle(sampleColor, "b"), rt.f(0.0))), rt.i(65535), 1, "uint")
+    def unpackRecordRgb__uvec2_uint(major, blue):
+        major = rt.copy(major, "uint")
+        packedRg = rt.binary("|", rt.binary("<<", rt.swizzle(major, "y"), rt.i(16), 1, "uint"), rt.binary(">>", rt.swizzle(major, "y"), rt.i(16), 1, "uint"), 1, "uint")
         rg = rt.unpack_half_2x16(packedRg)
         b = rt.swizzle(rt.unpack_half_2x16(blue), "x")
         return rt.construct(3, rg, b)
     def readRecord__ivec2_ivec2_int_int(center, dimensions, x, y):
-        center = rt.copy(center)
-        dimensions = rt.copy(dimensions)
-        coord = rt.component_wise("clamp", rt.binary("+", center, cpu_ivec2__float_float(x, y), 2, "float"), cpu_ivec2__float(rt.i(0)), rt.binary("-", dimensions, cpu_ivec2__float(rt.i(1)), 2, "float"), width=2)
+        center = rt.copy(center, "int")
+        dimensions = rt.copy(dimensions, "int")
+        coord = rt.component_wise("clamp", rt.binary("+", center, rt.construct(2, x, y, base="int"), 2, "int"), rt.construct(2, rt.i(0), base="int"), rt.binary("-", dimensions, rt.construct(2, rt.i(1), base="int"), 2, "int"), width=2)
         return rt.texel_fetch(_u_inputTex, coord, rt.i(0))
     def main__void():
-        majorRecords = rt.construct(2, 0.0)
-        blueRecords = 0
+        majorRecords = rt.new_array(rt.i(49), 2)
+        blueRecords = rt.new_array(rt.i(49), 1)
         dimensions = rt.texture_size(_u_inputTex)
-        center = cpu_ivec2__vec2(rt.swizzle(ctx.frag_coord, "xy"))
+        center = rt.construct(2, rt.swizzle(ctx.frag_coord, "xy"), base="int")
         originalRgb = rt.construct(3, rt.f(0.0))
         centerAlpha = rt.f(1.0)
         index = rt.i(0)
@@ -62,7 +49,7 @@ def run_pixel(ctx, out):
         _for0_first = True
         for _for0 in range(1048576):
             if not _for0_first:
-                y = rt.binary("+", y, rt.i(1), 1)
+                y = rt.binary("+", y, rt.i(1), 1, "int")
             _for0_first = False
             if not (rt.binary("<=", y, _u_RADIUS)):
                 break
@@ -70,17 +57,17 @@ def run_pixel(ctx, out):
             _for1_first = True
             for _for1 in range(1048576):
                 if not _for1_first:
-                    x = rt.binary("+", x, rt.i(1), 1)
+                    x = rt.binary("+", x, rt.i(1), 1, "int")
                 _for1_first = False
                 if not (rt.binary("<=", x, _u_RADIUS)):
                     break
                 sampleColor = readRecord__ivec2_ivec2_int_int(center, dimensions, x, y)
                 majorRecords[int(index)] = packRecordMajor__vec4(sampleColor)
                 blueRecords[int(index)] = packRecordBlue__vec4(sampleColor)
-                if rt.binary("&&", rt.binary("==", x, rt.i(0)), rt.binary("==", y, rt.i(0))):
+                if (bool(rt.binary("==", x, rt.i(0))) and bool(rt.binary("==", y, rt.i(0)))):
                     originalRgb = rt.swizzle(sampleColor, "rgb")
                     centerAlpha = rt.swizzle(sampleColor, "a")
-                index = rt.binary("+", index, rt.i(1), 1)
+                index = rt.binary("+", index, rt.i(1), 1, "int")
         medianIndex = rt.binary("/", rt.i(49), rt.i(2), 1, "int")
         left = rt.i(0)
         right = rt.binary("-", rt.i(49), rt.i(1), 1, "int")
@@ -95,13 +82,13 @@ def run_pixel(ctx, out):
                 if not (rt.binary("<=", scanLeft, scanRight)):
                     break
                 for _wh4 in range(1048576):
-                    if not (lessRecord__vec2_int_vec2_int(majorRecords[int(scanLeft)], blueRecords[int(scanLeft)], pivotMajor, pivotBlue)):
+                    if not (lessRecord__uvec2_uint_uvec2_uint(majorRecords[int(scanLeft)], blueRecords[int(scanLeft)], pivotMajor, pivotBlue)):
                         break
-                    scanLeft = rt.binary("+", scanLeft, rt.i(1), 1)
+                    scanLeft = rt.binary("+", scanLeft, rt.i(1), 1, "int")
                 for _wh5 in range(1048576):
-                    if not (lessRecord__vec2_int_vec2_int(pivotMajor, pivotBlue, majorRecords[int(scanRight)], blueRecords[int(scanRight)])):
+                    if not (lessRecord__uvec2_uint_uvec2_uint(pivotMajor, pivotBlue, majorRecords[int(scanRight)], blueRecords[int(scanRight)])):
                         break
-                    scanRight = rt.binary("-", scanRight, rt.i(1), 1)
+                    scanRight = rt.binary("-", scanRight, rt.i(1), 1, "int")
                 if rt.binary("<=", scanLeft, scanRight):
                     temporaryMajor = majorRecords[int(scanLeft)]
                     majorRecords[int(scanLeft)] = majorRecords[int(scanRight)]
@@ -109,16 +96,16 @@ def run_pixel(ctx, out):
                     temporaryBlue = blueRecords[int(scanLeft)]
                     blueRecords[int(scanLeft)] = blueRecords[int(scanRight)]
                     blueRecords[int(scanRight)] = temporaryBlue
-                    scanLeft = rt.binary("+", scanLeft, rt.i(1), 1)
-                    scanRight = rt.binary("-", scanRight, rt.i(1), 1)
+                    scanLeft = rt.binary("+", scanLeft, rt.i(1), 1, "int")
+                    scanRight = rt.binary("-", scanRight, rt.i(1), 1, "int")
             if rt.binary("<", scanRight, medianIndex):
                 left = scanLeft
             if rt.binary("<", medianIndex, scanLeft):
                 right = scanRight
-        medianRgb = unpackRecordRgb__vec2_int(majorRecords[int(medianIndex)], blueRecords[int(medianIndex)])
+        medianRgb = unpackRecordRgb__uvec2_uint(majorRecords[int(medianIndex)], blueRecords[int(medianIndex)])
         difference = rt.component_wise("abs", rt.binary("-", originalRgb, medianRgb, 3, "float"), width=3)
         maxDifference = rt.component_wise("max", rt.component_wise("max", rt.swizzle(difference, "r"), rt.swizzle(difference, "g"), width=1), rt.swizzle(difference, "b"), width=1)
-        replaceCenter = rt.binary("||", rt.binary("<=", _u_threshold, rt.f(0.0)), rt.binary(">=", maxDifference, rt.binary("/", _u_threshold, rt.f(100.0), 1, "float")))
+        replaceCenter = (bool(rt.binary("<=", _u_threshold, rt.f(0.0))) or bool(rt.binary(">=", maxDifference, rt.binary("/", _u_threshold, rt.f(100.0), 1, "float"))))
         g.fragColor = rt.construct(4, (medianRgb if replaceCenter else originalRgb), centerAlpha)
     main__void()
     _c = g.fragColor

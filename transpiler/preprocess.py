@@ -52,10 +52,15 @@ def normalize(source: str, runtime_defines: dict | None = None) -> dict:
 def _preprocess(source: str, runtime_defines: dict) -> list:
     out = []
     defines: dict[str, str] = {}
-    stack = []  # frames: {"kind": "static"|"runtime", "active": bool, "taken": bool, "outer": bool}
+    stack = []  # frames: {"kind": "static"|"runtime"|"include_all", "active", "taken", "outer"}
+    depth = [0]  # brace nesting of emitted content; list for closure mutation
 
     def emitting():
         return all(f["active"] for f in stack)
+
+    def emit(line):
+        out.append(line)
+        depth[0] += line.count("{") - line.count("}")
 
     for raw in source.split("\n"):
         s = raw.strip()
@@ -77,16 +82,26 @@ def _preprocess(source: str, runtime_defines: dict) -> list:
             if head in ("ifdef", "ifndef", "if"):
                 outer = emitting()
                 if outer and _cond_runtime(d, head, runtime_defines):
-                    out.append(f"if ({_glsl_cond(d, head, defines)}) {{")
-                    stack.append({"kind": "runtime", "active": True, "taken": True, "outer": outer})
+                    if depth[0] == 0:
+                        # A runtime #if at global scope gates whole declarations
+                        # (e.g. conditionally-compiled functions), which can't be
+                        # a runtime `if`. Include ALL branches — the transpiled
+                        # functions are uniquely named and dispatched at runtime
+                        # by a separate statement-scope #if.
+                        stack.append({"kind": "include_all", "active": True, "taken": True, "outer": outer})
+                    else:
+                        emit(f"if ({_glsl_cond(d, head, defines)}) {{")
+                        stack.append({"kind": "runtime", "active": True, "taken": True, "outer": outer})
                 else:
                     val = _eval(d, head, defines, runtime_defines) if outer else False
                     stack.append({"kind": "static", "active": outer and val, "taken": val, "outer": outer})
                 continue
             if head == "elif":
                 fr = stack[-1]
-                if fr["kind"] == "runtime":
-                    out.append(f"}} else if ({_glsl_cond(d, 'if', defines)}) {{")
+                if fr["kind"] == "include_all":
+                    pass  # every branch is emitted
+                elif fr["kind"] == "runtime":
+                    emit(f"}} else if ({_glsl_cond(d, 'if', defines)}) {{")
                     fr["active"] = True
                 else:
                     if fr["taken"]:
@@ -98,8 +113,10 @@ def _preprocess(source: str, runtime_defines: dict) -> list:
                 continue
             if head == "else":
                 fr = stack[-1]
-                if fr["kind"] == "runtime":
-                    out.append("} else {")
+                if fr["kind"] == "include_all":
+                    pass
+                elif fr["kind"] == "runtime":
+                    emit("} else {")
                     fr["active"] = True
                 else:
                     fr["active"] = fr["outer"] and (not fr["taken"])
@@ -108,11 +125,11 @@ def _preprocess(source: str, runtime_defines: dict) -> list:
             if head == "endif":
                 fr = stack.pop()
                 if fr["kind"] == "runtime":
-                    out.append("}")
+                    emit("}")
                 continue
             continue  # unknown directive
         if emitting():
-            out.append(_expand(raw, defines))
+            emit(_expand(raw, defines))
     return "\n".join(out)
 
 

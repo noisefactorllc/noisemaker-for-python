@@ -300,6 +300,132 @@
         }
       ]
     },
+    "classicNoisedeck/caustic": {
+      "namespace": "classicNoisedeck",
+      "func": "caustic",
+      "kind": "generator",
+      "params": {
+        "interp": {
+          "type": "int",
+          "default": 10,
+          "choices": {
+            "constant": 0,
+            "linear": 1,
+            "hermite": 2,
+            "catmullRom3x3": 3,
+            "catmullRom4x4": 4,
+            "bSpline3x3": 5,
+            "bSpline4x4": 6,
+            "simplex": 10,
+            "sine": 11
+          },
+          "ui": {
+            "label": "noise type",
+            "control": "dropdown"
+          },
+          "define": "NOISE_TYPE"
+        },
+        "noiseScale": {
+          "type": "float",
+          "default": 85,
+          "min": 1,
+          "max": 200,
+          "ui": {
+            "label": "scale",
+            "control": "slider"
+          },
+          "uniform": "noiseScale"
+        },
+        "speed": {
+          "type": "float",
+          "default": 25,
+          "min": 0,
+          "max": 100,
+          "zero": 0,
+          "ui": {
+            "label": "speed",
+            "control": "slider"
+          },
+          "uniform": "speed"
+        },
+        "wrap": {
+          "type": "boolean",
+          "default": true,
+          "ui": {
+            "label": "wrap",
+            "control": "checkbox",
+            "enabledBy": {
+              "param": "interp",
+              "notIn": [
+                10,
+                11
+              ]
+            }
+          },
+          "uniform": "wrap"
+        },
+        "seed": {
+          "type": "int",
+          "default": 44,
+          "min": 0,
+          "max": 100,
+          "ui": {
+            "label": "seed",
+            "control": "slider"
+          },
+          "uniform": "seed"
+        },
+        "hueRotation": {
+          "type": "float",
+          "default": 180,
+          "min": 0,
+          "max": 360,
+          "ui": {
+            "label": "hue rotation",
+            "control": "slider",
+            "category": "color"
+          },
+          "uniform": "hueRotation"
+        },
+        "hueRange": {
+          "type": "float",
+          "default": 25,
+          "min": 0,
+          "max": 100,
+          "ui": {
+            "label": "hue range",
+            "control": "slider",
+            "category": "color"
+          },
+          "uniform": "hueRange"
+        },
+        "intensity": {
+          "type": "float",
+          "default": 0,
+          "min": -100,
+          "max": 100,
+          "ui": {
+            "label": "intensity",
+            "control": "slider",
+            "category": "color"
+          },
+          "uniform": "intensity"
+        }
+      },
+      "textures": {},
+      "passes": [
+        {
+          "name": "render",
+          "program": "caustic",
+          "key": "classicNoisedeck/caustic:caustic",
+          "inputs": {},
+          "outputs": {
+            "fragColor": "outputTex"
+          },
+          "uniforms": {}
+        }
+      ]
+    },
     "classicNoisedeck/cellRefract": {
       "namespace": "classicNoisedeck",
       "func": "cellRefract",
@@ -1220,6 +1346,173 @@
           "inputs": {
             "inputTex": "inputTex"
           },
+          "outputs": {
+            "fragColor": "outputTex"
+          },
+          "uniforms": {}
+        }
+      ]
+    },
+    "classicNoisedeck/moodscape": {
+      "namespace": "classicNoisedeck",
+      "func": "moodscape",
+      "kind": "generator",
+      "params": {
+        "interp": {
+          "type": "int",
+          "default": 10,
+          "choices": {
+            "constant": 0,
+            "linear": 1,
+            "hermite": 2,
+            "catmullRom3x3": 3,
+            "catmullRom4x4": 4,
+            "bSpline3x3": 5,
+            "bSpline4x4": 6,
+            "simplex": 10,
+            "sine": 11
+          },
+          "ui": {
+            "label": "noise type",
+            "control": "dropdown"
+          },
+          "define": "NOISE_TYPE"
+        },
+        "noiseScale": {
+          "type": "float",
+          "default": 85,
+          "min": 1,
+          "max": 200,
+          "ui": {
+            "label": "scale",
+            "control": "slider"
+          },
+          "uniform": "noiseScale"
+        },
+        "speed": {
+          "type": "float",
+          "default": 25,
+          "min": 0,
+          "max": 100,
+          "zero": 0,
+          "ui": {
+            "label": "speed",
+            "control": "slider"
+          },
+          "uniform": "speed"
+        },
+        "refractAmt": {
+          "type": "float",
+          "default": 5,
+          "min": 0,
+          "max": 100,
+          "ui": {
+            "label": "refract",
+            "control": "slider"
+          },
+          "uniform": "refractAmt"
+        },
+        "ridges": {
+          "type": "boolean",
+          "default": true,
+          "ui": {
+            "label": "ridges",
+            "control": "checkbox"
+          },
+          "uniform": "ridges"
+        },
+        "wrap": {
+          "type": "boolean",
+          "default": true,
+          "ui": {
+            "label": "wrap",
+            "control": "checkbox",
+            "enabledBy": {
+              "param": "interp",
+              "lt": 10
+            }
+          },
+          "uniform": "wrap"
+        },
+        "seed": {
+          "type": "int",
+          "default": 44,
+          "min": 0,
+          "max": 100,
+          "ui": {
+            "label": "seed",
+            "control": "slider"
+          },
+          "uniform": "seed"
+        },
+        "colorMode": {
+          "type": "int",
+          "default": 2,
+          "choices": {
+            "mono": 0,
+            "rgb": 1,
+            "hsv": 2,
+            "oklab": 3
+          },
+          "ui": {
+            "label": "color mode",
+            "control": "dropdown",
+            "category": "color"
+          },
+          "define": "COLOR_MODE"
+        },
+        "hueRotation": {
+          "type": "float",
+          "default": 180,
+          "min": 0,
+          "max": 360,
+          "ui": {
+            "label": "hue rotation",
+            "control": "slider",
+            "category": "color",
+            "enabledBy": {
+              "param": "colorMode",
+              "neq": 0
+            }
+          },
+          "uniform": "hueRotation"
+        },
+        "hueRange": {
+          "type": "float",
+          "default": 25,
+          "min": 0,
+          "max": 100,
+          "ui": {
+            "label": "hue range",
+            "control": "slider",
+            "category": "color",
+            "enabledBy": {
+              "param": "colorMode",
+              "eq": 2
+            }
+          },
+          "uniform": "hueRange"
+        },
+        "intensity": {
+          "type": "float",
+          "default": 0,
+          "min": -100,
+          "max": 100,
+          "ui": {
+            "label": "intensity",
+            "control": "slider",
+            "category": "color"
+          },
+          "uniform": "intensity"
+        }
+      },
+      "textures": {},
+      "passes": [
+        {
+          "name": "render",
+          "program": "moodscape",
+          "key": "classicNoisedeck/moodscape:moodscape",
+          "inputs": {},
           "outputs": {
             "fragColor": "outputTex"
           },
@@ -5597,6 +5890,51 @@
           "inputs": {
             "inputTex": "inputTex",
             "heightMap": "heightMap"
+          },
+          "outputs": {
+            "fragColor": "outputTex"
+          },
+          "uniforms": {}
+        }
+      ]
+    },
+    "filter/median": {
+      "namespace": "filter",
+      "func": "median",
+      "kind": "filter",
+      "params": {
+        "radius": {
+          "type": "int",
+          "default": 3,
+          "define": "RADIUS",
+          "min": 1,
+          "max": 3,
+          "step": 1,
+          "ui": {
+            "label": "radius",
+            "control": "slider"
+          }
+        },
+        "threshold": {
+          "type": "float",
+          "default": 0,
+          "uniform": "threshold",
+          "min": 0,
+          "max": 100,
+          "ui": {
+            "label": "threshold",
+            "control": "slider"
+          }
+        }
+      },
+      "textures": {},
+      "passes": [
+        {
+          "name": "median",
+          "program": "median",
+          "key": "filter/median:median",
+          "inputs": {
+            "inputTex": "inputTex"
           },
           "outputs": {
             "fragColor": "outputTex"
@@ -15293,6 +15631,142 @@
           "name": "main",
           "program": "pattern",
           "key": "synth/pattern:pattern",
+          "inputs": {},
+          "outputs": {
+            "color": "outputTex"
+          },
+          "uniforms": {}
+        }
+      ]
+    },
+    "synth/perlin": {
+      "namespace": "synth",
+      "func": "perlin",
+      "kind": "generator",
+      "params": {
+        "scale": {
+          "type": "float",
+          "default": 25,
+          "min": 0,
+          "max": 100,
+          "randMin": 15,
+          "uniform": "scale",
+          "ui": {
+            "label": "scale"
+          }
+        },
+        "octaves": {
+          "type": "int",
+          "default": 1,
+          "min": 1,
+          "max": 6,
+          "uniform": "octaves",
+          "ui": {
+            "label": "octaves"
+          }
+        },
+        "colorMode": {
+          "type": "int",
+          "default": 1,
+          "uniform": "colorMode",
+          "choices": {
+            "mono": 0,
+            "rgb": 1
+          },
+          "ui": {
+            "label": "color mode",
+            "control": "dropdown"
+          }
+        },
+        "dimensions": {
+          "type": "int",
+          "default": 2,
+          "min": 2,
+          "max": 3,
+          "uniform": "dimensions",
+          "define": "DIMENSIONS",
+          "ui": {
+            "label": "dimensions"
+          }
+        },
+        "ridges": {
+          "type": "boolean",
+          "default": false,
+          "uniform": "ridges",
+          "ui": {
+            "label": "ridges"
+          }
+        },
+        "warpIterations": {
+          "type": "int",
+          "default": 0,
+          "min": 0,
+          "max": 4,
+          "uniform": "warpIterations",
+          "ui": {
+            "label": "warp iterations",
+            "category": "warp"
+          }
+        },
+        "warpScale": {
+          "type": "float",
+          "default": 50,
+          "min": 0,
+          "max": 100,
+          "uniform": "warpScale",
+          "ui": {
+            "label": "warp scale",
+            "category": "warp",
+            "enabledBy": {
+              "param": "warpIterations",
+              "neq": 0
+            }
+          }
+        },
+        "warpIntensity": {
+          "type": "float",
+          "default": 50,
+          "min": 0,
+          "max": 100,
+          "uniform": "warpIntensity",
+          "ui": {
+            "label": "warp intensity",
+            "category": "warp",
+            "enabledBy": {
+              "param": "warpIterations",
+              "neq": 0
+            }
+          }
+        },
+        "seed": {
+          "type": "int",
+          "default": 0,
+          "min": 0,
+          "max": 100,
+          "uniform": "seed",
+          "ui": {
+            "label": "seed"
+          }
+        },
+        "speed": {
+          "type": "int",
+          "default": 1,
+          "min": 0,
+          "max": 5,
+          "zero": 0,
+          "randMax": 2,
+          "uniform": "speed",
+          "ui": {
+            "label": "speed"
+          }
+        }
+      },
+      "textures": {},
+      "passes": [
+        {
+          "name": "main",
+          "program": "perlin",
+          "key": "synth/perlin:perlin",
           "inputs": {},
           "outputs": {
             "color": "outputTex"
