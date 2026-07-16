@@ -52,7 +52,7 @@ def run_pixel(ctx, out):
         quantized_rgb = rt.construct(3, 0.0)
         if _u_antialias:
             f = rt.component_wise("fract", scaled, width=3)
-            fw = rt.component_wise("fwidth", scaled, width=3)
+            fw = rt.fwidth(scaled)
             blend = rt.component_wise("smoothstep", rt.binary("-", rt.f(0.5), rt.binary("*", fw, rt.f(0.5), 3, "float"), 3, "float"), rt.binary("+", rt.f(0.5), rt.binary("*", fw, rt.f(0.5), 3, "float"), 3, "float"), f, width=3)
             quantized_rgb = rt.binary("*", rt.binary("+", rt.component_wise("floor", scaled, width=3), blend, 3, "float"), inv_factor, 3, "float")
         else:
@@ -63,3 +63,4 @@ def run_pixel(ctx, out):
     main__void()
     _c = g.fragColor
     out[0] = rt.f32(_c[0]); out[1] = rt.f32(_c[1]); out[2] = rt.f32(_c[2]); out[3] = rt.f32(_c[3])
+run_pixel.uses_derivatives = True

@@ -52,8 +52,8 @@ def run_pixel(ctx, out):
         else:
             coord = vortexCoords__vec2_float(uv, aspect)
         if _u_antialias:
-            dx = rt.component_wise("dFdx", coord, width=2)
-            dy = rt.component_wise("dFdy", coord, width=2)
+            dx = rt.dFdx(coord)
+            dy = rt.dFdy(coord)
             col = rt.construct(4, rt.f(0.0))
             col = rt.binary("+", col, rt.texture(_u_inputTex, rt.binary("+", rt.binary("+", coord, rt.binary("*", dx, rt.unary("-", rt.f(0.375)), 2, "float"), 2, "float"), rt.binary("*", dy, rt.unary("-", rt.f(0.125)), 2, "float"), 2, "float")), 4, "float")
             col = rt.binary("+", col, rt.texture(_u_inputTex, rt.binary("+", rt.binary("+", coord, rt.binary("*", dx, rt.f(0.125), 2, "float"), 2, "float"), rt.binary("*", dy, rt.unary("-", rt.f(0.375)), 2, "float"), 2, "float")), 4, "float")
@@ -65,3 +65,4 @@ def run_pixel(ctx, out):
     main__void()
     _c = g.fragColor
     out[0] = rt.f32(_c[0]); out[1] = rt.f32(_c[1]); out[2] = rt.f32(_c[2]); out[3] = rt.f32(_c[3])
+run_pixel.uses_derivatives = True

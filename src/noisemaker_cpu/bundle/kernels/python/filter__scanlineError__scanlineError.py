@@ -172,8 +172,8 @@ def run_pixel(ctx, out):
         return rt.component_wise("clamp", val, rt.f(0.0), rt.f(1.0), width=1)
     def vhs_gradValue__float_float_float_float(yNorm, freqY, t, spd):
         base = vhs_computeNoise__vec2_vec2_float_float_vec3_vec3(rt.construct(2, rt.f(0.0), yNorm), rt.construct(2, rt.f(1.0), freqY), t, spd, rt.construct(3, rt.f(17.0), rt.f(29.0), rt.f(47.0)), rt.construct(3, rt.f(71.0), rt.f(113.0), rt.f(191.0)))
-        g = rt.component_wise("max", rt.binary("-", base, rt.f(0.5), 1, "float"), rt.f(0.0), width=1)
-        return rt.component_wise("min", rt.binary("*", g, rt.f(2.0), 1, "float"), rt.f(1.0), width=1)
+        _g = rt.component_wise("max", rt.binary("-", base, rt.f(0.5), 1, "float"), rt.f(0.0), width=1)
+        return rt.component_wise("min", rt.binary("*", _g, rt.f(2.0), 1, "float"), rt.f(1.0), width=1)
     def vhs_scanNoise__vec2_vec2_float_float(coord, freq, t, spd):
         coord = rt.copy(coord)
         freq = rt.copy(freq)

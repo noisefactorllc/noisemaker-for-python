@@ -51,8 +51,8 @@ def run_pixel(ctx, out):
             cos_value = rt.component_wise("cos", angle, width=1)
             return rt.binary("*", rt.binary("-", rt.f(1.0), cos_value, 1, "float"), rt.f(0.5), 1, "float")
         return value
-    def blend_cubic__float_float_float_float_float(a, b, c, d, g):
-        t = rt.component_wise("clamp", g, rt.f(0.0), rt.f(1.0), width=1)
+    def blend_cubic__float_float_float_float_float(a, b, c, d, _g):
+        t = rt.component_wise("clamp", _g, rt.f(0.0), rt.f(1.0), width=1)
         t2 = rt.binary("*", t, t, 1, "float")
         a0 = rt.binary("+", rt.binary("-", rt.binary("-", d, c, 1, "float"), a, 1, "float"), b, 1, "float")
         a1 = rt.binary("-", rt.binary("-", a, b, 1, "float"), a0, 1, "float")

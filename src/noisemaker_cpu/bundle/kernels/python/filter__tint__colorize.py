@@ -14,24 +14,24 @@ def run_pixel(ctx, out):
     def rgb_to_hsv__vec3(rgb):
         rgb = rt.copy(rgb)
         r = rt.swizzle(rgb, "x")
-        g = rt.swizzle(rgb, "y")
+        _g = rt.swizzle(rgb, "y")
         b = rt.swizzle(rgb, "z")
-        max_c = rt.component_wise("max", rt.component_wise("max", r, g, width=1), b, width=1)
-        min_c = rt.component_wise("min", rt.component_wise("min", r, g, width=1), b, width=1)
+        max_c = rt.component_wise("max", rt.component_wise("max", r, _g, width=1), b, width=1)
+        min_c = rt.component_wise("min", rt.component_wise("min", r, _g, width=1), b, width=1)
         delta = rt.binary("-", max_c, min_c, 1, "float")
         hue = rt.f(0.0)
         if rt.binary("!=", delta, rt.f(0.0)):
             if rt.binary("==", max_c, r):
-                raw = rt.binary("/", rt.binary("-", g, b, 1, "float"), delta, 1, "float")
+                raw = rt.binary("/", rt.binary("-", _g, b, 1, "float"), delta, 1, "float")
                 raw = rt.binary("-", raw, rt.binary("*", rt.component_wise("floor", rt.binary("/", raw, rt.f(6.0), 1, "float"), width=1), rt.f(6.0), 1, "float"), 1, "float")
                 if rt.binary("<", raw, rt.f(0.0)):
                     raw = rt.binary("+", raw, rt.f(6.0), 1, "float")
                 hue = raw
             else:
-                if rt.binary("==", max_c, g):
+                if rt.binary("==", max_c, _g):
                     hue = rt.binary("+", rt.binary("/", rt.binary("-", b, r, 1, "float"), delta, 1, "float"), rt.f(2.0), 1, "float")
                 else:
-                    hue = rt.binary("+", rt.binary("/", rt.binary("-", r, g, 1, "float"), delta, 1, "float"), rt.f(4.0), 1, "float")
+                    hue = rt.binary("+", rt.binary("/", rt.binary("-", r, _g, 1, "float"), delta, 1, "float"), rt.f(4.0), 1, "float")
         hue = rt.binary("/", hue, rt.f(6.0), 1, "float")
         if rt.binary("<", hue, rt.f(0.0)):
             hue = rt.binary("+", hue, rt.f(1.0), 1, "float")

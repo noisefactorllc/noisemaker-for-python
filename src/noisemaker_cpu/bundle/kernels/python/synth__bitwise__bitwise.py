@@ -72,9 +72,9 @@ def run_pixel(ctx, out):
         else:
             if rt.binary("==", _u_colorMode, rt.i(1)):
                 r = bitOp__int_int_int_int(x, y, _u_operation, _u_mask)
-                g = bitOp__int_int_int_int(rt.binary("+", x, _u_colorOffset, 1, "int"), y, _u_operation, _u_mask)
+                _g = bitOp__int_int_int_int(rt.binary("+", x, _u_colorOffset, 1, "int"), y, _u_operation, _u_mask)
                 b = bitOp__int_int_int_int(x, rt.binary("+", y, _u_colorOffset, 1, "int"), _u_operation, _u_mask)
-                g.fragColor = rt.construct(4, r, g, b, rt.f(1.0))
+                g.fragColor = rt.construct(4, r, _g, b, rt.f(1.0))
             else:
                 v = bitOp__int_int_int_int(x, y, _u_operation, _u_mask)
                 hueScale = rt.binary("/", rt.construct(1, _u_mask), rt.construct(1, rt.binary("+", _u_mask, rt.i(1), 1, "int")), 1, "float")

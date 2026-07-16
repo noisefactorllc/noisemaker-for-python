@@ -40,41 +40,41 @@ def run_pixel(ctx, out):
     def rowTime__float_float(row, t):
         phase = rt.swizzle(prng__vec3(rt.construct(3, row, rt.binary("+", _u_seed, rt.f(777.0), 1, "float"), rt.f(0.0))), "x")
         return rt.component_wise("floor", rt.binary("*", rt.binary("+", t, phase, 1, "float"), rt.f(8.0), 1, "float"), width=1)
-    def lineHash__float_float(line, rt):
-        return prng__vec3(rt.construct(3, line, _u_seed, rt))
-    def pixelSort__vec2_float_float_float_float(uv, row, sortAmt, rt, resX):
+    def lineHash__float_float(line, _rt):
+        return prng__vec3(rt.construct(3, line, _u_seed, _rt))
+    def pixelSort__vec2_float_float_float_float(uv, row, sortAmt, _rt, resX):
         uv = rt.copy(uv)
-        rh = lineHash__float_float(row, rt)
+        rh = lineHash__float_float(row, _rt)
         threshold = rt.component_wise("mix", rt.f(0.8), rt.f(0.2), sortAmt, width=1)
         regionSize = rt.binary("+", rt.f(3.0), rt.binary("*", rt.swizzle(rh, "y"), rt.f(20.0), 1, "float"), 1, "float")
         region = rt.component_wise("floor", rt.binary("/", rt.binary("*", rt.swizzle(uv, "x"), resX, 1, "float"), regionSize, 1, "float"), width=1)
-        regionHash = prng__vec3(rt.construct(3, region, row, rt.binary("+", _u_seed, rt, 1, "float")))
+        regionHash = prng__vec3(rt.construct(3, region, row, rt.binary("+", _u_seed, _rt, 1, "float")))
         regionPos = rt.component_wise("fract", rt.binary("/", rt.binary("*", rt.swizzle(uv, "x"), resX, 1, "float"), regionSize, 1, "float"), width=1)
         sortShift = rt.binary("*", rt.binary("*", rt.binary("*", regionPos, rt.swizzle(regionHash, "x"), 1, "float"), sortAmt, 1, "float"), rt.f(0.15), 1, "float")
         if rt.binary(">", rt.swizzle(regionHash, "y"), threshold):
             uv = rt.assign_swizzle(uv, "x", rt.component_wise("fract", rt.binary("+", rt.swizzle(uv, "x"), sortShift, 1, "float"), width=1))
         return uv
-    def byteShift__vec2_float_float_float_float(uv, row, shiftAmt, rt, resX):
+    def byteShift__vec2_float_float_float_float(uv, row, shiftAmt, _rt, resX):
         uv = rt.copy(uv)
-        rh = lineHash__float_float(row, rt)
+        rh = lineHash__float_float(row, _rt)
         chunkWidth = rt.binary("+", rt.f(8.0), rt.binary("*", rt.swizzle(rh, "x"), rt.f(80.0), 1, "float"), 1, "float")
         chunk = rt.component_wise("floor", rt.binary("/", rt.binary("*", rt.swizzle(uv, "x"), resX, 1, "float"), chunkWidth, 1, "float"), width=1)
-        ch = prng__vec3(rt.construct(3, chunk, rt.binary("+", row, rt.f(200.0), 1, "float"), rt.binary("+", _u_seed, rt, 1, "float")))
+        ch = prng__vec3(rt.construct(3, chunk, rt.binary("+", row, rt.f(200.0), 1, "float"), rt.binary("+", _u_seed, _rt, 1, "float")))
         shiftPx = rt.binary("*", rt.binary("*", rt.binary("*", rt.binary("*", rt.binary("-", rt.swizzle(ch, "x"), rt.f(0.5), 1, "float"), rt.f(2.0), 1, "float"), shiftAmt, 1, "float"), resX, 1, "float"), rt.f(0.15), 1, "float")
         sparsity = rt.component_wise("mix", rt.f(0.85), rt.f(0.3), shiftAmt, width=1)
         if rt.binary(">", rt.swizzle(ch, "y"), sparsity):
             uv = rt.assign_swizzle(uv, "x", rt.component_wise("fract", rt.binary("+", rt.swizzle(uv, "x"), rt.binary("/", shiftPx, resX, 1, "float"), 1, "float"), width=1))
         return uv
-    def bitCorrupt__vec3_vec2_float_float_float_float(color, uv, row, bitAmt, rt, resX):
+    def bitCorrupt__vec3_vec2_float_float_float_float(color, uv, row, bitAmt, _rt, resX):
         color = rt.copy(color)
         uv = rt.copy(uv)
-        bh = lineHash__float_float(rt.binary("+", row, rt.f(400.0), 1, "float"), rt)
+        bh = lineHash__float_float(rt.binary("+", row, rt.f(400.0), 1, "float"), _rt)
         levels = rt.component_wise("mix", rt.f(256.0), rt.f(2.0), rt.binary("*", bitAmt, bitAmt, 1, "float"), width=1)
         color = rt.binary("/", rt.component_wise("floor", rt.binary("+", rt.binary("*", color, levels, 3, "float"), rt.f(0.5), 3, "float"), width=3), levels, 3, "float")
         if rt.binary(">", bitAmt, rt.f(0.3)):
             xorStrength = rt.binary("/", rt.binary("-", bitAmt, rt.f(0.3), 1, "float"), rt.f(0.7), 1, "float")
             px = rt.component_wise("floor", rt.binary("*", rt.swizzle(uv, "x"), resX, 1, "float"), width=1)
-            xorHash = prng__vec3(rt.construct(3, px, row, rt.binary("+", rt.binary("+", _u_seed, rt, 1, "float"), rt.f(500.0), 1, "float")))
+            xorHash = prng__vec3(rt.construct(3, px, row, rt.binary("+", rt.binary("+", _u_seed, _rt, 1, "float"), rt.f(500.0), 1, "float")))
             mask = rt.component_wise("step", rt.construct(3, rt.binary("-", rt.f(1.0), rt.binary("*", xorStrength, rt.f(0.5), 1, "float"), 1, "float")), xorHash, width=3)
             color = rt.component_wise("mix", color, rt.binary("-", rt.f(1.0), color, 3, "float"), mask, width=3)
         if rt.binary(">", bitAmt, rt.f(0.6)):
@@ -122,8 +122,8 @@ def run_pixel(ctx, out):
         rawRow = rt.binary("/", rt.swizzle(globalCoord, "y"), rs, 1, "float")
         bh = rt.component_wise("max", rt.f(1.0), rt.component_wise("floor", rt.binary("*", _u_bandHeight, rt.f(0.32), 1, "float"), width=1), width=1)
         row = rt.component_wise("floor", rt.binary("/", rawRow, bh, 1, "float"), width=1)
-        rt = rowTime__float_float(row, t)
-        rowHash = lineHash__float_float(row, rt)
+        _rt = rowTime__float_float(row, t)
+        rowHash = lineHash__float_float(row, _rt)
         prob = rt.binary("/", _u_intensity, rt.f(100.0), 1, "float")
         isCorrupt = rt.binary("<", rt.swizzle(rowHash, "x"), prob)
         sampleUv = uv
@@ -137,13 +137,13 @@ def run_pixel(ctx, out):
             sortAmt = rt.binary("/", _u_sort, rt.f(100.0), 1, "float")
             shiftAmt = rt.binary("/", _u_shift, rt.f(100.0), 1, "float")
             if rt.binary(">", sortAmt, rt.f(0.0)):
-                sampleUv = pixelSort__vec2_float_float_float_float(sampleUv, row, sortAmt, rt, resX)
+                sampleUv = pixelSort__vec2_float_float_float_float(sampleUv, row, sortAmt, _rt, resX)
             if rt.binary(">", shiftAmt, rt.f(0.0)):
-                sampleUv = byteShift__vec2_float_float_float_float(sampleUv, row, shiftAmt, rt, resX)
+                sampleUv = byteShift__vec2_float_float_float_float(sampleUv, row, shiftAmt, _rt, resX)
         color = rt.swizzle(rt.texture(_u_inputTex, sampleUv), "rgb")
         if (bool(rt.binary(">", _u_channelShift, rt.f(0.0))) and bool(isCorrupt)):
             chAmt = rt.binary("/", _u_channelShift, rt.f(100.0), 1, "float")
-            chHash = lineHash__float_float(rt.binary("+", row, rt.f(300.0), 1, "float"), rt)
+            chHash = lineHash__float_float(rt.binary("+", row, rt.f(300.0), 1, "float"), _rt)
             rShift = rt.binary("*", rt.binary("*", rt.binary("-", rt.swizzle(chHash, "x"), rt.f(0.5), 1, "float"), chAmt, 1, "float"), rt.f(0.08), 1, "float")
             bShift = rt.binary("*", rt.binary("*", rt.binary("-", rt.swizzle(chHash, "y"), rt.f(0.5), 1, "float"), chAmt, 1, "float"), rt.f(0.08), 1, "float")
             rUv = rt.construct(2, rt.component_wise("fract", rt.binary("+", rt.swizzle(sampleUv, "x"), rShift, 1, "float"), width=1), rt.swizzle(sampleUv, "y"))
@@ -151,7 +151,7 @@ def run_pixel(ctx, out):
             color = rt.assign_swizzle(color, "r", rt.swizzle(rt.texture(_u_inputTex, rUv), "r"))
             color = rt.assign_swizzle(color, "b", rt.swizzle(rt.texture(_u_inputTex, bUv), "b"))
         if (bool(rt.binary(">", _u_bits, rt.f(0.0))) and bool(isCorrupt)):
-            color = bitCorrupt__vec3_vec2_float_float_float_float(color, uv, row, rt.binary("/", _u_bits, rt.f(100.0), 1, "float"), rt, resX)
+            color = bitCorrupt__vec3_vec2_float_float_float_float(color, uv, row, rt.binary("/", _u_bits, rt.f(100.0), 1, "float"), _rt, resX)
         g.fragColor = rt.construct(4, color, rt.f(1.0))
     main__void()
     _c = g.fragColor

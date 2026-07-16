@@ -58,8 +58,8 @@ def run_pixel(ctx, out):
         tunnelCoords = smod__vec2_float(rt.construct(2, rt.binary("+", rt.binary("/", rt.f(0.3), r, 1, "float"), rt.binary("*", _u_time, _u_speed, 1, "float"), 1, "float"), rt.binary("+", rt.binary("/", a, g.PI, 1, "float"), rt.binary("*", _u_time, _u_rotation, 1, "float"), 1, "float")), rt.f(1.0))
         color = rt.construct(4, 0.0)
         if _u_antialias:
-            dx = rt.component_wise("dFdx", tunnelCoords, width=2)
-            dy = rt.component_wise("dFdy", tunnelCoords, width=2)
+            dx = rt.dFdx(tunnelCoords)
+            dy = rt.dFdy(tunnelCoords)
             color = rt.construct(4, rt.f(0.0))
             color = rt.binary("+", color, rt.texture(_u_inputTex, rt.binary("+", rt.binary("+", tunnelCoords, rt.binary("*", dx, rt.unary("-", rt.f(0.375)), 2, "float"), 2, "float"), rt.binary("*", dy, rt.unary("-", rt.f(0.125)), 2, "float"), 2, "float")), 4, "float")
             color = rt.binary("+", color, rt.texture(_u_inputTex, rt.binary("+", rt.binary("+", tunnelCoords, rt.binary("*", dx, rt.f(0.125), 2, "float"), 2, "float"), rt.binary("*", dy, rt.unary("-", rt.f(0.375)), 2, "float"), 2, "float")), 4, "float")
@@ -79,3 +79,4 @@ def run_pixel(ctx, out):
     main__void()
     _c = g.fragColor
     out[0] = rt.f32(_c[0]); out[1] = rt.f32(_c[1]); out[2] = rt.f32(_c[2]); out[3] = rt.f32(_c[3])
+run_pixel.uses_derivatives = True

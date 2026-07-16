@@ -48,8 +48,8 @@ def run_pixel(ctx, out):
         uv = rotate2D__vec2_float_float(uv, rt.binary("/", rt.unary("-", _u_rotation), rt.f(180.0), 1, "float"), aspectRatio)
         sampleUV = rt.component_wise("clamp", rt.binary("/", rt.binary("-", rt.binary("*", uv, _u_fullResolution, 2, "float"), _u_tileOffset, 2, "float"), _u_resolution, 2, "float"), rt.f(0.0), rt.f(1.0), width=2)
         if _u_antialias:
-            dx = rt.component_wise("dFdx", sampleUV, width=2)
-            dy = rt.component_wise("dFdy", sampleUV, width=2)
+            dx = rt.dFdx(sampleUV)
+            dy = rt.dFdy(sampleUV)
             col = rt.construct(4, rt.f(0.0))
             col = rt.binary("+", col, rt.texture(_u_inputTex, rt.binary("+", rt.binary("+", sampleUV, rt.binary("*", dx, rt.unary("-", rt.f(0.375)), 2, "float"), 2, "float"), rt.binary("*", dy, rt.unary("-", rt.f(0.125)), 2, "float"), 2, "float")), 4, "float")
             col = rt.binary("+", col, rt.texture(_u_inputTex, rt.binary("+", rt.binary("+", sampleUV, rt.binary("*", dx, rt.f(0.125), 2, "float"), 2, "float"), rt.binary("*", dy, rt.unary("-", rt.f(0.375)), 2, "float"), 2, "float")), 4, "float")
@@ -61,3 +61,4 @@ def run_pixel(ctx, out):
     main__void()
     _c = g.fragColor
     out[0] = rt.f32(_c[0]); out[1] = rt.f32(_c[1]); out[2] = rt.f32(_c[2]); out[3] = rt.f32(_c[3])
+run_pixel.uses_derivatives = True

@@ -45,6 +45,9 @@ def q(s):
 _RESERVED = {
     "and", "or", "not", "in", "is", "lambda", "class", "def", "return", "if", "else",
     "for", "while", "None", "True", "False", "global", "nonlocal", "import", "from", "as", "with",
+    # emitted-kernel infrastructure names — a shader local named any of these
+    # would shadow the runtime/globals holder and break the closure.
+    "rt", "g", "U", "T", "ctx", "out", "run_pixel",
 }
 
 
@@ -91,6 +94,7 @@ class CodeGen:
         self.globals = []     # {name, type, init}
         self.structs = {}     # name -> [ (fieldtype, fieldname) ]
         self.loop_id = 0
+        self.uses_deriv = False
 
     # ---- collect ----
     def collect(self):
@@ -164,6 +168,8 @@ class CodeGen:
         out_name = "ctx.uv" if self.outputs[0] in self.varyings else f"g.{py_ident(self.outputs[0])}"
         L.append(f"    _c = {out_name}")
         L.append("    out[0] = rt.f32(_c[0]); out[1] = rt.f32(_c[1]); out[2] = rt.f32(_c[2]); out[3] = rt.f32(_c[3])")
+        if self.uses_deriv:
+            L.append("run_pixel.uses_derivatives = True")
         return "\n".join(L) + "\n"
 
     def _emit_func(self, L, fn, indent=1):
@@ -431,6 +437,9 @@ class CodeGen:
         name = node["name"]
         args = [self.expr(a, scope) for a in node["args"]]
         codes = [a[0] for a in args]
+        if name in ("dFdx", "dFdy", "fwidth"):
+            self.uses_deriv = True
+            return (f"rt.{name}({codes[0]})", args[0][1])
         r = _ROUTED.get(name)
         if r:
             return r(self, codes, args)

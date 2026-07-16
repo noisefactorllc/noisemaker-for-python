@@ -56,10 +56,11 @@ def run_pixel(ctx, out):
         grain = rt.binary("*", rt.binary("*", rt.binary("-", fbm__vec2(rt.binary("/", globalCoord, rt.f(3.0), 2, "float")), rt.f(0.5), 1, "float"), rt.binary("/", _u_roughness, rt.f(100.0), 1, "float"), 1, "float"), rt.f(0.35), 1, "float")
         t = rt.binary("+", lumBlur, grain, 1, "float")
         b = rt.binary("/", _u_balance, rt.f(100.0), 1, "float")
-        aa = rt.binary("+", rt.component_wise("max", rt.component_wise("fwidth", t, width=1), rt.f(0.01), width=1), rt.binary("*", rt.binary("/", _u_roughness, rt.f(100.0), 1, "float"), rt.f(0.05), 1, "float"), 1, "float")
+        aa = rt.binary("+", rt.component_wise("max", rt.fwidth(t), rt.f(0.01), width=1), rt.binary("*", rt.binary("/", _u_roughness, rt.f(100.0), 1, "float"), rt.f(0.05), 1, "float"), 1, "float")
         m = rt.component_wise("smoothstep", rt.binary("-", b, aa, 1, "float"), rt.binary("+", b, aa, 1, "float"), t, width=1)
         outColor = tonemap2__float_vec3_vec3(m, _u_inkColor, _u_paperColor)
         g.fragColor = rt.construct(4, outColor, rt.swizzle(src, "a"))
     main__void()
     _c = g.fragColor
     out[0] = rt.f32(_c[0]); out[1] = rt.f32(_c[1]); out[2] = rt.f32(_c[2]); out[3] = rt.f32(_c[3])
+run_pixel.uses_derivatives = True

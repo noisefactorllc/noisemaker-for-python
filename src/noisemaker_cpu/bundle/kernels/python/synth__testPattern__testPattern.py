@@ -95,9 +95,9 @@ def run_pixel(ctx, out):
         return rt.construct(4, rt.construct(3, line), rt.f(1.0))
     def hue2rgb__float(h):
         r = rt.binary("-", rt.component_wise("abs", rt.binary("-", rt.binary("*", h, rt.f(6.0), 1, "float"), rt.f(3.0), 1, "float"), width=1), rt.f(1.0), 1, "float")
-        g = rt.binary("-", rt.f(2.0), rt.component_wise("abs", rt.binary("-", rt.binary("*", h, rt.f(6.0), 1, "float"), rt.f(2.0), 1, "float"), width=1), 1, "float")
+        _g = rt.binary("-", rt.f(2.0), rt.component_wise("abs", rt.binary("-", rt.binary("*", h, rt.f(6.0), 1, "float"), rt.f(2.0), 1, "float"), width=1), 1, "float")
         b = rt.binary("-", rt.f(2.0), rt.component_wise("abs", rt.binary("-", rt.binary("*", h, rt.f(6.0), 1, "float"), rt.f(4.0), 1, "float"), width=1), 1, "float")
-        return rt.component_wise("clamp", rt.construct(3, r, g, b), rt.f(0.0), rt.f(1.0), width=3)
+        return rt.component_wise("clamp", rt.construct(3, r, _g, b), rt.f(0.0), rt.f(1.0), width=3)
     def colorGrid__vec2(uv):
         uv = rt.copy(uv)
         n = rt.component_wise("max", _u_gridSize, rt.i(1), width=1)

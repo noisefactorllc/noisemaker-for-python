@@ -40,9 +40,61 @@ def _is_scalar(v) -> bool:
 class Runtime:
     def __init__(self):
         self._ctx = None
+        self._deriv_mode = None      # None | "record" | "replay"
+        self._deriv_log = []         # record: list of (op, value)
+        self._deriv_diffs = None     # replay: precomputed diff per call index
+        self._deriv_i = 0
 
     def begin_pixel(self, ctx=None):
         self._ctx = ctx
+
+    # ---- screen-space derivatives (2x2-quad record/replay) ----
+    def deriv_reset(self, mode, diffs=None):
+        self._deriv_mode = mode
+        self._deriv_i = 0
+        self._deriv_log = []
+        self._deriv_diffs = diffs
+
+    def _deriv(self, op, v):
+        if self._deriv_mode == "record":
+            self._deriv_log.append((op, float(v) if _is_scalar(v) else np.array(v, dtype=F32)))
+            self._deriv_i += 1
+            return 0.0 if _is_scalar(v) else np.zeros(np.asarray(v).shape[0], dtype=F32)
+        if self._deriv_mode == "replay":
+            d = self._deriv_diffs[self._deriv_i] if self._deriv_i < len(self._deriv_diffs) else (0.0 if _is_scalar(v) else np.zeros(np.asarray(v).shape[0], dtype=F32))
+            self._deriv_i += 1
+            return d
+        return 0.0 if _is_scalar(v) else np.zeros(np.asarray(v).shape[0], dtype=F32)
+
+    def dFdx(self, v):
+        return self._deriv("dFdx", v)
+
+    def dFdy(self, v):
+        return self._deriv("dFdy", v)
+
+    def fwidth(self, v):
+        return self._deriv("fwidth", v)
+
+    def deriv_compute(self, recs):
+        tl, tr, bl = recs[0], recs[1], recs[2]
+
+        def val(rec, i):
+            return rec[i][1] if i < len(rec) else tl[i][1]
+
+        diffs = []
+        for i in range(len(tl)):
+            op = tl[i][0]
+            a = np.asarray(tl[i][1], dtype=np.float64)
+            dx = np.asarray(val(tr, i), dtype=np.float64) - a
+            dy = np.asarray(val(bl, i), dtype=np.float64) - a
+            if op == "dFdx":
+                r = dx
+            elif op == "dFdy":
+                r = dy
+            else:  # fwidth
+                r = np.abs(dx) + np.abs(dy)
+            diffs.append(f32(float(r)) if r.ndim == 0 else np.asarray(r, dtype=F32))
+        return diffs
 
     @staticmethod
     def f32(x) -> float:

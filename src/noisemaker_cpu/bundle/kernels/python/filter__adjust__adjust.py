@@ -48,20 +48,20 @@ def run_pixel(ctx, out):
     def rgb2hsv__vec3(rgb):
         rgb = rt.copy(rgb)
         r = rt.swizzle(rgb, "r")
-        g = rt.swizzle(rgb, "g")
+        _g = rt.swizzle(rgb, "g")
         b = rt.swizzle(rgb, "b")
-        maxC = rt.component_wise("max", r, rt.component_wise("max", g, b, width=1), width=1)
-        minC = rt.component_wise("min", r, rt.component_wise("min", g, b, width=1), width=1)
+        maxC = rt.component_wise("max", r, rt.component_wise("max", _g, b, width=1), width=1)
+        minC = rt.component_wise("min", r, rt.component_wise("min", _g, b, width=1), width=1)
         delta = rt.binary("-", maxC, minC, 1, "float")
         h = rt.f(0.0)
         if rt.binary("!=", delta, rt.f(0.0)):
             if rt.binary("==", maxC, r):
-                h = rt.binary("/", rt.component_wise("mod", rt.binary("/", rt.binary("-", g, b, 1, "float"), delta, 1, "float"), rt.f(6.0), width=1), rt.f(6.0), 1, "float")
+                h = rt.binary("/", rt.component_wise("mod", rt.binary("/", rt.binary("-", _g, b, 1, "float"), delta, 1, "float"), rt.f(6.0), width=1), rt.f(6.0), 1, "float")
             else:
-                if rt.binary("==", maxC, g):
+                if rt.binary("==", maxC, _g):
                     h = rt.binary("/", rt.binary("+", rt.binary("/", rt.binary("-", b, r, 1, "float"), delta, 1, "float"), rt.f(2.0), 1, "float"), rt.f(6.0), 1, "float")
                 else:
-                    h = rt.binary("/", rt.binary("+", rt.binary("/", rt.binary("-", r, g, 1, "float"), delta, 1, "float"), rt.f(4.0), 1, "float"), rt.f(6.0), 1, "float")
+                    h = rt.binary("/", rt.binary("+", rt.binary("/", rt.binary("-", r, _g, 1, "float"), delta, 1, "float"), rt.f(4.0), 1, "float"), rt.f(6.0), 1, "float")
         s = (rt.f(0.0) if rt.binary("==", maxC, rt.f(0.0)) else rt.binary("/", delta, maxC, 1, "float"))
         return rt.construct(3, h, s, maxC)
     def linear_srgb_from_oklab__vec3(c):

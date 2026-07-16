@@ -28,30 +28,30 @@ def run_pixel(ctx, out):
         p = rt.copy(p)
         v = pcg__uvec3(rt.construct(3, rt.construct(1, (rt.binary("*", rt.swizzle(p, "x"), rt.f(2.0), 1, "float") if rt.binary(">=", rt.swizzle(p, "x"), rt.f(0.0)) else rt.binary("+", rt.binary("*", rt.unary("-", rt.swizzle(p, "x")), rt.f(2.0), 1, "float"), rt.f(1.0), 1, "float")), base="uint"), rt.construct(1, (rt.binary("*", rt.swizzle(p, "y"), rt.f(2.0), 1, "float") if rt.binary(">=", rt.swizzle(p, "y"), rt.f(0.0)) else rt.binary("+", rt.binary("*", rt.unary("-", rt.swizzle(p, "y")), rt.f(2.0), 1, "float"), rt.f(1.0), 1, "float")), base="uint"), rt.i(0), base="uint"))
         return rt.binary("/", rt.construct(1, rt.swizzle(v, "x")), rt.construct(1, rt.i(4294967295)), 1, "float")
-    def glyphPixel__int_int_int(g, x, y):
+    def glyphPixel__int_int_int(_g, x, y):
         row = rt.i(0)
-        if rt.binary("==", g, rt.i(0)):
+        if rt.binary("==", _g, rt.i(0)):
             return rt.f(0.0)
         else:
-            if rt.binary("==", g, rt.i(1)):
+            if rt.binary("==", _g, rt.i(1)):
                 if rt.binary("==", y, rt.i(5)):
                     row = rt.i(4)
                 else:
                     return rt.f(0.0)
             else:
-                if rt.binary("==", g, rt.i(2)):
+                if rt.binary("==", _g, rt.i(2)):
                     if (bool(rt.binary("==", y, rt.i(1))) or bool(rt.binary("==", y, rt.i(5)))):
                         row = rt.i(4)
                     else:
                         return rt.f(0.0)
                 else:
-                    if rt.binary("==", g, rt.i(3)):
+                    if rt.binary("==", _g, rt.i(3)):
                         if rt.binary("==", y, rt.i(3)):
                             row = rt.i(14)
                         else:
                             return rt.f(0.0)
                     else:
-                        if rt.binary("==", g, rt.i(4)):
+                        if rt.binary("==", _g, rt.i(4)):
                             if (bool((bool((bool(rt.binary("==", y, rt.i(1))) or bool(rt.binary("==", y, rt.i(2))))) or bool(rt.binary("==", y, rt.i(4))))) or bool(rt.binary("==", y, rt.i(5)))):
                                 row = rt.i(4)
                             else:
@@ -60,13 +60,13 @@ def run_pixel(ctx, out):
                                 else:
                                     return rt.f(0.0)
                         else:
-                            if rt.binary("==", g, rt.i(5)):
+                            if rt.binary("==", _g, rt.i(5)):
                                 if (bool(rt.binary("==", y, rt.i(2))) or bool(rt.binary("==", y, rt.i(4)))):
                                     row = rt.i(14)
                                 else:
                                     return rt.f(0.0)
                             else:
-                                if rt.binary("==", g, rt.i(6)):
+                                if rt.binary("==", _g, rt.i(6)):
                                     if (bool(rt.binary("==", y, rt.i(1))) or bool(rt.binary("==", y, rt.i(5)))):
                                         row = rt.i(10)
                                     else:
@@ -78,7 +78,7 @@ def run_pixel(ctx, out):
                                             else:
                                                 return rt.f(0.0)
                                 else:
-                                    if rt.binary("==", g, rt.i(7)):
+                                    if rt.binary("==", _g, rt.i(7)):
                                         if (bool(rt.binary("==", y, rt.i(2))) or bool(rt.binary("==", y, rt.i(5)))):
                                             row = rt.i(14)
                                         else:
@@ -87,7 +87,7 @@ def run_pixel(ctx, out):
                                             else:
                                                 return rt.f(0.0)
                                     else:
-                                        if rt.binary("==", g, rt.i(8)):
+                                        if rt.binary("==", _g, rt.i(8)):
                                             if (bool((bool((bool(rt.binary("==", y, rt.i(1))) or bool(rt.binary("==", y, rt.i(2))))) or bool(rt.binary("==", y, rt.i(4))))) or bool(rt.binary("==", y, rt.i(5)))):
                                                 row = rt.i(10)
                                             else:
@@ -96,7 +96,7 @@ def run_pixel(ctx, out):
                                                 else:
                                                     return rt.f(0.0)
                                         else:
-                                            if rt.binary("==", g, rt.i(9)):
+                                            if rt.binary("==", _g, rt.i(9)):
                                                 if (bool((bool(rt.binary("==", y, rt.i(1))) or bool(rt.binary("==", y, rt.i(3))))) or bool(rt.binary("==", y, rt.i(5)))):
                                                     row = rt.i(10)
                                                 else:
@@ -105,7 +105,7 @@ def run_pixel(ctx, out):
                                                     else:
                                                         return rt.f(0.0)
                                             else:
-                                                if rt.binary("==", g, rt.i(10)):
+                                                if rt.binary("==", _g, rt.i(10)):
                                                     if rt.binary("==", y, rt.i(0)):
                                                         row = rt.i(25)
                                                     else:
@@ -126,7 +126,7 @@ def run_pixel(ctx, out):
                                                                         else:
                                                                             return rt.f(0.0)
                                                 else:
-                                                    if rt.binary("==", g, rt.i(11)):
+                                                    if rt.binary("==", _g, rt.i(11)):
                                                         if rt.binary("==", y, rt.i(0)):
                                                             row = rt.i(4)
                                                         else:
@@ -144,7 +144,7 @@ def run_pixel(ctx, out):
                                                                         else:
                                                                             return rt.f(0.0)
                                                     else:
-                                                        if rt.binary("==", g, rt.i(12)):
+                                                        if rt.binary("==", _g, rt.i(12)):
                                                             if (bool(rt.binary("==", y, rt.i(0))) or bool(rt.binary("==", y, rt.i(1)))):
                                                                 row = rt.i(17)
                                                             else:
@@ -159,7 +159,7 @@ def run_pixel(ctx, out):
                                                                         else:
                                                                             return rt.f(0.0)
                                                         else:
-                                                            if rt.binary("==", g, rt.i(13)):
+                                                            if rt.binary("==", _g, rt.i(13)):
                                                                 if rt.binary("==", y, rt.i(0)):
                                                                     row = rt.i(17)
                                                                 else:
@@ -174,7 +174,7 @@ def run_pixel(ctx, out):
                                                                             else:
                                                                                 return rt.f(0.0)
                                                             else:
-                                                                if rt.binary("==", g, rt.i(14)):
+                                                                if rt.binary("==", _g, rt.i(14)):
                                                                     if (bool(rt.binary("==", y, rt.i(0))) or bool(rt.binary("==", y, rt.i(6)))):
                                                                         row = rt.i(14)
                                                                     else:

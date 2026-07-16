@@ -50,21 +50,21 @@ def run_pixel(ctx, out):
     def rgb2hsv__vec3(rgb):
         rgb = rt.copy(rgb)
         r = rt.swizzle(rgb, "r")
-        g = rt.swizzle(rgb, "g")
+        _g = rt.swizzle(rgb, "g")
         b = rt.swizzle(rgb, "b")
-        max = rt.component_wise("max", r, rt.component_wise("max", g, b, width=1), width=1)
-        min = rt.component_wise("min", r, rt.component_wise("min", g, b, width=1), width=1)
+        max = rt.component_wise("max", r, rt.component_wise("max", _g, b, width=1), width=1)
+        min = rt.component_wise("min", r, rt.component_wise("min", _g, b, width=1), width=1)
         delta = rt.binary("-", max, min, 1, "float")
         h = rt.f(0.0)
         if rt.binary("!=", delta, rt.f(0.0)):
             if rt.binary("==", max, r):
-                h = rt.binary("/", rt.component_wise("mod", rt.binary("/", rt.binary("-", g, b, 1, "float"), delta, 1, "float"), rt.f(6.0), width=1), rt.f(6.0), 1, "float")
+                h = rt.binary("/", rt.component_wise("mod", rt.binary("/", rt.binary("-", _g, b, 1, "float"), delta, 1, "float"), rt.f(6.0), width=1), rt.f(6.0), 1, "float")
             else:
-                if rt.binary("==", max, g):
+                if rt.binary("==", max, _g):
                     h = rt.binary("/", rt.binary("+", rt.binary("/", rt.binary("-", b, r, 1, "float"), delta, 1, "float"), rt.f(2.0), 1, "float"), rt.f(6.0), 1, "float")
                 else:
                     if rt.binary("==", max, b):
-                        h = rt.binary("/", rt.binary("+", rt.binary("/", rt.binary("-", r, g, 1, "float"), delta, 1, "float"), rt.f(4.0), 1, "float"), rt.f(6.0), 1, "float")
+                        h = rt.binary("/", rt.binary("+", rt.binary("/", rt.binary("-", r, _g, 1, "float"), delta, 1, "float"), rt.f(4.0), 1, "float"), rt.f(6.0), 1, "float")
         s = (rt.f(0.0) if rt.binary("==", max, rt.f(0.0)) else rt.binary("/", delta, max, 1, "float"))
         v = max
         return rt.construct(3, h, s, v)

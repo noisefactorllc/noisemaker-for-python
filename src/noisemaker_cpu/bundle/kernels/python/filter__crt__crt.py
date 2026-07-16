@@ -243,9 +243,9 @@ def run_pixel(ctx, out):
         sg = rt.binary("*", s, g_comp, 1, "float")
         sb = rt.binary("*", s, b_comp, 1, "float")
         r = clamp01__float(rt.binary("*", rt.binary("+", one_minus_s, sr, 1, "float"), v, 1, "float"))
-        g = clamp01__float(rt.binary("*", rt.binary("+", one_minus_s, sg, 1, "float"), v, 1, "float"))
+        _g = clamp01__float(rt.binary("*", rt.binary("+", one_minus_s, sg, 1, "float"), v, 1, "float"))
         b = clamp01__float(rt.binary("*", rt.binary("+", one_minus_s, sb, 1, "float"), v, 1, "float"))
-        return rt.construct(3, r, g, b)
+        return rt.construct(3, r, _g, b)
     def adjust_hue__vec3_float(color, amount):
         color = rt.copy(color)
         hsv = rgb_to_hsv__vec3(color)

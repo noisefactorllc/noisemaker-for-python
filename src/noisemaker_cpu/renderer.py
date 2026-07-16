@@ -13,7 +13,7 @@ import os
 import numpy as np
 
 from .kernel_loader import KernelCache
-from .pass_runner import Ctx, run_pass
+from .pass_runner import Ctx, run_pass, run_pass_deriv
 from .runtime import F32, Runtime, f32
 from .surface import Surface
 
@@ -162,5 +162,7 @@ def render_effect(effect_id, params=None, inputs=None, width=256, height=256, se
             time=time,
             seed=seed,
         )
-        result = run_pass(_kernel_for(p["key"]), ctx, width, height)
+        kernel = _kernel_for(p["key"])
+        runner = run_pass_deriv if getattr(kernel, "uses_derivatives", False) else run_pass
+        result = runner(kernel, ctx, width, height)
     return result

@@ -61,8 +61,8 @@ def run_pixel(ctx, out):
         h = rt.binary("*", s, rt.f(0.5), 2, "float")
         a = rt.binary("-", rt.component_wise("mod", p, s, width=2), h, 2, "float")
         b = rt.binary("-", rt.component_wise("mod", rt.binary("+", p, h, 2, "float"), s, width=2), h, 2, "float")
-        g = (a if rt.binary("<", rt.length(a), rt.length(b)) else b)
-        d = hexDist__vec2(g)
+        _g = (a if rt.binary("<", rt.length(a), rt.length(b)) else b)
+        d = hexDist__vec2(_g)
         edge = rt.binary("*", rt.f(0.5), t, 1, "float")
         return rt.component_wise("smoothstep", rt.binary("+", edge, _u_smoothness, 1, "float"), rt.binary("-", edge, _u_smoothness, 1, "float"), d, width=1)
     def concentricRings__vec2_float_float(p, t, timeOffset):

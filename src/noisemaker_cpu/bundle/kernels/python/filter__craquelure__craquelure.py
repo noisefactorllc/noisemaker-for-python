@@ -30,8 +30,8 @@ def run_pixel(ctx, out):
         return rt.component_wise("mix", rt.component_wise("mix", hash12__vec2(i), hash12__vec2(rt.binary("+", i, rt.construct(2, rt.f(1.0), rt.f(0.0)), 2, "float")), rt.swizzle(u, "x"), width=1), rt.component_wise("mix", hash12__vec2(rt.binary("+", i, rt.construct(2, rt.f(0.0), rt.f(1.0)), 2, "float")), hash12__vec2(rt.binary("+", i, rt.construct(2, rt.f(1.0), rt.f(1.0)), 2, "float")), rt.swizzle(u, "x"), width=1), rt.swizzle(u, "y"), width=1)
     def voronoiF1F2__vec2_float_float(p, jitter, seedVal):
         p = rt.copy(p)
-        g = rt.component_wise("floor", p, width=2)
-        f = rt.binary("-", p, g, 2, "float")
+        _g = rt.component_wise("floor", p, width=2)
+        f = rt.binary("-", p, _g, 2, "float")
         best = rt.f(1000000000.0)
         second = rt.f(1000000000.0)
         y = rt.unary("-", rt.i(1))
@@ -51,7 +51,7 @@ def run_pixel(ctx, out):
                 if not (rt.binary("<=", x, rt.i(1))):
                     break
                 cell = rt.construct(2, rt.construct(1, x), rt.construct(1, y))
-                pt = rt.binary("+", rt.binary("+", cell, rt.f(0.5), 2, "float"), rt.binary("*", rt.binary("-", hash22__vec2(rt.binary("+", rt.binary("+", g, cell, 2, "float"), rt.binary("*", seedVal, rt.f(101.7), 1, "float"), 2, "float")), rt.f(0.5), 2, "float"), jitter, 2, "float"), 2, "float")
+                pt = rt.binary("+", rt.binary("+", cell, rt.f(0.5), 2, "float"), rt.binary("*", rt.binary("-", hash22__vec2(rt.binary("+", rt.binary("+", _g, cell, 2, "float"), rt.binary("*", seedVal, rt.f(101.7), 1, "float"), 2, "float")), rt.f(0.5), 2, "float"), jitter, 2, "float"), 2, "float")
                 d = rt.dot(rt.binary("-", pt, f, 2, "float"), rt.binary("-", pt, f, 2, "float"))
                 if rt.binary("<", d, best):
                     second = best

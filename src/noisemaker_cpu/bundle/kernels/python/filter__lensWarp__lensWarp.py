@@ -74,8 +74,8 @@ def run_pixel(ctx, out):
         localUV = rt.binary("/", rt.binary("-", rt.binary("*", uv, fullRes, 2, "float"), _u_tileOffset, 2, "float"), _u_resolution, 2, "float")
         localUV = rt.component_wise("clamp", localUV, rt.f(0.0), rt.f(1.0), width=2)
         if _u_antialias:
-            dx = rt.component_wise("dFdx", uv, width=2)
-            dy = rt.component_wise("dFdy", uv, width=2)
+            dx = rt.dFdx(uv)
+            dy = rt.dFdy(uv)
             col = rt.construct(4, rt.f(0.0))
             sUV = rt.binary("/", rt.binary("-", rt.binary("*", rt.binary("+", rt.binary("+", uv, rt.binary("*", dx, rt.unary("-", rt.f(0.375)), 2, "float"), 2, "float"), rt.binary("*", dy, rt.unary("-", rt.f(0.125)), 2, "float"), 2, "float"), fullRes, 2, "float"), _u_tileOffset, 2, "float"), _u_resolution, 2, "float")
             col = rt.binary("+", col, rt.texture(_u_inputTex, rt.component_wise("clamp", sUV, rt.f(0.0), rt.f(1.0), width=2)), 4, "float")
@@ -91,3 +91,4 @@ def run_pixel(ctx, out):
     main__void()
     _c = g.fragColor
     out[0] = rt.f32(_c[0]); out[1] = rt.f32(_c[1]); out[2] = rt.f32(_c[2]); out[3] = rt.f32(_c[3])
+run_pixel.uses_derivatives = True
