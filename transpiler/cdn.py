@@ -62,6 +62,8 @@ from typing import Any
 
 import json5
 
+from .computed_defs import COMPUTED_DEFS
+
 CDN_BASE = os.environ.get("NM_SHADER_CDN", "https://shaders.noisedeck.app").rstrip("/")
 # The "1.0" minor channel is the current release. It's a rolling tag, not an
 # immutable snapshot -- pin an exact build with NM_SHADER_VERSION if byte-
@@ -350,16 +352,26 @@ def fetch_effect(effect_id: str, version: str = CDN_VERSION) -> dict:
 
     bundle = _fetch_text(f"{CDN_BASE}/{version}/effects/{effect_id}.js")
     region = _definition_region(bundle)
-    result = {
-        "id": effect_id,
-        "namespace": _parse_field(region, effect_id, "namespace", None),
-        "func": _parse_field(region, effect_id, "func", None),
-        "params": _parse_field(region, effect_id, "globals", {}),
-        "passes": _parse_field(region, effect_id, "passes", []),
-        "textures": _parse_field(region, effect_id, "textures", {}),
-        "externalTexture": _parse_field(region, effect_id, "externalTexture", None),
-        "programs": _extract_programs(bundle),
-    }
+    override = COMPUTED_DEFS.get(effect_id)
+    if override is not None:
+        # Definition is JS-computed (loops/spreads) and unreadable statically;
+        # use the hand-ported params/passes but keep the GLSL from the CDN.
+        result = {"id": effect_id, "namespace": override["namespace"], "func": override["func"],
+                  "params": override["params"], "passes": override["passes"],
+                  "textures": override.get("textures", {}),
+                  "externalTexture": override.get("externalTexture"),
+                  "programs": _extract_programs(bundle)}
+    else:
+        result = {
+            "id": effect_id,
+            "namespace": _parse_field(region, effect_id, "namespace", None),
+            "func": _parse_field(region, effect_id, "func", None),
+            "params": _parse_field(region, effect_id, "globals", {}),
+            "passes": _parse_field(region, effect_id, "passes", []),
+            "textures": _parse_field(region, effect_id, "textures", {}),
+            "externalTexture": _parse_field(region, effect_id, "externalTexture", None),
+            "programs": _extract_programs(bundle),
+        }
     cache_file.parent.mkdir(parents=True, exist_ok=True)
     cache_file.write_text(json.dumps(result), encoding="utf-8")
     return result

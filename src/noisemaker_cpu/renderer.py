@@ -141,7 +141,12 @@ def render_effect(effect_id, params=None, inputs=None, width=256, height=256, se
     for pname, spec in eff["params"].items():
         if spec.get("type") == "surface":
             sampler = spec.get("uniform") or spec.get("texture") or pname
-            surface_params[sampler] = inputs.get(sampler) or inputs.get(pname)
+            surf = inputs.get(sampler) or inputs.get(pname)
+            surface_params[sampler] = surf
+            # colorModeUniform (e.g. mashup's layerN_active): 1 when the surface
+            # is wired, 0 when unbound, so the kernel can fall back per band.
+            if spec.get("colorModeUniform"):
+                effect_uniforms[spec["colorModeUniform"]] = 1 if surf is not None else 0
             continue
         if pname == "seed" and "seed" not in params:
             # Match noisemaker-cpu bin/noisemaker-cpu.js `effect` command: an

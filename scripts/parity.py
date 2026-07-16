@@ -75,7 +75,7 @@ def py_render(effect_id: str, kind: str, ext: str | None = None):
     if ext:
         inputs[ext] = _ext_texture()
     surf = [pn for pn, sp in _meta()["effects"][effect_id]["params"].items()
-            if isinstance(sp, dict) and sp.get("type") == "surface"][:6]
+            if isinstance(sp, dict) and sp.get("type") == "surface"]
     for i, pname in enumerate(surf):
         src = _solid("#0cf" if i % 2 else "#f30")
         spec = _meta()["effects"][effect_id]["params"][pname]
