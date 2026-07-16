@@ -139,7 +139,16 @@ def render_effect(effect_id, params=None, inputs=None, width=256, height=256, se
             sampler = spec.get("uniform") or spec.get("texture") or pname
             surface_params[sampler] = inputs.get(sampler) or inputs.get(pname)
             continue
-        val = _coerce(spec, params.get(pname))
+        if pname == "seed" and "seed" not in params:
+            # Match noisemaker-cpu bin/noisemaker-cpu.js `effect` command: an
+            # effect's own `seed` param shares the GLSL uniform name with the
+            # canonical render seed. When the caller doesn't explicitly set the
+            # param, the CLI threads the render `seed` into it instead of
+            # falling back to the param's own (possibly different) metadata
+            # default, so `seed=` actually changes the generator's look.
+            val = _coerce(spec, seed)
+        else:
+            val = _coerce(spec, params.get(pname))
         if spec.get("uniform") is not None:
             effect_uniforms[spec["uniform"]] = val
         if spec.get("define") is not None:
