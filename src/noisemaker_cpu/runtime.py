@@ -253,7 +253,10 @@ class Runtime:
             return bool(np.all(np.asarray(args[0])))
         if name == "not":
             return np.logical_not(np.asarray(args[0]))
-        arrs = [a if _is_scalar(a) else np.asarray(a, dtype=F32) for a in args]
+        # Compute in float64 (like JS Math.*), then round to float32 (fround) —
+        # matches the reference engine's transcendentals; a float32 sin/pow path
+        # diverges enough to blow the +/-2 tolerance in noise chains.
+        arrs = [a if _is_scalar(a) else np.asarray(a, dtype=np.float64) for a in args]
         fn = _COMPONENT.get(name)
         if fn is None:
             raise ValueError(f"unsupported builtin {name!r}")
