@@ -95,6 +95,7 @@ class CodeGen:
         self.structs = {}     # name -> [ (fieldtype, fieldname) ]
         self.loop_id = 0
         self.uses_deriv = False
+        self.cur_out = []  # out/inout param pynames of the function being emitted
 
     # ---- collect ----
     def collect(self):
@@ -120,8 +121,10 @@ class CodeGen:
     def _collect_func(self, d):
         ret = self.type_of_name(d["ret"])
         ptypes = [self.type_of_name(p[0]) for p in d["params"]]
+        out_idxs = [i for i, p in enumerate(d["params"])
+                    if len(p) > 2 and any(qu in ("out", "inout") for qu in (p[2] or []))]
         mangled = py_ident(d["name"]) + "__" + ("_".join(_type_name(t) for t in ptypes) if ptypes else "void")
-        entry = {"mangled": mangled, "ptypes": ptypes, "ret": ret, "node": d}
+        entry = {"mangled": mangled, "ptypes": ptypes, "ret": ret, "node": d, "out_idxs": out_idxs}
         self.funcs.append(entry)
         self.overloads.setdefault(d["name"], []).append(entry)
 
@@ -176,17 +179,22 @@ class CodeGen:
         pad = "    " * indent
         scope = self.root.child()
         pynames = []
-        for (ptype, pname), t in zip(fn["node"]["params"], fn["ptypes"]):
-            if pname is None:
+        for p, t in zip(fn["node"]["params"], fn["ptypes"]):
+            if p[1] is None:
                 pynames.append("_unused")
                 continue
-            e = scope.define(pname, t)
-            pynames.append(e["py"])
+            pynames.append(scope.define(p[1], t)["py"])
         L.append(f"{pad}def {fn['mangled']}({', '.join(pynames)}):")
-        for (ptype, pname), t in zip(fn["node"]["params"], fn["ptypes"]):
-            if pname and width_of(t) > 1:
-                L.append(f"{pad}    {py_ident(pname)} = rt.copy({py_ident(pname)})")
+        for p, t in zip(fn["node"]["params"], fn["ptypes"]):
+            if p[1] and width_of(t) > 1:
+                L.append(f"{pad}    {py_ident(p[1])} = rt.copy({py_ident(p[1])})")
+        out_pynames = [pynames[i] for i in fn.get("out_idxs", [])]
+        prev = self.cur_out
+        self.cur_out = out_pynames
         body = self.block(fn["node"]["body"], scope, indent + 1)
+        if out_pynames:  # out/inout params: every exit returns (retval, *outs)
+            body.append(f"{'    ' * (indent + 1)}return (None, {', '.join(out_pynames)})")
+        self.cur_out = prev
         if not body:
             body = [f"{'    ' * (indent + 1)}pass"]
         L.extend(body)
@@ -237,7 +245,10 @@ class CodeGen:
             out.append(f"{pad}        break")
             out.extend(self._branch(s["body"], scope.child(), indent + 1))
         elif k == "return":
-            if s.get("value") is None:
+            if self.cur_out:
+                val = self.expr(s["value"], scope)[0] if s.get("value") is not None else "None"
+                out.append(f"{pad}return ({val}, {', '.join(self.cur_out)})")
+            elif s.get("value") is None:
                 out.append(f"{pad}return")
             else:
                 code, _ = self.expr(s["value"], scope)
@@ -282,6 +293,9 @@ class CodeGen:
         out.extend(self._branch(s["body"], ls, indent + 1))
 
     def _default(self, t):
+        if base_of(t) == "struct":
+            fields = self.structs.get(t.get("struct"), [])
+            return "[" + ", ".join(self._default(self.type_of_name(f[0])) for f in fields) + "]"
         if width_of(t) == 1:
             return "False" if base_of(t) == "bool" else ("0" if base_of(t) in ("int", "uint") else "rt.f(0.0)")
         return f"rt.construct({t['width']}, 0.0{_construct_base(t)})"
@@ -444,6 +458,9 @@ class CodeGen:
             return r(self, codes, args)
         if name in self.overloads:
             fn = self._resolve_overload(name, [a[1] for a in args])
+            if fn.get("out_idxs"):  # out/inout: unpack outputs back to caller lvalues
+                targets = [self.expr(node["args"][i], scope)[0] for i in fn["out_idxs"]]
+                return (f"_retc, {', '.join(targets)} = {fn['mangled']}({', '.join(codes)})", fn["ret"])
             return (f"{fn['mangled']}({', '.join(codes)})", fn["ret"])
         if name in TYPE:  # scalar cast: int(x), float(x), uint(x)
             t = TYPE[name]

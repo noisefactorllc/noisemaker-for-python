@@ -84,6 +84,7 @@ def run_pixel(ctx, out):
         ri = rt.copy(ri)
         rr = df64_sub__vec2_vec2(df64_mul__vec2_vec2(ar, br), df64_mul__vec2_vec2(ai, bi))
         ri = df64_add__vec2_vec2(df64_mul__vec2_vec2(ar, bi), df64_mul__vec2_vec2(ai, br))
+        return (None, rr, ri)
     def transformCoords_df64__vec2_vec2_vec2_float_float_vec2_vec2(fragCoord, cX_df, cY_df, z_zoom, rot, re_df, im_df):
         fragCoord = rt.copy(fragCoord)
         cX_df = rt.copy(cX_df)
@@ -100,6 +101,7 @@ def run_pixel(ctx, out):
         uv_im_df = df64_mul_f__vec2_float(df64_from__float(rt.swizzle(uv, "y")), scale)
         re_df = df64_add__vec2_vec2(uv_re_df, cX_df)
         im_df = df64_add__vec2_vec2(uv_im_df, cY_df)
+        return (None, re_df, im_df)
     def getPOI__int(idx):
         if rt.binary("==", idx, rt.i(1)):
             return [rt.construct(4, rt.f(0.0), rt.f(0.0), rt.f(0.0), rt.f(0.0)), rt.f(3.0), rt.f(7.0)]
@@ -148,7 +150,7 @@ def run_pixel(ctx, out):
             zoom = rt.component_wise("pow", rt.f(10.0), effZoomDepth, width=1)
         re_df = rt.construct(2, 0.0)
         im_df = rt.construct(2, 0.0)
-        transformCoords_df64__vec2_vec2_vec2_float_float_vec2_vec2(globalCoord, rt.construct(2, rt.swizzle(cHi, "x"), rt.swizzle(cLo, "x")), rt.construct(2, rt.swizzle(cHi, "y"), rt.swizzle(cLo, "y")), zoom, _u_rotation, re_df, im_df)
+        _retc, re_df, im_df = transformCoords_df64__vec2_vec2_vec2_float_float_vec2_vec2(globalCoord, rt.construct(2, rt.swizzle(cHi, "x"), rt.swizzle(cLo, "x")), rt.construct(2, rt.swizzle(cHi, "y"), rt.swizzle(cLo, "y")), zoom, _u_rotation, re_df, im_df)
         intDeg = rt.construct(1, rt.component_wise("floor", effDegree, width=1), base="int")
         numRoots = intDeg
         roots = rt.new_array(rt.i(8), 2)
@@ -194,12 +196,12 @@ def run_pixel(ctx, out):
                     break
                 tr = rt.construct(2, 0.0)
                 ti = rt.construct(2, 0.0)
-                df64_cmul__vec2_vec2_vec2_vec2_vec2_vec2(pwr, pwi, zr_df, zi_df, tr, ti)
+                _retc, tr, ti = df64_cmul__vec2_vec2_vec2_vec2_vec2_vec2(pwr, pwi, zr_df, zi_df, tr, ti)
                 pwr = tr
                 pwi = ti
             znr = rt.construct(2, 0.0)
             zni = rt.construct(2, 0.0)
-            df64_cmul__vec2_vec2_vec2_vec2_vec2_vec2(pwr, pwi, zr_df, zi_df, znr, zni)
+            _retc, znr, zni = df64_cmul__vec2_vec2_vec2_vec2_vec2_vec2(pwr, pwi, zr_df, zi_df, znr, zni)
             fzr = df64_sub__vec2_vec2(znr, df64_from__float(rt.f(1.0)))
             fzi = zni
             fpzr = df64_mul_f__vec2_float(pwr, rt.construct(1, intDeg))

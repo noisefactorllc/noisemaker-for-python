@@ -138,7 +138,7 @@ class Parser:
         params = []
         if not self.at(")"):
             while True:
-                self.qualifiers()
+                pquals = self.qualifiers()
                 if self.at("void") and self.peek(1).value == ")":
                     self.next()
                     break
@@ -147,7 +147,7 @@ class Parser:
                 if self.eat("["):
                     self.expr()
                     self.expect("]")
-                params.append((ptype, pname))
+                params.append((ptype, pname, pquals))
                 if not self.eat(","):
                     break
         self.expect(")")

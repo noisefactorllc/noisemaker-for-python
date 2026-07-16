@@ -83,6 +83,7 @@ def run_pixel(ctx, out):
         t = rt.binary("*", g.df64_split_const, a, 1, "float")
         hi = rt.binary("-", t, rt.binary("-", t, a, 1, "float"), 1, "float")
         lo = rt.binary("-", a, hi, 1, "float")
+        return (None, hi, lo)
     def df64_mul__vec2_vec2(a, b):
         a = rt.copy(a)
         b = rt.copy(b)
@@ -91,8 +92,8 @@ def run_pixel(ctx, out):
         alo = rt.f(0.0)
         bhi = rt.f(0.0)
         blo = rt.f(0.0)
-        df64_split__float_float_float(rt.swizzle(a, "x"), ahi, alo)
-        df64_split__float_float_float(rt.swizzle(b, "x"), bhi, blo)
+        _retc, ahi, alo = df64_split__float_float_float(rt.swizzle(a, "x"), ahi, alo)
+        _retc, bhi, blo = df64_split__float_float_float(rt.swizzle(b, "x"), bhi, blo)
         e = rt.binary("+", rt.binary("+", rt.binary("+", rt.binary("-", rt.binary("*", ahi, bhi, 1, "float"), p, 1, "float"), rt.binary("*", ahi, blo, 1, "float"), 1, "float"), rt.binary("*", alo, bhi, 1, "float"), 1, "float"), rt.binary("*", alo, blo, 1, "float"), 1, "float")
         e = rt.binary("+", e, rt.binary("+", rt.binary("*", rt.swizzle(a, "x"), rt.swizzle(b, "y"), 1, "float"), rt.binary("*", rt.swizzle(a, "y"), rt.swizzle(b, "x"), 1, "float"), 1, "float"), 1, "float")
         return rt.construct(2, p, e)
@@ -103,8 +104,8 @@ def run_pixel(ctx, out):
         alo = rt.f(0.0)
         bhi = rt.f(0.0)
         blo = rt.f(0.0)
-        df64_split__float_float_float(rt.swizzle(a, "x"), ahi, alo)
-        df64_split__float_float_float(b, bhi, blo)
+        _retc, ahi, alo = df64_split__float_float_float(rt.swizzle(a, "x"), ahi, alo)
+        _retc, bhi, blo = df64_split__float_float_float(b, bhi, blo)
         e = rt.binary("+", rt.binary("+", rt.binary("+", rt.binary("-", rt.binary("*", ahi, bhi, 1, "float"), p, 1, "float"), rt.binary("*", ahi, blo, 1, "float"), 1, "float"), rt.binary("*", alo, bhi, 1, "float"), 1, "float"), rt.binary("*", alo, blo, 1, "float"), 1, "float")
         e = rt.binary("+", e, rt.binary("*", rt.swizzle(a, "y"), b, 1, "float"), 1, "float")
         return rt.construct(2, p, e)
@@ -126,11 +127,12 @@ def run_pixel(ctx, out):
         scale = rt.binary("/", rt.f(2.5), zm, 1, "float")
         reDF = df64_add__vec2_vec2(df64_mul_f__vec2_float(df64_from__float(rt.swizzle(uv, "x")), scale), df64_from__float(_u_centerX))
         imDF = df64_add__vec2_vec2(df64_mul_f__vec2_float(df64_from__float(rt.swizzle(uv, "y")), scale), df64_from__float(_u_centerY))
+        return (None, reDF, imDF)
     def juliaIterate__vec2_vec2_vec2_int_float_int(z0Re, z0Im, c, maxIter, freq, trap):
         z0Re = rt.copy(z0Re)
         z0Im = rt.copy(z0Im)
         c = rt.copy(c)
-        r = rt.f(0.0)
+        r = [rt.f(0.0), rt.f(0.0), rt.f(0.0), rt.f(0.0), rt.f(0.0), rt.f(0.0), rt.f(0.0)]
         zRe = z0Re
         zIm = z0Im
         dz = rt.construct(2, rt.f(1.0), rt.f(0.0))
@@ -228,7 +230,7 @@ def run_pixel(ctx, out):
         c = rt.copy(c)
         reDF = rt.construct(2, 0.0)
         imDF = rt.construct(2, 0.0)
-        transformCoords__vec2_float_vec2_vec2(fragCoord, zm, reDF, imDF)
+        _retc, reDF, imDF = transformCoords__vec2_float_vec2_vec2(fragCoord, zm, reDF, imDF)
         zRe = reDF
         zIm = imDF
         i = rt.f(0.0)
@@ -283,7 +285,7 @@ def run_pixel(ctx, out):
         else:
             reDF = rt.construct(2, 0.0)
             imDF = rt.construct(2, 0.0)
-            transformCoords__vec2_float_vec2_vec2(globalCoord, effectiveZoom, reDF, imDF)
+            _retc, reDF, imDF = transformCoords__vec2_float_vec2_vec2(globalCoord, effectiveZoom, reDF, imDF)
             r = juliaIterate__vec2_vec2_vec2_int_float_int(reDF, imDF, c, _u_iterations, _u_stripeFreq, _u_trapShape)
             if rt.binary("==", _u_outputMode, rt.i(0)):
                 value = outputSmoothIteration__struct1_float(r, rt.construct(1, _u_iterations))

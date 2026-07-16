@@ -116,6 +116,7 @@ def run_pixel(ctx, out):
                                     else:
                                         cX_df = rt.construct(2, _u_centerHiX, _u_centerLoX)
                                         cY_df = rt.construct(2, _u_centerHiY, _u_centerLoY)
+        return (None, cX_df, cY_df)
     def transformCoords_df64__vec2_vec2_vec2_float_float_vec2_vec2(fragCoord, cX_df, cY_df, z, rot, re_df, im_df):
         fragCoord = rt.copy(fragCoord)
         cX_df = rt.copy(cX_df)
@@ -130,6 +131,7 @@ def run_pixel(ctx, out):
         scale = rt.binary("/", rt.f(2.5), z, 1, "float")
         re_df = df64_add__vec2_vec2(df64_from__float(rt.binary("*", rt.swizzle(uv, "x"), scale, 1, "float")), cX_df)
         im_df = df64_add__vec2_vec2(df64_from__float(rt.binary("*", rt.swizzle(uv, "y"), scale, 1, "float")), cY_df)
+        return (None, re_df, im_df)
     def inCardioid__float_float(x, y):
         y2 = rt.binary("*", y, y, 1, "float")
         q = rt.binary("+", rt.binary("*", rt.binary("-", x, rt.f(0.25), 1, "float"), rt.binary("-", x, rt.f(0.25), 1, "float"), 1, "float"), y2, 1, "float")
@@ -160,7 +162,7 @@ def run_pixel(ctx, out):
             dz_final = rt.construct(2, rt.f(0.0))
             stripeAcc = rt.f(0.0)
             trapMin = rt.f(1e+20)
-            return
+            return (None, smoothIter, rawIter, z_final, dz_final, stripeAcc, trapMin)
         zr = rt.construct(2, rt.f(0.0))
         zi = rt.construct(2, rt.f(0.0))
         dz = rt.construct(2, rt.f(1.0), rt.f(0.0))
@@ -210,6 +212,7 @@ def run_pixel(ctx, out):
             smoothIter = rt.binary("-", rt.binary("+", i, rt.f(1.0), 1, "float"), nu, 1, "float")
         else:
             smoothIter = i
+        return (None, smoothIter, rawIter, z_final, dz_final, stripeAcc, trapMin)
     def outputSmoothIteration__float_float_int(smoothIter, rawIter, maxIter):
         if rt.binary(">=", rawIter, rt.construct(1, maxIter)):
             return rt.f(0.0)
@@ -242,14 +245,14 @@ def run_pixel(ctx, out):
         cY_df = rt.copy(cY_df)
         re_df = rt.construct(2, 0.0)
         im_df = rt.construct(2, 0.0)
-        transformCoords_df64__vec2_vec2_vec2_float_float_vec2_vec2(fragCoord, cX_df, cY_df, z_zoom, rot, re_df, im_df)
+        _retc, re_df, im_df = transformCoords_df64__vec2_vec2_vec2_float_float_vec2_vec2(fragCoord, cX_df, cY_df, z_zoom, rot, re_df, im_df)
         sI = rt.f(0.0)
         rI = rt.f(0.0)
         zf = rt.construct(2, 0.0)
         dzf = rt.construct(2, 0.0)
         sa = rt.f(0.0)
         tm = rt.f(0.0)
-        mandelbrot_df64__vec2_vec2_int_float_float_vec2_vec2_float_float(re_df, im_df, maxIter, sI, rI, zf, dzf, sa, tm)
+        _retc, sI, rI, zf, dzf, sa, tm = mandelbrot_df64__vec2_vec2_int_float_float_vec2_vec2_float_float(re_df, im_df, maxIter, sI, rI, zf, dzf, sa, tm)
         return outputDistance__vec2_vec2_float_int(zf, dzf, rI, maxIter)
     def outputNormalMap__vec2_vec2_vec2_float_float_int_float(fragCoord, cX_df, cY_df, z_zoom, rot, maxIter, angle):
         fragCoord = rt.copy(fragCoord)
@@ -278,7 +281,7 @@ def run_pixel(ctx, out):
         rot = (rt.f(0.0) if rt.binary(">", _u_poi, rt.i(0)) else _u_rotation)
         cX_df = rt.construct(2, 0.0)
         cY_df = rt.construct(2, 0.0)
-        getPOI__int_vec2_vec2(_u_poi, cX_df, cY_df)
+        _retc, cX_df, cY_df = getPOI__int_vec2_vec2(_u_poi, cX_df, cY_df)
         value = rt.f(0.0)
         if rt.binary("==", _u_outputMode, rt.i(4)):
             value = outputNormalMap__vec2_vec2_vec2_float_float_int_float(globalCoord, cX_df, cY_df, effZoom, rot, maxIter, _u_lightAngle)
@@ -291,8 +294,8 @@ def run_pixel(ctx, out):
             trapMin = rt.f(0.0)
             re_df = rt.construct(2, 0.0)
             im_df = rt.construct(2, 0.0)
-            transformCoords_df64__vec2_vec2_vec2_float_float_vec2_vec2(globalCoord, cX_df, cY_df, effZoom, rot, re_df, im_df)
-            mandelbrot_df64__vec2_vec2_int_float_float_vec2_vec2_float_float(re_df, im_df, maxIter, smoothI, rawI, z_final, dz_final, stripeAcc, trapMin)
+            _retc, re_df, im_df = transformCoords_df64__vec2_vec2_vec2_float_float_vec2_vec2(globalCoord, cX_df, cY_df, effZoom, rot, re_df, im_df)
+            _retc, smoothI, rawI, z_final, dz_final, stripeAcc, trapMin = mandelbrot_df64__vec2_vec2_int_float_float_vec2_vec2_float_float(re_df, im_df, maxIter, smoothI, rawI, z_final, dz_final, stripeAcc, trapMin)
             if rt.binary("==", _u_outputMode, rt.i(0)):
                 value = outputSmoothIteration__float_float_int(smoothI, rawI, maxIter)
             else:
