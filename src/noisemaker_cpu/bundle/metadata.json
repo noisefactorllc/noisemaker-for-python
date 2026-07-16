@@ -11470,6 +11470,24 @@
           "uniforms": {}
         },
         {
+          "name": "deposit",
+          "program": "deposit",
+          "key": null,
+          "drawMode": "points",
+          "inputs": {
+            "inputTex": "inputTex"
+          },
+          "outputs": {
+            "fragColor": "wormhole_accum"
+          },
+          "uniforms": {
+            "kink": "kink",
+            "stride": "stride",
+            "rotation": "rotation",
+            "wrap": "wrap"
+          }
+        },
+        {
           "name": "blend",
           "program": "blend",
           "key": "filter/wormhole:blend",

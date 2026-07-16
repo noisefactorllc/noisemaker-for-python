@@ -66,6 +66,13 @@ def build(ids, out_dir=BUNDLE, update_lock=False):
         for p in eff["passes"]:
             glsl = eff["programs"].get(p["program"])
             if glsl is None:
+                # A pass without GLSL is a CPU-only draw op (e.g. wormhole's
+                # point-scatter deposit). Keep it so the renderer can run its
+                # native adapter; it has no transpiled kernel key.
+                if p.get("drawMode"):
+                    passes.append({"name": p["name"], "program": p["program"], "key": None,
+                                   "drawMode": p["drawMode"], "inputs": p.get("inputs", {}),
+                                   "outputs": p.get("outputs", {}), "uniforms": p.get("uniforms", {})})
                 continue
             key = _key(eid, p["program"])
             h = hashlib.sha256(glsl.strip().encode("utf-8")).hexdigest()

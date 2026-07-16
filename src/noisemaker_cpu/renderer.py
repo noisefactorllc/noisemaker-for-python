@@ -16,6 +16,7 @@ from .kernel_loader import KernelCache
 from .pass_runner import Ctx, run_pass, run_pass_deriv
 from .runtime import F32, Runtime, f32
 from .adapters import get_adapter
+from .draw_ops import get_draw_op
 from .surface import Surface
 from .texture_format import quantize_texture
 
@@ -182,24 +183,36 @@ def render_effect(effect_id, params=None, inputs=None, width=256, height=256, se
                 pass_uniforms[glsl_name] = effect_uniforms[param_name]
             elif param_name in uniforms:
                 pass_uniforms[glsl_name] = uniforms[param_name]
-        ctx = Ctx(
-            rt,
-            uniforms=pass_uniforms,
-            textures=textures,
-            resolution=np.array([float(width), float(height)], dtype=F32),
-            time=time,
-            seed=seed,
-        )
-        kernel = _kernel_for(p["key"])
-        adapter = get_adapter(effect_id, p["program"])
-        if adapter is not None:
-            kernel = adapter(rt, kernel)
-        runner = run_pass_deriv if getattr(kernel, "uses_derivatives", False) else run_pass
-        result = runner(kernel, ctx, width, height)
-        # Quantize the pass output to its declared texture format (rgba16f half
-        # by default), matching the reference engine's per-pass FBO storage.
         out_names = list((p.get("outputs") or {}).values())
         fmt = eff.get("textures", {}).get(out_names[0], {}).get("format", "rgba16f") if out_names else "rgba16f"
+        draw_op = get_draw_op(effect_id, p["program"]) if p.get("drawMode") else None
+        if draw_op is not None:
+            # CPU-only draw op (e.g. point-scatter). A fresh destination seeds
+            # from the prior same-name attachment (accumulator) or clears, then
+            # the op writes into it.
+            src = textures.get(list((p.get("inputs") or {}).values() or ["inputTex"])[0]) or textures["inputTex"]
+            result = Surface(width, height)
+            prev = attachments.get(out_names[0]) if out_names else None
+            if prev is not None and prev.data.shape == result.data.shape:
+                result.data[:] = prev.data
+            draw_op(src, result, pass_uniforms)
+        else:
+            ctx = Ctx(
+                rt,
+                uniforms=pass_uniforms,
+                textures=textures,
+                resolution=np.array([float(width), float(height)], dtype=F32),
+                time=time,
+                seed=seed,
+            )
+            kernel = _kernel_for(p["key"])
+            adapter = get_adapter(effect_id, p["program"])
+            if adapter is not None:
+                kernel = adapter(rt, kernel)
+            runner = run_pass_deriv if getattr(kernel, "uses_derivatives", False) else run_pass
+            result = runner(kernel, ctx, width, height)
+        # Quantize the pass output to its declared texture format (rgba16f half
+        # by default), matching the reference engine's per-pass FBO storage.
         quantize_texture(result, fmt)
         for attach_name in out_names:
             attachments[attach_name] = result
