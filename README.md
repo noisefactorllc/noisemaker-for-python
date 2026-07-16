@@ -26,8 +26,10 @@ CLI (modeled after the [`noisemaker`](https://github.com/noisedeck/noisemaker) C
 ```bash
 # generate a single frame
 noisemaker-py generate synth/curl --width 512 --height 512 --filename curl.png
-noisemaker-py generate filter/chrome --input photo.png --filename chrome.png
 noisemaker-py generate random --seed 42
+
+# apply an effect to an existing image
+noisemaker-py apply filter/chrome photo.png --filename chrome.png
 
 # animate an effect over time (needs ffmpeg for .mp4; or --save-frames DIR)
 noisemaker-py animate synth/curl --frame-count 60 --filename curl.mp4

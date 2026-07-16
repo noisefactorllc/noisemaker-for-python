@@ -1,9 +1,10 @@
 """Command-line interface, modeled after the noisemaker CLI
 (noisemaker/noisemaker/scripts/noisemaker.py and its js/ equivalent): a click
-group with `generate` and `animate`, sharing its option conventions
+group with `generate`, `apply`, and `animate`, sharing its option conventions
 (--width/--height/--time/--seed/--filename, -h/--help). Where noisemaker renders
 a named preset, this renders a catalog effect by id (e.g. `synth/curl`,
-`filter/chrome`); `random` picks one at random.
+`filter/chrome`); `random` picks one at random. As in noisemaker, `generate`
+takes no input and `apply` takes the input image as a positional argument.
 """
 
 from __future__ import annotations
@@ -53,14 +54,10 @@ def _parse_params(pairs: tuple[str, ...]) -> dict:
     return params
 
 
-def _load_inputs(effect_id: str, input_filename: str | None) -> dict:
-    if not input_filename:
-        return {}
-    with open(input_filename, "rb") as handle:
-        surface = decode_png(handle.read())
+def _bind_input(effect_id: str, surface) -> dict:
     inputs = {"inputTex": surface}
     # An effect that reads a host texture (filter/text, synth/media) binds the
-    # same image, mirroring the noisemaker/js CLI's --input (imageTex + textTex).
+    # same image, mirroring the noisemaker/js CLI's input (imageTex + textTex).
     external = _meta()["effects"][effect_id].get("externalTexture")
     if external:
         inputs[external] = surface
@@ -87,18 +84,38 @@ def main():
 @click.option("--seed", type=int, default=None, help="Random seed. Might not affect all effects.")
 @click.option("--filename", type=click.Path(dir_okay=False), default="art.png", help="Image output filename (.png)")
 @click.option("--param", "params", multiple=True, metavar="NAME=VALUE", help="Effect parameter (repeatable)")
-@click.option("--input", "input_filename", type=click.Path(exists=True, dir_okay=False), help="Input .png (bound as inputTex)")
 @click.argument("effect")
-def generate(width, height, time_value, seed, filename, params, input_filename, effect):
+def generate(width, height, time_value, seed, filename, params, effect):
     effect = _resolve_effect(effect)
     if seed is None:
         seed = random.randint(1, MAX_SEED_VALUE)
     click.echo(effect)
-    surface = render_effect(effect, _parse_params(params), _load_inputs(effect, input_filename),
+    surface = render_effect(effect, _parse_params(params),
                             width=width, height=height, seed=seed, time=time_value)
     with open(filename, "wb") as handle:
         handle.write(encode_png(surface))
     click.echo(f"Rendered {width}x{height} -> {filename}")
+
+
+@main.command(help="Apply an effect to a .png image")
+@click.option("--time", "time_value", type=float, default=0.0, help="Time value for the Z axis / animation phase")
+@click.option("--seed", type=int, default=None, help="Random seed. Might not affect all effects.")
+@click.option("--filename", type=click.Path(dir_okay=False), default="mangled.png", help="Image output filename (.png)")
+@click.option("--param", "params", multiple=True, metavar="NAME=VALUE", help="Effect parameter (repeatable)")
+@click.argument("effect")
+@click.argument("input_filename", type=click.Path(exists=True, dir_okay=False))
+def apply(time_value, seed, filename, params, effect, input_filename):
+    effect = _resolve_effect(effect)
+    if seed is None:
+        seed = random.randint(1, MAX_SEED_VALUE)
+    click.echo(effect)
+    with open(input_filename, "rb") as handle:
+        source = decode_png(handle.read())
+    surface = render_effect(effect, _parse_params(params), _bind_input(effect, source),
+                            width=source.width, height=source.height, seed=seed, time=time_value)
+    with open(filename, "wb") as handle:
+        handle.write(encode_png(surface))
+    click.echo(f"Rendered {source.width}x{source.height} -> {filename}")
 
 
 @main.command(help="Render an effect over time to an animation (.mp4)")
@@ -111,22 +128,20 @@ def generate(width, height, time_value, seed, filename, params, input_filename, 
 @click.option("--speed", type=float, default=1.0, help="Time-sweep multiplier (loops of the [0,1) time phase)")
 @click.option("--save-frames", type=click.Path(file_okay=False), default=None, help="Directory to also write the PNG frames into")
 @click.option("--param", "params", multiple=True, metavar="NAME=VALUE", help="Effect parameter (repeatable)")
-@click.option("--input", "input_filename", type=click.Path(exists=True, dir_okay=False), help="Input .png (bound as inputTex)")
 @click.argument("effect")
-def animate(width, height, seed, filename, frame_count, fps, speed, save_frames, params, input_filename, effect):
+def animate(width, height, seed, filename, frame_count, fps, speed, save_frames, params, effect):
     effect = _resolve_effect(effect)
     if seed is None:
         seed = random.randint(1, MAX_SEED_VALUE)
     click.echo(effect)
     parsed = _parse_params(params)
-    inputs = _load_inputs(effect, input_filename)
 
     frames_dir = save_frames or tempfile.mkdtemp(prefix="noisemaker-py-")
     os.makedirs(frames_dir, exist_ok=True)
     with click.progressbar(range(frame_count), label="Rendering frames") as frames:
         for i in frames:
             time_value = (i / frame_count) * speed  # sweep the [0,1) phase, `speed` loops
-            surface = render_effect(effect, parsed, inputs, width=width, height=height, seed=seed, time=time_value)
+            surface = render_effect(effect, parsed, width=width, height=height, seed=seed, time=time_value)
             with open(os.path.join(frames_dir, f"frame_{i:04d}.png"), "wb") as handle:
                 handle.write(encode_png(surface))
 
