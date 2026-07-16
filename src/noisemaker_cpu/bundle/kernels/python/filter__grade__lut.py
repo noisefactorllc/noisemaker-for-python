@@ -10,6 +10,7 @@ def run_pixel(ctx, out):
     _u_inputTex = T["inputTex"]
     _u_preset = U["preset"]
     _u_alpha = U["alpha"]
+    g.fragColor = rt.construct(4, 0.0)
     def srgbToLinear__vec3(srgb):
         srgb = rt.copy(srgb)
         linear = rt.construct(3, 0.0)

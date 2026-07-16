@@ -12,6 +12,7 @@ def run_pixel(ctx, out):
     _u_cellSize = U["cellSize"]
     _u_seed = U["seed"]
     _u_colorMode = U["colorMode"]
+    g.fragColor = rt.construct(4, 0.0)
     g.GLYPH_COUNT = rt.i(16)
     def pcg__uvec3(v):
         v = rt.copy(v)

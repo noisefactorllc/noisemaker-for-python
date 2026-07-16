@@ -16,6 +16,7 @@ def run_pixel(ctx, out):
     _u_center = U["center"]
     _u_aspectLens = U["aspectLens"]
     _u_antialias = U["antialias"]
+    g.fragColor = rt.construct(4, 0.0)
     g.PI = rt.f(3.14159265359)
     g.TAU = rt.f(6.28318530718)
     def polygonShape__vec2_int(uv, sides):

@@ -20,6 +20,7 @@ def run_pixel(ctx, out):
     _u_scatter = U["scatter"]
     _u_bandHeight = U["bandHeight"]
     _u_renderScale = U["renderScale"]
+    g.fragColor = rt.construct(4, 0.0)
     def pcg__uvec3(v):
         v = rt.copy(v)
         v = rt.binary("+", rt.binary("*", v, rt.i(1664525), 3, "uint"), rt.i(1013904223), 3, "uint")

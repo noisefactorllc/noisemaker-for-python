@@ -11,6 +11,7 @@ def run_pixel(ctx, out):
     _u_fullResolution = U["fullResolution"]
     _u_renderScale = U["renderScale"]
     _u_alpha = U["alpha"]
+    g.fragColor = rt.construct(4, 0.0)
     g.TAP_COUNT = rt.i(32)
     g.RADIUS = rt.f(48.0)
     g.GOLDEN_ANGLE = rt.f(2.39996323)

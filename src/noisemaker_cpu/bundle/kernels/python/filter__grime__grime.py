@@ -11,6 +11,7 @@ def run_pixel(ctx, out):
     _u_tileOffset = U["tileOffset"]
     _u_strength = U["strength"]
     _u_seed = U["seed"]
+    g.fragColor = rt.construct(4, 0.0)
     def clamp01__float(v):
         return rt.component_wise("clamp", v, rt.f(0.0), rt.f(1.0), width=1)
     def freq_for_shape__float_float_float(freq, w, h):

@@ -11,6 +11,7 @@ def run_pixel(ctx, out):
     _u_fullResolution = U["fullResolution"]
     _u_aberrationAmt = U["aberrationAmt"]
     _u_passthru = U["passthru"]
+    g.fragColor = rt.construct(4, 0.0)
     def map__float_float_float_float_float(value, inMin, inMax, outMin, outMax):
         return rt.binary("+", outMin, rt.binary("/", rt.binary("*", rt.binary("-", outMax, outMin, 1, "float"), rt.binary("-", value, inMin, 1, "float"), 1, "float"), rt.binary("-", inMax, inMin, 1, "float"), 1, "float"), 1, "float")
     def main__void():

@@ -18,6 +18,7 @@ def run_pixel(ctx, out):
     g.TIME_SEED_OFFSETS = rt.construct(3, rt.f(97.0), rt.f(57.0), rt.f(131.0))
     g.STATIC_SEED = rt.construct(3, rt.f(37.0), rt.f(17.0), rt.f(53.0))
     g.LIMITER_SEED = rt.construct(3, rt.f(113.0), rt.f(71.0), rt.f(193.0))
+    g.fragColor = rt.construct(4, 0.0)
     def as_u32__float(value):
         return rt.construct(1, rt.component_wise("max", rt.component_wise("round", value, width=1), rt.f(0.0), width=1), base="uint")
     def clamp_01__float(value):

@@ -11,6 +11,7 @@ def run_pixel(ctx, out):
     _u_lensDisplacement = U["lensDisplacement"]
     _u_aspectLens = U["aspectLens"]
     _u_antialias = U["antialias"]
+    g.fragColor = rt.construct(4, 0.0)
     g.HALF_FRAME = rt.f(0.5)
     def main__void():
         globalCoord = rt.binary("+", rt.swizzle(ctx.frag_coord, "xy"), _u_tileOffset, 2, "float")

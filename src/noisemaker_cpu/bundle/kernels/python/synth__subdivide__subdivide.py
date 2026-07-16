@@ -20,6 +20,7 @@ def run_pixel(ctx, out):
     _u_wrap = U["wrap"]
     _u_time = U["time"]
     _u_speed = U["speed"]
+    g.fragColor = rt.construct(4, 0.0)
     g.PHI = rt.f(1.618033988749895)
     def pcg__uvec3(v):
         v = rt.copy(v)

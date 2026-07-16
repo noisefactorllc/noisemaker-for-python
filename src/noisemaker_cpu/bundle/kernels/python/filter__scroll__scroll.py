@@ -16,6 +16,7 @@ def run_pixel(ctx, out):
     _u_time = U["time"]
     _u_wrap = U["wrap"]
     _u_inputTex = T["inputTex"]
+    g.fragColor = rt.construct(4, 0.0)
     def main__void():
         globalCoord = rt.binary("+", rt.swizzle(ctx.frag_coord, "xy"), _u_tileOffset, 2, "float")
         globalUV = rt.binary("/", globalCoord, _u_fullResolution, 2, "float")

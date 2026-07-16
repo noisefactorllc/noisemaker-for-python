@@ -10,6 +10,7 @@ def run_pixel(ctx, out):
     _u_wrap = U["wrap"]
     _u_speed = U["speed"]
     _u_time = U["time"]
+    g.fragColor = rt.construct(4, 0.0)
     g.TAU = rt.f(6.283185307179586)
     def rotate2D__float(angle):
         c = rt.component_wise("cos", angle, width=1)

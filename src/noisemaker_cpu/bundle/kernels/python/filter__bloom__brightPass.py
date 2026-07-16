@@ -10,6 +10,7 @@ def run_pixel(ctx, out):
     _u_inputTex = T["inputTex"]
     _u_threshold = U["threshold"]
     _u_softKnee = U["softKnee"]
+    g.fragColor = rt.construct(4, 0.0)
     def main__void():
         globalCoord = rt.binary("+", rt.swizzle(ctx.frag_coord, "xy"), _u_tileOffset, 2, "float")
         coord = rt.construct(2, rt.swizzle(ctx.frag_coord, "xy"), base="int")

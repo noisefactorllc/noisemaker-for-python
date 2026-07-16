@@ -12,6 +12,7 @@ def run_pixel(ctx, out):
     _u_alpha = U["alpha"]
     _u_sobelMetric = U["sobelMetric"]
     _u_width = U["width"]
+    g.fragColor = rt.construct(4, 0.0)
     def luminance__vec3(rgb):
         rgb = rt.copy(rgb)
         return rt.dot(rgb, rt.construct(3, rt.f(0.299), rt.f(0.587), rt.f(0.114)))

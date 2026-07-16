@@ -20,6 +20,7 @@ def run_pixel(ctx, out):
     _u_speed = U["speed"]
     _u_rotation = U["rotation"]
     _u_colorOffset = U["colorOffset"]
+    g.fragColor = rt.construct(4, 0.0)
     g.PI = rt.f(3.14159265358979)
     def hsv2rgb__vec3(c):
         c = rt.copy(c)

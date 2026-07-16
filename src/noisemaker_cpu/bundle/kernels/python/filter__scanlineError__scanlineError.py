@@ -16,6 +16,7 @@ def run_pixel(ctx, out):
     _u_time = U["time"]
     _u_renderScale = U["renderScale"]
     g.TAU = rt.f(6.283185307179586)
+    g.fragColor = rt.construct(4, 0.0)
     g.BASE_SEED_LINE = rt.construct(3, rt.f(37.0), rt.f(91.0), rt.f(53.0))
     g.TIME_SEED_LINE = rt.construct(3, rt.binary("+", rt.swizzle(g.BASE_SEED_LINE, "x"), rt.f(97.0), 1, "float"), rt.binary("+", rt.swizzle(g.BASE_SEED_LINE, "y"), rt.f(59.0), 1, "float"), rt.binary("+", rt.swizzle(g.BASE_SEED_LINE, "z"), rt.f(131.0), 1, "float"))
     g.BASE_SEED_SWERVE = rt.construct(3, rt.f(11.0), rt.f(73.0), rt.f(29.0))

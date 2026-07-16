@@ -27,6 +27,7 @@ def run_pixel(ctx, out):
     _u_rotation = U["rotation"]
     _u_outputMode = U["outputMode"]
     _u_invert = U["invert"]
+    g.fragColor = rt.construct(4, 0.0)
     g.PI = rt.f(3.14159265359)
     g.TAU = rt.f(6.28318530718)
     g.PHI = rt.f(1.6180339887)

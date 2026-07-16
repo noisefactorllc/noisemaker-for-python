@@ -15,6 +15,7 @@ def run_pixel(ctx, out):
     _u_scale = U["scale"]
     _u_aspectLens = U["aspectLens"]
     _u_antialias = U["antialias"]
+    g.fragColor = rt.construct(4, 0.0)
     g.TAU = rt.f(6.28318530718)
     def smod__float_float(v, m):
         return rt.binary("*", m, rt.binary("-", rt.binary("-", rt.f(0.75), rt.component_wise("abs", rt.binary("-", rt.component_wise("fract", v, width=1), rt.f(0.5), 1, "float"), width=1), 1, "float"), rt.f(0.25), 1, "float"), 1, "float")

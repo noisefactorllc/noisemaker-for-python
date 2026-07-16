@@ -17,6 +17,7 @@ def run_pixel(ctx, out):
     _u_invert = U["invert"]
     _u_time = U["time"]
     _u_speed = U["speed"]
+    g.fragColor = rt.construct(4, 0.0)
     g.TAU = rt.f(6.28318530718)
     def pcg__uvec3(v):
         v = rt.copy(v)

@@ -12,6 +12,7 @@ def run_pixel(ctx, out):
     _u_depth = U["depth"]
     _u_brightness = U["brightness"]
     _u_seed = U["seed"]
+    g.fragColor = rt.construct(4, 0.0)
     def hash12__vec2(p):
         p = rt.copy(p)
         p3 = rt.component_wise("fract", rt.binary("*", rt.construct(3, rt.swizzle(p, "xyx")), rt.f(0.1031), 3, "float"), width=3)

@@ -14,6 +14,7 @@ def run_pixel(ctx, out):
     _u_wrap = U["wrap"]
     _u_rotation = U["rotation"]
     _u_antialias = U["antialias"]
+    g.fragColor = rt.construct(4, 0.0)
     def rotate2D__vec2_float_float(st, rot, aspectRatio):
         st = rt.copy(st)
         st = rt.assign_swizzle(st, "x", rt.binary("*", rt.swizzle(st, "x"), aspectRatio, 1, "float"))

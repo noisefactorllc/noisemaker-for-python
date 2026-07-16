@@ -10,6 +10,7 @@ def run_pixel(ctx, out):
     _u_inputTex = T["inputTex"]
     _u_edgesTexture = T["edgesTexture"]
     _u_invert = U["invert"]
+    g.fragColor = rt.construct(4, 0.0)
     def main__void():
         globalCoord = rt.binary("+", rt.swizzle(ctx.frag_coord, "xy"), _u_tileOffset, 2, "float")
         dimensions = rt.texture_size(_u_inputTex)

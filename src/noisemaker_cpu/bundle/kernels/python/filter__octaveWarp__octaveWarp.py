@@ -17,6 +17,7 @@ def run_pixel(ctx, out):
     _u_wrap = U["wrap"]
     _u_seed = U["seed"]
     _u_antialias = U["antialias"]
+    g.fragColor = rt.construct(4, 0.0)
     g.TAU = rt.f(6.28318530717959)
     def pcg__uvec3(v):
         v = rt.copy(v)

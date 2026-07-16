@@ -26,6 +26,7 @@ def run_pixel(ctx, out):
     _u_alpha = U["alpha"]
     _u_rotation = U["rotation"]
     _u_time = U["time"]
+    g.fragColor = rt.construct(4, 0.0)
     g.TAU = rt.f(6.283185307179586)
     def hsv2rgb__vec3(hsv):
         hsv = rt.copy(hsv)

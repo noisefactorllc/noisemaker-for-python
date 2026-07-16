@@ -10,6 +10,7 @@ def run_pixel(ctx, out):
     _u_resolution = U["resolution"]
     _u_mode = U["mode"]
     _u_radius = U["radius"]
+    g.fragColor = rt.construct(4, 0.0)
     def main__void():
         uv = rt.binary("/", rt.swizzle(ctx.frag_coord, "xy"), _u_resolution, 2, "float")
         texel = rt.binary("/", rt.f(1.0), _u_resolution, 2, "float")

@@ -10,6 +10,7 @@ def run_pixel(ctx, out):
     g.F32_MIN = rt.unary("-", rt.f(3.402823466e+38))
     g.TILE_SIZE = rt.i(8)
     g.MAX_TILE_DIM = rt.i(512)
+    g.fragColor = rt.construct(4, 0.0)
     def main__void():
         if (bool(rt.binary("!=", rt.construct(1, rt.swizzle(ctx.frag_coord, "x"), base="int"), rt.i(0))) or bool(rt.binary("!=", rt.construct(1, rt.swizzle(ctx.frag_coord, "y"), base="int"), rt.i(0)))):
             g.fragColor = rt.construct(4, rt.f(0.0))

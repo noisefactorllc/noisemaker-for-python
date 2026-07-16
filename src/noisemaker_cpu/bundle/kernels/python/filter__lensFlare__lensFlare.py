@@ -14,6 +14,7 @@ def run_pixel(ctx, out):
     _u_centerX = U["centerX"]
     _u_centerY = U["centerY"]
     _u_tint = U["tint"]
+    g.fragColor = rt.construct(4, 0.0)
     def flareAxis__vec2_vec2_float_float(flarePos, mirrorPos, t, aspectRatio):
         flarePos = rt.copy(flarePos)
         mirrorPos = rt.copy(mirrorPos)

@@ -13,6 +13,7 @@ def run_pixel(ctx, out):
     _u_antialias = U["antialias"]
     _u_lightDirection = U["lightDirection"]
     _u_strength = U["strength"]
+    g.fragColor = rt.construct(4, 0.0)
     g.MIN_GAMMA = rt.f(0.001)
     def srgb_to_linear_component__float(value):
         if rt.binary("<=", value, rt.f(0.04045)):

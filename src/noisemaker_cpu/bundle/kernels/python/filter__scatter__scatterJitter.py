@@ -11,6 +11,7 @@ def run_pixel(ctx, out):
     _u_tileOffset = U["tileOffset"]
     _u_radius = U["radius"]
     _u_seed = U["seed"]
+    g.fragColor = rt.construct(4, 0.0)
     def hash22__vec2(p):
         p = rt.copy(p)
         p3 = rt.component_wise("fract", rt.binary("*", rt.construct(3, rt.swizzle(p, "xyx")), rt.construct(3, rt.f(0.1031), rt.f(0.103), rt.f(0.0973)), 3, "float"), width=3)

@@ -20,6 +20,7 @@ def run_pixel(ctx, out):
     _u_blur = U["blur"]
     _u_spread = U["spread"]
     _u_wrap = U["wrap"]
+    g.fragColor = rt.construct(4, 0.0)
     def getChannel__vec4_int(color, channel):
         color = rt.copy(color)
         if rt.binary("==", channel, rt.i(0)):

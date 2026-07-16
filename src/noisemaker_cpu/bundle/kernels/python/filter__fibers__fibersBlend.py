@@ -8,6 +8,7 @@ def run_pixel(ctx, out):
     _u_inputTex = T["inputTex"]
     _u_overlayTex = T["overlayTex"]
     _u_alpha = U["alpha"]
+    g.fragColor = rt.construct(4, 0.0)
     def main__void():
         coord = rt.construct(2, rt.swizzle(ctx.frag_coord, "xy"), base="int")
         base = rt.texel_fetch(_u_inputTex, coord, rt.i(0))

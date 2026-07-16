@@ -11,6 +11,7 @@ def run_pixel(ctx, out):
     _u_darkness = U["darkness"]
     _u_inkColor = U["inkColor"]
     _u_paperColor = U["paperColor"]
+    g.fragColor = rt.construct(4, 0.0)
     def lum__vec3(c):
         c = rt.copy(c)
         return rt.dot(c, rt.construct(3, rt.f(0.2126), rt.f(0.7152), rt.f(0.0722)))

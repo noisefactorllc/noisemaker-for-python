@@ -11,6 +11,7 @@ def run_pixel(ctx, out):
     _u_fullResolution = U["fullResolution"]
     _u_direction = U["direction"]
     _u_pivot = U["pivot"]
+    g.fragColor = rt.construct(4, 0.0)
     g.MARCH_STEPS = rt.i(32)
     g.SHIFT_SCALE = rt.f(0.15)
     def getLuminosity__vec3(color):

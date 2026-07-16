@@ -14,6 +14,7 @@ def run_pixel(ctx, out):
     _u_aperture = U["aperture"]
     _u_sampleBias = U["sampleBias"]
     _u_depthSource = U["depthSource"]
+    g.fragColor = rt.construct(4, 0.0)
     def getLuminosity__vec3(color):
         color = rt.copy(color)
         return rt.dot(color, rt.construct(3, rt.f(0.2126), rt.f(0.7152), rt.f(0.0722)))

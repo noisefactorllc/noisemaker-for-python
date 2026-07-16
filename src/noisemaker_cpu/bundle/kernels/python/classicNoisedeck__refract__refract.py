@@ -16,6 +16,7 @@ def run_pixel(ctx, out):
     _u_blendMode = U["blendMode"]
     _u_mixAmt = U["mixAmt"]
     _u_wrap = U["wrap"]
+    g.fragColor = rt.construct(4, 0.0)
     def map__float_float_float_float_float(value, inMin, inMax, outMin, outMax):
         return rt.binary("+", outMin, rt.binary("/", rt.binary("*", rt.binary("-", outMax, outMin, 1, "float"), rt.binary("-", value, inMin, 1, "float"), 1, "float"), rt.binary("-", inMax, inMin, 1, "float"), 1, "float"), 1, "float")
     def convolve__vec2_float_bool(uv, kernel, divide):

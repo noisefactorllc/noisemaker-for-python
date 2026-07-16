@@ -9,6 +9,7 @@ def run_pixel(ctx, out):
     _u_resolution = U["resolution"]
     _u_angle = U["angle"]
     _u_blurDistance = U["blurDistance"]
+    g.fragColor = rt.construct(4, 0.0)
     g.N = rt.i(32)
     def hash12__vec2(p):
         p = rt.copy(p)

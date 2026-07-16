@@ -11,6 +11,7 @@ def run_pixel(ctx, out):
     _u_radius = U["radius"]
     _u_renderScale = U["renderScale"]
     _u_taps = U["taps"]
+    g.fragColor = rt.construct(4, 0.0)
     g.MAX_TAPS = rt.i(64)
     g.GOLDEN_ANGLE = rt.f(2.39996323)
     g.PI = rt.f(3.14159265359)

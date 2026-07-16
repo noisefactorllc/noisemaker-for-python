@@ -11,6 +11,7 @@ def run_pixel(ctx, out):
     _u_sobelMetric = U["sobelMetric"]
     _u_thickness = U["thickness"]
     _u_renderScale = U["renderScale"]
+    g.fragColor = rt.construct(4, 0.0)
     def wrapCoord__int_int(value, size):
         if rt.binary("<=", size, rt.i(0)):
             return rt.i(0)

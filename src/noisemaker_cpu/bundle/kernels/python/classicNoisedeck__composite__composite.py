@@ -15,6 +15,7 @@ def run_pixel(ctx, out):
     _u_blendMode = U["blendMode"]
     _u_range = U["range"]
     _u_mixAmt = U["mixAmt"]
+    g.fragColor = rt.construct(4, 0.0)
     def hsv2rgb__vec3(hsv):
         hsv = rt.copy(hsv)
         h = rt.component_wise("fract", rt.swizzle(hsv, "x"), width=1)

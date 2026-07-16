@@ -11,6 +11,7 @@ def run_pixel(ctx, out):
     _u_levels = U["levels"]
     _u_gamma = U["gamma"]
     _u_antialias = U["antialias"]
+    g.fragColor = rt.construct(4, 0.0)
     g.MIN_LEVELS = rt.f(1.0)
     g.MIN_GAMMA = rt.f(0.001)
     def clamp_01__float(value):

@@ -10,6 +10,7 @@ def run_pixel(ctx, out):
     _u_fullResolution = U["fullResolution"]
     _u_vignetteBrightness = U["vignetteBrightness"]
     _u_alpha = U["alpha"]
+    g.fragColor = rt.construct(4, 0.0)
     def computeVignetteMask__vec2_vec2(uv, dims):
         uv = rt.copy(uv)
         dims = rt.copy(dims)

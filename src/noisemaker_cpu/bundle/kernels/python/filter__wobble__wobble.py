@@ -10,6 +10,7 @@ def run_pixel(ctx, out):
     _u_speed = U["speed"]
     _u_range = U["range"]
     _u_wrap = U["wrap"]
+    g.fragColor = rt.construct(4, 0.0)
     g.TAU = rt.f(6.28318530717959)
     g.X_NOISE_SEED = rt.construct(3, rt.f(17.0), rt.f(29.0), rt.f(11.0))
     g.Y_NOISE_SEED = rt.construct(3, rt.f(41.0), rt.f(23.0), rt.f(7.0))

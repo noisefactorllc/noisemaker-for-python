@@ -11,6 +11,7 @@ def run_pixel(ctx, out):
     _u_alpha = U["alpha"]
     _u_mode = U["mode"]
     _u_inputTex = T["inputTex"]
+    g.fragColor = rt.construct(4, 0.0)
     def rgb_to_hsv__vec3(rgb):
         rgb = rt.copy(rgb)
         r = rt.swizzle(rgb, "x")

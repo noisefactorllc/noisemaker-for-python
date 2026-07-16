@@ -14,6 +14,7 @@ def run_pixel(ctx, out):
     _u_amount = U["amount"]
     _u_ridges = U["ridges"]
     _u_antialias = U["antialias"]
+    g.fragColor = rt.construct(4, 0.0)
     def main__void():
         aspectRatio = rt.binary("/", rt.swizzle(_u_fullResolution, "x"), rt.swizzle(_u_fullResolution, "y"), 1, "float")
         globalCoord = rt.binary("+", rt.swizzle(ctx.frag_coord, "xy"), _u_tileOffset, 2, "float")

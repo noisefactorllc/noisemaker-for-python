@@ -15,6 +15,7 @@ def run_pixel(ctx, out):
     _u_speed = U["speed"]
     _u_time = U["time"]
     _u_corner = U["corner"]
+    g.fragColor = rt.construct(4, 0.0)
     g.GLYPHS = rt.array([rt.i(60), rt.i(66), rt.i(66), rt.i(66), rt.i(66), rt.i(66), rt.i(60), rt.i(0), rt.i(24), rt.i(8), rt.i(8), rt.i(8), rt.i(28), rt.i(28), rt.i(28), rt.i(0), rt.i(28), rt.i(4), rt.i(4), rt.i(28), rt.i(16), rt.i(16), rt.i(28), rt.i(0), rt.i(28), rt.i(4), rt.i(4), rt.i(28), rt.i(6), rt.i(6), rt.i(30), rt.i(0), rt.i(96), rt.i(96), rt.i(96), rt.i(96), rt.i(102), rt.i(126), rt.i(6), rt.i(0), rt.i(60), rt.i(32), rt.i(32), rt.i(60), rt.i(4), rt.i(4), rt.i(60), rt.i(0), rt.i(120), rt.i(72), rt.i(64), rt.i(64), rt.i(126), rt.i(66), rt.i(126), rt.i(0), rt.i(60), rt.i(36), rt.i(4), rt.i(12), rt.i(8), rt.i(8), rt.i(8), rt.i(0), rt.i(60), rt.i(36), rt.i(36), rt.i(126), rt.i(102), rt.i(102), rt.i(126), rt.i(0), rt.i(62), rt.i(34), rt.i(34), rt.i(62), rt.i(6), rt.i(6), rt.i(6), rt.i(0)])
     g.GLYPH_W = rt.i(7)
     g.GLYPH_H = rt.i(8)

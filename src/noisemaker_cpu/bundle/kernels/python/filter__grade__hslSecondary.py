@@ -19,6 +19,7 @@ def run_pixel(ctx, out):
     _u_hslHueShift = U["hslHueShift"]
     _u_hslSatAdjust = U["hslSatAdjust"]
     _u_hslLumAdjust = U["hslLumAdjust"]
+    g.fragColor = rt.construct(4, 0.0)
     g.LUMA_WEIGHTS = rt.construct(3, rt.f(0.2126), rt.f(0.7152), rt.f(0.0722))
     g.PI = rt.f(3.14159265359)
     def srgbToLinear__vec3(srgb):

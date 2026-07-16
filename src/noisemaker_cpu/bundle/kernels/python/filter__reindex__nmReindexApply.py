@@ -11,6 +11,7 @@ def run_pixel(ctx, out):
     _u_inputTex = T["inputTex"]
     _u_statsTex = T["statsTex"]
     _u_uDisplacement = U["uDisplacement"]
+    g.fragColor = rt.construct(4, 0.0)
     def clamp01__float(value):
         return rt.component_wise("clamp", value, rt.f(0.0), rt.f(1.0), width=1)
     def srgb_to_linear__float(value):

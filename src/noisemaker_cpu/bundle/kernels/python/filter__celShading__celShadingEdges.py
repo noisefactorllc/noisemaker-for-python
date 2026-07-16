@@ -11,6 +11,7 @@ def run_pixel(ctx, out):
     _u_edgeWidth = U["edgeWidth"]
     _u_edgeThreshold = U["edgeThreshold"]
     _u_renderScale = U["renderScale"]
+    g.fragColor = rt.construct(4, 0.0)
     def getLuminosity__vec3(color):
         color = rt.copy(color)
         return rt.dot(color, rt.construct(3, rt.f(0.299), rt.f(0.587), rt.f(0.114)))

@@ -15,6 +15,7 @@ def run_pixel(ctx, out):
     _u_speed = U["speed"]
     _u_rotation = U["rotation"]
     _u_seed = U["seed"]
+    g.fragColor = rt.construct(4, 0.0)
     g.PI = rt.f(3.141592653589793)
     g.TAU = rt.f(6.283185307179586)
     def hash11__float_float(p, s):

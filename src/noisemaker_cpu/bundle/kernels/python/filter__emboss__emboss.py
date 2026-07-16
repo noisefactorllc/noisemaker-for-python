@@ -14,6 +14,7 @@ def run_pixel(ctx, out):
     _u_height = U["height"]
     _u_colorAmount = U["colorAmount"]
     _u_renderScale = U["renderScale"]
+    g.fragColor = rt.construct(4, 0.0)
     g.LUMA = rt.construct(3, rt.f(0.2126), rt.f(0.7152), rt.f(0.0722))
     def sampleGlobal__vec2(globalUV):
         globalUV = rt.copy(globalUV)

@@ -9,6 +9,7 @@ def run_pixel(ctx, out):
     g.F32_MAX = rt.f(3.402823466e+38)
     g.F32_MIN = rt.unary("-", rt.f(3.402823466e+38))
     g.TILE_SIZE = rt.i(8)
+    g.fragColor = rt.construct(4, 0.0)
     def clamp01__float(value):
         return rt.component_wise("clamp", value, rt.f(0.0), rt.f(1.0), width=1)
     def srgb_to_linear__float(value):

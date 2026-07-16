@@ -10,6 +10,7 @@ def run_pixel(ctx, out):
     _u_fullResolution = U["fullResolution"]
     _u_gridSize = U["gridSize"]
     _u_pattern = U["pattern"]
+    g.fragColor = rt.construct(4, 0.0)
     g.GLYPH = rt.array([rt.i(31599), rt.i(9362), rt.i(29671), rt.i(29391), rt.i(23497), rt.i(31183), rt.i(31215), rt.i(29257), rt.i(31727), rt.i(31695)])
     def sampleGlyph__int_int_int(digit, x, y):
         if (bool((bool((bool((bool((bool(rt.binary("<", digit, rt.i(0))) or bool(rt.binary(">", digit, rt.i(9))))) or bool(rt.binary("<", x, rt.i(0))))) or bool(rt.binary(">", x, rt.i(2))))) or bool(rt.binary("<", y, rt.i(0))))) or bool(rt.binary(">", y, rt.i(4)))):

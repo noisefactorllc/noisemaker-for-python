@@ -12,6 +12,7 @@ def run_pixel(ctx, out):
     _u_motion = U["motion"]
     g.CHANNEL_COUNT = rt.i(4)
     g.CHANNEL_CAP = rt.i(4)
+    g.fragColor = rt.construct(4, 0.0)
     g.SOBEL_OFFSETS = rt.array([rt.construct(2, rt.unary("-", rt.i(1)), rt.unary("-", rt.i(1)), base="int"), rt.construct(2, rt.i(0), rt.unary("-", rt.i(1)), base="int"), rt.construct(2, rt.i(1), rt.unary("-", rt.i(1)), base="int"), rt.construct(2, rt.unary("-", rt.i(1)), rt.i(0), base="int"), rt.construct(2, rt.i(0), rt.i(0), base="int"), rt.construct(2, rt.i(1), rt.i(0), base="int"), rt.construct(2, rt.unary("-", rt.i(1)), rt.i(1), base="int"), rt.construct(2, rt.i(0), rt.i(1), base="int"), rt.construct(2, rt.i(1), rt.i(1), base="int")])
     g.SOBEL_X_KERNEL = rt.array([rt.f(0.5), rt.f(0.0), rt.unary("-", rt.f(0.5)), rt.f(1.0), rt.f(0.0), rt.unary("-", rt.f(1.0)), rt.f(0.5), rt.f(0.0), rt.unary("-", rt.f(0.5))])
     g.SOBEL_Y_KERNEL = rt.array([rt.f(0.5), rt.f(1.0), rt.f(0.5), rt.f(0.0), rt.f(0.0), rt.f(0.0), rt.unary("-", rt.f(0.5)), rt.unary("-", rt.f(1.0)), rt.unary("-", rt.f(0.5))])

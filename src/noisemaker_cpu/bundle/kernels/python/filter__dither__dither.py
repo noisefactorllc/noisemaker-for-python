@@ -16,6 +16,7 @@ def run_pixel(ctx, out):
     _u_levels = U["levels"]
     _u_time = U["time"]
     _u_mixAmount = U["mixAmount"]
+    g.fragColor = rt.construct(4, 0.0)
     g.DITHER_BAYER_2X2 = rt.i(0)
     g.DITHER_BAYER_4X4 = rt.i(1)
     g.DITHER_BAYER_8X8 = rt.i(2)

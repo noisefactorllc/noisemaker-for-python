@@ -15,6 +15,7 @@ def run_pixel(ctx, out):
     g.CHANNEL_COUNT = rt.i(4)
     g.EPSILON = rt.f(1e-10)
     g.LUMA_WEIGHTS = rt.construct(3, rt.f(0.299), rt.f(0.587), rt.f(0.114))
+    g.fragColor = rt.construct(4, 0.0)
     def as_u32__float(value):
         return rt.construct(1, rt.component_wise("max", rt.component_wise("round", value, width=1), rt.f(0.0), width=1), base="uint")
     def sanitized_channelCount__float(channel_value):

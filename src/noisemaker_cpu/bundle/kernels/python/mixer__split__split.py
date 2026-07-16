@@ -16,6 +16,7 @@ def run_pixel(ctx, out):
     _u_invert = U["invert"]
     _u_speed = U["speed"]
     _u_time = U["time"]
+    g.fragColor = rt.construct(4, 0.0)
     def main__void():
         globalCoord = rt.binary("+", rt.swizzle(ctx.frag_coord, "xy"), _u_tileOffset, 2, "float")
         st = rt.binary("/", globalCoord, _u_fullResolution, 2, "float")

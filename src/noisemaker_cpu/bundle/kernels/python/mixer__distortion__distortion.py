@@ -17,6 +17,7 @@ def run_pixel(ctx, out):
     _u_smoothing = U["smoothing"]
     _u_aberration = U["aberration"]
     _u_antialias = U["antialias"]
+    g.fragColor = rt.construct(4, 0.0)
     def getLuminosity__vec3(color):
         color = rt.copy(color)
         return rt.dot(color, rt.construct(3, rt.f(0.299), rt.f(0.587), rt.f(0.114)))

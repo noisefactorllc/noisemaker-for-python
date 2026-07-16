@@ -13,6 +13,7 @@ def run_pixel(ctx, out):
     _u_shadowTint = U["shadowTint"]
     _u_highlightTint = U["highlightTint"]
     _u_splitToneBalance = U["splitToneBalance"]
+    g.fragColor = rt.construct(4, 0.0)
     g.LUMA_WEIGHTS = rt.construct(3, rt.f(0.2126), rt.f(0.7152), rt.f(0.0722))
     def srgbToLinear__vec3(srgb):
         srgb = rt.copy(srgb)

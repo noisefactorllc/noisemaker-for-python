@@ -14,6 +14,7 @@ def run_pixel(ctx, out):
     _u_rLevel = U["rLevel"]
     _u_gLevel = U["gLevel"]
     _u_bLevel = U["bLevel"]
+    g.fragColor = rt.construct(4, 0.0)
     def luminance__vec4(c):
         c = rt.copy(c)
         return rt.dot(rt.swizzle(c, "rgb"), rt.construct(3, rt.f(0.2126), rt.f(0.7152), rt.f(0.0722)))

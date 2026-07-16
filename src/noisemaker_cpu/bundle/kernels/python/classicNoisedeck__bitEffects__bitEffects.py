@@ -25,6 +25,7 @@ def run_pixel(ctx, out):
     _u_hueRange = U["hueRange"]
     _u_hueRotation = U["hueRotation"]
     _u_baseHueRange = U["baseHueRange"]
+    g.fragColor = rt.construct(4, 0.0)
     g.BIT_COUNT = rt.i(8)
     g.mask = rt.binary("-", rt.binary("<<", rt.i(1), g.BIT_COUNT, 1, "int"), rt.i(1), 1, "int")
     def map__float_float_float_float_float(value, inMin, inMax, outMin, outMax):

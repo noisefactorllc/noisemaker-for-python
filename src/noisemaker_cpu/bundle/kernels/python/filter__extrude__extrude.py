@@ -14,6 +14,7 @@ def run_pixel(ctx, out):
     _u_size = U["size"]
     _u_depth = U["depth"]
     _u_solidFront = U["solidFront"]
+    g.fragColor = rt.construct(4, 0.0)
     g.TOP_SIGN = rt.f(1.0)
     g.SHADE_TOP = rt.f(0.8875)
     g.SHADE_BOTTOM = rt.f(0.6625)

@@ -22,6 +22,7 @@ def run_pixel(ctx, out):
     _u_smoothing = U["smoothing"]
     _u_speed = U["speed"]
     _u_animMode = U["animMode"]
+    g.fragColor = rt.construct(4, 0.0)
     def shape__int_vec2(shapeIndex, p):
         p = rt.copy(p)
         v = rt.f(0.0)

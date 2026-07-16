@@ -17,6 +17,7 @@ def run_pixel(ctx, out):
     g.PI = rt.f(3.141592653589793)
     g.TAU = rt.f(6.283185307179586)
     g.INV_THREE = rt.f(0.3333333333333333)
+    g.fragColor = rt.construct(4, 0.0)
     def as_u32__float(value):
         return rt.construct(1, rt.component_wise("max", value, rt.f(0.0), width=1), base="uint")
     def clamp01__float(value):

@@ -11,6 +11,7 @@ def run_pixel(ctx, out):
     _u_targetHue = U["targetHue"]
     _u_range = U["range"]
     _u_feather = U["feather"]
+    g.fragColor = rt.construct(4, 0.0)
     def rgb2hsv__vec3(c):
         c = rt.copy(c)
         K = rt.construct(4, rt.f(0.0), rt.binary("/", rt.unary("-", rt.f(1.0)), rt.f(3.0), 1, "float"), rt.binary("/", rt.f(2.0), rt.f(3.0), 1, "float"), rt.unary("-", rt.f(1.0)))

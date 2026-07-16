@@ -17,6 +17,7 @@ def run_pixel(ctx, out):
     _u_fgAlpha = U["fgAlpha"]
     _u_bgColor = U["bgColor"]
     _u_bgAlpha = U["bgAlpha"]
+    g.fragColor = rt.construct(4, 0.0)
     def polygon__vec2_float(st, sides):
         st = rt.copy(st)
         a = rt.binary("+", rt.component_wise("atan", rt.swizzle(st, "y"), rt.swizzle(st, "x"), width=1), rt.f(3.14159265), 1, "float")

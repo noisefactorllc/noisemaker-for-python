@@ -10,6 +10,7 @@ def run_pixel(ctx, out):
     _u_inputTex = T["inputTex"]
     _u_smoothType = U["smoothType"]
     _u_threshold = U["threshold"]
+    g.fragColor = rt.construct(4, 0.0)
     g.LUMA_WEIGHTS = rt.construct(3, rt.f(0.299), rt.f(0.587), rt.f(0.114))
     def luminance__vec3(rgb):
         rgb = rt.copy(rgb)

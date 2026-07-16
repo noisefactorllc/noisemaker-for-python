@@ -17,8 +17,11 @@ def run_pixel(ctx, out):
     _u_loopBScale = U["loopBScale"]
     _u_speedA = U["speedA"]
     _u_speedB = U["speedB"]
+    g.fragColor = rt.construct(4, 0.0)
     g.PI = rt.f(3.14159265359)
     g.TAU = rt.f(6.28318530718)
+    g.aspectRatio = rt.f(0.0)
+    g.globalCoord = rt.construct(2, 0.0)
     def map__float_float_float_float_float(value, inMin, inMax, outMin, outMax):
         return rt.binary("+", outMin, rt.binary("/", rt.binary("*", rt.binary("-", outMax, outMin, 1, "float"), rt.binary("-", value, inMin, 1, "float"), 1, "float"), rt.binary("-", inMax, inMin, 1, "float"), 1, "float"), 1, "float")
     def positiveModulo__int_int(a, b):

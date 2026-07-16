@@ -15,6 +15,7 @@ def run_pixel(ctx, out):
     _u_colorMix = U["colorMix"]
     _u_replaceAlpha = U["replaceAlpha"]
     _u_keepAlpha = U["keepAlpha"]
+    g.fragColor = rt.construct(4, 0.0)
     def main__void():
         globalCoord = rt.binary("+", rt.swizzle(ctx.frag_coord, "xy"), _u_tileOffset, 2, "float")
         st = rt.binary("/", rt.swizzle(ctx.frag_coord, "xy"), rt.construct(2, rt.component_wise("max", rt.texture_size(_u_inputTex), rt.construct(2, rt.i(1), base="int"), width=2)), 2, "float")

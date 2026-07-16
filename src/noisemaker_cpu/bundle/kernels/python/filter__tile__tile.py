@@ -15,6 +15,7 @@ def run_pixel(ctx, out):
     _u_angle = U["angle"]
     _u_repeat = U["repeat"]
     _u_aspectLens = U["aspectLens"]
+    g.fragColor = rt.construct(4, 0.0)
     g.PI = rt.f(3.14159265359)
     g.TAU = rt.f(6.28318530718)
     def rot__vec2_float(p, a):

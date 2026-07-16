@@ -22,6 +22,7 @@ def run_pixel(ctx, out):
     g.INTERPOLATION_COSINE = rt.i(2)
     g.INTERPOLATION_BICUBIC = rt.i(3)
     g.BASE_SEED = rt.i(4660)
+    g.fragColor = rt.construct(4, 0.0)
     def as_u32__float(value):
         return rt.construct(1, rt.component_wise("max", rt.component_wise("round", value, width=1), rt.f(0.0), width=1), base="uint")
     def clamp01__float(value):

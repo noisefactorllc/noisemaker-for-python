@@ -5,6 +5,7 @@ def run_pixel(ctx, out):
     class _G:
         pass
     g = _G()
+    g.fragColor = rt.construct(4, 0.0)
     def main__void():
         g.fragColor = rt.construct(4, rt.f(0.0))
     main__void()

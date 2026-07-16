@@ -15,6 +15,7 @@ def run_pixel(ctx, out):
     _u_scale = U["scale"]
     _u_offset = U["offset"]
     _u_wrap = U["wrap"]
+    g.fragColor = rt.construct(4, 0.0)
     def mirrorWrap__float(t):
         m = rt.component_wise("mod", t, rt.f(2.0), width=1)
         return (rt.binary("-", rt.f(2.0), m, 1, "float") if rt.binary(">", m, rt.f(1.0)) else m)

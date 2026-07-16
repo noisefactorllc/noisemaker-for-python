@@ -7,6 +7,7 @@ def run_pixel(ctx, out):
     g = _G()
     _u_inputTex = T["inputTex"]
     _u_mode = U["mode"]
+    g.fragColor = rt.construct(4, 0.0)
     def main__void():
         texSize = rt.texture_size(_u_inputTex)
         uv = rt.binary("/", rt.swizzle(ctx.frag_coord, "xy"), rt.construct(2, texSize), 2, "float")

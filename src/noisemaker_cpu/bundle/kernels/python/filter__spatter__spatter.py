@@ -14,6 +14,7 @@ def run_pixel(ctx, out):
     _u_density = U["density"]
     _u_alpha = U["alpha"]
     _u_seed = U["seed"]
+    g.fragColor = rt.construct(4, 0.0)
     def pcg3__uvec3(v):
         v = rt.copy(v)
         v = rt.binary("+", rt.binary("*", v, rt.i(1664525), 3, "uint"), rt.i(1013904223), 3, "uint")

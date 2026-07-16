@@ -20,6 +20,14 @@ def run_pixel(ctx, out):
     _u_offsetY = U["offsetY"]
     _u_intensity = U["intensity"]
     _u_saturation = U["saturation"]
+    g.fragColor = rt.construct(4, 0.0)
+    g.emboss = rt.new_array(rt.i(9), 1)
+    g.sharpen = rt.new_array(rt.i(9), 1)
+    g.blur = rt.new_array(rt.i(9), 1)
+    g.edge = rt.new_array(rt.i(9), 1)
+    g.edge2 = rt.new_array(rt.i(9), 1)
+    g.edge3 = rt.new_array(rt.i(9), 1)
+    g.sharpenBlur = rt.new_array(rt.i(9), 1)
     def loadKernels__void():
         g.emboss[int(rt.i(0))] = rt.unary("-", rt.f(2.0))
         g.emboss[int(rt.i(1))] = rt.unary("-", rt.f(1.0))
@@ -263,7 +271,8 @@ def run_pixel(ctx, out):
         s1 = convolve__vec2_float_bool(uv, deriv_x, divide)
         s2 = convolve__vec2_float_bool(uv, deriv_y, divide)
         dist = rt.distance(s1, s2)
-        return color = rt.binary("*", color, dist, 3, "float")
+        color = rt.binary("*", color, dist, 3, "float")
+        return color
     def sobel__vec3_vec2(color, uv):
         color = rt.copy(color)
         uv = rt.copy(uv)
@@ -291,7 +300,8 @@ def run_pixel(ctx, out):
         s1 = convolve__vec2_float_bool(uv, sobel_x, False)
         s2 = convolve__vec2_float_bool(uv, sobel_y, False)
         dist = rt.distance(s1, s2)
-        return color = rt.binary("*", color, dist, 3, "float")
+        color = rt.binary("*", color, dist, 3, "float")
+        return color
     def outline__vec3_vec2(color, uv):
         color = rt.copy(color)
         uv = rt.copy(uv)

@@ -10,6 +10,7 @@ def run_pixel(ctx, out):
     _u_smearTex = T["smearTex"]
     _u_resolution = U["resolution"]
     _u_sharpness = U["sharpness"]
+    g.fragColor = rt.construct(4, 0.0)
     def tent3x3__vec2(uv):
         uv = rt.copy(uv)
         px = rt.binary("/", rt.f(1.0), _u_resolution, 2, "float")

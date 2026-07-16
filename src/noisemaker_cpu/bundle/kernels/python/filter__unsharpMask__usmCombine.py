@@ -10,6 +10,7 @@ def run_pixel(ctx, out):
     _u_resolution = U["resolution"]
     _u_amount = U["amount"]
     _u_threshold = U["threshold"]
+    g.fragColor = rt.construct(4, 0.0)
     def main__void():
         uv = rt.binary("/", rt.swizzle(ctx.frag_coord, "xy"), _u_resolution, 2, "float")
         src = rt.texture(_u_inputTex, uv)

@@ -12,6 +12,7 @@ def run_pixel(ctx, out):
     _u_scale = U["scale"]
     _u_speed = U["speed"]
     _u_time = U["time"]
+    g.fragColor = rt.construct(4, 0.0)
     g.TAU = rt.f(6.28318530718)
     def mod289__vec3(x):
         x = rt.copy(x)

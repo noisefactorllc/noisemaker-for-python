@@ -12,6 +12,7 @@ def run_pixel(ctx, out):
     _u_ridges = U["ridges"]
     _u_alpha = U["alpha"]
     _u_wrap = U["wrap"]
+    g.fragColor = rt.construct(4, 0.0)
     def applyWrap__vec2(uv):
         uv = rt.copy(uv)
         mode = rt.construct(1, _u_wrap, base="int")

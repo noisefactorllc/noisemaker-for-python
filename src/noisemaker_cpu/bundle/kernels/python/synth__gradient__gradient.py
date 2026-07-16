@@ -19,6 +19,7 @@ def run_pixel(ctx, out):
     _u_seed = U["seed"]
     _u_time = U["time"]
     _u_speed = U["speed"]
+    g.fragColor = rt.construct(4, 0.0)
     def rotate2D__vec2_float(st, angle):
         st = rt.copy(st)
         aspectRatio = rt.binary("/", rt.swizzle(_u_fullResolution, "x"), rt.swizzle(_u_fullResolution, "y"), 1, "float")

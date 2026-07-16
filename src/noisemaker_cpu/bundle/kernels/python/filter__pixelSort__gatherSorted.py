@@ -8,6 +8,7 @@ def run_pixel(ctx, out):
     _u_preparedTex = T["preparedTex"]
     _u_rankTex = T["rankTex"]
     _u_brightestTex = T["brightestTex"]
+    g.fragColor = rt.construct(4, 0.0)
     def main__void():
         coord = rt.construct(2, rt.swizzle(ctx.frag_coord, "xy"), base="int")
         size = rt.texture_size(_u_preparedTex)

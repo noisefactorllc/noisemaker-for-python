@@ -10,6 +10,7 @@ def run_pixel(ctx, out):
     _u_inputTex = T["inputTex"]
     _u_amount = U["amount"]
     _u_colorMode = U["colorMode"]
+    g.fragColor = rt.construct(4, 0.0)
     def normalized_sine__float(value):
         return rt.binary("*", rt.binary("+", rt.component_wise("sin", value, width=1), rt.f(1.0), 1, "float"), rt.f(0.5), 1, "float")
     def main__void():

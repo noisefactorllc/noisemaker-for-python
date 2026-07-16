@@ -12,6 +12,7 @@ def run_pixel(ctx, out):
     _u_strokeLength = U["strokeLength"]
     _u_balance = U["balance"]
     _u_intensity = U["intensity"]
+    g.fragColor = rt.construct(4, 0.0)
     g.MAX_TAPS = rt.i(24)
     def hash12__vec2(p):
         p = rt.copy(p)

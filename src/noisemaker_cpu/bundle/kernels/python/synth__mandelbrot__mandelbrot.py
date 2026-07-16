@@ -23,6 +23,7 @@ def run_pixel(ctx, out):
     _u_trapShape = U["trapShape"]
     _u_lightAngle = U["lightAngle"]
     _u_rotation = U["rotation"]
+    g.fragColor = rt.construct(4, 0.0)
     g.PI = rt.f(3.14159265359)
     g.TAU = rt.f(6.28318530718)
     g.BAILOUT = rt.f(256.0)

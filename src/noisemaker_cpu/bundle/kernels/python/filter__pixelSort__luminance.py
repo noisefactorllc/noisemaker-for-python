@@ -6,6 +6,7 @@ def run_pixel(ctx, out):
         pass
     g = _G()
     _u_inputTex = T["inputTex"]
+    g.fragColor = rt.construct(4, 0.0)
     def srgb_to_lin__float(value):
         return (rt.binary("/", value, rt.f(12.92), 1, "float") if rt.binary("<=", value, rt.f(0.04045)) else rt.component_wise("pow", rt.binary("/", rt.binary("+", value, rt.f(0.055), 1, "float"), rt.f(1.055), 1, "float"), rt.f(2.4), width=1))
     def oklab_l__vec3(rgb):

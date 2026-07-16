@@ -12,6 +12,7 @@ def run_pixel(ctx, out):
     _u_amount = U["amount"]
     _u_centerX = U["centerX"]
     _u_centerY = U["centerY"]
+    g.fragColor = rt.construct(4, 0.0)
     g.N = rt.i(32)
     def hash12__vec2(p):
         p = rt.copy(p)

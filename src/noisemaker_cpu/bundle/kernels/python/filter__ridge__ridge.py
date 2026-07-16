@@ -9,6 +9,7 @@ def run_pixel(ctx, out):
     _u_fullResolution = U["fullResolution"]
     _u_inputTex = T["inputTex"]
     _u_level = U["level"]
+    g.fragColor = rt.construct(4, 0.0)
     def ridge_transform__vec4_float(value, lvl):
         value = rt.copy(value)
         denom = rt.component_wise("max", lvl, rt.binary("-", rt.f(1.0), lvl, 1, "float"), width=1)

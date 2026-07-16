@@ -15,6 +15,7 @@ def run_pixel(ctx, out):
     _u_radius = U["radius"]
     _u_samples = U["samples"]
     _u_searchSteps = U["searchSteps"]
+    g.fragColor = rt.construct(4, 0.0)
     g.LUMA_WEIGHTS = rt.construct(3, rt.f(0.299), rt.f(0.587), rt.f(0.114))
     def luminance__vec3(rgb):
         rgb = rt.copy(rgb)

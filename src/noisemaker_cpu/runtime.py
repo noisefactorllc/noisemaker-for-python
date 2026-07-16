@@ -196,7 +196,11 @@ class Runtime:
         else:
             raise ValueError(f"unsupported binary op {op!r}")
         if _is_scalar(av) and _is_scalar(bv):
-            return f32(r)
+            # Match the reference engine: scalar float arithmetic accumulates in
+            # float64 (raw JS ops), rounded to float32 only at vec/output
+            # boundaries (construct, swizzle, out). Per-op rounding diverges in
+            # long chains (noise). Vectors stay float32 (Float32Array semantics).
+            return float(r)
         return np.asarray(r, dtype=F32)
 
     def _int_binary(self, op, a, b, base):

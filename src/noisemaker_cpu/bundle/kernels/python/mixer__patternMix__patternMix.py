@@ -16,6 +16,7 @@ def run_pixel(ctx, out):
     _u_smoothness = U["smoothness"]
     _u_rotation = U["rotation"]
     _u_invert = U["invert"]
+    g.fragColor = rt.construct(4, 0.0)
     def rotate2D__vec2_float(p, angle):
         p = rt.copy(p)
         c = rt.component_wise("cos", angle, width=1)

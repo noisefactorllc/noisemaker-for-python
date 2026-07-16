@@ -17,6 +17,7 @@ def run_pixel(ctx, out):
     _u_mixAmt = U["mixAmt"]
     _u_level = U["level"]
     _u_contourSide = U["contourSide"]
+    g.fragColor = rt.construct(4, 0.0)
     g.LUMA = rt.construct(3, rt.f(0.2126), rt.f(0.7152), rt.f(0.0722))
     def getWeight__int_int_int(dx, dy, kernelType):
         if (bool(rt.binary("==", dx, rt.i(0))) and bool(rt.binary("==", dy, rt.i(0)))):

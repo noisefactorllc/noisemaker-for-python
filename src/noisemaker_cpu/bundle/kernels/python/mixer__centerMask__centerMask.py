@@ -14,6 +14,7 @@ def run_pixel(ctx, out):
     _u_power = U["power"]
     _u_hardness = U["hardness"]
     _u_blendMode = U["blendMode"]
+    g.fragColor = rt.construct(4, 0.0)
     def clamp01__float(x):
         return rt.component_wise("clamp", x, rt.f(0.0), rt.f(1.0), width=1)
     def blendOverlay__float_float(a, b):

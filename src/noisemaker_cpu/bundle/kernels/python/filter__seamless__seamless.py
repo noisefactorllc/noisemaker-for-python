@@ -9,6 +9,7 @@ def run_pixel(ctx, out):
     _u_blend = U["blend"]
     _u_repeat = U["repeat"]
     _u_curve = U["curve"]
+    g.fragColor = rt.construct(4, 0.0)
     def edgeWeight__float_float(t, width):
         if rt.binary("<=", width, rt.f(0.0)):
             return rt.f(0.0)

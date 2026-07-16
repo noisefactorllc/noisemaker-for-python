@@ -14,6 +14,7 @@ def run_pixel(ctx, out):
     _u_repeat = U["repeat"]
     _u_alpha = U["alpha"]
     _u_time = U["time"]
+    g.fragColor = rt.construct(4, 0.0)
     g.MODE_RGB = rt.i(0)
     g.MODE_HSV = rt.i(1)
     g.MODE_OKLAB = rt.i(2)

@@ -11,6 +11,7 @@ def run_pixel(ctx, out):
     _u_x = U["x"]
     _u_y = U["y"]
     _u_wrap = U["wrap"]
+    g.fragColor = rt.construct(4, 0.0)
     def main__void():
         globalCoord = rt.binary("+", rt.swizzle(ctx.frag_coord, "xy"), _u_tileOffset, 2, "float")
         texSize = rt.texture_size(_u_inputTex)

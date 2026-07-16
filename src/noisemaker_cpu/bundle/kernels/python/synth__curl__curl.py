@@ -16,6 +16,7 @@ def run_pixel(ctx, out):
     _u_seed = U["seed"]
     _u_speed = U["speed"]
     _u_intensity = U["intensity"]
+    g.fragColor = rt.construct(4, 0.0)
     def permute__vec3(x):
         x = rt.copy(x)
         return rt.component_wise("mod", rt.binary("*", rt.binary("+", rt.binary("*", x, rt.f(34.0), 3, "float"), rt.f(10.0), 3, "float"), x, 3, "float"), rt.f(289.0), width=3)

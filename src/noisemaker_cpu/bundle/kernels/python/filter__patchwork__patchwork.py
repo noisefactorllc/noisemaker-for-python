@@ -12,6 +12,7 @@ def run_pixel(ctx, out):
     _u_squareSize = U["squareSize"]
     _u_relief = U["relief"]
     _u_lightAngle = U["lightAngle"]
+    g.fragColor = rt.construct(4, 0.0)
     def lum__vec3(c):
         c = rt.copy(c)
         return rt.dot(c, rt.construct(3, rt.f(0.2126), rt.f(0.7152), rt.f(0.0722)))

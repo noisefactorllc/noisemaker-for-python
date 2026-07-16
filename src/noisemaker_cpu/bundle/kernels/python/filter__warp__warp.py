@@ -16,6 +16,7 @@ def run_pixel(ctx, out):
     _u_speed = U["speed"]
     _u_wrap = U["wrap"]
     _u_antialias = U["antialias"]
+    g.fragColor = rt.construct(4, 0.0)
     def pcg__uvec3(v):
         v = rt.copy(v)
         v = rt.binary("+", rt.binary("*", v, rt.construct(1, rt.i(1664525), base="uint"), 3, "uint"), rt.construct(1, rt.i(1013904223), base="uint"), 3, "uint")

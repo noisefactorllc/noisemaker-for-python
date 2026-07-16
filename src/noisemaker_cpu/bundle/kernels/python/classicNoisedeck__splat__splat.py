@@ -25,6 +25,7 @@ def run_pixel(ctx, out):
     _u_speckSeed = U["speckSeed"]
     _u_speckColor = U["speckColor"]
     _u_speckMode = U["speckMode"]
+    g.fragColor = rt.construct(4, 0.0)
     def map__float_float_float_float_float(value, inMin, inMax, outMin, outMax):
         return rt.binary("+", outMin, rt.binary("/", rt.binary("*", rt.binary("-", outMax, outMin, 1, "float"), rt.binary("-", value, inMin, 1, "float"), 1, "float"), rt.binary("-", inMax, inMin, 1, "float"), 1, "float"), 1, "float")
     def pcg__uvec3(v):

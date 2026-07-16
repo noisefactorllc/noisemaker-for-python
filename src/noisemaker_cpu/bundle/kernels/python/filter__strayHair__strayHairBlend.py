@@ -11,6 +11,7 @@ def run_pixel(ctx, out):
     _u_tileOffset = U["tileOffset"]
     _u_fullResolution = U["fullResolution"]
     _u_renderScale = U["renderScale"]
+    g.fragColor = rt.construct(4, 0.0)
     def main__void():
         coord = rt.construct(2, rt.swizzle(ctx.frag_coord, "xy"), base="int")
         baseSize = rt.texture_size(_u_inputTex)

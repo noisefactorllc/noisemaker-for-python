@@ -153,9 +153,18 @@ class CodeGen:
             store = "T" if base_of(u["type"]) == "sampler" else "U"
             L.append(f"    _u_{py_ident(u['name'])} = {store}[{q(u['name'])}]")
         for g in self.globals:
-            if g["name"] in self.varyings or g["init"] is None:
+            if g["name"] in self.varyings:
                 continue
-            code, _ = self.expr(g["init"], self.root)
+            # Uninitialized globals still need their attribute created on `g`
+            # (e.g. `float emboss[9];` filled later inside a helper). Mirror the
+            # local-decl defaulting: array -> new_array, else type default.
+            if g["init"] is not None:
+                code, _ = self.expr(g["init"], self.root)
+            elif g.get("array") is not None:
+                n_code = self.expr(g["array"], self.root)[0] if g["array"] not in (None, True) else "0"
+                code = f"rt.new_array({n_code}, {g['type']['width']})"
+            else:
+                code = self._default(g["type"])
             L.append(f"    g.{py_ident(g['name'])} = {code}")
 
         main = None
@@ -245,13 +254,21 @@ class CodeGen:
             out.append(f"{pad}        break")
             out.extend(self._branch(s["body"], scope.child(), indent + 1))
         elif k == "return":
+            val_node = s.get("value")
+            # GLSL permits `return x = expr;` / `return x *= expr;` — assignment
+            # is an expression yielding the assigned value. Python assignment is a
+            # statement, so hoist it: emit the assignment, then return the target.
+            if val_node is not None and val_node.get("k") == "assign":
+                stmt_code, _ = self._e_assign(val_node, scope)
+                out.append(f"{pad}{stmt_code}")
+                val_node = val_node["target"]
             if self.cur_out:
-                val = self.expr(s["value"], scope)[0] if s.get("value") is not None else "None"
+                val = self.expr(val_node, scope)[0] if val_node is not None else "None"
                 out.append(f"{pad}return ({val}, {', '.join(self.cur_out)})")
-            elif s.get("value") is None:
+            elif val_node is None:
                 out.append(f"{pad}return")
             else:
-                code, _ = self.expr(s["value"], scope)
+                code, _ = self.expr(val_node, scope)
                 out.append(f"{pad}return {code}")
         elif k == "break":
             out.append(f"{pad}break")

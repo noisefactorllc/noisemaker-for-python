@@ -26,6 +26,7 @@ def run_pixel(ctx, out):
     _u_time = U["time"]
     _u_fgColor = U["fgColor"]
     _u_bgColor = U["bgColor"]
+    g.fragColor = rt.construct(4, 0.0)
     def rotate2D__vec2_float(p, angle):
         p = rt.copy(p)
         c = rt.component_wise("cos", angle, width=1)

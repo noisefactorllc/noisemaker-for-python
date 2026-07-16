@@ -11,6 +11,7 @@ def run_pixel(ctx, out):
     _u_highlight = U["highlight"]
     _u_smoothness = U["smoothness"]
     _u_lightDirection = U["lightDirection"]
+    g.fragColor = rt.construct(4, 0.0)
     def lum__vec3(c):
         c = rt.copy(c)
         return rt.dot(c, rt.construct(3, rt.f(0.2126), rt.f(0.7152), rt.f(0.0722)))

@@ -6,6 +6,7 @@ def run_pixel(ctx, out):
         pass
     g = _G()
     _u_inputTex = T["inputTex"]
+    g.fragColor = rt.construct(4, 0.0)
     def main__void():
         inSize = rt.texture_size(_u_inputTex)
         minVal = rt.f(100000.0)

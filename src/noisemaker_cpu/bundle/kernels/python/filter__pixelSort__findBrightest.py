@@ -6,6 +6,7 @@ def run_pixel(ctx, out):
         pass
     g = _G()
     _u_lumTex = T["lumTex"]
+    g.fragColor = rt.construct(4, 0.0)
     def main__void():
         coord = rt.construct(2, rt.swizzle(ctx.frag_coord, "xy"), base="int")
         size = rt.texture_size(_u_lumTex)

@@ -8,6 +8,7 @@ def run_pixel(ctx, out):
     _u_inputTex = T["inputTex"]
     _u_resolution = U["resolution"]
     _u_detail = U["detail"]
+    g.fragColor = rt.construct(4, 0.0)
     def sort2__vec3_vec3(a, b):
         a = rt.copy(a)
         b = rt.copy(b)

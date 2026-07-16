@@ -12,6 +12,7 @@ def run_pixel(ctx, out):
     _u_darkest = U["darkest"]
     _u_wrap = U["wrap"]
     _u_alpha = U["alpha"]
+    g.fragColor = rt.construct(4, 0.0)
     g.PI = rt.f(3.141592653589793)
     def applyWrap__vec2_vec2(coord, size):
         coord = rt.copy(coord)
