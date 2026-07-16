@@ -36,17 +36,25 @@ def js_effect(effect_id: str, out: str):
         return decode_png(f.read())
 
 
+def _solid(color=None):
+    return render_effect("synth/solid", {} if color is None else {"color": color},
+                         width=SIZE, height=SIZE, seed=SEED, time=TIME)
+
+
 def py_render(effect_id: str, kind: str):
     if kind == "generator":
         return render_effect(effect_id, {}, width=SIZE, height=SIZE, seed=SEED, time=TIME)
-    solid = render_effect("synth/solid", {}, width=SIZE, height=SIZE, seed=SEED, time=TIME)
-    # The JS `effect` CLI feeds solid() to the primary input AND to every surface
-    # param (mixers), so bind all of them to the same default solid.
-    inputs = {"inputTex": solid}
-    for pname, spec in _meta()["effects"][effect_id]["params"].items():
-        if isinstance(spec, dict) and spec.get("type") == "surface":
-            inputs[spec.get("uniform") or spec.get("texture") or pname] = solid
-            inputs[pname] = solid
+    # Replicate the JS `effect` CLI: primary input is a default solid; each
+    # surface param (mixers) gets solid(#f30 / #0cf), alternating by index.
+    inputs = {"inputTex": _solid()}
+    surf = [pn for pn, sp in _meta()["effects"][effect_id]["params"].items()
+            if isinstance(sp, dict) and sp.get("type") == "surface"][:6]
+    for i, pname in enumerate(surf):
+        src = _solid("#0cf" if i % 2 else "#f30")
+        spec = _meta()["effects"][effect_id]["params"][pname]
+        for name in {spec.get("uniform"), spec.get("texture"), pname}:
+            if name:
+                inputs[name] = src
     return render_effect(effect_id, {}, inputs, width=SIZE, height=SIZE, seed=SEED, time=TIME)
 
 
