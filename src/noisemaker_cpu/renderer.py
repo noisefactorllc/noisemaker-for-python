@@ -67,14 +67,20 @@ def _coerce(spec: dict, value):
         return np.array(value, dtype=F32)
     if t == "float":
         return f32(float(value))
-    if t in ("int", "enum"):
+    if t in ("int", "enum", "member"):
         if isinstance(value, str):
             choices = spec.get("choices") or {}
+            key = value.split(".")[-1]  # "oscType.sine" -> "sine"
             if value in choices:
                 return int(choices[value])
-            return int(float(value))
+            if key in choices:
+                return int(choices[key])
+            try:
+                return int(float(value))
+            except ValueError:
+                return 0  # CDN member with no inline choices: defaults are the 0th member
         return int(value)
-    if t == "bool":
+    if t in ("bool", "boolean"):
         if isinstance(value, str):
             return value.strip().lower() in ("1", "true", "yes", "on")
         return bool(value)
