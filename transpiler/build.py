@@ -103,8 +103,8 @@ def build(ids, out_dir=BUNDLE, update_lock=False):
             hashes[key] = h
             n_ok += 1
             passes.append({"name": p["name"], "program": p["program"], "key": key,
-                           "inputs": p.get("inputs", {}), "outputs": p.get("outputs", {}),
-                           "uniforms": p.get("uniforms", {})})
+                           "inputs": p.get("inputs") or {}, "outputs": p.get("outputs") or {},
+                           "uniforms": p.get("uniforms") or {}})
         if not passes:
             continue
         bundle["effects"][eid] = {
