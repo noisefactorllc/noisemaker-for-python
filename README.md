@@ -1,4 +1,4 @@
-# noisemaker-cpu (Python)
+# noisemaker-for-python
 
 A pure-Python CPU implementation of the [Noisemaker](https://noisemaker.app)
 shader engine — the Python port of [`noisemaker-cpu`](https://github.com/noisefactorllc/noisemaker-cpu).
@@ -10,24 +10,27 @@ NumPy-backed kernel per shader pass; a small runtime reproduces the reference
 engine's float model (float32 vectors, float64 scalar arithmetic, half-float
 texture quantization, screen-space derivatives, bit-exact uint32/PCG hashing).
 
-**165 effects** are bundled; **163 render at byte-parity** with the JavaScript
-engine's `effect` CLI (8×8, seed 1). The two that don't are only untestable via
-that harness (they need an external texture the CLI won't supply). Two further
-effects have JS-computed definitions the static extractor can't reproduce.
+**All 167 catalog effects** are bundled and render at **byte-parity** with the
+JavaScript engine's `effect` CLI (8×8, seed 1) — 0 diff across the whole catalog.
 
 ## Install
 
 ```bash
-pip install -e ".[dev]"      # requires Python 3.11+, numpy
+pip install -e ".[dev]"      # requires Python 3.11+, numpy, click
 ```
 
 ## Render an effect
 
-CLI:
+CLI (modeled after the [`noisemaker`](https://github.com/noisedeck/noisemaker) CLI):
 
 ```bash
-noisemaker-cpu effect synth/curl --width 512 --height 512 --output curl.png
-noisemaker-cpu effect filter/chrome --input photo.png --output chrome.png
+# generate a single frame
+noisemaker-py generate synth/curl --width 512 --height 512 --filename curl.png
+noisemaker-py generate filter/chrome --input photo.png --filename chrome.png
+noisemaker-py generate random --seed 42
+
+# animate an effect over time (needs ffmpeg for .mp4; or --save-frames DIR)
+noisemaker-py animate synth/curl --frame-count 60 --filename curl.mp4
 ```
 
 Library:

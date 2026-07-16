@@ -3,7 +3,7 @@ requires = ["setuptools>=68"]
 build-backend = "setuptools.build_meta"
 
 [project]
-name = "noisemaker-cpu"
+name = "noisemaker-for-python"
 version = "0.0.0"
 description = "CPU Noisemaker shader engine — Python port of noisemaker-cpu (GLSL-transpiled)"
 requires-python = ">=3.11"
@@ -13,7 +13,7 @@ classifiers = [
     "License :: OSI Approved :: MIT License",
     "Programming Language :: Python :: 3",
 ]
-dependencies = ["numpy>=1.26"]
+dependencies = ["numpy>=1.26", "click>=8"]
 
 [project.optional-dependencies]
 dev = ["pytest>=8"]
@@ -22,7 +22,7 @@ dev = ["pytest>=8"]
 build = ["json5>=0.9"]
 
 [project.scripts]
-noisemaker-cpu = "noisemaker_cpu.cli:main"
+noisemaker-py = "noisemaker_cpu.cli:main"
 
 [tool.setuptools.packages.find]
 where = ["src"]
