@@ -40,7 +40,14 @@ def py_render(effect_id: str, kind: str):
     if kind == "generator":
         return render_effect(effect_id, {}, width=SIZE, height=SIZE, seed=SEED, time=TIME)
     solid = render_effect("synth/solid", {}, width=SIZE, height=SIZE, seed=SEED, time=TIME)
-    return render_effect(effect_id, {}, {"inputTex": solid}, width=SIZE, height=SIZE, seed=SEED, time=TIME)
+    # The JS `effect` CLI feeds solid() to the primary input AND to every surface
+    # param (mixers), so bind all of them to the same default solid.
+    inputs = {"inputTex": solid}
+    for pname, spec in _meta()["effects"][effect_id]["params"].items():
+        if isinstance(spec, dict) and spec.get("type") == "surface":
+            inputs[spec.get("uniform") or spec.get("texture") or pname] = solid
+            inputs[pname] = solid
+    return render_effect(effect_id, {}, inputs, width=SIZE, height=SIZE, seed=SEED, time=TIME)
 
 
 def main():
