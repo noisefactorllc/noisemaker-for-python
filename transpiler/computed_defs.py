@@ -6,11 +6,15 @@ only the definition (params/passes) is reproduced here, faithful to the JS.
 - mixer/mashup: `d()` generates layer0_tex..layer7_tex surface params (max 8),
   each with a `layerN_active` colorModeUniform; `c` wires them plus `source`
   into the single render pass's inputs.
+- synth/remap: `f()` generates zone0_tex..zone7_tex surface params (max 8), each
+  with a `zoneN_active` colorModeUniform; the std140 `data` block is packed from
+  the params at render time by renderer._remap_uniform_data.
 """
 
 from __future__ import annotations
 
 _MASHUP_LAYERS = 8
+_REMAP_ZONES = 8
 
 
 def _mashup():
@@ -30,6 +34,25 @@ def _mashup():
             "passes": passes, "textures": {}, "externalTexture": None}
 
 
+def _remap():
+    params = {
+        "zoneCount": {"type": "int", "default": 0, "uniform": "zoneCount"},
+        "bgColor": {"type": "color", "default": [0, 0, 0], "uniform": "bgColor"},
+        "bgAlpha": {"type": "float", "default": 1, "uniform": "bgAlpha"},
+        "smoothEdge": {"type": "float", "default": 0.04, "uniform": "smoothEdge"},
+    }
+    inputs = {}
+    for z in range(_REMAP_ZONES):
+        params[f"zone{z}_tex"] = {"type": "surface", "default": "none",
+                                  "colorModeUniform": f"zone{z}_active"}
+        inputs[f"zone{z}_tex"] = f"zone{z}_tex"
+    passes = [{"name": "render", "program": "remap", "inputs": inputs,
+               "outputs": {"fragColor": "outputTex"}}]
+    return {"namespace": "synth", "func": "remap", "params": params,
+            "passes": passes, "textures": {}, "externalTexture": None}
+
+
 COMPUTED_DEFS = {
     "mixer/mashup": _mashup(),
+    "synth/remap": _remap(),
 }

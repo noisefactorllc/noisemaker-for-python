@@ -77,12 +77,36 @@ class Parser:
             return self.struct_decl()
         # skip layout(...) qualifier prefixes
         quals = self.qualifiers()
+        # interface (uniform) block: `uniform Name { members } [inst];`
+        if "uniform" in quals and self.peek().kind == "id" and self.peek(1).value == "{":
+            return self.uniform_block()
         typ = self.type_spec()
         # function or variable?
         name = self.next().value
         if self.at("("):
             return self.function_rest(typ, name, quals)
         return self.var_decl_rest(typ, name, quals, top=True)
+
+    def uniform_block(self):
+        self.next()  # block type name (irrelevant without an instance)
+        self.expect("{")
+        members = []
+        while not self.at("}"):
+            self.qualifiers()
+            mtype = self.type_spec()
+            mname = self.next().value
+            arr = None
+            if self.eat("["):
+                arr = self.expr()
+                self.expect("]")
+            members.append({"type": mtype, "name": mname, "array": arr})
+            self.expect(";")
+        self.expect("}")
+        inst = None
+        if self.peek().kind == "id":
+            inst = self.next().value
+        self.expect(";")
+        return {"k": "ubo", "members": members, "inst": inst}
 
     def qualifiers(self):
         q = []

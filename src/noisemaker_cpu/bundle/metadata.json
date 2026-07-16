@@ -18622,6 +18622,99 @@
         }
       ]
     },
+    "synth/remap": {
+      "namespace": "synth",
+      "func": "remap",
+      "kind": "filter",
+      "params": {
+        "zoneCount": {
+          "type": "int",
+          "default": 0,
+          "uniform": "zoneCount"
+        },
+        "bgColor": {
+          "type": "color",
+          "default": [
+            0,
+            0,
+            0
+          ],
+          "uniform": "bgColor"
+        },
+        "bgAlpha": {
+          "type": "float",
+          "default": 1,
+          "uniform": "bgAlpha"
+        },
+        "smoothEdge": {
+          "type": "float",
+          "default": 0.04,
+          "uniform": "smoothEdge"
+        },
+        "zone0_tex": {
+          "type": "surface",
+          "default": "none",
+          "colorModeUniform": "zone0_active"
+        },
+        "zone1_tex": {
+          "type": "surface",
+          "default": "none",
+          "colorModeUniform": "zone1_active"
+        },
+        "zone2_tex": {
+          "type": "surface",
+          "default": "none",
+          "colorModeUniform": "zone2_active"
+        },
+        "zone3_tex": {
+          "type": "surface",
+          "default": "none",
+          "colorModeUniform": "zone3_active"
+        },
+        "zone4_tex": {
+          "type": "surface",
+          "default": "none",
+          "colorModeUniform": "zone4_active"
+        },
+        "zone5_tex": {
+          "type": "surface",
+          "default": "none",
+          "colorModeUniform": "zone5_active"
+        },
+        "zone6_tex": {
+          "type": "surface",
+          "default": "none",
+          "colorModeUniform": "zone6_active"
+        },
+        "zone7_tex": {
+          "type": "surface",
+          "default": "none",
+          "colorModeUniform": "zone7_active"
+        }
+      },
+      "textures": {},
+      "passes": [
+        {
+          "name": "render",
+          "program": "remap",
+          "key": "synth/remap:remap",
+          "inputs": {
+            "zone0_tex": "zone0_tex",
+            "zone1_tex": "zone1_tex",
+            "zone2_tex": "zone2_tex",
+            "zone3_tex": "zone3_tex",
+            "zone4_tex": "zone4_tex",
+            "zone5_tex": "zone5_tex",
+            "zone6_tex": "zone6_tex",
+            "zone7_tex": "zone7_tex"
+          },
+          "outputs": {
+            "fragColor": "outputTex"
+          },
+          "uniforms": {}
+        }
+      ]
+    },
     "synth/sacredGeometry": {
       "namespace": "synth",
       "func": "sacredGeometry",

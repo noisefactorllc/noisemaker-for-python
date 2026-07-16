@@ -22,9 +22,20 @@ _IDENT = re.compile(r"\b[A-Za-z_]\w*\b")
 _DEFINE = re.compile(r"define\s+(\w+)(?:\(|\s|$)")
 
 
+def _strip_comments(source: str) -> str:
+    """Remove block and line comments before preprocessing. The tokenizer strips
+    comments too, but the preprocessor runs first on raw text — a `//` comment
+    trailing a `#define` value (e.g. `#define MAX_PAIRS 32  // ...`) would
+    otherwise be captured into the macro and comment out every later expansion.
+    GLSL has no string literals, so this is unambiguous."""
+    source = re.sub(r"/\*.*?\*/", " ", source, flags=re.DOTALL)
+    source = re.sub(r"//[^\n]*", "", source)
+    return source
+
+
 def normalize(source: str, runtime_defines: dict | None = None) -> dict:
     runtime_defines = runtime_defines or {}
-    body = _preprocess(source, runtime_defines)
+    body = _preprocess(_strip_comments(source), runtime_defines)
 
     out_lines = []
     outputs = []

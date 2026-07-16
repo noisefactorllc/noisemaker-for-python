@@ -108,6 +108,12 @@ class CodeGen:
                 pass
             elif d["k"] == "decl":
                 self._collect_decl(d)
+            elif d["k"] == "ubo":
+                # Anonymous std140 block members are addressed like bare uniforms
+                # (e.g. `data[i]`); each is bound as a uniform value.
+                for m in d["members"]:
+                    self.uniforms.append({"name": m["name"],
+                                          "type": self.type_of_name(m["type"], m.get("array"))})
 
     def type_of_name(self, tname, array=None):
         t = dict(TYPE.get(tname, {"base": "float", "width": 1}))

@@ -104,6 +104,26 @@ class _DefaultTex(dict):
         return self._default
 
 
+def _remap_uniform_data(u, width, height):
+    """Pack synth/remap's std140 `data[267]` block from the bound uniforms —
+    port of noisemaker-cpu renderer.js remapUniformData. At the default
+    zoneCount=0 this yields the background color for every pixel."""
+    def g(name, default):
+        v = u.get(name)
+        return default if v is None else v
+    data = [np.zeros(4, dtype=F32) for _ in range(267)]
+    bg = np.asarray(g("bgColor", [0, 0, 0]), dtype=F32)
+    data[0] = np.array([bg[0], bg[1], bg[2], g("bgAlpha", 1)], dtype=F32)
+    data[1] = np.array([g("zoneCount", 0), g("smoothEdge", 0.04), 0, g("time", 0)], dtype=F32)
+    for zone in range(8):
+        data[2 + zone] = np.array([g(f"zone{zone}_count", 0), g(f"zone{zone}_active", 0),
+                                   0, g(f"zone{zone}_alpha", 1)], dtype=F32)
+        for pair in range(32):
+            data[10 + zone * 32 + pair] = np.asarray(g(f"zone{zone}_v{pair}", [0, 0, 0, 0]), dtype=F32)
+    data[266] = np.array([width, height, 0, 0], dtype=F32)
+    return data
+
+
 def _canonical_uniforms(width, height, time, seed, effect_uniforms):
     """Match noisemaker-cpu src/csl/glsl-kernel.js createCanonicalBindings."""
     res = np.array([float(width), float(height)], dtype=F32)
@@ -180,6 +200,9 @@ def render_effect(effect_id, params=None, inputs=None, width=256, height=256, se
                 effect_uniforms["paletteMode"] = 3 if e[3] == 0 else int(e[3])
 
     uniforms = _canonical_uniforms(width, height, time, seed, effect_uniforms)
+    # synth/remap's std140 `data` block is packed from the bound uniforms.
+    if effect_id == "synth/remap":
+        uniforms["data"] = _remap_uniform_data(uniforms, width, height)
     blank = Surface(1, 1)
 
     rt = Runtime()
