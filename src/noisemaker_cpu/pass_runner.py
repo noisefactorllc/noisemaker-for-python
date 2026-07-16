@@ -43,46 +43,57 @@ def f32_or(x):
 
 
 def run_pass_deriv(kernel, ctx: Ctx, width: int, height: int) -> Surface:
-    """Pass runner for kernels using dFdx/dFdy/fwidth: process 2x2 quads,
-    running each kernel in 'record' mode on the (clamped) quad corners to capture
-    derivative arguments, computing per-call differences, then 'replay' on the
-    real pixels."""
+    """Pass runner for kernels using dFdx/dFdy/fwidth. Mirrors the reference
+    engine's wrapDerivatives: derivatives are computed in bottom-left pixel space
+    over 2x2 quads. Each quad's 4 corners are probed in 'record' mode (arguments
+    captured, no edge clamping — probes may fall outside the image like the GPU);
+    each real pixel then replays with FINE derivatives selected by its parity."""
     surf = Surface(width, height)
     data = surf.data
     rt = ctx.rt
     fw, fh = float(width), float(height)
+    if ctx.resolution is None:
+        ctx.resolution = np.array([fw, fh], dtype=F32)
 
-    def set_px(x, y):
-        fx = x + 0.5
-        fy = height - y - 0.5
+    def set_frag(fx, fy):
         ctx.frag_coord = np.array([fx, fy, 0.0, 1.0], dtype=F32)
         ctx.uv = np.array([fx / fw, fy / fh], dtype=F32)
 
-    if ctx.resolution is None:
-        ctx.resolution = np.array([fw, fh], dtype=F32)
-    scratch = [0.0, 0.0, 0.0, 0.0]
-    for qy in range(0, height, 2):
-        for qx in range(0, width, 2):
-            x1 = min(qx + 1, width - 1)
-            y1 = min(qy + 1, height - 1)
-            recs = []
-            for (px, py) in ((qx, qy), (x1, qy), (qx, y1), (x1, y1)):  # TL, TR, BL, BR
-                set_px(px, py)
-                rt.deriv_reset("record")
-                kernel(ctx, scratch)
-                recs.append(rt._deriv_log)
-            diffs = rt.deriv_compute(recs)
-            for py in range(qy, min(qy + 2, height)):
-                for px in range(qx, min(qx + 2, width)):
-                    set_px(px, py)
-                    rt.deriv_reset("replay", diffs)
-                    out = [0.0, 0.0, 0.0, 0.0]
-                    kernel(ctx, out)
-                    i = (py * width + px) * 4
-                    data[i] = out[0]
-                    data[i + 1] = out[1]
-                    data[i + 2] = out[2]
-                    data[i + 3] = out[3]
+    def probe(fx, fy):
+        set_frag(fx, fy)
+        rt.deriv_reset("record")
+        kernel(ctx, [0.0, 0.0, 0.0, 0.0])
+        return rt._deriv_log
+
+    lane_cache = {}   # (quadX, quadY) -> [LL, LR, UL, UR] logs
+    diff_cache = {}   # (quadX, quadY, xParity, yParity) -> fine diffs
+    for y in range(height):
+        fy = height - y - 0.5
+        for x in range(width):
+            fx = x + 0.5
+            pixel_x = x
+            pixel_y = height - 1 - y  # bottom-left pixel row
+            quad_x, quad_y = pixel_x >> 1, pixel_y >> 1
+            lanes = lane_cache.get((quad_x, quad_y))
+            if lanes is None:
+                x0, y0 = quad_x * 2 + 0.5, quad_y * 2 + 0.5
+                lanes = [probe(x0, y0), probe(x0 + 1, y0), probe(x0, y0 + 1), probe(x0 + 1, y0 + 1)]
+                lane_cache[(quad_x, quad_y)] = lanes
+            xp, yp = pixel_x & 1, pixel_y & 1
+            dkey = (quad_x, quad_y, xp, yp)
+            diffs = diff_cache.get(dkey)
+            if diffs is None:
+                diffs = rt.deriv_fine(lanes, xp, yp)
+                diff_cache[dkey] = diffs
+            set_frag(fx, fy)
+            rt.deriv_reset("replay", diffs)
+            out = [0.0, 0.0, 0.0, 0.0]
+            kernel(ctx, out)
+            i = (y * width + x) * 4
+            data[i] = out[0]
+            data[i + 1] = out[1]
+            data[i + 2] = out[2]
+            data[i + 3] = out[3]
     rt.deriv_reset(None)
     return surf
 

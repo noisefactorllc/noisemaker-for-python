@@ -61,7 +61,10 @@ class Runtime:
             self._deriv_i += 1
             return 0.0 if _is_scalar(v) else np.zeros(np.asarray(v).shape[0], dtype=F32)
         if self._deriv_mode == "replay":
-            d = self._deriv_diffs[self._deriv_i] if self._deriv_i < len(self._deriv_diffs) else (0.0 if _is_scalar(v) else np.zeros(np.asarray(v).shape[0], dtype=F32))
+            if self._deriv_i < len(self._deriv_diffs):
+                d = self._deriv_diffs[self._deriv_i][op]
+            else:
+                d = 0.0 if _is_scalar(v) else np.zeros(np.asarray(v).shape[0], dtype=F32)
             self._deriv_i += 1
             return d
         return 0.0 if _is_scalar(v) else np.zeros(np.asarray(v).shape[0], dtype=F32)
@@ -75,25 +78,29 @@ class Runtime:
     def fwidth(self, v):
         return self._deriv("fwidth", v)
 
-    def deriv_compute(self, recs):
-        tl, tr, bl = recs[0], recs[1], recs[2]
-
-        def val(rec, i):
-            return rec[i][1] if i < len(rec) else tl[i][1]
-
+    def deriv_fine(self, lanes, x_parity, y_parity):
+        """Per-pixel FINE screen-space derivatives, matching the reference engine's
+        wrapDerivatives: dFdx uses the pixel's own row (chosen by y-parity), dFdy
+        its own column (x-parity). ``lanes`` are the 4 recorded quad-corner logs in
+        [LL, LR, UL, UR] order (lower/upper × left/right, bottom-left space)."""
+        left, right = lanes[y_parity * 2], lanes[y_parity * 2 + 1]
+        bottom, top = lanes[x_parity], lanes[x_parity + 2]
+        n = max(len(left), len(right), len(bottom), len(top))
         diffs = []
-        for i in range(len(tl)):
-            op = tl[i][0]
-            a = np.asarray(tl[i][1], dtype=np.float64)
-            dx = np.asarray(val(tr, i), dtype=np.float64) - a
-            dy = np.asarray(val(bl, i), dtype=np.float64) - a
-            if op == "dFdx":
-                r = dx
-            elif op == "dFdy":
-                r = dy
-            else:  # fwidth
-                r = np.abs(dx) + np.abs(dy)
-            diffs.append(f32(float(r)) if r.ndim == 0 else np.asarray(r, dtype=F32))
+        for i in range(n):
+            lv = left[i][1] if i < len(left) else 0.0
+            rv = right[i][1] if i < len(right) else lv
+            bv = bottom[i][1] if i < len(bottom) else 0.0
+            tv = top[i][1] if i < len(top) else bv
+            if _is_scalar(lv) and _is_scalar(rv) and _is_scalar(bv) and _is_scalar(tv):
+                xd = f32(float(rv) - float(lv))
+                yd = f32(float(tv) - float(bv))
+                wd = f32(abs(xd) + abs(yd))
+            else:
+                xd = np.asarray(np.asarray(rv, dtype=np.float64) - np.asarray(lv, dtype=np.float64), dtype=F32)
+                yd = np.asarray(np.asarray(tv, dtype=np.float64) - np.asarray(bv, dtype=np.float64), dtype=F32)
+                wd = np.asarray(np.abs(xd.astype(np.float64)) + np.abs(yd.astype(np.float64)), dtype=F32)
+            diffs.append({"dFdx": xd, "dFdy": yd, "fwidth": wd})
         return diffs
 
     @staticmethod
