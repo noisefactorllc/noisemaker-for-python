@@ -52,6 +52,9 @@ def run_pixel(ctx, out):
             coord = polarCoords__vec2_float(uv, aspect)
         else:
             coord = vortexCoords__vec2_float(uv, aspect)
+        dx = rt.construct(2, 0.0)
+        dy = rt.construct(2, 0.0)
+        col = rt.construct(4, 0.0)
         if _u_antialias:
             dx = rt.dFdx(coord)
             dy = rt.dFdy(coord)

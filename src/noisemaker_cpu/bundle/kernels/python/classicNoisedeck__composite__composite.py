@@ -76,6 +76,9 @@ def run_pixel(ctx, out):
         color2 = rt.copy(color2, "float")
         color = rt.construct(3, rt.f(0.0))
         cut = rt.binary("*", _u_range, rt.f(0.01), 1, "float")
+        c = rt.construct(3, 0.0)
+        c1 = rt.construct(3, 0.0)
+        c2 = rt.construct(3, 0.0)
         if rt.binary("==", _u_blendMode, rt.i(0)):
             if rt.binary(">", rt.distance(_u_inputColor, color1), rt.binary("*", _u_range, rt.f(0.01), 1, "float")):
                 color1 = desaturate__vec3(color1)

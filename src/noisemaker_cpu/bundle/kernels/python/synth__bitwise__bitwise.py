@@ -67,6 +67,10 @@ def run_pixel(ctx, out):
         x = rt.binary("^", x, _u_seed, 1, "int")
         y = rt.binary("^", y, rt.binary("*", _u_seed, rt.i(3), 1, "int"), 1, "int")
         v = rt.f(0.0)
+        r = rt.f(0.0)
+        _g = rt.f(0.0)
+        b = rt.f(0.0)
+        hueScale = rt.f(0.0)
         if rt.binary("==", _u_colorMode, rt.i(0)):
             v = bitOp__int_int_int_int(x, y, _u_operation, _u_mask)
             g.fragColor = rt.construct(4, v, v, v, rt.f(1.0))

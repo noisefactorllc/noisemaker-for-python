@@ -243,17 +243,20 @@ class CodeGen:
             out.append(f"{pad}{code}")
         elif k == "if":
             code, _ = self.expr(s["cond"], scope)
-            # A runtime #if/#else lowered to a real if/else keeps GLSL block
-            # scope, but a variable a C preprocessor #if would have left at the
-            # enclosing scope is typically declared in BOTH branches and used
-            # after #endif. Python has no block scope, so pre-bind names declared
-            # in both branches into the enclosing scope for post-if resolution.
+            # A runtime #if lowered to a real if/else keeps GLSL block scope, but
+            # a preprocessor #if leaves its declarations at the ENCLOSING scope —
+            # they may be read after #endif or in a sibling lowered-#if block.
+            # Real GLSL never declares in a branch and reads it after (won't
+            # compile), so hoisting every branch decl to the enclosing scope
+            # (with a default init, since a single-arm #if may not run) is safe
+            # and only affects lowered #if.
+            hoist = dict(self._branch_decls(s["then"]))
             if s.get("els") is not None:
-                then_decls = self._branch_decls(s["then"])
-                else_decls = self._branch_decls(s["els"])
-                for name, typ in then_decls.items():
-                    if name in else_decls and scope.resolve(name) is None:
-                        scope.define(name, typ)
+                hoist.update(self._branch_decls(s["els"]))
+            for name, typ in hoist.items():
+                if scope.resolve(name) is None:
+                    e = scope.define(name, typ)
+                    out.append(f"{pad}{e['py']} = {self._default(typ)}")
             out.append(f"{pad}if {code}:")
             out.extend(self._branch(s["then"], scope, indent + 1))
             if s.get("els") is not None:
@@ -304,9 +307,10 @@ class CodeGen:
         return out or [f"{'    ' * indent}pass"]
 
     def _branch_decls(self, s):
-        """Names (mapped to type) a branch declares on EVERY path — safe to hoist
-        to the enclosing scope. Recurses through if/elif/else chains so a variable
-        declared in all N arms of a lowered runtime #if is still resolved after."""
+        """Names (mapped to type) a branch may declare at its top level — the
+        UNION over if/elif/else arms. Used to hoist lowered-#if declarations to
+        the enclosing scope (each hoisted name gets a default init at the hoist
+        site, so an arm that doesn't run still leaves the name bound)."""
         if s is None:
             return {}
         k = s.get("k")
@@ -319,10 +323,10 @@ class CodeGen:
             return decls
         if k == "decl":
             return {dc["name"]: self.type_of_name(s["type"], dc.get("array")) for dc in s["declarators"]}
-        if k == "if" and s.get("els") is not None:
-            a = self._branch_decls(s["then"])
-            b = self._branch_decls(s["els"])
-            return {n: t for n, t in a.items() if n in b}
+        if k == "if":
+            d = dict(self._branch_decls(s["then"]))
+            d.update(self._branch_decls(s.get("els")))
+            return d
         return {}
 
     def _for(self, s, scope, indent, out):

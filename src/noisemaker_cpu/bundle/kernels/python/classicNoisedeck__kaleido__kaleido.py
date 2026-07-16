@@ -124,6 +124,7 @@ def run_pixel(ctx, out):
         xCombined = rt.binary("+", rt.swizzle(frac, "x"), seedFrac, 1, "float")
         xi = rt.binary("+", rt.binary("+", rt.swizzle(base, "x"), seedInt, 1, "int"), rt.construct(1, rt.component_wise("floor", xCombined, width=1), base="int"), 1, "int")
         yi = rt.swizzle(base, "y")
+        freqInt = 0
         if _u_wrap:
             freqInt = rt.construct(1, rt.binary("+", freq, rt.f(0.5), 1, "float"), base="int")
             if rt.binary(">", freqInt, rt.i(0)):
@@ -318,6 +319,7 @@ def run_pixel(ctx, out):
     def value__vec2_float_int(st, freq, interp):
         st = rt.copy(st, "float")
         st = rt.binary("-", st, rt.construct(2, rt.binary("/", rt.binary("*", rt.f(0.5), rt.swizzle(_u_fullResolution, "x"), 1, "float"), rt.swizzle(_u_fullResolution, "y"), 1, "float"), rt.f(0.5)), 2, "float")
+        simplexVal = rt.f(0.0)
         if rt.binary("==", interp, rt.i(3)):
             return catmullRom3x3Value__vec2_float(st, freq)
         else:
@@ -710,6 +712,7 @@ def run_pixel(ctx, out):
         r = rt.binary("+", getMetric__vec2(st), blendy, 1, "float")
         st = rt.binary("-", st, rt.construct(2, rt.binary("/", rt.binary("*", rt.f(0.5), rt.swizzle(_u_fullResolution, "x"), 1, "float"), rt.swizzle(_u_fullResolution, "y"), 1, "float"), rt.f(0.5)), 2, "float")
         a = rt.component_wise("atan", rt.swizzle(st, "y"), rt.swizzle(st, "x"), width=1)
+        dir = rt.f(0.0)
         if rt.binary("==", _u_DIRECTION, rt.i(1)):
             dir = rt.unary("-", _u_time)
         else:

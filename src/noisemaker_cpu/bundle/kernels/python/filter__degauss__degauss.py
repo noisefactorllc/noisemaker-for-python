@@ -123,6 +123,10 @@ def run_pixel(ctx, out):
         base_seed = rt.construct(3, rt.binary("+", rt.binary("+", rt.f(17.0), channel_offset, 1, "float"), seed_offset, 1, "float"), rt.binary("+", rt.binary("+", rt.f(29.0), rt.binary("*", channel_offset, rt.f(1.3), 1, "float"), 1, "float"), rt.binary("*", seed_offset, rt.f(1.1), 1, "float"), 1, "float"), rt.binary("+", rt.binary("+", rt.f(47.0), rt.binary("*", channel_offset, rt.f(1.7), 1, "float"), 1, "float"), rt.binary("*", seed_offset, rt.f(0.7), 1, "float"), 1, "float"))
         base_noise = simplex_noise__vec3(rt.construct(3, rt.binary("+", rt.swizzle(uv, "x"), rt.swizzle(base_seed, "x"), 1, "float"), rt.binary("+", rt.swizzle(uv, "y"), rt.swizzle(base_seed, "y"), 1, "float"), rt.binary("+", z_base, rt.swizzle(base_seed, "z"), 1, "float")))
         value = rt.component_wise("clamp", rt.binary("+", rt.binary("*", base_noise, rt.f(0.5), 1, "float"), rt.f(0.5), 1, "float"), rt.f(0.0), rt.f(1.0), width=1)
+        time_seed = rt.construct(3, 0.0)
+        time_noise = rt.f(0.0)
+        time_value = rt.f(0.0)
+        scaled_time = rt.f(0.0)
         if (bool(rt.binary("!=", speed, rt.f(0.0))) and bool(rt.binary("!=", time, rt.f(0.0)))):
             time_seed = rt.construct(3, rt.binary("+", rt.swizzle(base_seed, "x"), rt.f(54.0), 1, "float"), rt.binary("+", rt.swizzle(base_seed, "y"), rt.f(82.0), 1, "float"), rt.binary("+", rt.swizzle(base_seed, "z"), rt.f(124.0), 1, "float"))
             time_noise = simplex_noise__vec3(rt.construct(3, rt.binary("+", rt.swizzle(uv, "x"), rt.swizzle(time_seed, "x"), 1, "float"), rt.binary("+", rt.swizzle(uv, "y"), rt.swizzle(time_seed, "y"), 1, "float"), rt.swizzle(time_seed, "z")))

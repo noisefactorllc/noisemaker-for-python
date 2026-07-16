@@ -91,10 +91,17 @@ def run_pixel(ctx, out):
         lx = rt.binary("-", rt.swizzle(globalCoord, "x"), origin_x, 1, "int")
         ly = rt.binary("-", rt.swizzle(globalCoord, "y"), origin_y, 1, "int")
         mask = rt.f(0.0)
+        cell_stride = 0
+        glyph_idx = 0
+        within_glyph_x = 0
         if (bool((bool((bool(rt.binary(">=", lx, rt.i(0))) and bool(rt.binary("<", lx, overlay_w)))) and bool(rt.binary(">=", ly, rt.i(0))))) and bool(rt.binary("<", ly, overlay_h))):
             cell_stride = rt.binary("+", CELL_W, GAP, 1, "int")
             glyph_idx = rt.binary("/", lx, cell_stride, 1, "int")
             within_glyph_x = rt.binary("-", lx, rt.binary("*", glyph_idx, cell_stride, 1, "int"), 1, "int")
+            local_y = 0
+            time_cell = 0
+            digit_hash = 0
+            digit = 0
             if (bool(rt.binary("<", within_glyph_x, CELL_W)) and bool(rt.binary("<", glyph_idx, glyph_count))):
                 local_y = rt.binary("-", rt.binary("-", CELL_H, rt.i(1), 1, "int"), ly, 1, "int")
                 time_cell = rt.construct(1, rt.component_wise("floor", rt.binary("*", _u_time, rt.component_wise("max", _u_speed, rt.f(0.001), width=1), 1, "float"), width=1), base="int")

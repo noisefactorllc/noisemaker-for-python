@@ -303,6 +303,7 @@ def run_pixel(ctx, out):
         return closest
     def findClosestPaletteColor__vec3_int(color, paletteType):
         color = rt.copy(color, "float")
+        luma = rt.f(0.0)
         if rt.binary("==", paletteType, g.PALETTE_MONOCHROME):
             luma = rt.dot(color, rt.construct(3, rt.f(0.299), rt.f(0.587), rt.f(0.114)))
             return rt.construct(3, (rt.f(1.0) if rt.binary(">", luma, rt.f(0.5)) else rt.f(0.0)))
@@ -338,6 +339,7 @@ def run_pixel(ctx, out):
         return findClosestPaletteColor__vec3_int(dithered, paletteType)
     def fsQuantize__vec3(v):
         v = rt.copy(v, "float")
+        maxLevel = rt.f(0.0)
         if rt.binary("==", _u_palette, g.PALETTE_INPUT):
             maxLevel = rt.binary("-", rt.construct(1, _u_levels), rt.f(1.0), 1, "float")
             return rt.binary("/", rt.component_wise("floor", rt.binary("+", rt.binary("*", v, maxLevel, 3, "float"), rt.f(0.5), 3, "float"), width=3), maxLevel, 3, "float")
@@ -401,6 +403,9 @@ def run_pixel(ctx, out):
                 _for5_first = False
                 if not (rt.binary("<", c, rt.binary("+", g.FS_BLOCK, g.FS_RPAD, 1, "int"))):
                     break
+                src = rt.construct(3, 0.0)
+                v = rt.construct(3, 0.0)
+                err = rt.construct(3, 0.0)
                 if (bool(rt.binary(">=", c, rt.unary("-", apronX))) and bool((not ((bool(lastRow) and bool(rt.binary(">=", c, lx))))))):
                     src = fsFetchCell__ivec2_float_ivec2(rt.binary("+", blockOrigin, rt.construct(2, c, r, base="int"), 2, "int"), cellSize, texSize)
                     v = rt.component_wise("clamp", rt.binary("+", rt.binary("+", rt.binary("+", src, errRow[int(rt.binary("+", rt.binary("+", c, g.FS_APRON_MAX, 1, "int"), rt.i(1), 1, "int"))], 3, "float"), rightErr, 3, "float"), bias, 3, "float"), rt.f(0.0), rt.f(1.0), width=3)
@@ -409,6 +414,7 @@ def run_pixel(ctx, out):
                     errRow[int(rt.binary("+", c, g.FS_APRON_MAX, 1, "int"))] = rt.binary("+", errRow[int(rt.binary("+", c, g.FS_APRON_MAX, 1, "int"))], rt.binary("*", err, rt.binary("/", rt.f(3.0), rt.f(16.0), 1, "float"), 3, "float"), 3, "float")
                     errRow[int(rt.binary("+", rt.binary("+", c, g.FS_APRON_MAX, 1, "int"), rt.i(1), 1, "int"))] = rt.binary("+", diag, rt.binary("*", err, rt.binary("/", rt.f(5.0), rt.f(16.0), 1, "float"), 3, "float"), 3, "float")
                     diag = rt.binary("*", err, rt.binary("/", rt.f(1.0), rt.f(16.0), 1, "float"), 3, "float")
+            incoming = rt.construct(3, 0.0)
             if lastRow:
                 incoming = errRow[int(rt.binary("+", g.FS_APRON_MAX, rt.i(1), 1, "int"))]
                 if rt.binary("==", lx, rt.i(1)):
@@ -427,6 +433,7 @@ def run_pixel(ctx, out):
         color = rt.texture(_u_inputTex, uv)
         globalCoord = rt.binary("+", rt.swizzle(ctx.frag_coord, "xy"), _u_tileOffset, 2, "float")
         result = rt.construct(3, 0.0)
+        ditherValue = rt.f(0.0)
         if rt.binary("==", _u_ditherType, g.DITHER_ERROR_DIFFUSION):
             result = errorDiffusion__vec2_float_ivec2(globalCoord, rt.binary("*", _u_matrixScale, _u_renderScale, 1, "float"), texSize)
         else:

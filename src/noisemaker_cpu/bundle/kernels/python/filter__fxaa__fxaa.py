@@ -94,6 +94,8 @@ def run_pixel(ctx, out):
         weight_east = weight_from_luma__float_float(center_luma, east_luma)
         weight_sum = rt.binary("+", rt.binary("+", rt.binary("+", rt.binary("+", rt.binary("+", weight_center, weight_north, 1, "float"), weight_south, 1, "float"), weight_west, 1, "float"), weight_east, 1, "float"), g.EPSILON, 1, "float")
         result_texel = center_texel
+        blended_luma = rt.f(0.0)
+        blended_rgb = rt.construct(3, 0.0)
         if rt.binary("<=", channelCount, rt.i(2)):
             blended_luma = rt.binary("/", rt.binary("+", rt.binary("+", rt.binary("+", rt.binary("+", rt.binary("*", rt.swizzle(center_texel, "x"), weight_center, 1, "float"), rt.binary("*", rt.swizzle(north_texel, "x"), weight_north, 1, "float"), 1, "float"), rt.binary("*", rt.swizzle(south_texel, "x"), weight_south, 1, "float"), 1, "float"), rt.binary("*", rt.swizzle(west_texel, "x"), weight_west, 1, "float"), 1, "float"), rt.binary("*", rt.swizzle(east_texel, "x"), weight_east, 1, "float"), 1, "float"), weight_sum, 1, "float")
             result_texel = rt.assign_swizzle(result_texel, "x", blended_luma)

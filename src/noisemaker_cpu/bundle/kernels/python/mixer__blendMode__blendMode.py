@@ -61,6 +61,7 @@ def run_pixel(ctx, out):
         middle = applyBlendMode__vec4_vec4_int(color1, color2, _u_mode)
         amt = map__float_float_float_float_float(_u_mixAmt, rt.unary("-", rt.f(100.0)), rt.f(100.0), rt.f(0.0), rt.f(1.0))
         color = rt.construct(4, 0.0)
+        factor = rt.f(0.0)
         if rt.binary("<", amt, rt.f(0.5)):
             factor = rt.binary("*", amt, rt.f(2.0), 1, "float")
             color = rt.component_wise("mix", color1, middle, factor, width=4)

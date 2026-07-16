@@ -96,6 +96,7 @@ def run_pixel(ctx, out):
         uv = rt.binary("/", globalCoord, _u_fullResolution, 2, "float")
         color = rt.texture(_u_inputTex, rt.binary("/", rt.swizzle(ctx.frag_coord, "xy"), rt.construct(2, rt.texture_size(_u_inputTex)), 2, "float"))
         noiseCoord = rt.binary("*", uv, rt.construct(2, rt.binary("/", rt.swizzle(_u_fullResolution, "x"), rt.swizzle(_u_fullResolution, "y"), 1, "float"), rt.f(1.0)), 2, "float")
+        speckMask = rt.f(0.0)
         if _u_useSpecks:
             speckMask = speckle__vec2_vec2(rt.binary("+", noiseCoord, _u_speckSeed, 2, "float"), rt.binary("*", rt.construct(2, rt.f(32.0)), map__float_float_float_float_float(_u_speckScale, rt.f(1.0), rt.f(5.0), rt.f(2.0), rt.f(0.5)), 2, "float"))
             if rt.binary("==", _u_speckMode, rt.i(0)):
@@ -109,8 +110,10 @@ def run_pixel(ctx, out):
                     else:
                         if rt.binary("==", _u_speckMode, rt.i(3)):
                             color = rt.assign_swizzle(color, "rgb", rt.binary("*", rt.swizzle(color, "rgb"), speckMask, 3, "float"))
+        splatMask = rt.f(0.0)
         if _u_enabled:
             splatMask = splat__vec2_vec2(rt.binary("+", noiseCoord, _u_seed, 2, "float"), rt.construct(2, map__float_float_float_float_float(_u_scale, rt.f(1.0), rt.f(5.0), rt.f(2.0), rt.f(0.5))))
+            texColor = rt.construct(4, 0.0)
             if rt.binary("==", _u_mode, rt.i(0)):
                 color = rt.assign_swizzle(color, "rgb", rt.component_wise("mix", rt.swizzle(color, "rgb"), _u_splatColor, splatMask, width=3))
             else:

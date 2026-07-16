@@ -46,6 +46,9 @@ def run_pixel(ctx, out):
     def periodic_value__float_float(time_value, sample_val):
         return rt.binary("*", rt.binary("+", rt.component_wise("sin", rt.binary("*", rt.binary("-", time_value, sample_val, 1, "float"), g.TAU, 1, "float"), width=1), rt.f(1.0), 1, "float"), rt.f(0.5), 1, "float")
     def interpolation_weight__float_uint(value, spline_order):
+        clamped = rt.f(0.0)
+        angle = rt.f(0.0)
+        cos_value = rt.f(0.0)
         if rt.binary("==", spline_order, g.INTERPOLATION_COSINE):
             clamped = rt.component_wise("clamp", value, rt.f(0.0), rt.f(1.0), width=1)
             angle = rt.binary("*", clamped, g.PI, 1, "float")
@@ -86,6 +89,14 @@ def run_pixel(ctx, out):
         time_frac = rt.component_wise("fract", time_coord, width=1)
         if rt.binary("==", spline_order, g.INTERPOLATION_CONSTANT):
             return random_from_cell_3d__ivec3_uint(rt.construct(3, rt.swizzle(cell, "x"), rt.swizzle(cell, "y"), time_cell, base="int"), base_seed)
+        tl = rt.f(0.0)
+        tr = rt.f(0.0)
+        bl = rt.f(0.0)
+        br = rt.f(0.0)
+        weight_x = rt.f(0.0)
+        top = rt.f(0.0)
+        bottom = rt.f(0.0)
+        weight_y = rt.f(0.0)
         if rt.binary("==", spline_order, g.INTERPOLATION_LINEAR):
             tl = random_from_cell_3d__ivec3_uint(rt.construct(3, rt.swizzle(cell, "x"), rt.swizzle(cell, "y"), time_cell, base="int"), base_seed)
             tr = random_from_cell_3d__ivec3_uint(rt.construct(3, rt.binary("+", rt.swizzle(cell, "x"), rt.i(1), 1, "int"), rt.swizzle(cell, "y"), time_cell, base="int"), base_seed)

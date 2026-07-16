@@ -230,6 +230,7 @@ def run_pixel(ctx, out):
         st = rt.binary("*", st, freq, 2, "float")
         st = rt.binary("+", st, rt.f(1000.0), 2, "float")
         timeAngle = rt.binary("*", rt.binary("*", _u_time, _u_speed, 1, "float"), g.TAU, 1, "float")
+        zWarp = rt.f(0.0)
         if rt.binary("==", _u_DIMENSIONS, rt.i(2)):
             if rt.binary(">", _u_warpIterations, rt.i(0)):
                 st = domainWarp2D__vec2_float_int_float_float(st, timeAngle, _u_warpIterations, _u_warpScale, _u_warpIntensity)

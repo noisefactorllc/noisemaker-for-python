@@ -62,6 +62,8 @@ def run_pixel(ctx, out):
         if rt.binary("<", mm, rt.i(0)):
             mm = rt.binary("+", mm, rt.i(3), 1, "int")
         ap = rt.component_wise("abs", p, width=2)
+        d = rt.f(0.0)
+        maxD = rt.f(0.0)
         if rt.binary("==", mm, rt.i(0)):
             d = rt.length(ap)
             maxD = rt.length(corner)

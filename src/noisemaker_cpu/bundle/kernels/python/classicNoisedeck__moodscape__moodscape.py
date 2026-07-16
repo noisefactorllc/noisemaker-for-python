@@ -194,6 +194,8 @@ def run_pixel(ctx, out):
         xCombined = rt.binary("+", rt.swizzle(frac, "x"), seedFrac, 1, "float")
         xi = rt.binary("+", rt.binary("+", rt.swizzle(base, "x"), seedInt, 1, "int"), rt.construct(1, rt.component_wise("floor", xCombined, width=1), base="int"), 1, "int")
         yi = rt.swizzle(base, "y")
+        freqXInt = 0
+        freqYInt = 0
         if _u_wrap:
             freqXInt = rt.construct(1, rt.binary("+", xFreq, rt.f(0.5), 1, "float"), base="int")
             freqYInt = rt.construct(1, rt.binary("+", yFreq, rt.f(0.5), 1, "float"), base="int")
@@ -328,6 +330,16 @@ def run_pixel(ctx, out):
         return rt.component_wise("clamp", catmullRom4__float_float_float_float_float(y0, y1, y2, y3, rt.swizzle(f, "y")), rt.f(0.0), rt.f(1.0), width=1)
     def value__vec2_float_float_float(st, xFreq, yFreq, s):
         st = rt.copy(st, "float")
+        scaledTime10 = rt.f(0.0)
+        scaledTime11 = rt.f(0.0)
+        uv = rt.construct(2, 0.0)
+        f = rt.construct(2, 0.0)
+        x0y0 = rt.f(0.0)
+        x1y0 = rt.f(0.0)
+        x0y1 = rt.f(0.0)
+        x1y1 = rt.f(0.0)
+        a = rt.f(0.0)
+        b = rt.f(0.0)
         if rt.binary("==", _u_NOISE_TYPE, rt.i(0)):
             return constant__vec2_float_float_float(st, xFreq, yFreq, s)
         else:

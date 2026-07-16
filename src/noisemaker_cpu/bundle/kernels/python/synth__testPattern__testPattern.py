@@ -53,6 +53,11 @@ def run_pixel(ctx, out):
             if not (rt.binary("<", d, numDigits)):
                 break
             digitX = rt.binary("+", startX, rt.binary("*", rt.construct(1, d), rt.binary("+", glyphWidth, spacing, 1, "float"), 1, "float"), 1, "float")
+            localX = rt.f(0.0)
+            localY = rt.f(0.0)
+            gx = 0
+            gy = 0
+            digit = 0
             if (bool(rt.binary(">=", rt.swizzle(cellUV, "x"), digitX)) and bool(rt.binary("<", rt.swizzle(cellUV, "x"), rt.binary("+", digitX, glyphWidth, 1, "float")))):
                 localX = rt.binary("/", rt.binary("-", rt.swizzle(cellUV, "x"), digitX, 1, "float"), glyphWidth, 1, "float")
                 localY = rt.binary("/", rt.binary("-", rt.swizzle(cellUV, "y"), startY, 1, "float"), glyphHeight, 1, "float")

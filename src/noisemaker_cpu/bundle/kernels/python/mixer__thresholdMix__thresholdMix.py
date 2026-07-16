@@ -31,6 +31,8 @@ def run_pixel(ctx, out):
         numBands = rt.construct(1, bands)
         return rt.binary("/", rt.component_wise("floor", rt.binary("*", value, numBands, 1, "float"), width=1), numBands, 1, "float")
     def calculateBlendFactor__float_float_float(mapValue, thresh, rng):
+        lower = rt.f(0.0)
+        upper = rt.f(0.0)
         if rt.binary("<=", rng, rt.f(0.0)):
             return rt.component_wise("step", thresh, mapValue, width=1)
         else:
@@ -52,6 +54,11 @@ def run_pixel(ctx, out):
             mapColor = rt.assign_swizzle(mapColor, "g", quantizeValue__float_int(rt.swizzle(mapColor, "g"), _u_quantize))
             mapColor = rt.assign_swizzle(mapColor, "b", quantizeValue__float_int(rt.swizzle(mapColor, "b"), _u_quantize))
         result = rt.construct(4, 0.0)
+        lum = rt.f(0.0)
+        blendFactor = rt.f(0.0)
+        blendR = rt.f(0.0)
+        blendG = rt.f(0.0)
+        blendB = rt.f(0.0)
         if rt.binary("==", _u_mode, rt.i(0)):
             lum = getLuminosity__vec3(mapColor)
             blendFactor = calculateBlendFactor__float_float_float(lum, _u_threshold, _u_range)

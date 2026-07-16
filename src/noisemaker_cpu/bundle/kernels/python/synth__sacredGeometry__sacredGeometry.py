@@ -77,6 +77,7 @@ def run_pixel(ctx, out):
                     circleR = rt.binary("*", circleR, ripplePulse__float(rt.binary("*", hexDist, rt.f(1.4), 1, "float")), 1, "float")
                 d = rt.binary("-", rt.length(rt.binary("-", p, center, 2, "float")), circleR, 1, "float")
                 vis = rt.f(1.0)
+                t_e = rt.f(0.0)
                 if rt.binary("==", _u_animation, rt.i(5)):
                     t_e = rt.binary("/", hexDist, rt.component_wise("max", rt.construct(1, ringsN), rt.f(1.0), width=1), 1, "float")
                     vis = unfoldVis__float(t_e)
@@ -125,10 +126,12 @@ def run_pixel(ctx, out):
                 circleR = rt.binary("*", circleR, ripplePulse__float(rt.binary("*", distFromOrigin, rt.f(0.8), 1, "float")), 1, "float")
             d = rt.binary("-", rt.length(rt.binary("-", p, centers[int(i)], 2, "float")), circleR, 1, "float")
             vis = rt.f(1.0)
+            t_e = rt.f(0.0)
             if rt.binary("==", _u_animation, rt.i(5)):
                 t_e = rt.binary("*", rt.binary("/", distFromOrigin, maxCircleDist, 1, "float"), circleUnfoldRange, 1, "float")
                 vis = unfoldVis__float(t_e)
             m = rt.component_wise("max", m, rt.binary("*", outlineEdge__float_float(d, lineWidth), vis, 1, "float"), width=1)
+        lineVis = rt.f(0.0)
         if drawLines:
             lineVis = rt.f(1.0)
             if rt.binary("==", _u_animation, rt.i(5)):

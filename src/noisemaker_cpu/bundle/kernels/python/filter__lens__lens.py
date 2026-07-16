@@ -34,6 +34,8 @@ def run_pixel(ctx, out):
         if _u_aspectLens:
             displacement = rt.assign_swizzle(displacement, "x", rt.binary("/", rt.swizzle(displacement, "x"), aspect, 1, "float"))
         isTileRendering = rt.binary(">", rt.length(_u_tileOffset), rt.f(0.0))
+        maxDispPixels = rt.f(0.0)
+        dispPixels = rt.f(0.0)
         if isTileRendering:
             maxDispPixels = rt.f(256.0)
             dispPixels = rt.length(rt.binary("*", displacement, dims, 2, "float"))
@@ -42,6 +44,9 @@ def run_pixel(ctx, out):
         warpedGlobalUV = (rt.binary("-", uv, displacement, 2, "float") if isTileRendering else rt.component_wise("fract", rt.binary("-", uv, displacement, 2, "float"), width=2))
         offset = rt.binary("/", rt.binary("-", rt.binary("*", warpedGlobalUV, dims, 2, "float"), _u_tileOffset, 2, "float"), tileDims, 2, "float")
         sampledUV = offset
+        dx = rt.construct(2, 0.0)
+        dy = rt.construct(2, 0.0)
+        col = rt.construct(4, 0.0)
         if _u_antialias:
             dx = rt.dFdx(sampledUV)
             dy = rt.dFdy(sampledUV)

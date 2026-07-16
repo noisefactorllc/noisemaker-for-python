@@ -25,6 +25,8 @@ def run_pixel(ctx, out):
         phase = rt.binary("*", rt.binary("*", rt.binary("*", r, rt.construct(1, _u_ridges), 1, "float"), rt.f(2.0), 1, "float"), rt.f(3.14159265359), 1, "float")
         damping = rt.component_wise("max", rt.f(0.0), rt.binary("-", rt.f(1.0), r, 1, "float"), width=1)
         w = rt.f(0.0)
+        x = rt.f(0.0)
+        amountGain = rt.f(0.0)
         if rt.binary("<=", _u_amount, rt.f(30.0)):
             w = rt.binary("*", rt.binary("*", rt.binary("*", rt.component_wise("sin", phase, width=1), rt.binary("/", _u_amount, rt.f(100.0), 1, "float"), 1, "float"), rt.f(0.05), 1, "float"), damping, 1, "float")
         else:
@@ -57,6 +59,9 @@ def run_pixel(ctx, out):
             else:
                 uv = rt.component_wise("clamp", uv, rt.f(0.0), rt.f(1.0), width=2)
         sampleUV = rt.component_wise("clamp", rt.binary("/", rt.binary("-", rt.binary("*", uv, _u_fullResolution, 2, "float"), _u_tileOffset, 2, "float"), _u_resolution, 2, "float"), rt.f(0.0), rt.f(1.0), width=2)
+        dx = rt.construct(2, 0.0)
+        dy = rt.construct(2, 0.0)
+        col = rt.construct(4, 0.0)
         if _u_antialias:
             dx = rt.dFdx(sampleUV)
             dy = rt.dFdy(sampleUV)

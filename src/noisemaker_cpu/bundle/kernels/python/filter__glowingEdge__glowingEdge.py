@@ -19,6 +19,7 @@ def run_pixel(ctx, out):
     def distance_metric__float_float_int(gx, gy, metric):
         abs_gx = rt.component_wise("abs", gx, width=1)
         abs_gy = rt.component_wise("abs", gy, width=1)
+        cross = rt.f(0.0)
         if rt.binary("==", metric, rt.i(1)):
             return rt.binary("+", abs_gx, abs_gy, 1, "float")
         else:

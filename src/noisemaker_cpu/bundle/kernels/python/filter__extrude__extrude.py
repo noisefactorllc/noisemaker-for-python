@@ -143,6 +143,12 @@ def run_pixel(ctx, out):
             cellC = rt.binary("+", imgCenter, rt.binary("*", rt.binary("+", cellIdxF, rt.f(0.5), 2, "float"), _u_size, 2, "float"), 2, "float")
             h = cellHeight__vec2_vec2(cellC, cellIdxF)
             s = rt.binary("+", rt.f(1.0), rt.binary("*", rt.binary("*", h, rt.binary("/", _u_depth, rt.f(100.0), 1, "float"), 1, "float"), rt.f(0.4), 1, "float"), 1, "float")
+            apex = rt.construct(2, 0.0)
+            tri = 0
+            faceCenter = rt.construct(2, 0.0)
+            faceHalf = rt.construct(2, 0.0)
+            topHit = False
+            sideHit = False
             if rt.binary("==", _u_EXTRUDE_TYPE, rt.i(1)):
                 apex = rt.binary("+", imgCenter, rt.binary("*", rt.binary("-", cellC, imgCenter, 2, "float"), s, 2, "float"), 2, "float")
                 tri = pyramidTriHit__vec2_vec2_vec2_vec2(P, cellC, apex, halfCell)
@@ -157,6 +163,7 @@ def run_pixel(ctx, out):
                 faceHalf = rt.binary("*", halfCell, s, 2, "float")
                 topHit = rt.component_wise("all", rt.component_wise("lessThanEqual", rt.component_wise("abs", rt.binary("-", P, faceCenter, 2, "float"), width=2), faceHalf, width=2), width=2)
                 sideHit = (bool((not (topHit))) and bool(rt.component_wise("all", rt.component_wise("lessThanEqual", rt.component_wise("abs", rt.binary("-", P, cellC, 2, "float"), width=2), halfCell, width=2), width=2)))
+                priority = rt.f(0.0)
                 if (bool(topHit) or bool(sideHit)):
                     priority = rt.binary("+", s, (rt.f(1000.0) if topHit else rt.f(0.0)), 1, "float")
                     if rt.binary(">", priority, bestPriority):
@@ -168,10 +175,27 @@ def run_pixel(ctx, out):
             if rt.binary(">=", t, distToCenter):
                 break
         outColor = rt.construct(4, 0.0)
+        cellC = rt.construct(2, 0.0)
         if (not (found)):
             cellC = rt.binary("+", imgCenter, rt.binary("*", rt.binary("+", rt.component_wise("floor", rt.binary("/", rt.binary("-", P, imgCenter, 2, "float"), _u_size, 2, "float"), width=2), rt.f(0.5), 2, "float"), _u_size, 2, "float"), 2, "float")
             outColor = cellAvgColor3x3__vec2(cellC)
         else:
+            apex = rt.construct(2, 0.0)
+            topC = rt.construct(2, 0.0)
+            botC = rt.construct(2, 0.0)
+            leftX = rt.f(0.0)
+            rightX = rt.f(0.0)
+            Cbl = rt.construct(2, 0.0)
+            Cbr = rt.construct(2, 0.0)
+            Ctr = rt.construct(2, 0.0)
+            Ctl = rt.construct(2, 0.0)
+            Ci = rt.construct(2, 0.0)
+            Ci1 = rt.construct(2, 0.0)
+            shadeConst = rt.f(0.0)
+            bc = rt.construct(3, 0.0)
+            apexW = rt.f(0.0)
+            baseColor = rt.construct(4, 0.0)
+            shade = rt.f(0.0)
             if rt.binary("==", _u_EXTRUDE_TYPE, rt.i(1)):
                 apex = rt.binary("+", imgCenter, rt.binary("*", rt.binary("-", bestCenterPx, imgCenter, 2, "float"), bestS, 2, "float"), 2, "float")
                 topC = rt.binary("+", bestCenterPx, rt.binary("*", g.TOP_SIGN, rt.construct(2, rt.f(0.0), rt.swizzle(halfCell, "y")), 2, "float"), 2, "float")
@@ -206,6 +230,7 @@ def run_pixel(ctx, out):
                 bc = baryWeights__vec2_vec2_vec2_vec2(P, Ci, Ci1, apex)
                 apexW = rt.component_wise("clamp", rt.swizzle(bc, "z"), rt.f(0.0), rt.f(1.0), width=1)
                 baseColor = rt.construct(4, 0.0)
+                localPos = rt.construct(2, 0.0)
                 if _u_solidFront:
                     baseColor = cellAvgColor3x3__vec2(bestCenterPx)
                 else:
@@ -214,7 +239,9 @@ def run_pixel(ctx, out):
                 shade = rt.component_wise("mix", rt.f(1.0), shadeConst, apexW, width=1)
                 outColor = rt.construct(4, rt.binary("*", rt.swizzle(baseColor, "rgb"), shade, 3, "float"), rt.swizzle(baseColor, "a"))
             else:
+                meanColor = rt.construct(4, 0.0)
                 if bestIsTop:
+                    localPos = rt.construct(2, 0.0)
                     if _u_solidFront:
                         outColor = cellAvgColor3x3__vec2(bestCenterPx)
                     else:

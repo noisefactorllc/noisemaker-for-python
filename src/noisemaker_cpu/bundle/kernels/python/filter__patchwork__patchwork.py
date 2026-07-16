@@ -61,6 +61,14 @@ def run_pixel(ctx, out):
         dTop = rt.binary("-", _u_squareSize, rt.swizzle(localPx, "y"), 1, "float")
         dMin = rt.component_wise("min", rt.component_wise("min", dLeft, dRight, width=1), rt.component_wise("min", dBottom, dTop, width=1), width=1)
         bevelMul = rt.f(1.0)
+        neighborIdx = rt.construct(2, 0.0)
+        edgeNormal = rt.construct(2, 0.0)
+        neighborCenter = rt.construct(2, 0.0)
+        hNeighbor = rt.f(0.0)
+        dh = rt.f(0.0)
+        a = rt.f(0.0)
+        lightDir = rt.construct(2, 0.0)
+        signTerm = rt.f(0.0)
         if rt.binary("<", dMin, rimPx):
             neighborIdx = cellIdxF
             edgeNormal = rt.construct(2, 0.0)

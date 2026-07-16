@@ -38,6 +38,7 @@ def run_pixel(ctx, out):
             centered = rt.assign_swizzle(centered, "x", rt.binary("*", rt.swizzle(centered, "x"), aspectRatio, 1, "float"))
         a = rt.component_wise("atan", rt.swizzle(centered, "y"), rt.swizzle(centered, "x"), width=1)
         r = rt.f(0.0)
+        p = rt.construct(2, 0.0)
         if rt.binary("==", _u_shape, rt.i(0)):
             r = rt.length(centered)
         else:
@@ -58,6 +59,8 @@ def run_pixel(ctx, out):
         r = rt.binary("-", r, rt.binary("*", _u_scale, rt.f(0.15), 1, "float"), 1, "float")
         tunnelCoords = smod__vec2_float(rt.construct(2, rt.binary("+", rt.binary("/", rt.f(0.3), r, 1, "float"), rt.binary("*", _u_time, _u_speed, 1, "float"), 1, "float"), rt.binary("+", rt.binary("/", a, g.PI, 1, "float"), rt.binary("*", _u_time, _u_rotation, 1, "float"), 1, "float")), rt.f(1.0))
         color = rt.construct(4, 0.0)
+        dx = rt.construct(2, 0.0)
+        dy = rt.construct(2, 0.0)
         if _u_antialias:
             dx = rt.dFdx(tunnelCoords)
             dy = rt.dFdy(tunnelCoords)
@@ -69,6 +72,8 @@ def run_pixel(ctx, out):
             color = rt.binary("*", color, rt.f(0.25), 4, "float")
         else:
             color = rt.texture(_u_inputTex, tunnelCoords)
+        centerMask = rt.f(0.0)
+        amt = rt.f(0.0)
         if rt.binary("!=", _u_center, rt.f(0.0)):
             centerMask = rt.component_wise("smoothstep", rt.f(0.0), rt.f(0.5), r, width=1)
             amt = rt.binary("/", _u_center, rt.f(100.0), 1, "float")

@@ -32,6 +32,7 @@ def run_pixel(ctx, out):
         uv = rt.binary("/", globalCoord, _u_fullResolution, 2, "float")
         uv = rotate2D__vec2_float_float(uv, rt.binary("/", _u_rotation, rt.f(180.0), 1, "float"), aspectRatio)
         displacement = rt.binary("*", rt.component_wise("sin", rt.binary("+", rt.binary("*", rt.binary("*", rt.swizzle(uv, "x"), _u_scale, 1, "float"), rt.f(10.0), 1, "float"), rt.binary("*", rt.binary("*", _u_time, rt.f(6.28318530718), 1, "float"), rt.construct(1, _u_speed), 1, "float"), 1, "float"), width=1), rt.binary("*", _u_strength, rt.f(0.01), 1, "float"), 1, "float")
+        maxDisplacementUV = rt.f(0.0)
         if rt.component_wise("any", rt.component_wise("notEqual", _u_tileOffset, rt.construct(2, rt.f(0.0)), width=2), width=2):
             maxDisplacementUV = rt.binary("/", rt.f(256.0), rt.swizzle(_u_fullResolution, "y"), 1, "float")
             displacement = rt.component_wise("clamp", displacement, rt.unary("-", maxDisplacementUV), maxDisplacementUV, width=1)
@@ -46,6 +47,9 @@ def run_pixel(ctx, out):
         uv = rotate2D__vec2_float_float(uv, rt.binary("/", rt.unary("-", _u_rotation), rt.f(180.0), 1, "float"), aspectRatio)
         localCoord = rt.binary("/", rt.binary("-", rt.binary("*", uv, _u_fullResolution, 2, "float"), _u_tileOffset, 2, "float"), rt.construct(2, rt.texture_size(_u_inputTex)), 2, "float")
         sampleUV = (rt.component_wise("fract", localCoord, width=2) if rt.component_wise("any", rt.component_wise("notEqual", _u_tileOffset, rt.construct(2, rt.f(0.0)), width=2), width=2) else rt.component_wise("clamp", localCoord, rt.f(0.0), rt.f(1.0), width=2))
+        dx = rt.construct(2, 0.0)
+        dy = rt.construct(2, 0.0)
+        col = rt.construct(4, 0.0)
         if _u_antialias:
             dx = rt.dFdx(sampleUV)
             dy = rt.dFdy(sampleUV)

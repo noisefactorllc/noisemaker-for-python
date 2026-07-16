@@ -76,6 +76,7 @@ def run_pixel(ctx, out):
                 uv = rt.component_wise("mod", uv, rt.f(1.0), width=2)
             else:
                 uv = rt.component_wise("clamp", uv, rt.f(0.0), rt.f(1.0), width=2)
+        col = rt.construct(4, 0.0)
         if _u_antialias:
             dx = rt.dFdx(uv)
             dy = rt.dFdy(uv)

@@ -256,6 +256,10 @@ def run_pixel(ctx, out):
         dims = rt.copy(dims, "float")
         uv = rt.copy(uv, "float")
         size = rt.component_wise("max", _u_scale, rt.f(0.1), width=1)
+        a = rt.f(0.0)
+        b = rt.f(0.0)
+        c = rt.f(0.0)
+        n = rt.f(0.0)
         if rt.binary("==", _u_MODE, rt.i(6)):
             return material_soft__vec2_float_uint_float(globalPixel, motion, salt, size)
         else:
@@ -304,6 +308,11 @@ def run_pixel(ctx, out):
         if rt.binary("<=", a, rt.f(0.0)):
             g.fragColor = base_color
             return
+        globalDims = rt.construct(2, 0.0)
+        globalPixel = rt.construct(2, 0.0)
+        materialMotion = rt.f(0.0)
+        r = rt.f(0.0)
+        material = rt.construct(3, 0.0)
         if rt.binary(">=", _u_MODE, rt.i(5)):
             globalDims = (_u_fullResolution if rt.binary(">", rt.swizzle(_u_fullResolution, "x"), rt.f(0.0)) else dims)
             globalPixel = rt.binary("+", rt.swizzle(ctx.frag_coord, "xy"), _u_tileOffset, 2, "float")
@@ -315,6 +324,7 @@ def run_pixel(ctx, out):
                 material = rt.assign_swizzle(material, "b", shape_material__float(material_value__vec2_vec2_vec2_float_uint(globalPixel, globalDims, ctx.uv, materialMotion, rt.i(48610963))))
             g.fragColor = rt.construct(4, rt.component_wise("clamp", rt.component_wise("mix", rt.swizzle(base_color, "rgb"), material, a, width=3), rt.f(0.0), rt.f(1.0), width=3), rt.swizzle(base_color, "a"))
             return
+        freq_scale = rt.f(0.0)
         if rt.binary("==", _u_MODE, rt.i(4)):
             freq_scale = rt.f(48.0)
         else:
@@ -329,6 +339,7 @@ def run_pixel(ctx, out):
         gx = rt.binary("-", h_right, h_left, 1, "float")
         gy = rt.binary("-", h_down, h_up, 1, "float")
         gradient = rt.component_wise("sqrt", rt.binary("+", rt.binary("*", gx, gx, 1, "float"), rt.binary("*", gy, gy, 1, "float"), 1, "float"), width=1)
+        gain = rt.f(0.0)
         if rt.binary("==", _u_MODE, rt.i(4)):
             gain = rt.binary("*", g.SHADE_GAIN, rt.f(0.5), 1, "float")
         else:

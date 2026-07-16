@@ -12,6 +12,7 @@ def run_pixel(ctx, out):
     def main__void():
         icenter = rt.construct(2, rt.swizzle(ctx.frag_coord, "xy"), base="int")
         dims = rt.texture_size(_u_inputTex)
+        radius = rt.f(0.0)
         if rt.binary("==", _u_MODE, rt.i(0)):
             radius = rt.component_wise("min", _u_size, rt.f(3.0), width=1)
         else:
@@ -112,6 +113,9 @@ def run_pixel(ctx, out):
                                     n3 = rt.binary("+", n3, rt.f(1.0), 1, "float")
         bestC = rt.construct(3, rt.f(0.0))
         bestV = rt.f(1000000000.0)
+        m = rt.construct(3, 0.0)
+        v = rt.construct(3, 0.0)
+        tv = rt.f(0.0)
         if rt.binary(">=", n0, rt.f(1.0)):
             m = rt.binary("/", m0, n0, 3, "float")
             v = rt.binary("-", rt.binary("/", q0, n0, 3, "float"), rt.binary("*", m, m, 3, "float"), 3, "float")

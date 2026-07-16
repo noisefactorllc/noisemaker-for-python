@@ -53,6 +53,7 @@ def run_pixel(ctx, out):
             contrast = rt.binary("-", rt.binary("-", lum__vec3(candidate), baseLum, 1, "float"), edge, 1, "float")
             activation = rt.component_wise("smoothstep", rt.f(0.0), rt.f(0.08), contrast, width=1)
             alongRun = rt.binary("/", distancePx, rt.component_wise("max", reach, rt.f(1.0), width=1), 1, "float")
+            decayRate = rt.f(0.0)
             if rt.binary("==", _u_METHOD, rt.i(1)):
                 decayRate = rt.f(0.8)
             else:
@@ -60,6 +61,7 @@ def run_pixel(ctx, out):
                     decayRate = rt.f(2.0)
                 else:
                     decayRate = rt.f(3.4)
+            taperStart = rt.f(0.0)
             if rt.binary("==", _u_METHOD, rt.i(1)):
                 taperStart = rt.f(0.82)
             else:
@@ -69,11 +71,13 @@ def run_pixel(ctx, out):
             accumColor = rt.binary("+", accumColor, rt.binary("*", candidate, weight, 3, "float"), 3, "float")
             accumWeight = rt.binary("+", accumWeight, weight, 1, "float")
         integrated = rt.binary("/", accumColor, rt.component_wise("max", accumWeight, rt.f(1e-05), width=1), 3, "float")
+        densityRate = rt.f(0.0)
         if rt.binary("==", _u_METHOD, rt.i(1)):
             densityRate = rt.f(0.12)
         else:
             densityRate = rt.f(0.16)
         density = rt.binary("-", rt.f(1.0), rt.component_wise("exp", rt.binary("*", rt.unary("-", accumWeight), densityRate, 1, "float"), width=1), 1, "float")
+        methodGain = rt.f(0.0)
         if rt.binary("==", _u_METHOD, rt.i(1)):
             methodGain = rt.f(1.0)
         else:

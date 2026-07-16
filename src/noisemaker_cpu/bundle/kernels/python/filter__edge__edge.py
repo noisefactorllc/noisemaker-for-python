@@ -43,6 +43,7 @@ def run_pixel(ctx, out):
             return rt.component_wise("max", orig, edge, width=4)
         if rt.binary("==", mode, rt.i(5)):
             return rt.binary("*", orig, edge, 4, "float")
+        result = rt.construct(4, 0.0)
         if rt.binary("==", mode, rt.i(7)):
             result = rt.construct(4, 0.0)
             result = rt.assign_swizzle(result, "r", (rt.binary("*", rt.binary("*", rt.f(2.0), rt.swizzle(orig, "r"), 1, "float"), rt.swizzle(edge, "r"), 1, "float") if rt.binary("<", rt.swizzle(orig, "r"), rt.f(0.5)) else rt.binary("-", rt.f(1.0), rt.binary("*", rt.binary("*", rt.f(2.0), rt.binary("-", rt.f(1.0), rt.swizzle(orig, "r"), 1, "float"), 1, "float"), rt.binary("-", rt.f(1.0), rt.swizzle(edge, "r"), 1, "float"), 1, "float"), 1, "float")))
@@ -61,6 +62,9 @@ def run_pixel(ctx, out):
         southRGB = rt.swizzle(rt.texture(_u_inputTex, rt.binary("*", rt.binary("+", fragCoord, rt.construct(2, rt.f(0.0), rt.unary("-", rt.f(1.0))), 2, "float"), texelSize, 2, "float")), "rgb")
         eastRGB = rt.swizzle(rt.texture(_u_inputTex, rt.binary("*", rt.binary("+", fragCoord, rt.construct(2, rt.f(1.0), rt.f(0.0)), 2, "float"), texelSize, 2, "float")), "rgb")
         westRGB = rt.swizzle(rt.texture(_u_inputTex, rt.binary("*", rt.binary("+", fragCoord, rt.construct(2, rt.unary("-", rt.f(1.0)), rt.f(0.0)), 2, "float"), texelSize, 2, "float")), "rgb")
+        centerL = rt.f(0.0)
+        centerOnSide = False
+        crossing = False
         if useLuma:
             centerL = rt.dot(centerRGB, g.LUMA)
             centerOnSide = (rt.binary(">=", centerL, lvl) if upperSide else rt.binary("<", centerL, lvl))
@@ -81,6 +85,7 @@ def run_pixel(ctx, out):
         useLuma = rt.binary(">", _u_channel, rt.f(0.5))
         conv = rt.construct(3, rt.f(0.0))
         centerWeight = rt.f(0.0)
+        centerSample = rt.construct(3, 0.0)
         if rt.binary("==", kernelType, rt.i(2)):
             conv = contourConv__vec2_vec2_vec3_float_bool_bool(rt.swizzle(ctx.frag_coord, "xy"), texelSize, rt.swizzle(origColor, "rgb"), rt.binary("/", _u_level, rt.f(100.0), 1, "float"), useLuma, rt.binary(">", _u_contourSide, rt.f(0.5)))
         else:
@@ -121,6 +126,9 @@ def run_pixel(ctx, out):
             conv = rt.binary("+", conv, rt.binary("*", centerSample, centerWeight, 3, "float"), 3, "float")
         conv = rt.binary("*", conv, rt.binary("/", _u_amount, rt.f(50.0), 1, "float"), 3, "float")
         conv = rt.component_wise("clamp", conv, rt.f(0.0), rt.f(1.0), width=3)
+        thresh = rt.f(0.0)
+        edge = rt.f(0.0)
+        mask = rt.f(0.0)
         if rt.binary(">", _u_threshold, rt.f(0.0)):
             thresh = rt.binary("/", _u_threshold, rt.f(100.0), 1, "float")
             edge = rt.f(0.0)

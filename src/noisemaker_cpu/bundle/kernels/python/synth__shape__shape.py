@@ -70,6 +70,7 @@ def run_pixel(ctx, out):
         xCombined = rt.binary("+", rt.swizzle(frac, "x"), seedFrac, 1, "float")
         xi = rt.binary("+", rt.binary("+", rt.swizzle(base, "x"), seedInt, 1, "int"), rt.construct(1, rt.component_wise("floor", xCombined, width=1), base="int"), 1, "int")
         yi = rt.swizzle(base, "y")
+        freqInt = 0
         if _u_wrap:
             freqInt = rt.construct(1, rt.binary("+", freq, rt.f(0.5), 1, "float"), base="int")
             if rt.binary(">", freqInt, rt.i(0)):
@@ -264,6 +265,7 @@ def run_pixel(ctx, out):
         return catmullRom4__float_float_float_float_float(y0, y1, y2, y3, rt.component_wise("fract", rt.swizzle(uv, "y"), width=1))
     def value__vec2_float_int_float(st, freq, interp, speed):
         st = rt.copy(st, "float")
+        scaledTime = rt.f(0.0)
         if rt.binary("==", interp, rt.i(3)):
             return catmullRom3x3Value__vec2_float_float(st, freq, speed)
         else:
@@ -317,6 +319,10 @@ def run_pixel(ctx, out):
         return rt.binary("*", rt.binary("*", rt.component_wise("cos", rt.binary("-", rt.binary("*", rt.component_wise("floor", rt.binary("+", rt.f(0.5), rt.binary("/", a, r, 1, "float"), 1, "float"), width=1), r, 1, "float"), a, 1, "float"), width=1), rt.length(st), 1, "float"), blend, 1, "float")
     def offset__vec2_float_int_float_float(st, freq, loopOffset, speed, seedVal):
         st = rt.copy(st, "float")
+        sides = 0
+        idx = 0
+        interp = 0
+        f = rt.f(0.0)
         if rt.binary("==", loopOffset, rt.i(10)):
             return circles__vec2_float(st, freq)
         else:

@@ -178,6 +178,7 @@ def run_pixel(ctx, out):
     def mixInColorSpace__vec3_vec3_float_int(a, b, f, mode):
         a = rt.copy(a, "float")
         b = rt.copy(b, "float")
+        dh = rt.f(0.0)
         if rt.binary("==", mode, rt.i(1)):
             dh = rt.binary("-", rt.swizzle(b, "x"), rt.swizzle(a, "x"), 1, "float")
             if rt.binary(">", dh, rt.f(0.5)):
@@ -208,6 +209,8 @@ def run_pixel(ctx, out):
                 break
             boundary = rt.f(0.0)
             bw = rt.f(0.0)
+            pPrev = rt.f(0.0)
+            pCurr = rt.f(0.0)
             if rt.binary("==", _u_positionMode, rt.i(0)):
                 boundary = rt.binary("/", rt.construct(1, i), rt.construct(1, count), 1, "float")
                 bw = rt.binary("/", rt.binary("*", smoothAmount, rt.f(0.5), 1, "float"), rt.construct(1, count), 1, "float")
@@ -219,8 +222,12 @@ def run_pixel(ctx, out):
             blend = rt.component_wise("smoothstep", rt.binary("-", boundary, bw, 1, "float"), rt.binary("+", boundary, bw, 1, "float"), t, width=1)
             nextColor = rgbToColorSpace__vec3_int(getColor__int(i), mode)
             result = mixInColorSpace__vec3_vec3_float_int(result, nextColor, blend, mode)
+        bw = rt.f(0.0)
         if rt.binary(">", smoothAmount, rt.f(0.0)):
             bw = rt.f(0.0)
+            pLast = rt.f(0.0)
+            pFirst = rt.f(0.0)
+            gap = rt.f(0.0)
             if rt.binary("==", _u_positionMode, rt.i(0)):
                 bw = rt.binary("/", rt.binary("*", smoothAmount, rt.f(0.5), 1, "float"), rt.construct(1, count), 1, "float")
             else:
@@ -228,6 +235,12 @@ def run_pixel(ctx, out):
                 pFirst = getPosition__int_int(rt.i(0), count)
                 gap = rt.binary("+", rt.binary("-", rt.f(1.0), pLast, 1, "float"), pFirst, 1, "float")
                 bw = rt.binary("*", rt.binary("*", smoothAmount, gap, 1, "float"), rt.f(0.25), 1, "float")
+            d = rt.f(0.0)
+            wrapFactor = rt.f(0.0)
+            lastColor = rt.construct(3, 0.0)
+            firstColor = rt.construct(3, 0.0)
+            wrapColor = rt.construct(3, 0.0)
+            wrapMask = rt.f(0.0)
             if rt.binary(">", bw, rt.f(0.0)):
                 d = (rt.binary("-", t, rt.f(1.0), 1, "float") if rt.binary(">", t, rt.f(0.5)) else t)
                 wrapFactor = rt.component_wise("smoothstep", rt.unary("-", bw), bw, d, width=1)

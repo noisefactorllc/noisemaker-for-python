@@ -34,6 +34,8 @@ def run_pixel(ctx, out):
         extent = rt.binary("+", rt.binary("+", rt.binary("*", aspect, rt.component_wise("abs", s, width=1), 1, "float"), rt.component_wise("abs", c, width=1), 1, "float"), _u_softness, 1, "float")
         animPos = _u_position
         flipCycle = False
+        cycle = rt.f(0.0)
+        t = rt.f(0.0)
         if rt.binary(">", _u_speed, rt.f(0.0)):
             cycle = rt.binary("*", rt.binary("*", _u_time, _u_speed, 1, "float"), rt.f(2.0), 1, "float")
             t = rt.component_wise("fract", cycle, width=1)

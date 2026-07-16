@@ -48,6 +48,9 @@ def run_pixel(ctx, out):
                 uv = rt.component_wise("clamp", uv, rt.f(0.0), rt.f(1.0), width=2)
         uv = rotate2D__vec2_float_float(uv, rt.binary("/", rt.unary("-", _u_rotation), rt.f(180.0), 1, "float"), aspectRatio)
         sampleUV = rt.component_wise("fract", rt.binary("/", rt.binary("-", rt.binary("*", uv, _u_fullResolution, 2, "float"), _u_tileOffset, 2, "float"), _u_resolution, 2, "float"), width=2)
+        dx = rt.construct(2, 0.0)
+        dy = rt.construct(2, 0.0)
+        col = rt.construct(4, 0.0)
         if _u_antialias:
             dx = rt.dFdx(sampleUV)
             dy = rt.dFdy(sampleUV)

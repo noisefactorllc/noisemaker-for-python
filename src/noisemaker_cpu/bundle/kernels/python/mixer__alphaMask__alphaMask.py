@@ -20,11 +20,14 @@ def run_pixel(ctx, out):
         st = rt.binary("/", globalCoord, _u_fullResolution, 2, "float")
         color1 = rt.texture(_u_inputTex, rt.binary("/", rt.swizzle(ctx.frag_coord, "xy"), rt.construct(2, rt.texture_size(_u_inputTex)), 2, "float"))
         color2 = rt.texture(_u_tex, rt.binary("/", rt.swizzle(ctx.frag_coord, "xy"), rt.construct(2, rt.texture_size(_u_tex)), 2, "float"))
+        maskVal = rt.f(0.0)
         if _u_maskMode:
             maskVal = rt.dot(rt.swizzle(color2, "rgb"), rt.construct(3, rt.f(0.299), rt.f(0.587), rt.f(0.114)))
             g.fragColor = rt.construct(4, rt.swizzle(color1, "rgb"), rt.binary("*", rt.swizzle(color1, "a"), maskVal, 1, "float"))
             return
         color = rt.construct(4, 0.0)
+        AoverB = rt.construct(4, 0.0)
+        BoverA = rt.construct(4, 0.0)
         if rt.binary("<", _u_mixAmt, rt.f(0.0)):
             AoverB = rt.binary("+", rt.binary("*", color2, rt.binary("-", rt.f(1.0), rt.swizzle(color1, "a"), 1, "float"), 4, "float"), rt.binary("*", color1, rt.swizzle(color1, "a"), 4, "float"), 4, "float")
             color = rt.component_wise("mix", color1, AoverB, map__float_float_float_float_float(_u_mixAmt, rt.unary("-", rt.f(100.0)), rt.f(0.0), rt.f(0.0), rt.f(1.0)), width=4)

@@ -89,6 +89,14 @@ def run_pixel(ctx, out):
         uv = rt.copy(uv, "float")
         c = rt.copy(c, "float")
         globalCoord = rt.copy(globalCoord, "float")
+        blurred = rt.construct(3, 0.0)
+        levels = rt.f(0.0)
+        poster = rt.construct(3, 0.0)
+        gradMag = rt.f(0.0)
+        edgeDarken = rt.f(0.0)
+        darkened = rt.construct(3, 0.0)
+        band = rt.f(0.0)
+        shift = rt.f(0.0)
         if rt.binary("==", _u_MODE, rt.i(0)):
             return c
         else:

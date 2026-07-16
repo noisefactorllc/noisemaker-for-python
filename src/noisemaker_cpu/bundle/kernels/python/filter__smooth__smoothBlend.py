@@ -126,6 +126,11 @@ def run_pixel(ctx, out):
         if (bool(rt.binary("<", edgeH, rt.f(0.5))) and bool(rt.binary("<", edgeV, rt.f(0.5)))):
             return center
         blended = center
+        distLeft = rt.f(0.0)
+        distRight = rt.f(0.0)
+        edgeLength = rt.f(0.0)
+        weight = rt.f(0.0)
+        neighbor = rt.construct(4, 0.0)
         if rt.binary(">", edgeH, rt.f(0.5)):
             distLeft = searchEdge__ivec2_ivec2_ivec2_int(coord, rt.construct(2, rt.unary("-", rt.i(1)), rt.i(0), base="int"), maxC, rt.i(0))
             distRight = searchEdge__ivec2_ivec2_ivec2_int(coord, rt.construct(2, rt.i(1), rt.i(0), base="int"), maxC, rt.i(0))
@@ -133,6 +138,8 @@ def run_pixel(ctx, out):
             weight = rt.component_wise("clamp", rt.binary("/", rt.binary("*", _u_radius, rt.f(0.5), 1, "float"), rt.component_wise("sqrt", edgeLength, width=1), 1, "float"), rt.f(0.0), rt.f(0.5), width=1)
             neighbor = rt.texel_fetch(_u_inputTex, rt.component_wise("clamp", rt.binary("+", coord, rt.construct(2, rt.i(0), rt.i(1), base="int"), 2, "int"), rt.construct(2, rt.i(0), base="int"), maxC, width=2), rt.i(0))
             blended = rt.component_wise("mix", blended, neighbor, weight, width=4)
+        distUp = rt.f(0.0)
+        distDown = rt.f(0.0)
         if rt.binary(">", edgeV, rt.f(0.5)):
             distUp = searchEdge__ivec2_ivec2_ivec2_int(coord, rt.construct(2, rt.i(0), rt.unary("-", rt.i(1)), base="int"), maxC, rt.i(1))
             distDown = searchEdge__ivec2_ivec2_ivec2_int(coord, rt.construct(2, rt.i(0), rt.i(1), base="int"), maxC, rt.i(1))

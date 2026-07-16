@@ -58,6 +58,7 @@ def run_pixel(ctx, out):
         sat = (rt.binary("/", rt.binary("-", maxC, minC, 1, "float"), maxC, 1, "float") if rt.binary(">", maxC, rt.f(0.001)) else rt.f(0.0))
         vibranceGain = rt.binary("+", rt.f(1.0), rt.binary("*", vibrance, rt.binary("-", rt.f(1.0), sat, 1, "float"), 1, "float"), 1, "float")
         skinFactor = rt.f(1.0)
+        hueScore = rt.f(0.0)
         if (bool(rt.binary(">", rt.swizzle(rgb, "r"), rt.swizzle(rgb, "g"))) and bool(rt.binary(">", rt.swizzle(rgb, "g"), rt.swizzle(rgb, "b")))):
             hueScore = rt.binary("/", rt.binary("-", rt.swizzle(rgb, "r"), rt.swizzle(rgb, "b"), 1, "float"), rt.binary("+", rt.binary("-", maxC, minC, 1, "float"), rt.f(0.001), 1, "float"), 1, "float")
             skinFactor = rt.binary("+", rt.binary("*", rt.component_wise("smoothstep", rt.f(0.3), rt.f(0.7), sat, width=1), rt.f(0.5), 1, "float"), rt.f(0.5), 1, "float")

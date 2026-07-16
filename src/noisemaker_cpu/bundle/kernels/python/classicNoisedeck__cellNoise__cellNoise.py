@@ -245,6 +245,7 @@ def run_pixel(ctx, out):
         texLuminosity = rt.f(0.0)
         texFactor = rt.binary("*", _u_texIntensity, rt.f(0.01), 1, "float")
         texCoord = rt.binary("/", globalCoord, _u_fullResolution, 2, "float")
+        texRGB = rt.construct(3, 0.0)
         if rt.binary(">", _u_texInfluence, rt.i(0)):
             texRGB = rt.swizzle(rt.texture(_u_tex, rt.binary("/", rt.swizzle(ctx.frag_coord, "xy"), rt.construct(2, rt.texture_size(_u_tex)), 2, "float")), "rgb")
             texLuminosity = luminance__vec3(texRGB)

@@ -66,6 +66,11 @@ def run_pixel(ctx, out):
         timePhase = rt.binary("*", _u_time, _u_speed, 1, "float")
         t = rt.binary("+", spatialPhase, timePhase, 1, "float")
         val = rt.f(0.0)
+        scrollOffset = rt.f(0.0)
+        scrolledPos = rt.f(0.0)
+        timeNoise = rt.f(0.0)
+        valueNoise = rt.f(0.0)
+        scaledTime = rt.f(0.0)
         if rt.binary("==", _u_oscType, rt.i(0)):
             val = oscSine__float(t)
         else:

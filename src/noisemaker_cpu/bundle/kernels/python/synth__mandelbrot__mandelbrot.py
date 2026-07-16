@@ -207,6 +207,8 @@ def run_pixel(ctx, out):
         stripeAcc = stripe
         trapMin = trap
         mag2 = rt.dot(z_final, z_final)
+        log_zn = rt.f(0.0)
+        nu = rt.f(0.0)
         if (bool(rt.binary("<", i, rt.construct(1, maxIter))) and bool(rt.binary(">", mag2, rt.f(1.0)))):
             log_zn = rt.binary("*", rt.component_wise("log", mag2, width=1), rt.f(0.5), 1, "float")
             nu = rt.binary("/", rt.component_wise("log", rt.binary("/", log_zn, g.LOG2, 1, "float"), width=1), g.LOG2, 1, "float")
@@ -271,6 +273,7 @@ def run_pixel(ctx, out):
     def getEffectiveZoom__int(poiIndex):
         maxDepth = (getPoiMaxZoom__int(poiIndex) if rt.binary(">", poiIndex, rt.i(0)) else rt.f(14.0))
         effDepth = rt.component_wise("min", _u_zoomDepth, maxDepth, width=1)
+        zoomPhase = rt.f(0.0)
         if rt.binary(">", _u_zoomSpeed, rt.f(0.0)):
             zoomPhase = rt.binary("*", rt.f(0.5), rt.binary("-", rt.f(1.0), rt.component_wise("cos", rt.binary("*", rt.binary("*", _u_time, _u_zoomSpeed, 1, "float"), g.TAU, 1, "float"), width=1), 1, "float"), 1, "float")
             return rt.component_wise("pow", rt.f(10.0), rt.binary("*", effDepth, zoomPhase, 1, "float"), width=1)
@@ -284,6 +287,14 @@ def run_pixel(ctx, out):
         cY_df = rt.construct(2, 0.0)
         _retc, cX_df, cY_df = getPOI__int_vec2_vec2(_u_poi, cX_df, cY_df)
         value = rt.f(0.0)
+        smoothI = rt.f(0.0)
+        rawI = rt.f(0.0)
+        z_final = rt.construct(2, 0.0)
+        dz_final = rt.construct(2, 0.0)
+        stripeAcc = rt.f(0.0)
+        trapMin = rt.f(0.0)
+        re_df = rt.construct(2, 0.0)
+        im_df = rt.construct(2, 0.0)
         if rt.binary("==", _u_outputMode, rt.i(4)):
             value = outputNormalMap__vec2_vec2_vec2_float_float_int_float(globalCoord, cX_df, cY_df, effZoom, rot, maxIter, _u_lightAngle)
         else:

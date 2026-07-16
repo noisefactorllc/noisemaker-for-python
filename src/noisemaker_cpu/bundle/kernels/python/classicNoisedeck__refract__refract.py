@@ -168,6 +168,7 @@ def run_pixel(ctx, out):
         inputColor = rt.texture(_u_inputTex, localUV)
         brightness = rt.binary("+", desaturate__vec3(rt.swizzle(inputColor, "rgb")), rt.binary("/", _u_direction, rt.f(360.0), 1, "float"), 1, "float")
         displacement = rt.binary("*", _u_amount, rt.f(0.01), 1, "float")
+        maxDisplacement = rt.f(0.0)
         if (bool(rt.binary(">", rt.swizzle(_u_fullResolution, "x"), rt.swizzle(_u_resolution, "x"))) or bool(rt.binary(">", rt.swizzle(_u_fullResolution, "y"), rt.swizzle(_u_resolution, "y")))):
             maxDisplacement = rt.binary("/", rt.f(256.0), rt.component_wise("max", rt.swizzle(_u_fullResolution, "x"), rt.swizzle(_u_fullResolution, "y"), width=1), 1, "float")
             displacement = rt.component_wise("min", displacement, maxDisplacement, width=1)

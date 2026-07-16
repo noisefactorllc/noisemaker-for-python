@@ -253,6 +253,7 @@ def run_pixel(ctx, out):
         xCombined = rt.binary("+", rt.swizzle(frac, "x"), seedFrac, 1, "float")
         xi = rt.binary("+", rt.binary("+", rt.swizzle(base, "x"), seedInt, 1, "int"), rt.construct(1, rt.component_wise("floor", xCombined, width=1), base="int"), 1, "int")
         yi = rt.swizzle(base, "y")
+        freqInt = 0
         if _u_wrap:
             freqInt = rt.construct(1, rt.binary("+", freq, rt.f(0.5), 1, "float"), base="int")
             if rt.binary(">", freqInt, rt.i(0)):
@@ -311,6 +312,7 @@ def run_pixel(ctx, out):
         st2 = rt.binary("-", st, rt.construct(2, rt.binary("/", rt.binary("*", rt.f(0.5), rt.swizzle(_u_fullResolution, "x"), 1, "float"), rt.swizzle(_u_fullResolution, "y"), 1, "float"), rt.f(0.5)), 2, "float")
         scaledTime = rt.f(1.0)
         d = rt.f(0.0)
+        x1y1 = rt.f(0.0)
         if rt.binary("==", interp, rt.i(5)):
             d = quadratic3x3Value__vec2_float(st, freq)
         else:
@@ -323,6 +325,14 @@ def run_pixel(ctx, out):
                 d = simplexValue__vec2_float_float_float(st, freq, rt.construct(1, _u_seed), scaledTime)
             else:
                 x1y1 = constant__vec2_float(st, freq)
+                ndX = rt.f(0.0)
+                ndY = rt.f(0.0)
+                x1y2 = rt.f(0.0)
+                x2y1 = rt.f(0.0)
+                x2y2 = rt.f(0.0)
+                uv = rt.construct(2, 0.0)
+                a = rt.f(0.0)
+                b = rt.f(0.0)
                 if rt.binary("==", interp, rt.i(0)):
                     d = x1y1
                 else:
@@ -354,6 +364,9 @@ def run_pixel(ctx, out):
         st = rt.copy(st, "float")
         st = rt.assign_swizzle(st, "x", rt.binary("*", rt.swizzle(st, "x"), rt.binary("/", rt.swizzle(_u_fullResolution, "x"), rt.swizzle(_u_fullResolution, "y"), 1, "float"), 1, "float"))
         d = rt.f(0.0)
+        sides = 0
+        idx = 0
+        interp = 0
         if rt.binary("==", _u_LOOP_OFFSET, rt.i(10)):
             d = circles__vec2_float(st, freq)
         else:

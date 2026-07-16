@@ -72,12 +72,19 @@ def run_pixel(ctx, out):
         bh = lineHash__float_float(rt.binary("+", row, rt.f(400.0), 1, "float"), _rt)
         levels = rt.component_wise("mix", rt.f(256.0), rt.f(2.0), rt.binary("*", bitAmt, bitAmt, 1, "float"), width=1)
         color = rt.binary("/", rt.component_wise("floor", rt.binary("+", rt.binary("*", color, levels, 3, "float"), rt.f(0.5), 3, "float"), width=3), levels, 3, "float")
+        xorStrength = rt.f(0.0)
+        px = rt.f(0.0)
+        xorHash = rt.construct(3, 0.0)
+        mask = rt.construct(3, 0.0)
         if rt.binary(">", bitAmt, rt.f(0.3)):
             xorStrength = rt.binary("/", rt.binary("-", bitAmt, rt.f(0.3), 1, "float"), rt.f(0.7), 1, "float")
             px = rt.component_wise("floor", rt.binary("*", rt.swizzle(uv, "x"), resX, 1, "float"), width=1)
             xorHash = prng__vec3(rt.construct(3, px, row, rt.binary("+", rt.binary("+", _u_seed, _rt, 1, "float"), rt.f(500.0), 1, "float")))
             mask = rt.component_wise("step", rt.construct(3, rt.binary("-", rt.f(1.0), rt.binary("*", xorStrength, rt.f(0.5), 1, "float"), 1, "float")), xorHash, width=3)
             color = rt.component_wise("mix", color, rt.binary("-", rt.f(1.0), color, 3, "float"), mask, width=3)
+        shiftStr = rt.f(0.0)
+        bitShift = rt.f(0.0)
+        scale = rt.f(0.0)
         if rt.binary(">", bitAmt, rt.f(0.6)):
             shiftStr = rt.binary("/", rt.binary("-", bitAmt, rt.f(0.6), 1, "float"), rt.f(0.4), 1, "float")
             bitShift = rt.binary("+", rt.component_wise("floor", rt.binary("*", rt.swizzle(bh, "x"), rt.f(4.0), 1, "float"), width=1), rt.f(1.0), 1, "float")
@@ -92,6 +99,7 @@ def run_pixel(ctx, out):
         gravity = rt.binary("*", rt.binary("-", rt.f(1.0), rt.swizzle(uv, "y"), 1, "float"), rt.binary("-", rt.f(1.0), rt.swizzle(uv, "y"), 1, "float"), 1, "float")
         dripAmt = rt.binary("*", rt.binary("*", rt.binary("*", rt.swizzle(dripHash, "x"), meltAmt, 1, "float"), gravity, 1, "float"), rt.f(0.4), 1, "float")
         dripProb = rt.component_wise("mix", rt.f(0.9), rt.f(0.2), meltAmt, width=1)
+        wobble = rt.f(0.0)
         if rt.binary(">", rt.swizzle(dripHash, "y"), dripProb):
             wobble = rt.binary("*", rt.binary("*", rt.component_wise("sin", rt.binary("+", rt.binary("+", rt.binary("*", rt.swizzle(uv, "y"), rt.f(20.0), 1, "float"), rt.binary("*", rt.swizzle(dripHash, "z"), rt.f(6.28318530718), 1, "float"), 1, "float"), t, 1, "float"), width=1), meltAmt, 1, "float"), rt.f(0.02), 1, "float")
             uv = rt.assign_swizzle(uv, "y", rt.component_wise("clamp", rt.binary("+", rt.swizzle(uv, "y"), dripAmt, 1, "float"), rt.f(0.0), rt.f(1.0), width=1))
@@ -105,6 +113,8 @@ def run_pixel(ctx, out):
         pixTime = rt.component_wise("floor", rt.binary("*", rt.binary("+", t, rt.swizzle(phaseHash, "x"), 1, "float"), rt.f(8.0), 1, "float"), width=1)
         pixHash = prng__vec3(rt.construct(3, scaledCoord, rt.binary("+", pixTime, _u_seed, 1, "float")))
         threshold = rt.component_wise("mix", rt.f(0.98), rt.f(0.1), rt.binary("*", scatterAmt, scatterAmt, 1, "float"), width=1)
+        dirHash = rt.construct(3, 0.0)
+        dist = rt.f(0.0)
         if rt.binary(">", rt.swizzle(pixHash, "x"), threshold):
             dirHash = prng__vec3(rt.construct(3, rt.binary("+", scaledCoord, rt.f(1000.0), 2, "float"), rt.binary("+", pixTime, _u_seed, 1, "float")))
             dist = rt.binary("*", rt.binary("*", scatterAmt, rt.f(0.15), 1, "float"), rt.binary("+", rt.f(0.5), rt.binary("*", rt.swizzle(pixHash, "y"), rt.f(0.5), 1, "float"), 1, "float"), 1, "float")
@@ -134,6 +144,8 @@ def run_pixel(ctx, out):
         scatterAmt = rt.binary("/", _u_scatter, rt.f(100.0), 1, "float")
         if rt.binary(">", scatterAmt, rt.f(0.0)):
             sampleUv = scatterDisplace__vec2_float_float_float_vec2(sampleUv, scatterAmt, t, rs, _u_tileOffset)
+        sortAmt = rt.f(0.0)
+        shiftAmt = rt.f(0.0)
         if isCorrupt:
             sortAmt = rt.binary("/", _u_sort, rt.f(100.0), 1, "float")
             shiftAmt = rt.binary("/", _u_shift, rt.f(100.0), 1, "float")
@@ -142,6 +154,12 @@ def run_pixel(ctx, out):
             if rt.binary(">", shiftAmt, rt.f(0.0)):
                 sampleUv = byteShift__vec2_float_float_float_float(sampleUv, row, shiftAmt, _rt, resX)
         color = rt.swizzle(rt.texture(_u_inputTex, sampleUv), "rgb")
+        chAmt = rt.f(0.0)
+        chHash = rt.construct(3, 0.0)
+        rShift = rt.f(0.0)
+        bShift = rt.f(0.0)
+        rUv = rt.construct(2, 0.0)
+        bUv = rt.construct(2, 0.0)
         if (bool(rt.binary(">", _u_channelShift, rt.f(0.0))) and bool(isCorrupt)):
             chAmt = rt.binary("/", _u_channelShift, rt.f(100.0), 1, "float")
             chHash = lineHash__float_float(rt.binary("+", row, rt.f(300.0), 1, "float"), _rt)

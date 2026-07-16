@@ -110,6 +110,7 @@ def run_pixel(ctx, out):
                 edgeDist = rt.component_wise("min", edgeDist, d, width=1)
         onEdge = (rt.component_wise("step", edgeDist, _u_edgeWidth, width=1) if rt.binary(">", _u_edgeWidth, rt.f(0.0)) else rt.f(0.0))
         mask = rt.f(0.0)
+        cellChoice = rt.f(0.0)
         if rt.binary("==", _u_mode, rt.i(0)):
             mask = onEdge
         else:

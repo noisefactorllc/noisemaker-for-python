@@ -60,6 +60,8 @@ def run_pixel(ctx, out):
                 sampleUV = rt.binary("+", maskUV, offset, 2, "float")
                 localUV = rt.binary("/", rt.binary("-", rt.binary("*", sampleUV, _u_fullResolution, 2, "float"), _u_tileOffset, 2, "float"), rt.construct(2, rt.texture_size(_u_inputTex)), 2, "float")
                 thresholded = rt.f(0.0)
+                wrappedUV = rt.construct(2, 0.0)
+                maskSample = rt.construct(4, 0.0)
                 if rt.binary("==", _u_wrap, rt.i(0)):
                     if (bool((bool((bool(rt.binary(">=", rt.swizzle(localUV, "x"), rt.f(0.0))) and bool(rt.binary("<=", rt.swizzle(localUV, "x"), rt.f(1.0))))) and bool(rt.binary(">=", rt.swizzle(localUV, "y"), rt.f(0.0))))) and bool(rt.binary("<=", rt.swizzle(localUV, "y"), rt.f(1.0)))):
                         maskSample = (rt.texture(_u_inputTex, localUV) if rt.binary("==", _u_maskSource, rt.i(0)) else rt.texture(_u_tex, localUV))

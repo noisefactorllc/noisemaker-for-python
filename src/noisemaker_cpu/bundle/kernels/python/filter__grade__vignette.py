@@ -66,6 +66,8 @@ def run_pixel(ctx, out):
         if rt.binary("<", rt.component_wise("abs", amount, width=1), rt.f(0.001)):
             return rgb
         darken = rt.binary("-", rt.f(1.0), rt.binary("*", rt.binary("-", rt.f(1.0), vignetteMask, 1, "float"), rt.component_wise("abs", amount, width=1), 1, "float"), 1, "float")
+        luma = rt.f(0.0)
+        protection = rt.f(0.0)
         if rt.binary(">", highlightProtect, rt.f(0.0)):
             luma = rt.dot(rgb, g.LUMA_WEIGHTS)
             protection = rt.binary("*", rt.component_wise("smoothstep", rt.f(0.5), rt.f(1.0), luma, width=1), highlightProtect, 1, "float")

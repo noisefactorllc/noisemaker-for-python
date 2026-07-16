@@ -22,6 +22,7 @@ def run_pixel(ctx, out):
         delta = rt.binary("-", max_c, min_c, 1, "float")
         hue = rt.f(0.0)
         if rt.binary("!=", delta, rt.f(0.0)):
+            raw = rt.f(0.0)
             if rt.binary("==", max_c, r):
                 raw = rt.binary("/", rt.binary("-", _g, b, 1, "float"), delta, 1, "float")
                 raw = rt.binary("-", raw, rt.binary("*", rt.component_wise("floor", rt.binary("/", raw, rt.f(6.0), 1, "float"), width=1), rt.f(6.0), 1, "float"), 1, "float")
@@ -56,6 +57,8 @@ def run_pixel(ctx, out):
         base_rgb = rt.component_wise("clamp", rt.swizzle(base, "rgb"), rt.f(0.0), rt.f(1.0), width=3)
         m = rt.construct(1, _u_mode, base="int")
         tinted = rt.construct(3, 0.0)
+        tintHue = rt.f(0.0)
+        base_hsv = rt.construct(3, 0.0)
         if rt.binary("==", m, rt.i(1)):
             tinted = rt.binary("*", base_rgb, _u_color, 3, "float")
         else:

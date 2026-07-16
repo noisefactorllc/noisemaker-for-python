@@ -20,6 +20,7 @@ def run_pixel(ctx, out):
         threshLow = rt.binary("-", _u_threshold, knee, 1, "float")
         threshHigh = rt.binary("+", _u_threshold, knee, 1, "float")
         bloomFactor = rt.f(0.0)
+        t = rt.f(0.0)
         if rt.binary("<=", luma, threshLow):
             bloomFactor = rt.f(0.0)
         else:

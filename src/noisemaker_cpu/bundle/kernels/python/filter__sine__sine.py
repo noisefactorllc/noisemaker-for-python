@@ -19,6 +19,8 @@ def run_pixel(ctx, out):
         uv = rt.binary("/", rt.swizzle(ctx.frag_coord, "xy"), rt.construct(2, texSize), 2, "float")
         color = rt.texture(_u_inputTex, uv)
         use_rgb = rt.binary(">", _u_colorMode, rt.f(0.5))
+        lum = rt.f(0.0)
+        result = rt.f(0.0)
         if use_rgb:
             color = rt.assign_swizzle(color, "r", normalized_sine__float(rt.binary("*", rt.swizzle(color, "r"), _u_amount, 1, "float")))
             color = rt.assign_swizzle(color, "g", normalized_sine__float(rt.binary("*", rt.swizzle(color, "g"), _u_amount, 1, "float")))

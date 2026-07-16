@@ -33,6 +33,8 @@ def run_pixel(ctx, out):
         v = (rt.normalize(_u_direction) if rt.binary(">", rt.length(_u_direction), rt.f(0.0)) else rt.construct(3, rt.f(0.0), rt.f(0.0), rt.f(1.0)))
         shift = rt.binary("*", rt.swizzle(v, "xy"), g.SHIFT_SCALE, 2, "float")
         isTileRendering = rt.binary(">", rt.length(_u_tileOffset), rt.f(0.0))
+        maxDispPixels = rt.f(0.0)
+        dispPixels = rt.f(0.0)
         if isTileRendering:
             maxDispPixels = rt.f(256.0)
             dispPixels = rt.length(rt.binary("*", shift, _u_fullResolution, 2, "float"))
@@ -41,6 +43,7 @@ def run_pixel(ctx, out):
         t = rt.f(1.0)
         rayUV = rt.binary("+", uv, rt.binary("*", shift, rt.binary("-", rt.f(1.0), _u_pivot, 1, "float"), 2, "float"), 2, "float")
         f = rt.binary("-", t, getHeight__vec2(rayUV), 1, "float")
+        stepSize = rt.f(0.0)
         if rt.binary(">", f, rt.f(0.0)):
             stepSize = rt.binary("/", rt.f(1.0), rt.construct(1, g.MARCH_STEPS), 1, "float")
             i = rt.i(1)
@@ -56,6 +59,7 @@ def run_pixel(ctx, out):
                 t = rt.binary("-", rt.f(1.0), rt.binary("*", rt.construct(1, i), stepSize, 1, "float"), 1, "float")
                 rayUV = rt.binary("+", uv, rt.binary("*", shift, rt.binary("-", t, _u_pivot, 1, "float"), 2, "float"), 2, "float")
                 f = rt.binary("-", t, getHeight__vec2(rayUV), 1, "float")
+                w = rt.f(0.0)
                 if rt.binary("<=", f, rt.f(0.0)):
                     w = rt.binary("/", f, rt.binary("-", f, prevF, 1, "float"), 1, "float")
                     rayUV = rt.component_wise("mix", rayUV, prevUV, w, width=2)

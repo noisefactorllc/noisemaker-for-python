@@ -281,6 +281,7 @@ def run_pixel(ctx, out):
                 d = rt.binary("+", d, _u_time, 1, "float")
         d = rt.binary("+", rt.binary("*", d, _u_repeatPalette, 1, "float"), rt.binary("*", _u_rotatePalette, rt.f(0.01), 1, "float"), 1, "float")
         d = rt.component_wise("fract", d, width=1)
+        lev = rt.f(0.0)
         if rt.binary(">", _u_levels, rt.f(0.0)):
             lev = rt.binary("+", _u_levels, rt.f(1.0), 1, "float")
             d = rt.binary("/", rt.component_wise("floor", rt.binary("*", d, lev, 1, "float"), width=1), lev, 1, "float")

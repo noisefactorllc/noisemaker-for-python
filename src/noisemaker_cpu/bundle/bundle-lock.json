@@ -211,6 +211,7 @@
     "classicNoisedeck/fractal:fractal": "d041e8b1fc4e9aff5b674fff5a42db40510b0af4412c23e2f5f4224dcfdf91db",
     "classicNoisedeck/noise:noise": "d6cec1c6b4f7debb497911e64b94424e4d55b17b784b302075d413ad2db23e58",
     "classicNoisedeck/shapeMixer:shapeMixer": "803d99590ec1c3ec2a04757419bb633fdb3a63851177e1733fba3a0a7a575444",
-    "classicNoisedeck/shapes:shapes": "8ed7c5eddd75595b09b89934a872cf60c6fa4390de20ea2a767bb0dc22260ab1"
+    "classicNoisedeck/shapes:shapes": "8ed7c5eddd75595b09b89934a872cf60c6fa4390de20ea2a767bb0dc22260ab1",
+    "filter/lowPoly:lowPoly": "e2a31e80ff3a3d1d10bbce91bfa43d03a85832ff9b28325bd32b3ad06fa8b926"
   }
 }

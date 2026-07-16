@@ -32,6 +32,10 @@ def run_pixel(ctx, out):
         result = rt.component_wise("mix", result, pal[2], b2, width=3)
         result = rt.component_wise("mix", result, pal[3], b3, width=3)
         result = rt.component_wise("mix", result, pal[4], b4, width=3)
+        d = rt.f(0.0)
+        wrapFactor = rt.f(0.0)
+        wrapColor = rt.construct(3, 0.0)
+        wrapMask = rt.f(0.0)
         if rt.binary(">", blendWidth, rt.f(0.0)):
             d = (rt.binary("-", lum, rt.f(1.0), 1, "float") if rt.binary(">", lum, rt.f(0.5)) else lum)
             wrapFactor = rt.component_wise("smoothstep", rt.unary("-", blendWidth), blendWidth, d, width=1)

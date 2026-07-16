@@ -142,6 +142,7 @@ def run_pixel(ctx, out):
             st = rotate2D__vec2_float(st, rt.binary("*", rt.binary("*", _u_time, rt.f(6.28318530718), 1, "float"), rt.component_wise("floor", _u_speed, width=1), 1, "float"))
         st = rt.assign_swizzle(st, "x", rt.binary("+", rt.swizzle(st, "x"), rt.binary("*", rt.swizzle(st, "y"), _u_skew, 1, "float"), 1, "float"))
         p = rt.binary("*", st, rt.binary("-", rt.f(21.0), _u_scale, 1, "float"), 2, "float")
+        panPeriod = rt.f(0.0)
         if (bool((not (centered))) and bool(rt.binary("==", _u_animation, rt.i(1)))):
             panPeriod = (rt.f(2.0) if rt.binary("==", _u_patternType, rt.i(0)) else rt.f(1.0))
             p = rt.assign_swizzle(p, "x", rt.binary("+", rt.swizzle(p, "x"), rt.binary("*", rt.binary("*", _u_time, rt.unary("-", rt.component_wise("floor", _u_speed, width=1)), 1, "float"), panPeriod, 1, "float"), 1, "float"))

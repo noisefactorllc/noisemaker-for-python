@@ -84,6 +84,14 @@ def run_pixel(ctx, out):
     def value__vec2_float_float_float(st, xFreq, yFreq, s):
         st = rt.copy(st, "float")
         x1y1 = constant__vec2_float_float_float(st, xFreq, yFreq, s)
+        ndX = rt.f(0.0)
+        ndY = rt.f(0.0)
+        x1y2 = rt.f(0.0)
+        x2y1 = rt.f(0.0)
+        x2y2 = rt.f(0.0)
+        uv = rt.construct(2, 0.0)
+        a = rt.f(0.0)
+        b = rt.f(0.0)
         if rt.binary("==", _u_INTERP, rt.i(0)):
             return x1y1
         else:

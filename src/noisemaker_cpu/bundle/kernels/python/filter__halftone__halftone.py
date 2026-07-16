@@ -95,6 +95,22 @@ def run_pixel(ctx, out):
         uv = rt.binary("/", rt.swizzle(ctx.frag_coord, "xy"), _u_resolution, 2, "float")
         texel = rt.binary("/", rt.f(1.0), _u_resolution, 2, "float")
         alpha = rt.swizzle(rt.texture(_u_inputTex, uv), "a")
+        ruvC = rt.construct(2, 0.0)
+        ruvM = rt.construct(2, 0.0)
+        ruvY = rt.construct(2, 0.0)
+        ruvK = rt.construct(2, 0.0)
+        valC = rt.f(0.0)
+        valM = rt.f(0.0)
+        valY = rt.f(0.0)
+        valK = rt.f(0.0)
+        inkC = rt.f(0.0)
+        inkM = rt.f(0.0)
+        inkY = rt.f(0.0)
+        inkK = rt.f(0.0)
+        screened = rt.construct(3, 0.0)
+        value = rt.f(0.0)
+        d = rt.f(0.0)
+        dotOffset = rt.construct(2, 0.0)
         if rt.binary("==", _u_MODE, rt.i(0)):
             ruvC = rt.binary("/", rotate2D__vec2_float(globalCoord, _u_cyanAngle), _u_frequency, 2, "float")
             ruvM = rt.binary("/", rotate2D__vec2_float(globalCoord, _u_magentaAngle), _u_frequency, 2, "float")
@@ -115,6 +131,10 @@ def run_pixel(ctx, out):
             value = rt.f(0.0)
             d = rt.f(0.0)
             dotOffset = rt.construct(2, rt.f(0.0))
+            center = rt.construct(2, 0.0)
+            rd = rt.f(0.0)
+            ruv = rt.construct(2, 0.0)
+            off = rt.construct(2, 0.0)
             if rt.binary("==", _u_PATTERN, rt.i(2)):
                 center = rt.binary("*", _u_fullResolution, rt.f(0.5), 2, "float")
                 value = rt.binary("-", rt.f(1.0), lum__vec3(boxBlur3__vec2_vec2(uv, texel)), 1, "float")
@@ -129,6 +149,7 @@ def run_pixel(ctx, out):
                     d = rt.component_wise("abs", rt.swizzle(off, "y"), width=1)
                 else:
                     d = rt.length(off)
+            ink = rt.f(0.0)
             if rt.binary("==", _u_PATTERN, rt.i(0)):
                 ink = roundDotCoverage__vec2_float_float(dotOffset, value, _u_sharpness)
             else:

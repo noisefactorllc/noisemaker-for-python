@@ -89,6 +89,8 @@ def run_pixel(ctx, out):
                     if not (lessRecord__uvec2_uint_uvec2_uint(pivotMajor, pivotBlue, majorRecords[int(scanRight)], blueRecords[int(scanRight)])):
                         break
                     scanRight = rt.binary("-", scanRight, rt.i(1), 1, "int")
+                temporaryMajor = rt.construct(2, 0.0, base="uint")
+                temporaryBlue = 0
                 if rt.binary("<=", scanLeft, scanRight):
                     temporaryMajor = majorRecords[int(scanLeft)]
                     majorRecords[int(scanLeft)] = majorRecords[int(scanRight)]

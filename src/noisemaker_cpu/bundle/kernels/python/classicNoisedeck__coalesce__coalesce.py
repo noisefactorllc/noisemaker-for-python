@@ -209,6 +209,18 @@ def run_pixel(ctx, out):
         globalCoord = rt.binary("+", rt.swizzle(ctx.frag_coord, "xy"), _u_tileOffset, 2, "float")
         color = rt.construct(4, rt.f(0.0), rt.f(0.0), rt.f(1.0), rt.f(1.0))
         st = rt.binary("/", globalCoord, _u_fullResolution, 2, "float")
+        ra = rt.f(0.0)
+        rb = rt.f(0.0)
+        leftColor = rt.construct(4, 0.0)
+        rightColor = rt.construct(4, 0.0)
+        leftUV = rt.construct(2, 0.0)
+        rightLen = rt.f(0.0)
+        leftLocalUV = rt.construct(2, 0.0)
+        color1 = rt.construct(4, 0.0)
+        rightUV = rt.construct(2, 0.0)
+        leftLen = rt.f(0.0)
+        rightLocalUV = rt.construct(2, 0.0)
+        color2 = rt.construct(4, 0.0)
         if rt.binary("==", _u_blendMode, rt.i(100)):
             color = cloak__vec2(st)
         else:

@@ -40,9 +40,12 @@ def run_pixel(ctx, out):
             hashCoord = rt.binary("*", rt.component_wise("floor", rt.binary("/", globalCoord, rt.f(3.0), 2, "float"), width=2), rt.f(3.0), 2, "float")
         rnd = rt.binary("-", hash22__vec2(rt.binary("+", hashCoord, rt.binary("*", rt.construct(1, _u_seed), rt.f(101.7), 1, "float"), 2, "float")), rt.f(0.5), 2, "float")
         offset = rt.binary("*", rt.binary("*", rnd, rt.f(2.0), 2, "float"), _u_radius, 2, "float")
+        grad = rt.construct(2, 0.0)
+        gradLen = rt.f(0.0)
         if rt.binary("==", _u_MODE, rt.i(3)):
             grad = lumGradient__vec2(uv)
             gradLen = rt.length(grad)
+            perp = rt.construct(2, 0.0)
             if rt.binary(">", gradLen, rt.f(1e-05)):
                 perp = rt.binary("/", rt.construct(2, rt.unary("-", rt.swizzle(grad, "y")), rt.swizzle(grad, "x")), gradLen, 2, "float")
                 offset = rt.binary("*", rt.dot(offset, perp), perp, 2, "float")

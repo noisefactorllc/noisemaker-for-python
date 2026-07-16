@@ -51,6 +51,9 @@ def run_pixel(ctx, out):
         working_rgb = pow_vec3__vec3_float(rt.component_wise("clamp", working_rgb, rt.construct(3, rt.f(0.0)), rt.construct(3, rt.f(1.0)), width=3), gamma_value)
         scaled = rt.binary("+", rt.binary("*", working_rgb, level_factor, 3, "float"), rt.construct(3, half_step), 3, "float")
         quantized_rgb = rt.construct(3, 0.0)
+        f = rt.construct(3, 0.0)
+        fw = rt.construct(3, 0.0)
+        blend = rt.construct(3, 0.0)
         if _u_antialias:
             f = rt.component_wise("fract", scaled, width=3)
             fw = rt.fwidth(scaled)

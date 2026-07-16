@@ -63,6 +63,8 @@ def run_pixel(ctx, out):
         xCombined = rt.binary("+", rt.swizzle(frac, "x"), sFrac, 1, "float")
         xi = rt.binary("+", rt.swizzle(base, "x"), rt.construct(1, rt.component_wise("floor", xCombined, width=1), base="int"), 1, "int")
         yi = rt.swizzle(base, "y")
+        freqX = 0
+        freqY = 0
         if _u_wrap:
             freqX = rt.construct(1, rt.binary("+", rt.swizzle(freq, "x"), rt.f(0.5), 1, "float"), base="int")
             freqY = rt.construct(1, rt.binary("+", rt.swizzle(freq, "y"), rt.f(0.5), 1, "float"), base="int")
@@ -259,6 +261,14 @@ def run_pixel(ctx, out):
     def value__vec2_vec2_float_float(st, freq, s, blend):
         st = rt.copy(st, "float")
         freq = rt.copy(freq, "float")
+        lattice = rt.construct(2, 0.0)
+        x1y1 = rt.f(0.0)
+        x2y1 = rt.f(0.0)
+        x1y2 = rt.f(0.0)
+        x2y2 = rt.f(0.0)
+        frac = rt.construct(2, 0.0)
+        a = rt.f(0.0)
+        b = rt.f(0.0)
         if rt.binary("==", _u_NOISE_TYPE, rt.i(3)):
             return catmullRom3x3ValueNoise__vec2_vec2_float_float(st, freq, s, blend)
         else:
@@ -423,6 +433,7 @@ def run_pixel(ctx, out):
                 freq = rt.assign_swizzle(freq, "y", map__float_float_float_float_float(_u_scaleY, rt.f(1.0), rt.f(100.0), rt.f(20.0), rt.f(3.0)))
                 lf = rt.construct(2, map__float_float_float_float_float(_u_loopScale, rt.f(1.0), rt.f(100.0), rt.f(12.0), rt.f(3.0)))
         if rt.binary("==", _u_LOOP_OFFSET, rt.i(300)):
+            base = rt.f(0.0)
             if rt.binary("==", _u_NOISE_TYPE, rt.i(11)):
                 base = map__float_float_float_float_float(rt.f(75.0), rt.f(1.0), rt.f(100.0), rt.f(40.0), rt.f(1.0))
             else:

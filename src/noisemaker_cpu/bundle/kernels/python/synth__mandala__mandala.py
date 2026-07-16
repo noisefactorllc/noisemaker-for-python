@@ -54,6 +54,7 @@ def run_pixel(ctx, out):
         if rt.binary("==", _u_animation, rt.i(5)):
             dynTwistRad = rt.binary("*", twistRad, rt.component_wise("sin", rt.binary("*", rt.binary("*", _u_time, rt.f(6.28318530718), 1, "float"), rt.component_wise("floor", _u_speed, width=1), 1, "float"), width=1), 1, "float")
         m = rt.f(0.0)
+        dBindu = rt.f(0.0)
         if _u_bindu:
             dBindu = rt.binary("-", rt.length(p), rt.binary("+", rt.f(0.15), rt.binary("*", _u_thickness, rt.f(0.15), 1, "float"), 1, "float"), 1, "float")
             m = rt.component_wise("max", m, fillEdge__float(dBindu), width=1)
@@ -69,6 +70,7 @@ def run_pixel(ctx, out):
                 break
             Rlayer = rt.binary("*", rt.construct(1, rt.binary("+", i, rt.i(1), 1, "int")), _u_layerSpacing, 1, "float")
             layerAnimRot = rt.f(0.0)
+            dir = rt.f(0.0)
             if rt.binary("==", _u_animation, rt.i(3)):
                 layerAnimRot = rt.binary("*", rt.binary("*", _u_time, rt.f(6.28318530718), 1, "float"), rt.binary("+", rt.component_wise("floor", _u_speed, width=1), rt.construct(1, i), 1, "float"), 1, "float")
             else:
@@ -85,6 +87,8 @@ def run_pixel(ctx, out):
             shapeSize = rt.binary("*", baseSize, rt.binary("+", rt.f(1.0), rt.binary("*", _u_shapeGrowth, lt, 1, "float"), 1, "float"), 1, "float")
             if rt.binary("==", _u_animation, rt.i(6)):
                 shapeSize = rt.binary("*", shapeSize, rt.binary("+", rt.f(1.0), rt.binary("*", _u_pulseDepth, rt.component_wise("sin", rt.binary("-", rt.binary("*", rt.binary("*", _u_time, rt.f(6.28318530718), 1, "float"), rt.component_wise("floor", _u_speed, width=1), 1, "float"), rt.binary("*", rt.construct(1, i), rt.f(0.6), 1, "float"), 1, "float"), width=1), 1, "float"), 1, "float"), 1, "float")
+            d = rt.f(0.0)
+            q = rt.construct(2, 0.0)
             if rt.binary("==", _u_shape, rt.i(0)):
                 d = rt.binary("-", rt.length(rt.construct(2, rt.binary("*", radial, rt.f(0.55), 1, "float"), tangent)), shapeSize, 1, "float")
                 m = rt.component_wise("max", m, fillEdge__float(d), width=1)

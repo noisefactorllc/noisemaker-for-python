@@ -401,6 +401,7 @@ def run_pixel(ctx, out):
                 spd = rt.component_wise("floor", _u_speed, width=1)
                 point = rt.binary("+", point, rt.construct(2, rt.binary("*", rt.component_wise("sin", rt.binary("+", rt.binary("*", rt.binary("*", _u_time, rt.f(6.28318530718), 1, "float"), spd, 1, "float"), rt.swizzle(r2, "x"), 1, "float"), width=1), rt.swizzle(r1, "x"), 1, "float"), rt.binary("*", rt.component_wise("cos", rt.binary("+", rt.binary("*", rt.binary("*", _u_time, rt.f(6.28318530718), 1, "float"), spd, 1, "float"), rt.swizzle(r2, "y"), 1, "float"), width=1), rt.swizzle(r1, "y"), 1, "float")), 2, "float")
                 diff = rt.binary("-", rt.binary("+", n, point, 2, "float"), f, 2, "float")
+                dist = rt.f(0.0)
                 if rt.binary("==", _u_SHAPE, rt.i(1)):
                     dist = rt.binary("*", rt.binary("+", rt.component_wise("abs", rt.binary("-", rt.binary("+", rt.swizzle(n, "x"), rt.swizzle(point, "x"), 1, "float"), rt.swizzle(f, "x"), 1, "float"), width=1), rt.component_wise("abs", rt.binary("-", rt.binary("+", rt.swizzle(n, "y"), rt.swizzle(point, "y"), 1, "float"), rt.swizzle(f, "y"), 1, "float"), width=1), 1, "float"), cellSize, 1, "float")
                 else:

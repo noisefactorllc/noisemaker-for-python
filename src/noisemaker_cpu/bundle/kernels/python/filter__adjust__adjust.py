@@ -90,6 +90,11 @@ def run_pixel(ctx, out):
         texSize = rt.texture_size(_u_inputTex)
         uv = rt.binary("/", rt.swizzle(ctx.frag_coord, "xy"), rt.construct(2, texSize), 2, "float")
         color = rt.texture(_u_inputTex, uv)
+        L = rt.f(0.0)
+        C = rt.f(0.0)
+        H = rt.f(0.0)
+        a = rt.f(0.0)
+        b = rt.f(0.0)
         if rt.binary("==", _u_mode, rt.i(1)):
             color = rt.assign_swizzle(color, "rgb", hsv2rgb__vec3(rt.swizzle(color, "rgb")))
         else:

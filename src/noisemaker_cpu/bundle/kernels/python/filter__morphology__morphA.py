@@ -15,6 +15,8 @@ def run_pixel(ctx, out):
         uv = rt.binary("/", rt.swizzle(ctx.frag_coord, "xy"), _u_resolution, 2, "float")
         texel = rt.binary("/", rt.f(1.0), _u_resolution, 2, "float")
         acc = rt.texture(_u_inputTex, uv)
+        r = rt.f(0.0)
+        r2 = rt.f(0.0)
         if rt.binary("==", _u_SHAPE, rt.i(1)):
             r = rt.component_wise("min", _u_radius, rt.f(12.0), width=1)
             r2 = rt.binary("*", r, r, 1, "float")

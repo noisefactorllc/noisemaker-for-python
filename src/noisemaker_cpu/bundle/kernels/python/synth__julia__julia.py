@@ -275,12 +275,16 @@ def run_pixel(ctx, out):
         globalCoord = rt.binary("+", rt.swizzle(ctx.frag_coord, "xy"), _u_tileOffset, 2, "float")
         c = resolveC__void()
         effectiveZoom = rt.f(0.0)
+        phase = rt.f(0.0)
         if rt.binary(">", _u_zoomSpeed, rt.f(0.0)):
             phase = rt.binary("*", rt.f(0.5), rt.binary("-", rt.f(1.0), rt.component_wise("cos", rt.binary("*", rt.binary("*", _u_time, _u_zoomSpeed, 1, "float"), g.TAU, 1, "float"), width=1), 1, "float"), 1, "float")
             effectiveZoom = rt.component_wise("pow", rt.f(10.0), rt.binary("*", _u_zoomDepth, phase, 1, "float"), width=1)
         else:
             effectiveZoom = rt.component_wise("pow", rt.f(10.0), _u_zoomDepth, width=1)
         value = rt.f(0.0)
+        reDF = rt.construct(2, 0.0)
+        imDF = rt.construct(2, 0.0)
+        r = [rt.f(0.0), rt.f(0.0), rt.f(0.0), rt.f(0.0), rt.f(0.0), rt.f(0.0), rt.f(0.0)]
         if rt.binary("==", _u_outputMode, rt.i(4)):
             value = outputNormalMap__vec2_vec2_int_float_float(globalCoord, c, _u_iterations, _u_lightAngle, effectiveZoom)
         else:

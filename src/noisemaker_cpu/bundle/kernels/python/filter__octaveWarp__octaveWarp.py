@@ -109,6 +109,9 @@ def run_pixel(ctx, out):
             sampleCoord = rt.binary("+", sampleCoord, offset, 2, "float")
             sampleCoord = rt.construct(2, wrapFloat__float_float_int(rt.swizzle(sampleCoord, "x"), width, rt.construct(1, _u_wrap, base="int")), wrapFloat__float_float_int(rt.swizzle(sampleCoord, "y"), height, rt.construct(1, _u_wrap, base="int")))
         finalUV = rt.binary("/", rt.construct(2, wrapFloat__float_float_int(rt.swizzle(sampleCoord, "x"), width, rt.construct(1, _u_wrap, base="int")), wrapFloat__float_float_int(rt.swizzle(sampleCoord, "y"), height, rt.construct(1, _u_wrap, base="int"))), dims, 2, "float")
+        dx = rt.construct(2, 0.0)
+        dy = rt.construct(2, 0.0)
+        col = rt.construct(4, 0.0)
         if _u_antialias:
             dx = rt.dFdx(finalUV)
             dy = rt.dFdy(finalUV)

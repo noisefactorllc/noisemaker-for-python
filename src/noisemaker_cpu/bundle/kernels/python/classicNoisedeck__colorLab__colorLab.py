@@ -202,6 +202,7 @@ def run_pixel(ctx, out):
         if rt.binary("!=", _u_levels, rt.f(0.0)):
             color = rt.assign_swizzle(color, "rgb", posterize__vec3_float(rt.swizzle(color, "rgb"), _u_levels))
         bright = rgb2hsv__vec3(rt.swizzle(color, "rgb"))[int(rt.i(2))]
+        coord = rt.construct(2, 0.0)
         if rt.binary("==", _u_dither, rt.i(1)):
             color = rt.assign_swizzle(color, "rgb", rt.binary("*", rt.swizzle(color, "rgb"), rt.construct(3, rt.component_wise("step", rt.f(0.5), bright, width=1)), 3, "float"))
         else:
@@ -233,6 +234,7 @@ def run_pixel(ctx, out):
                                             else:
                                                 if rt.binary("<", bright, rt.f(0.84)):
                                                     color = rt.assign_swizzle(color, "rgb", rt.binary("*", rt.swizzle(color, "rgb"), (rt.construct(3, rt.f(0.0)) if rt.binary("==", rt.swizzle(coord, "xy"), rt.construct(2, rt.f(1.0))) else rt.construct(3, rt.f(1.0))), 3, "float"))
+        d = rt.f(0.0)
         if rt.binary("==", _u_colorMode, rt.i(0)):
             color = rt.assign_swizzle(color, "rgb", rt.construct(3, rt.swizzle(rgb2hsv__vec3(rt.swizzle(color, "rgb")), "b")))
         else:

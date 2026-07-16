@@ -134,6 +134,7 @@ def run_pixel(ctx, out):
         cHi = rt.construct(2, 0.0)
         cLo = rt.construct(2, 0.0)
         effZoomDepth = _u_zoomDepth
+        p = [rt.construct(4, 0.0), rt.f(0.0), rt.f(0.0)]
         if rt.binary(">", poiIdx, rt.i(0)):
             p = getPOI__int(poiIdx)
             cHi = rt.binary("+", rt.swizzle(p[0], "xy"), rt.construct(2, _u_centerHiX, _u_centerHiY), 2, "float")
@@ -144,6 +145,7 @@ def run_pixel(ctx, out):
             cHi = rt.construct(2, _u_centerHiX, _u_centerHiY)
             cLo = rt.construct(2, _u_centerLoX, _u_centerLoY)
         zoom = rt.f(0.0)
+        zoomPhase = rt.f(0.0)
         if rt.binary(">", _u_zoomSpeed, rt.f(0.0)):
             zoomPhase = rt.binary("*", rt.f(0.5), rt.binary("-", rt.f(1.0), rt.component_wise("cos", rt.binary("*", rt.binary("*", _u_time, _u_zoomSpeed, 1, "float"), g.TAU, 1, "float"), width=1), 1, "float"), 1, "float")
             zoom = rt.component_wise("pow", rt.f(10.0), rt.binary("*", effZoomDepth, zoomPhase, 1, "float"), width=1)

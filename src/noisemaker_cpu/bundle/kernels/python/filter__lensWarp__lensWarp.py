@@ -74,6 +74,10 @@ def run_pixel(ctx, out):
         uv = rt.component_wise("abs", rt.binary("-", rt.component_wise("mod", rt.binary("+", uv, rt.f(1.0), 2, "float"), rt.f(2.0), width=2), rt.f(1.0), 2, "float"), width=2)
         localUV = rt.binary("/", rt.binary("-", rt.binary("*", uv, fullRes, 2, "float"), _u_tileOffset, 2, "float"), _u_resolution, 2, "float")
         localUV = rt.component_wise("clamp", localUV, rt.f(0.0), rt.f(1.0), width=2)
+        dx = rt.construct(2, 0.0)
+        dy = rt.construct(2, 0.0)
+        col = rt.construct(4, 0.0)
+        sUV = rt.construct(2, 0.0)
         if _u_antialias:
             dx = rt.dFdx(uv)
             dy = rt.dFdy(uv)

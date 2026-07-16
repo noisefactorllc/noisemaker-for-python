@@ -55,6 +55,8 @@ def run_pixel(ctx, out):
             st = rt.assign_swizzle(st, "x", rt.binary("/", rt.swizzle(st, "x"), aspect, 1, "float"))
         st = rt.binary("+", st, rt.f(0.5), 2, "float")
         rep = (rt.construct(2, rt.binary("*", _u_repeat, aspect, 1, "float"), _u_repeat) if _u_aspectLens else rt.construct(2, _u_repeat))
+        local = rt.construct(2, 0.0)
+        effectiveScale = rt.f(0.0)
         if rt.binary("==", _u_symmetry, rt.i(3)):
             local = hexCoord__vec2(rt.binary("*", rt.binary("+", st, rt.construct(2, _u_offsetX, _u_offsetY), 2, "float"), rep, 2, "float"))
             local = rt.binary("/", local, _u_scale, 2, "float")
