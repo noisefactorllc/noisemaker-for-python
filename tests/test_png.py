@@ -1,3 +1,5 @@
+import os
+import shutil
 import subprocess
 import zlib
 
@@ -7,6 +9,11 @@ from noisemaker_cpu.png import decode_png, encode_png
 from noisemaker_cpu.surface import Surface
 
 SIGNATURE = bytes([137, 80, 78, 71, 13, 10, 26, 10])
+
+# The JS PNG-encoder cross-check needs a sibling noisemaker-cpu checkout + node.
+CPU_DIR = os.environ.get("NOISEMAKER_CPU_DIR") or os.path.normpath(
+    os.path.join(os.path.dirname(__file__), "..", "..", "noisemaker-cpu")
+)
 
 
 def _png_chunk(chunk_type: str, data: bytes = b"") -> bytes:
@@ -90,8 +97,10 @@ def test_round_trip_3x2_surface():
     assert decoded.to_rgba8() == surface.to_rgba8()
 
 
-def test_cross_check_against_js_encoder():
-    output_path = "/tmp/nmpng_fix.png"
+def test_cross_check_against_js_encoder(tmp_path):
+    if shutil.which("node") is None or not os.path.isdir(CPU_DIR):
+        pytest.skip("needs node + a sibling noisemaker-cpu checkout")
+    output_path = str(tmp_path / "nmpng_fix.png")
     subprocess.run(
         [
             "node",
@@ -103,7 +112,7 @@ def test_cross_check_against_js_encoder():
             "--param", "color=#4080c0",
             "--output", output_path,
         ],
-        cwd="/Users/aayars/platform/noisemaker-cpu",
+        cwd=CPU_DIR,
         check=True,
         capture_output=True,
     )
