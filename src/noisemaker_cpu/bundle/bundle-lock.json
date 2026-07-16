@@ -202,6 +202,9 @@
     "filter/oilPaint:oilFlatten": "55b0a900fc6f62df71808e4a79f36eefd4c216da8601dbaa3717cc4b3487069a",
     "filter/texture:texture": "b92b2a4d4161240895758d1e80df13c592208501b783f3c12be4419c942c10a7",
     "classicNoisedeck/caustic:caustic": "20b91aca512529fd16d2ce97b9cbe59e0e1c6fd755ecc8b0dd4df14ac487e6e5",
-    "classicNoisedeck/moodscape:moodscape": "8d884897009a6b2fd5d02d31eb762ae39f94a6de79444ff63bf51283c32acf90"
+    "classicNoisedeck/moodscape:moodscape": "8d884897009a6b2fd5d02d31eb762ae39f94a6de79444ff63bf51283c32acf90",
+    "classicNoisedeck/kaleido:kaleido": "988b44da4926ec5371c8e2838cf225510283c992cb0c64ac5b87384cf1e0b7f4",
+    "filter/wind:wind": "3540e81343c42ae16e3d56508efecf81e2d380ad328ac44264482de07aeda0e7",
+    "synth/noise:noise": "0ddec990a1965f56f993b47302e5b34ec93b77e82a548d86ecf54780f7d16a83"
   }
 }

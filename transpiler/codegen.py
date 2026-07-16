@@ -304,15 +304,26 @@ class CodeGen:
         return out or [f"{'    ' * indent}pass"]
 
     def _branch_decls(self, s):
-        """Names declared at the top level of a branch (block or single stmt),
-        mapped to their type — used to hoist #if-lowered decls to enclosing scope."""
-        stmts = s["body"] if s["k"] == "block" else [s]
-        decls = {}
-        for st in stmts:
-            if st.get("k") == "decl":
-                for dc in st["declarators"]:
-                    decls[dc["name"]] = self.type_of_name(st["type"], dc.get("array"))
-        return decls
+        """Names (mapped to type) a branch declares on EVERY path — safe to hoist
+        to the enclosing scope. Recurses through if/elif/else chains so a variable
+        declared in all N arms of a lowered runtime #if is still resolved after."""
+        if s is None:
+            return {}
+        k = s.get("k")
+        if k == "block":
+            decls = {}
+            for st in s["body"]:
+                if st.get("k") == "decl":
+                    for dc in st["declarators"]:
+                        decls[dc["name"]] = self.type_of_name(st["type"], dc.get("array"))
+            return decls
+        if k == "decl":
+            return {dc["name"]: self.type_of_name(s["type"], dc.get("array")) for dc in s["declarators"]}
+        if k == "if" and s.get("els") is not None:
+            a = self._branch_decls(s["then"])
+            b = self._branch_decls(s["els"])
+            return {n: t for n, t in a.items() if n in b}
+        return {}
 
     def _for(self, s, scope, indent, out):
         pad = "    " * indent
