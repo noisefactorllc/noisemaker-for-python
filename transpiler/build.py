@@ -73,7 +73,7 @@ def build(ids, out_dir=BUNDLE, update_lock=False):
     for eid in ids:
         try:
             eff = fetch_effect(eid)
-        except Exception as e:
+        except Exception as e:  # a few effects compute their defs via JS; skip
             n_skip += 1
             print(f"skip {eid}: cdn: {str(e)[:70]}", file=sys.stderr)
             continue
@@ -105,7 +105,7 @@ def build(ids, out_dir=BUNDLE, update_lock=False):
                 norm = normalize(glsl, defines)
                 ast = parse(norm["source"])
                 py = emit_python(ast, norm.get("outputs"), norm.get("varyings"))
-            except Exception as e:
+            except Exception as e:  # report + skip this program, keep building
                 n_skip += 1
                 print(f"skip {key}: {type(e).__name__}: {str(e)[:80]}", file=sys.stderr)
                 continue

@@ -69,6 +69,8 @@ def _coerce(spec: dict, value):
             value = _parse_hex(value)
         return np.array(value, dtype=F32)
     if t in ("vec2", "vec3", "vec4"):
+        if isinstance(value, str):  # CLI --param: "0.1,0.2,0.3"
+            value = [float(x) for x in value.split(",")]
         return np.array(value, dtype=F32)
     if t == "float":
         return f32(float(value))
