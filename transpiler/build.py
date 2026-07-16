@@ -17,6 +17,17 @@ from .cdn import CDN_BASE, CDN_VERSION, eligible_ids, fetch_effect
 from .codegen import emit_python
 from .parser import parse
 from .preprocess import normalize
+from .shared_enums import SHARED_ENUMS
+
+
+def _resolve_shared_enums(params: dict) -> None:
+    """Inline choices for member params that reference a shared enum by name only
+    (the CDN bundle omits the name->index table). Mutates params in place."""
+    for spec in params.values():
+        if isinstance(spec, dict) and spec.get("type") == "member" and not spec.get("choices"):
+            choices = SHARED_ENUMS.get(spec.get("enum"))
+            if choices:
+                spec["choices"] = dict(choices)
 
 _HERE = os.path.dirname(__file__)
 BUNDLE = os.path.normpath(os.path.join(_HERE, "..", "src", "noisemaker_cpu", "bundle"))
@@ -61,6 +72,7 @@ def build(ids, out_dir=BUNDLE, update_lock=False):
             n_skip += 1
             print(f"skip {eid}: cdn: {str(e)[:70]}", file=sys.stderr)
             continue
+        _resolve_shared_enums(eff["params"])
         defines = runtime_defines(eff["params"])
         passes = []
         for p in eff["passes"]:
