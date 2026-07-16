@@ -17,6 +17,7 @@ from .pass_runner import Ctx, run_pass, run_pass_deriv
 from .runtime import F32, Runtime, f32
 from .adapters import get_adapter
 from .draw_ops import get_draw_op
+from .overlay_gen import OVERLAY_EFFECTS, render_worm_overlay
 from .surface import Surface
 from .texture_format import quantize_texture
 
@@ -162,6 +163,20 @@ def render_effect(effect_id, params=None, inputs=None, width=256, height=256, se
     rt = Runtime()
     result = None
     attachments = {}  # attach-name -> Surface produced by an earlier pass this render
+
+    # One-shot CPU-generated textures declared but not produced by any pass
+    # (fibers/scratches/strayHair overlayTex): generate and bind before the loop.
+    if effect_id in OVERLAY_EFFECTS:
+        produced = {an for pp in eff["passes"] for an in (pp.get("outputs") or {}).values()}
+        for tname in eff.get("textures", {}):
+            if tname == "overlayTex" and tname not in produced and tname not in surface_params:
+                gen = {}
+                for pn in ("seed", "density"):
+                    if pn in eff["params"]:
+                        gp = eff["params"][pn]
+                        gen[pn] = _coerce(gp, seed) if pn == "seed" and "seed" not in params else _coerce(gp, params.get(pn))
+                attachments[tname] = render_worm_overlay(effect_id, width, height, gen)
+
     for p in eff["passes"]:
         textures = _DefaultTex(blank)
         for sampler, surf in surface_params.items():
