@@ -196,6 +196,10 @@
     "filter/mosaicTiles:mosaicTiles": "4f1b1f24e0db89ca7a19a0d59d0a7d8124baaba2a024e4fc2370c74aee5276d3",
     "filter/pondRipples:pondRipples": "da42c4164f614417863fa3c400b8132f1171bc8254f7c78a5a991ebe79e9e96c",
     "filter/stipple:stipple": "39cf37ee3bc53445d6795599a93d11e098b4a92eb6555613651cc350bc7b8949",
-    "filter/strokes:stkSmear": "12a8ba6ecdc5a1087f54c02582f71d284b0a80ee94332932f2a7cc0f25a5fcee"
+    "filter/strokes:stkSmear": "12a8ba6ecdc5a1087f54c02582f71d284b0a80ee94332932f2a7cc0f25a5fcee",
+    "classicNoisedeck/cellRefract:cellRefract": "81a5231c94a9579546bf7f05c307e1bc7645b255186d8002de16e0ae8535391a",
+    "filter/halftone:halftone": "b689937fb9c6d197d72d692773af433d650627f946b8de7b0308a667cb23be1c",
+    "filter/oilPaint:oilFlatten": "55b0a900fc6f62df71808e4a79f36eefd4c216da8601dbaa3717cc4b3487069a",
+    "filter/texture:texture": "b92b2a4d4161240895758d1e80df13c592208501b783f3c12be4419c942c10a7"
   }
 }

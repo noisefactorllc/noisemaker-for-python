@@ -243,6 +243,17 @@ class CodeGen:
             out.append(f"{pad}{code}")
         elif k == "if":
             code, _ = self.expr(s["cond"], scope)
+            # A runtime #if/#else lowered to a real if/else keeps GLSL block
+            # scope, but a variable a C preprocessor #if would have left at the
+            # enclosing scope is typically declared in BOTH branches and used
+            # after #endif. Python has no block scope, so pre-bind names declared
+            # in both branches into the enclosing scope for post-if resolution.
+            if s.get("els") is not None:
+                then_decls = self._branch_decls(s["then"])
+                else_decls = self._branch_decls(s["els"])
+                for name, typ in then_decls.items():
+                    if name in else_decls and scope.resolve(name) is None:
+                        scope.define(name, typ)
             out.append(f"{pad}if {code}:")
             out.extend(self._branch(s["then"], scope, indent + 1))
             if s.get("els") is not None:
@@ -291,6 +302,17 @@ class CodeGen:
         else:
             self.stmt(s, scope.child(), indent, out)
         return out or [f"{'    ' * indent}pass"]
+
+    def _branch_decls(self, s):
+        """Names declared at the top level of a branch (block or single stmt),
+        mapped to their type — used to hoist #if-lowered decls to enclosing scope."""
+        stmts = s["body"] if s["k"] == "block" else [s]
+        decls = {}
+        for st in stmts:
+            if st.get("k") == "decl":
+                for dc in st["declarators"]:
+                    decls[dc["name"]] = self.type_of_name(st["type"], dc.get("array"))
+        return decls
 
     def _for(self, s, scope, indent, out):
         pad = "    " * indent

@@ -300,6 +300,194 @@
         }
       ]
     },
+    "classicNoisedeck/cellRefract": {
+      "namespace": "classicNoisedeck",
+      "func": "cellRefract",
+      "kind": "filter",
+      "params": {
+        "amount": {
+          "type": "float",
+          "default": 23,
+          "uniform": "refractAmt",
+          "min": 0,
+          "max": 100,
+          "ui": {
+            "label": "refract",
+            "control": "slider"
+          }
+        },
+        "direction": {
+          "type": "float",
+          "default": 0,
+          "uniform": "direction",
+          "min": 0,
+          "max": 360,
+          "ui": {
+            "label": "refract dir",
+            "control": "slider"
+          }
+        },
+        "wrap": {
+          "type": "int",
+          "default": 0,
+          "uniform": "wrap",
+          "choices": {
+            "mirror": 0,
+            "repeat": 1
+          },
+          "ui": {
+            "label": "wrap",
+            "control": "dropdown"
+          }
+        },
+        "speed": {
+          "type": "int",
+          "default": 1,
+          "uniform": "speed",
+          "min": 0,
+          "max": 5,
+          "zero": 0,
+          "ui": {
+            "label": "speed",
+            "control": "slider"
+          }
+        },
+        "shape": {
+          "type": "int",
+          "default": 1,
+          "define": "SHAPE",
+          "choices": {
+            "circle": 0,
+            "diamond": 1,
+            "hexagon": 2,
+            "octagon": 3,
+            "square": 4,
+            "triangle": 6
+          },
+          "ui": {
+            "label": "shape",
+            "control": "dropdown",
+            "category": "cells"
+          }
+        },
+        "scale": {
+          "type": "float",
+          "default": 50,
+          "uniform": "scale",
+          "min": 1,
+          "max": 100,
+          "ui": {
+            "label": "scale",
+            "control": "slider",
+            "category": "cells"
+          }
+        },
+        "cellScale": {
+          "type": "float",
+          "default": 75,
+          "uniform": "cellScale",
+          "min": 1,
+          "max": 100,
+          "ui": {
+            "label": "cell scale",
+            "control": "slider",
+            "category": "cells"
+          }
+        },
+        "smooth": {
+          "type": "float",
+          "default": 0,
+          "uniform": "cellSmooth",
+          "min": 0,
+          "max": 100,
+          "ui": {
+            "label": "cell smooth",
+            "control": "slider",
+            "category": "cells"
+          }
+        },
+        "variation": {
+          "type": "float",
+          "default": 0,
+          "uniform": "variation",
+          "min": 0,
+          "max": 100,
+          "ui": {
+            "label": "cell variation",
+            "control": "slider",
+            "category": "cells"
+          }
+        },
+        "seed": {
+          "type": "int",
+          "default": 1,
+          "uniform": "seed",
+          "min": 1,
+          "max": 100,
+          "ui": {
+            "label": "seed",
+            "control": "slider",
+            "category": "cells"
+          }
+        },
+        "kernel": {
+          "type": "int",
+          "default": 0,
+          "define": "KERNEL",
+          "choices": {
+            "none": 0,
+            "blur": 1,
+            "derivatives": 120,
+            "derivDivide": 2,
+            "edge": 3,
+            "emboss": 4,
+            "litEdge": 9,
+            "outline": 5,
+            "pixels": 100,
+            "posterize": 110,
+            "shadow": 6,
+            "sharpen": 7,
+            "sobel": 8
+          },
+          "ui": {
+            "label": "effect",
+            "control": "dropdown",
+            "category": "effect"
+          }
+        },
+        "effectWidth": {
+          "type": "int",
+          "default": 0,
+          "uniform": "effectWidth",
+          "min": 0,
+          "max": 10,
+          "ui": {
+            "label": "effect width",
+            "control": "slider",
+            "category": "effect",
+            "enabledBy": {
+              "param": "kernel",
+              "neq": 0
+            }
+          }
+        }
+      },
+      "textures": {},
+      "passes": [
+        {
+          "name": "render",
+          "program": "cellRefract",
+          "key": "classicNoisedeck/cellRefract:cellRefract",
+          "inputs": {
+            "inputTex": "inputTex"
+          },
+          "outputs": {
+            "fragColor": "outputTex"
+          },
+          "uniforms": {}
+        }
+      ]
+    },
     "classicNoisedeck/coalesce": {
       "namespace": "classicNoisedeck",
       "func": "coalesce",
@@ -4363,6 +4551,201 @@
         }
       ]
     },
+    "filter/halftone": {
+      "namespace": "filter",
+      "func": "halftone",
+      "kind": "filter",
+      "params": {
+        "mode": {
+          "type": "int",
+          "default": 0,
+          "define": "MODE",
+          "choices": {
+            "color": 0,
+            "mono": 1
+          },
+          "ui": {
+            "label": "mode",
+            "control": "dropdown"
+          }
+        },
+        "pattern": {
+          "type": "int",
+          "default": 0,
+          "define": "PATTERN",
+          "choices": {
+            "dot": 0,
+            "line": 1,
+            "circle": 2
+          },
+          "ui": {
+            "label": "pattern",
+            "control": "dropdown",
+            "enabledBy": {
+              "param": "mode",
+              "eq": 1
+            }
+          }
+        },
+        "frequency": {
+          "type": "float",
+          "default": 24,
+          "uniform": "frequency",
+          "min": 4,
+          "max": 128,
+          "ui": {
+            "label": "frequency",
+            "control": "slider"
+          }
+        },
+        "cyanAngle": {
+          "type": "float",
+          "default": 108,
+          "uniform": "cyanAngle",
+          "min": -180,
+          "max": 180,
+          "ui": {
+            "label": "cyan angle",
+            "control": "slider",
+            "enabledBy": {
+              "param": "mode",
+              "eq": 0
+            }
+          }
+        },
+        "magentaAngle": {
+          "type": "float",
+          "default": 162,
+          "uniform": "magentaAngle",
+          "min": -180,
+          "max": 180,
+          "ui": {
+            "label": "magenta angle",
+            "control": "slider",
+            "enabledBy": {
+              "param": "mode",
+              "eq": 0
+            }
+          }
+        },
+        "yellowAngle": {
+          "type": "float",
+          "default": 90,
+          "uniform": "yellowAngle",
+          "min": -180,
+          "max": 180,
+          "ui": {
+            "label": "yellow angle",
+            "control": "slider",
+            "enabledBy": {
+              "param": "mode",
+              "eq": 0
+            }
+          }
+        },
+        "blackAngle": {
+          "type": "float",
+          "default": 45,
+          "uniform": "blackAngle",
+          "min": -180,
+          "max": 180,
+          "ui": {
+            "label": "black angle",
+            "control": "slider",
+            "enabledBy": {
+              "param": "mode",
+              "eq": 0
+            }
+          }
+        },
+        "monoAngle": {
+          "type": "float",
+          "default": 45,
+          "uniform": "monoAngle",
+          "min": -180,
+          "max": 180,
+          "ui": {
+            "label": "mono angle",
+            "control": "slider",
+            "enabledBy": {
+              "and": [
+                {
+                  "param": "mode",
+                  "eq": 1
+                },
+                {
+                  "param": "pattern",
+                  "in": [
+                    0,
+                    1
+                  ]
+                }
+              ]
+            }
+          }
+        },
+        "sharpness": {
+          "type": "float",
+          "default": 80,
+          "uniform": "sharpness",
+          "min": 0,
+          "max": 100,
+          "ui": {
+            "label": "sharpness",
+            "control": "slider"
+          }
+        },
+        "inkColor": {
+          "type": "color",
+          "default": [
+            0.05,
+            0.05,
+            0.05
+          ],
+          "uniform": "inkColor",
+          "ui": {
+            "label": "ink color",
+            "control": "color",
+            "enabledBy": {
+              "param": "mode",
+              "eq": 1
+            }
+          }
+        },
+        "paperColor": {
+          "type": "color",
+          "default": [
+            0.98,
+            0.96,
+            0.9
+          ],
+          "uniform": "paperColor",
+          "ui": {
+            "label": "paper color",
+            "control": "color",
+            "enabledBy": {
+              "param": "mode",
+              "eq": 1
+            }
+          }
+        }
+      },
+      "textures": {},
+      "passes": [
+        {
+          "name": "render",
+          "program": "halftone",
+          "key": "filter/halftone:halftone",
+          "inputs": {
+            "inputTex": "inputTex"
+          },
+          "outputs": {
+            "fragColor": "outputTex"
+          },
+          "uniforms": {}
+        }
+      ]
+    },
     "filter/hatch": {
       "namespace": "filter",
       "func": "hatch",
@@ -5736,6 +6119,20 @@
         }
       },
       "passes": [
+        {
+          "name": "flatten",
+          "program": "oilFlatten",
+          "key": "filter/oilPaint:oilFlatten",
+          "inputs": {
+            "inputTex": "inputTex"
+          },
+          "outputs": {
+            "fragColor": "_paintTmp"
+          },
+          "uniforms": {
+            "size": "size"
+          }
+        },
         {
           "name": "post",
           "program": "oilPost",
@@ -9960,6 +10357,128 @@
           "uniforms": {
             "matteColor": "matteColor",
             "matteOpacity": "matteOpacity"
+          }
+        }
+      ]
+    },
+    "filter/texture": {
+      "namespace": "filter",
+      "func": "texture",
+      "kind": "filter",
+      "params": {
+        "mode": {
+          "type": "int",
+          "default": 3,
+          "define": "MODE",
+          "choices": {
+            "canvas": 0,
+            "crosshatch": 1,
+            "halftone": 2,
+            "paper": 3,
+            "stucco": 4,
+            "regular": 5,
+            "soft": 6,
+            "sprinkles": 7,
+            "clumped": 8,
+            "contrasty": 9,
+            "enlarged": 10,
+            "stippled": 11,
+            "horizontal": 12,
+            "vertical": 13,
+            "speckle": 14
+          },
+          "ui": {
+            "label": "mode",
+            "control": "dropdown"
+          }
+        },
+        "alpha": {
+          "type": "float",
+          "default": 0.5,
+          "uniform": "alpha",
+          "min": 0,
+          "max": 1,
+          "step": 0.01,
+          "ui": {
+            "label": "alpha",
+            "control": "slider"
+          }
+        },
+        "scale": {
+          "type": "float",
+          "default": 1,
+          "uniform": "scale",
+          "min": 0.1,
+          "max": 10,
+          "step": 0.1,
+          "randMax": 4,
+          "ui": {
+            "label": "scale",
+            "control": "slider"
+          }
+        },
+        "intensity": {
+          "type": "float",
+          "default": 40,
+          "uniform": "intensity",
+          "min": 0,
+          "max": 100,
+          "ui": {
+            "label": "intensity",
+            "control": "slider",
+            "enabledBy": {
+              "param": "mode",
+              "gt": 4
+            }
+          }
+        },
+        "contrast": {
+          "type": "float",
+          "default": 50,
+          "uniform": "contrast",
+          "min": 0,
+          "max": 100,
+          "ui": {
+            "label": "contrast",
+            "control": "slider",
+            "enabledBy": {
+              "param": "mode",
+              "gt": 4
+            }
+          }
+        },
+        "mono": {
+          "type": "boolean",
+          "default": true,
+          "uniform": "mono",
+          "ui": {
+            "label": "mono",
+            "control": "checkbox",
+            "enabledBy": {
+              "param": "mode",
+              "gt": 4
+            }
+          }
+        }
+      },
+      "textures": {},
+      "passes": [
+        {
+          "name": "main",
+          "program": "texture",
+          "key": "filter/texture:texture",
+          "inputs": {
+            "inputTex": "inputTex"
+          },
+          "outputs": {
+            "fragColor": "outputTex"
+          },
+          "uniforms": {
+            "alpha": "alpha",
+            "scale": "scale",
+            "intensity": "intensity",
+            "contrast": "contrast",
+            "mono": "mono"
           }
         }
       ]
