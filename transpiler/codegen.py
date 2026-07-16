@@ -15,13 +15,25 @@ TYPE = {
     "int": {"base": "int", "width": 1},
     "uint": {"base": "uint", "width": 1},
     "float": {"base": "float", "width": 1},
-    "vec2": {"base": "float", "width": 2}, "vec3": {"base": "float", "width": 3}, "vec4": {"base": "float", "width": 4},
-    "ivec2": {"base": "int", "width": 2}, "ivec3": {"base": "int", "width": 3}, "ivec4": {"base": "int", "width": 4},
-    "uvec2": {"base": "uint", "width": 2}, "uvec3": {"base": "uint", "width": 3}, "uvec4": {"base": "uint", "width": 4},
-    "bvec2": {"base": "bool", "width": 2}, "bvec3": {"base": "bool", "width": 3}, "bvec4": {"base": "bool", "width": 4},
-    "mat2": {"base": "float", "width": 4, "mat": 2}, "mat3": {"base": "float", "width": 9, "mat": 3}, "mat4": {"base": "float", "width": 16, "mat": 4},
-    "sampler2D": {"base": "sampler", "width": 0}, "sampler3D": {"base": "sampler", "width": 0},
-    "samplerCube": {"base": "sampler", "width": 0}, "sampler2DArray": {"base": "sampler", "width": 0},
+    "vec2": {"base": "float", "width": 2},
+    "vec3": {"base": "float", "width": 3},
+    "vec4": {"base": "float", "width": 4},
+    "ivec2": {"base": "int", "width": 2},
+    "ivec3": {"base": "int", "width": 3},
+    "ivec4": {"base": "int", "width": 4},
+    "uvec2": {"base": "uint", "width": 2},
+    "uvec3": {"base": "uint", "width": 3},
+    "uvec4": {"base": "uint", "width": 4},
+    "bvec2": {"base": "bool", "width": 2},
+    "bvec3": {"base": "bool", "width": 3},
+    "bvec4": {"base": "bool", "width": 4},
+    "mat2": {"base": "float", "width": 4, "mat": 2},
+    "mat3": {"base": "float", "width": 9, "mat": 3},
+    "mat4": {"base": "float", "width": 16, "mat": 4},
+    "sampler2D": {"base": "sampler", "width": 0},
+    "sampler3D": {"base": "sampler", "width": 0},
+    "samplerCube": {"base": "sampler", "width": 0},
+    "sampler2DArray": {"base": "sampler", "width": 0},
 }
 FLOAT = TYPE["float"]
 BOOL = TYPE["bool"]
@@ -43,11 +55,37 @@ def q(s):
 
 
 _RESERVED = {
-    "and", "or", "not", "in", "is", "lambda", "class", "def", "return", "if", "else",
-    "for", "while", "None", "True", "False", "global", "nonlocal", "import", "from", "as", "with",
+    "and",
+    "or",
+    "not",
+    "in",
+    "is",
+    "lambda",
+    "class",
+    "def",
+    "return",
+    "if",
+    "else",
+    "for",
+    "while",
+    "None",
+    "True",
+    "False",
+    "global",
+    "nonlocal",
+    "import",
+    "from",
+    "as",
+    "with",
     # emitted-kernel infrastructure names — a shader local named any of these
     # would shadow the runtime/globals holder and break the closure.
-    "rt", "g", "U", "T", "ctx", "out", "run_pixel",
+    "rt",
+    "g",
+    "U",
+    "T",
+    "ctx",
+    "out",
+    "run_pixel",
 }
 
 
@@ -88,11 +126,11 @@ class CodeGen:
         self.outputs = outputs or ["fragColor"]
         self.varyings = set(varyings or [])
         self.root = Scope()
-        self.overloads = {}   # base name -> [ {mangled, ptypes, ret, node} ]
+        self.overloads = {}  # base name -> [ {mangled, ptypes, ret, node} ]
         self.funcs = []
-        self.uniforms = []    # {name, type}
-        self.globals = []     # {name, type, init}
-        self.structs = {}     # name -> [ (fieldtype, fieldname) ]
+        self.uniforms = []  # {name, type}
+        self.globals = []  # {name, type, init}
+        self.structs = {}  # name -> [ (fieldtype, fieldname) ]
         self.loop_id = 0
         self.uses_deriv = False
         self.cur_out = []  # out/inout param pynames of the function being emitted
@@ -112,8 +150,7 @@ class CodeGen:
                 # Anonymous std140 block members are addressed like bare uniforms
                 # (e.g. `data[i]`); each is bound as a uniform value.
                 for m in d["members"]:
-                    self.uniforms.append({"name": m["name"],
-                                          "type": self.type_of_name(m["type"], m.get("array"))})
+                    self.uniforms.append({"name": m["name"], "type": self.type_of_name(m["type"], m.get("array"))})
 
     def type_of_name(self, tname, array=None):
         t = dict(TYPE.get(tname, {"base": "float", "width": 1}))
@@ -127,8 +164,9 @@ class CodeGen:
     def _collect_func(self, d):
         ret = self.type_of_name(d["ret"])
         ptypes = [self.type_of_name(p[0]) for p in d["params"]]
-        out_idxs = [i for i, p in enumerate(d["params"])
-                    if len(p) > 2 and any(qu in ("out", "inout") for qu in (p[2] or []))]
+        out_idxs = [
+            i for i, p in enumerate(d["params"]) if len(p) > 2 and any(qu in ("out", "inout") for qu in (p[2] or []))
+        ]
         mangled = py_ident(d["name"]) + "__" + ("_".join(_type_name(t) for t in ptypes) if ptypes else "void")
         entry = {"mangled": mangled, "ptypes": ptypes, "ret": ret, "node": d, "out_idxs": out_idxs}
         self.funcs.append(entry)
@@ -142,7 +180,14 @@ class CodeGen:
                 self.uniforms.append({"name": dc["name"], "type": self.type_of_name(base_t)})
         else:
             for dc in d["declarators"]:
-                self.globals.append({"name": dc["name"], "type": self.type_of_name(base_t, dc.get("array")), "init": dc.get("init"), "array": dc.get("array")})
+                self.globals.append(
+                    {
+                        "name": dc["name"],
+                        "type": self.type_of_name(base_t, dc.get("array")),
+                        "init": dc.get("init"),
+                        "array": dc.get("array"),
+                    }
+                )
 
     # ---- emit ----
     def emit(self):
@@ -153,8 +198,15 @@ class CodeGen:
             py = "ctx.uv" if g["name"] in self.varyings else f"g.{py_ident(g['name'])}"
             self.root.define(g["name"], g["type"], py)
 
-        L = ["def run_pixel(ctx, out):", "    rt = ctx.rt", "    U = ctx.uniforms", "    T = ctx.textures",
-             "    class _G:", "        pass", "    g = _G()"]
+        L = [
+            "def run_pixel(ctx, out):",
+            "    rt = ctx.rt",
+            "    U = ctx.uniforms",
+            "    T = ctx.textures",
+            "    class _G:",
+            "        pass",
+            "    g = _G()",
+        ]
         for u in self.uniforms:
             if base_of(u["type"]) == "sampler":
                 L.append(f"    _u_{py_ident(u['name'])} = T[{q(u['name'])}]")
@@ -199,13 +251,13 @@ class CodeGen:
         pad = "    " * indent
         scope = self.root.child()
         pynames = []
-        for p, t in zip(fn["node"]["params"], fn["ptypes"]):
+        for p, t in zip(fn["node"]["params"], fn["ptypes"], strict=True):
             if p[1] is None:
                 pynames.append("_unused")
                 continue
             pynames.append(scope.define(p[1], t)["py"])
         L.append(f"{pad}def {fn['mangled']}({', '.join(pynames)}):")
-        for p, t in zip(fn["node"]["params"], fn["ptypes"]):
+        for p, t in zip(fn["node"]["params"], fn["ptypes"], strict=True):
             if p[1] and width_of(t) > 1:
                 L.append(f"{pad}    {py_ident(p[1])} = rt.copy({py_ident(p[1])}, {q(base_of(t))})")
         out_pynames = [pynames[i] for i in fn.get("out_idxs", [])]
@@ -461,9 +513,7 @@ class CodeGen:
         lb, rb = base_of(l_t), base_of(r_t)
         if lb == "uint" or rb == "uint":
             base = "uint"
-        elif lb == "int" and rb == "int":
-            base = "int"
-        elif op in ("&", "|", "^", "<<", ">>", "%"):
+        elif (lb == "int" and rb == "int") or op in ("&", "|", "^", "<<", ">>", "%"):
             base = "int"
         else:
             base = "float"
@@ -472,7 +522,7 @@ class CodeGen:
     def _e_assign(self, node, scope):
         op = node["op"]
         target = node["target"]
-        v_code, v_t = self.expr(node["value"], scope)
+        v_code, _v_t = self.expr(node["value"], scope)
         base_op = None if op == "=" else op[:-1]
         tcode, tt = self.expr(target, scope)
         if target["k"] == "id" or target["k"] == "index":
@@ -496,7 +546,10 @@ class CodeGen:
                 rhs = f"rt.binary({q(base_op)}, {cur}, {v_code}, {len(sw)}, {q(b)})"
             else:
                 rhs = v_code
-            return (f"{obj_code} = rt.assign_swizzle({obj_code}, {q(sw)}, {rhs})", {"base": base_of(obj_t), "width": len(sw)})
+            return (
+                f"{obj_code} = rt.assign_swizzle({obj_code}, {q(sw)}, {rhs})",
+                {"base": base_of(obj_t), "width": len(sw)},
+            )
         raise SyntaxError(f"codegen: bad assignment target {target['k']}")
 
     def _e_construct(self, node, scope):
@@ -540,7 +593,17 @@ class CodeGen:
         if len(cands) == 1:
             return cands[0]
         same = [c for c in cands if len(c["ptypes"]) == len(argtypes)]
-        exact = next((c for c in same if all(base_of(p) == base_of(a) and width_of(p) == width_of(a) for p, a in zip(c["ptypes"], argtypes))), None)
+        exact = next(
+            (
+                c
+                for c in same
+                if all(
+                    base_of(p) == base_of(a) and width_of(p) == width_of(a)
+                    for p, a in zip(c["ptypes"], argtypes, strict=True)
+                )
+            ),
+            None,
+        )
         return exact or (same[0] if same else cands[0])
 
 

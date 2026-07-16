@@ -14,7 +14,8 @@ rather than entry count.
 from __future__ import annotations
 
 from collections import OrderedDict
-from typing import Callable, NamedTuple
+from collections.abc import Callable
+from typing import NamedTuple
 
 Kernel = Callable[..., object]
 SourceFactory = Callable[[], str]

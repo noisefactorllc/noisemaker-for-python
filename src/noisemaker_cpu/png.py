@@ -115,11 +115,7 @@ def _decode_scanlines(compressed: bytes, width: int, height: int, bytes_per_pixe
             raw = filtered[source_row + x + 1]
             left = decoded[target_row + x - bytes_per_pixel] if x >= bytes_per_pixel else 0
             up = decoded[target_row + x - stride] if y > 0 else 0
-            upper_left = (
-                decoded[target_row + x - stride - bytes_per_pixel]
-                if y > 0 and x >= bytes_per_pixel
-                else 0
-            )
+            upper_left = decoded[target_row + x - stride - bytes_per_pixel] if y > 0 and x >= bytes_per_pixel else 0
             if filt == 0:
                 predictor = 0
             elif filt == 1:
@@ -239,18 +235,10 @@ def decode_png(data: bytes) -> Surface:
         if color_type in (4, 6):
             raise ValueError(f"PNG color type {color_type} cannot contain tRNS")
 
-    transparent_gray = (
-        int.from_bytes(transparency[0:2], "big") if color_type == 0 and transparency is not None else -1
-    )
-    transparent_red = (
-        int.from_bytes(transparency[0:2], "big") if color_type == 2 and transparency is not None else -1
-    )
-    transparent_green = (
-        int.from_bytes(transparency[2:4], "big") if color_type == 2 and transparency is not None else -1
-    )
-    transparent_blue = (
-        int.from_bytes(transparency[4:6], "big") if color_type == 2 and transparency is not None else -1
-    )
+    transparent_gray = int.from_bytes(transparency[0:2], "big") if color_type == 0 and transparency is not None else -1
+    transparent_red = int.from_bytes(transparency[0:2], "big") if color_type == 2 and transparency is not None else -1
+    transparent_green = int.from_bytes(transparency[2:4], "big") if color_type == 2 and transparency is not None else -1
+    transparent_blue = int.from_bytes(transparency[4:6], "big") if color_type == 2 and transparency is not None else -1
 
     decoded = _decode_scanlines(b"".join(idat_chunks), width, height, components)
     rgba = bytearray(width * height * 4)
@@ -268,9 +256,7 @@ def decode_png(data: bytes) -> Surface:
             rgba[target] = r
             rgba[target + 1] = g
             rgba[target + 2] = b
-            rgba[target + 3] = (
-                0 if r == transparent_red and g == transparent_green and b == transparent_blue else 255
-            )
+            rgba[target + 3] = 0 if r == transparent_red and g == transparent_green and b == transparent_blue else 255
         elif color_type == 3:
             index = decoded[source]
             if index * 3 + 2 >= len(palette):
@@ -278,9 +264,7 @@ def decode_png(data: bytes) -> Surface:
             rgba[target] = palette[index * 3]
             rgba[target + 1] = palette[index * 3 + 1]
             rgba[target + 2] = palette[index * 3 + 2]
-            rgba[target + 3] = (
-                transparency[index] if transparency is not None and index < len(transparency) else 255
-            )
+            rgba[target + 3] = transparency[index] if transparency is not None and index < len(transparency) else 255
         elif color_type == 4:
             value = decoded[source]
             rgba[target] = value

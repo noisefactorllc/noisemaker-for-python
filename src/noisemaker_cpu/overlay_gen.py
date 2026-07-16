@@ -98,7 +98,9 @@ def _draw_segment(surface, x0, y0, x1, y1, line_width, color, alpha):
             dst_a = float(data[off + 3])
             out_a = src_a + dst_a * (1 - src_a)
             for c in range(3):
-                data[off + c] = (color[c] * src_a + float(data[off + c]) * dst_a * (1 - src_a)) / out_a if out_a > 0 else 0
+                data[off + c] = (
+                    (color[c] * src_a + float(data[off + c]) * dst_a * (1 - src_a)) / out_a if out_a > 0 else 0
+                )
             data[off + 3] = out_a
 
 
@@ -112,13 +114,15 @@ def _trace(surface, opts):
     shared_rotation = rng.float() * _TAU
     worms = []
     for index in range(count):
-        worms.append({
-            "x": rng.float() * surface.width,
-            "y": rng.float() * surface.height,
-            "stride": rng.normal(opts["stride"], opts["strideDeviation"]) * stride_scale,
-            "rotation": shared_rotation if opts["behavior"] == "obedient" else rng.float() * _TAU,
-            "color": opts["color"](rng, index),
-        })
+        worms.append(
+            {
+                "x": rng.float() * surface.width,
+                "y": rng.float() * surface.height,
+                "stride": rng.normal(opts["stride"], opts["strideDeviation"]) * stride_scale,
+                "rotation": shared_rotation if opts["behavior"] == "obedient" else rng.float() * _TAU,
+                "color": opts["color"](rng, index),
+            }
+        )
     iterations = max(1, math.floor(math.sqrt(min_dim) * opts["duration"]))
     for worm in worms:
         x = worm["x"]
@@ -145,36 +149,67 @@ def render_worm_overlay(effect_id, width, height, params):
         base_density = 0.5 + density * 2
         for layer in range(4):
             layer_seed = seed * 1000 + layer * 137
-            _trace(surface, {
-                "seed": layer_seed, "density": base_density, "kink": 5 + layer_seed % 5,
-                "stride": 0.75, "strideDeviation": 0.125, "duration": 1, "behavior": "chaotic",
-                "flowFrequency": 4, "lineWidth": max(1.5, width / 384),
-                "color": lambda rng, i=0: [math.floor(rng.float() * 200 + 55) / 255,
-                                           math.floor(rng.float() * 200 + 55) / 255,
-                                           math.floor(rng.float() * 200 + 55) / 255],
-                "alpha": 0.5,
-            })
+            _trace(
+                surface,
+                {
+                    "seed": layer_seed,
+                    "density": base_density,
+                    "kink": 5 + layer_seed % 5,
+                    "stride": 0.75,
+                    "strideDeviation": 0.125,
+                    "duration": 1,
+                    "behavior": "chaotic",
+                    "flowFrequency": 4,
+                    "lineWidth": max(1.5, width / 384),
+                    "color": lambda rng, i=0: [
+                        math.floor(rng.float() * 200 + 55) / 255,
+                        math.floor(rng.float() * 200 + 55) / 255,
+                        math.floor(rng.float() * 200 + 55) / 255,
+                    ],
+                    "alpha": 0.5,
+                },
+            )
     elif effect_id == "filter/scratches":
         for layer in range(4):
             layer_seed = seed * 1000 + layer * 251
-            _trace(surface, {
-                "seed": layer_seed, "density": 0.1 + density * 0.4, "kink": 0.125 + layer_seed % 50 / 400,
-                "stride": 0.75, "strideDeviation": 0.5, "duration": 2 + layer_seed % 3,
-                "behavior": "obedient" if layer_seed % 2 == 0 else "unruly",
-                "flowFrequency": 2 + layer_seed % 3, "lineWidth": max(0.5, width / 1024),
-                "color": lambda rng, i=0: [1.0, 1.0, 1.0], "alpha": 1,
-            })
+            _trace(
+                surface,
+                {
+                    "seed": layer_seed,
+                    "density": 0.1 + density * 0.4,
+                    "kink": 0.125 + layer_seed % 50 / 400,
+                    "stride": 0.75,
+                    "strideDeviation": 0.5,
+                    "duration": 2 + layer_seed % 3,
+                    "behavior": "obedient" if layer_seed % 2 == 0 else "unruly",
+                    "flowFrequency": 2 + layer_seed % 3,
+                    "lineWidth": max(0.5, width / 1024),
+                    "color": lambda rng, i=0: [1.0, 1.0, 1.0],
+                    "alpha": 1,
+                },
+            )
     elif effect_id == "filter/strayHair":
         layer_seed = seed * 1000 + 42
-        _trace(surface, {
-            "seed": layer_seed, "density": 0.001 + density * 0.004, "kink": 5 + layer_seed % 45,
-            "stride": 0.5, "strideDeviation": 0.25, "duration": 8 + layer_seed % 8, "behavior": "unruly",
-            "flowFrequency": 4, "lineWidth": max(1, width / 400),
-            "color": lambda rng, i=0: [math.floor(rng.float() * 30) / 255,
-                                       math.floor(rng.float() * 30) / 255,
-                                       math.floor(rng.float() * 30) / 255],
-            "alpha": 0.666,
-        })
+        _trace(
+            surface,
+            {
+                "seed": layer_seed,
+                "density": 0.001 + density * 0.004,
+                "kink": 5 + layer_seed % 45,
+                "stride": 0.5,
+                "strideDeviation": 0.25,
+                "duration": 8 + layer_seed % 8,
+                "behavior": "unruly",
+                "flowFrequency": 4,
+                "lineWidth": max(1, width / 400),
+                "color": lambda rng, i=0: [
+                    math.floor(rng.float() * 30) / 255,
+                    math.floor(rng.float() * 30) / 255,
+                    math.floor(rng.float() * 30) / 255,
+                ],
+                "alpha": 0.666,
+            },
+        )
     else:
         raise ValueError(f"Unsupported canonical CPU overlay {effect_id}")
     d = surface.data

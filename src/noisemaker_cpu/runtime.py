@@ -40,9 +40,9 @@ def _is_scalar(v) -> bool:
 class Runtime:
     def __init__(self):
         self._ctx = None
-        self._deriv_mode = None      # None | "record" | "replay"
-        self._deriv_log = []         # record: list of (op, value)
-        self._deriv_diffs = None     # replay: precomputed diff per call index
+        self._deriv_mode = None  # None | "record" | "replay"
+        self._deriv_log = []  # record: list of (op, value)
+        self._deriv_diffs = None  # replay: precomputed diff per call index
         self._deriv_i = 0
         # Per-render stdlib overrides (CPU adapters replace e.g. `sin` with a
         # range-reduced variant): name -> fn(*args) returning the final value.
@@ -396,7 +396,7 @@ class Runtime:
     def mat_col(self, mat, i, dim):
         n = int(dim)
         c = int(i)
-        return np.asarray(mat, dtype=F32)[c * n:(c + 1) * n].astype(F32)
+        return np.asarray(mat, dtype=F32)[c * n : (c + 1) * n].astype(F32)
 
     # ---- arrays (GLSL fixed-size arrays -> Python lists) ----
     @staticmethod
@@ -413,7 +413,7 @@ class Runtime:
     def bit_not(self, x):
         if _is_scalar(x):
             return _s32(~int(x))
-        return (~np.asarray(x).astype(np.int64))
+        return ~np.asarray(x).astype(np.int64)
 
 
 def _s32arr(x):
@@ -425,9 +425,14 @@ def _int_scalar(op, a, b, base):
         a &= _U32
         b &= _U32
         table = {
-            "+": uintmath.uadd, "-": uintmath.usub, "*": uintmath.umul,
-            "&": uintmath.uand, "|": uintmath.uor, "^": uintmath.uxor,
-            "<<": uintmath.ushl, ">>": uintmath.ushr,
+            "+": uintmath.uadd,
+            "-": uintmath.usub,
+            "*": uintmath.umul,
+            "&": uintmath.uand,
+            "|": uintmath.uor,
+            "^": uintmath.uxor,
+            "<<": uintmath.ushl,
+            ">>": uintmath.ushr,
             "/": lambda x, y: (x // y) if y else 0,
             "%": lambda x, y: (x % y) if y else 0,
         }

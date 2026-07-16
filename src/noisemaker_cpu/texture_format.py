@@ -28,9 +28,9 @@ def _float16_truncate(vals: np.ndarray) -> np.ndarray:
     exp = src_exp - 127 + 15
 
     half = np.empty(v.shape, dtype=np.uint32)
-    special = src_exp == 0xFF          # inf / nan
+    special = src_exp == 0xFF  # inf / nan
     over = (~special) & (exp >= 0x1F)  # overflow -> largest finite half
-    under = (~special) & (exp <= 0)    # subnormal / underflow
+    under = (~special) & (exp <= 0)  # subnormal / underflow
     normal = (~special) & (~over) & (~under)
 
     half[normal] = sign[normal] | (exp[normal].astype(np.uint32) << np.uint32(10)) | (frac[normal] >> np.uint32(13))

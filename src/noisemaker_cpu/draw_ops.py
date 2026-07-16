@@ -92,9 +92,15 @@ def wormhole_deposit(input_surf, dest_surf, uniforms):
             dest_row = height - 1 - dest_y
             do = (dest_row * width + dest_x) * 4
             weight = _mul(lightness, lightness)
-            odata[do] = _float16_truncate(np.array([_add(float(odata[do]), _mul(float(idata[so]), weight))], dtype=F32))[0]
-            odata[do + 1] = _float16_truncate(np.array([_add(float(odata[do + 1]), _mul(float(idata[so + 1]), weight))], dtype=F32))[0]
-            odata[do + 2] = _float16_truncate(np.array([_add(float(odata[do + 2]), _mul(float(idata[so + 2]), weight))], dtype=F32))[0]
+            odata[do] = _float16_truncate(
+                np.array([_add(float(odata[do]), _mul(float(idata[so]), weight))], dtype=F32)
+            )[0]
+            odata[do + 1] = _float16_truncate(
+                np.array([_add(float(odata[do + 1]), _mul(float(idata[so + 1]), weight))], dtype=F32)
+            )[0]
+            odata[do + 2] = _float16_truncate(
+                np.array([_add(float(odata[do + 2]), _mul(float(idata[so + 2]), weight))], dtype=F32)
+            )[0]
 
 
 POINT_DRAW_OPS = {

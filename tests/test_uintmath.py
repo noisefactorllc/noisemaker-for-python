@@ -30,10 +30,10 @@ from noisemaker_cpu.uintmath import (
     uxor,
 )
 
-
 # ---------------------------------------------------------------------------
 # u32 (JS `value >>> 0`)
 # ---------------------------------------------------------------------------
+
 
 def test_u32_wraps_overflow_spec():
     assert u32(0xFFFFFFFF + 2) == 1  # (spec)
@@ -67,6 +67,7 @@ def test_u32_nan_and_infinity_coerce_to_zero_like_js():
 # umul (JS `Math.imul(a, b) >>> 0`)
 # ---------------------------------------------------------------------------
 
+
 def test_umul_matches_math_imul_unsigned_spec():
     assert umul(0xFFFFFFFF, 374761393) == 3920205903  # (spec)
 
@@ -94,6 +95,7 @@ def test_umul_power_of_two_overflow_wraps_to_zero():
 # ---------------------------------------------------------------------------
 # uadd / usub / ushl / ushr / uand / uor / uxor
 # ---------------------------------------------------------------------------
+
 
 def test_uadd_wraps():
     assert uadd(0xFFFFFFFF, 2) == 1
@@ -135,6 +137,7 @@ def test_uand_uor_uxor_bit_patterns():
 # pcg3d
 # ---------------------------------------------------------------------------
 
+
 def test_pcg3d_golden_vector_spec():
     assert pcg3d([1, 2, 3]) == [4204755366, 1223881804, 1500469937]  # (spec)
 
@@ -161,6 +164,7 @@ def test_pcg3d_returns_a_plain_list_of_three():
 # hash_uint32 / hash_uint
 # ---------------------------------------------------------------------------
 
+
 def test_hash_uint32_golden_vector_spec():
     assert hash_uint32(0x1234ABCD) == 737574769  # (spec)
 
@@ -186,6 +190,7 @@ def test_hash_uint_is_an_alias_for_hash_uint32():
 # glsl_mod (floored modulo, NOT Python's `%`)
 # ---------------------------------------------------------------------------
 
+
 def test_glsl_mod_negative_dividend_spec():
     assert glsl_mod(-1, 3) == 2  # (spec)
 
@@ -205,6 +210,7 @@ def test_glsl_mod_matches_pythons_percent_for_these_signs():
 # ---------------------------------------------------------------------------
 # float_bits_to_uint / uint_bits_to_float
 # ---------------------------------------------------------------------------
+
 
 def test_float_bits_to_uint_of_one_spec():
     assert float_bits_to_uint(1.0) == 0x3F800000 == 1065353216  # (spec)
@@ -238,6 +244,7 @@ def test_uint_bits_to_float_of_known_bit_pattern():
 # ---------------------------------------------------------------------------
 # pack_half_2x16 / unpack_half_2x16
 # ---------------------------------------------------------------------------
+
 
 def test_pack_half_2x16_golden_bit_patterns():
     assert pack_half_2x16([0.0, 0.0]) == 0

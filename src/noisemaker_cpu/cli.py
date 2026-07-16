@@ -90,8 +90,7 @@ def generate(width, height, time_value, seed, filename, params, effect):
     if seed is None:
         seed = random.randint(1, MAX_SEED_VALUE)
     click.echo(effect)
-    surface = render_effect(effect, _parse_params(params),
-                            width=width, height=height, seed=seed, time=time_value)
+    surface = render_effect(effect, _parse_params(params), width=width, height=height, seed=seed, time=time_value)
     with open(filename, "wb") as handle:
         handle.write(encode_png(surface))
     click.echo(f"Rendered {width}x{height} -> {filename}")
@@ -111,8 +110,15 @@ def apply(time_value, seed, filename, params, effect, input_filename):
     click.echo(effect)
     with open(input_filename, "rb") as handle:
         source = decode_png(handle.read())
-    surface = render_effect(effect, _parse_params(params), _bind_input(effect, source),
-                            width=source.width, height=source.height, seed=seed, time=time_value)
+    surface = render_effect(
+        effect,
+        _parse_params(params),
+        _bind_input(effect, source),
+        width=source.width,
+        height=source.height,
+        seed=seed,
+        time=time_value,
+    )
     with open(filename, "wb") as handle:
         handle.write(encode_png(surface))
     click.echo(f"Rendered {source.width}x{source.height} -> {filename}")
@@ -122,11 +128,15 @@ def apply(time_value, seed, filename, params, effect, input_filename):
 @click.option("--width", type=int, default=512, help="Output width, in pixels")
 @click.option("--height", type=int, default=512, help="Output height, in pixels")
 @click.option("--seed", type=int, default=None, help="Random seed. Might not affect all effects.")
-@click.option("--filename", type=click.Path(dir_okay=False), default="animation.mp4", help="Animation output filename (.mp4)")
+@click.option(
+    "--filename", type=click.Path(dir_okay=False), default="animation.mp4", help="Animation output filename (.mp4)"
+)
 @click.option("--frame-count", type=int, default=50, help="How many frames total")
 @click.option("--fps", type=int, default=30, help="Frames per second for the encoded video")
 @click.option("--speed", type=float, default=1.0, help="Time-sweep multiplier (loops of the [0,1) time phase)")
-@click.option("--save-frames", type=click.Path(file_okay=False), default=None, help="Directory to also write the PNG frames into")
+@click.option(
+    "--save-frames", type=click.Path(file_okay=False), default=None, help="Directory to also write the PNG frames into"
+)
 @click.option("--param", "params", multiple=True, metavar="NAME=VALUE", help="Effect parameter (repeatable)")
 @click.argument("effect")
 def animate(width, height, seed, filename, frame_count, fps, speed, save_frames, params, effect):
@@ -151,9 +161,23 @@ def animate(width, height, seed, filename, frame_count, fps, speed, save_frames,
             return
         raise click.ClickException("ffmpeg not found; install it, or pass --save-frames DIR to keep the PNG frames.")
     subprocess.run(
-        ["ffmpeg", "-y", "-framerate", str(fps), "-i", os.path.join(frames_dir, "frame_%04d.png"),
-         "-vf", "pad=ceil(iw/2)*2:ceil(ih/2)*2", "-c:v", "libx264", "-pix_fmt", "yuv420p", filename],
-        check=True, capture_output=True,
+        [
+            "ffmpeg",
+            "-y",
+            "-framerate",
+            str(fps),
+            "-i",
+            os.path.join(frames_dir, "frame_%04d.png"),
+            "-vf",
+            "pad=ceil(iw/2)*2:ceil(ih/2)*2",
+            "-c:v",
+            "libx264",
+            "-pix_fmt",
+            "yuv420p",
+            filename,
+        ],
+        check=True,
+        capture_output=True,
     )
     click.echo(f"Rendered {frame_count} frames ({width}x{height}) -> {filename}")
 

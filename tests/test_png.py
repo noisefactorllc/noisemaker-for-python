@@ -73,9 +73,7 @@ def _build_png(width: int, height: int, filtered_scanlines: bytes) -> bytes:
 
 
 def test_encode_png_has_signature_and_chunk_markers():
-    surface = Surface.from_rgba8(
-        2, 2, bytes([255, 0, 0, 255, 0, 255, 0, 255, 0, 0, 255, 255, 255, 255, 255, 255])
-    )
+    surface = Surface.from_rgba8(2, 2, bytes([255, 0, 0, 255, 0, 255, 0, 255, 0, 0, 255, 255, 255, 255, 255, 255]))
     output = encode_png(surface)
     assert output[:8] == SIGNATURE
     assert b"IHDR" in output
@@ -86,8 +84,30 @@ def test_encode_png_has_signature_and_chunk_markers():
 def test_round_trip_3x2_surface():
     raw = bytes(
         [
-            10, 20, 30, 255, 40, 50, 60, 200, 70, 80, 90, 128,
-            100, 110, 120, 64, 130, 140, 150, 32, 160, 170, 180, 0,
+            10,
+            20,
+            30,
+            255,
+            40,
+            50,
+            60,
+            200,
+            70,
+            80,
+            90,
+            128,
+            100,
+            110,
+            120,
+            64,
+            130,
+            140,
+            150,
+            32,
+            160,
+            170,
+            180,
+            0,
         ]
     )
     surface = Surface.from_rgba8(3, 2, raw)
@@ -107,10 +127,14 @@ def test_cross_check_against_js_encoder(tmp_path):
             "bin/noisemaker-cpu.js",
             "effect",
             "synth/solid",
-            "--width", "4",
-            "--height", "4",
-            "--param", "color=#4080c0",
-            "--output", output_path,
+            "--width",
+            "4",
+            "--height",
+            "4",
+            "--param",
+            "color=#4080c0",
+            "--output",
+            output_path,
         ],
         cwd=CPU_DIR,
         check=True,
@@ -132,8 +156,22 @@ def test_decode_png_paeth_filter_round_trip():
     width, height, bpp = 2, 2, 4
     raw = bytes(
         [
-            10, 20, 30, 40, 50, 60, 70, 80,
-            90, 100, 110, 120, 200, 210, 220, 230,
+            10,
+            20,
+            30,
+            40,
+            50,
+            60,
+            70,
+            80,
+            90,
+            100,
+            110,
+            120,
+            200,
+            210,
+            220,
+            230,
         ]
     )
     filtered = _filter4_encode(raw, width, height, bpp)
@@ -151,10 +189,7 @@ def test_decode_png_paeth_filter_round_trip():
 def test_decode_png_rejects_oversized_pixel_count():
     bogus_ihdr = _ihdr(16_777_217, 1)
     bogus = (
-        SIGNATURE
-        + _png_chunk("IHDR", bogus_ihdr)
-        + _png_chunk("IDAT", zlib.compress(bytes(5)))
-        + _png_chunk("IEND")
+        SIGNATURE + _png_chunk("IHDR", bogus_ihdr) + _png_chunk("IDAT", zlib.compress(bytes(5))) + _png_chunk("IEND")
     )
     with pytest.raises(ValueError, match="16,777,216 pixel limit"):
         decode_png(bogus)
@@ -162,11 +197,6 @@ def test_decode_png_rejects_oversized_pixel_count():
 
 def test_decode_png_rejects_decompression_bomb():
     bomb_idat = zlib.compress(bytes(1024 * 1024))
-    bomb = (
-        SIGNATURE
-        + _png_chunk("IHDR", _ihdr(1, 1))
-        + _png_chunk("IDAT", bomb_idat)
-        + _png_chunk("IEND")
-    )
+    bomb = SIGNATURE + _png_chunk("IHDR", _ihdr(1, 1)) + _png_chunk("IDAT", bomb_idat) + _png_chunk("IEND")
     with pytest.raises(ValueError, match="exceeds the expected scanline length"):
         decode_png(bomb)

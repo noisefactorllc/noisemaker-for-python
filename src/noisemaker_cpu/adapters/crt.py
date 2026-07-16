@@ -39,5 +39,6 @@ def crt_factory(rt, base_kernel):
             base_kernel(ctx, out)
         finally:
             rt.stdlib_override = prev
+
     kernel.uses_derivatives = getattr(base_kernel, "uses_derivatives", False)
     return kernel

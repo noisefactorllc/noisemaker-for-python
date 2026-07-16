@@ -25,13 +25,17 @@ def _mashup():
     }
     inputs = {"source": "source"}
     for e in range(_MASHUP_LAYERS):
-        params[f"layer{e}_tex"] = {"type": "surface", "default": "none",
-                                   "colorModeUniform": f"layer{e}_active"}
+        params[f"layer{e}_tex"] = {"type": "surface", "default": "none", "colorModeUniform": f"layer{e}_active"}
         inputs[f"layer{e}_tex"] = f"layer{e}_tex"
-    passes = [{"name": "render", "program": "mashup", "inputs": inputs,
-               "outputs": {"fragColor": "outputTex"}}]
-    return {"namespace": "mixer", "func": "mashup", "params": params,
-            "passes": passes, "textures": {}, "externalTexture": None}
+    passes = [{"name": "render", "program": "mashup", "inputs": inputs, "outputs": {"fragColor": "outputTex"}}]
+    return {
+        "namespace": "mixer",
+        "func": "mashup",
+        "params": params,
+        "passes": passes,
+        "textures": {},
+        "externalTexture": None,
+    }
 
 
 def _remap():
@@ -43,13 +47,17 @@ def _remap():
     }
     inputs = {}
     for z in range(_REMAP_ZONES):
-        params[f"zone{z}_tex"] = {"type": "surface", "default": "none",
-                                  "colorModeUniform": f"zone{z}_active"}
+        params[f"zone{z}_tex"] = {"type": "surface", "default": "none", "colorModeUniform": f"zone{z}_active"}
         inputs[f"zone{z}_tex"] = f"zone{z}_tex"
-    passes = [{"name": "render", "program": "remap", "inputs": inputs,
-               "outputs": {"fragColor": "outputTex"}}]
-    return {"namespace": "synth", "func": "remap", "params": params,
-            "passes": passes, "textures": {}, "externalTexture": None}
+    passes = [{"name": "render", "program": "remap", "inputs": inputs, "outputs": {"fragColor": "outputTex"}}]
+    return {
+        "namespace": "synth",
+        "func": "remap",
+        "params": params,
+        "passes": passes,
+        "textures": {},
+        "externalTexture": None,
+    }
 
 
 COMPUTED_DEFS = {

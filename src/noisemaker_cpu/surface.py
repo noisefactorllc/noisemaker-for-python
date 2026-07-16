@@ -18,7 +18,7 @@ def _assert_dim(value: int, name: str) -> None:
 
 
 class Surface:
-    __slots__ = ("width", "height", "data", "filter")
+    __slots__ = ("data", "filter", "height", "width")
 
     def __init__(self, width: int, height: int, data: np.ndarray | None = None):
         _assert_dim(width, "width")
@@ -37,7 +37,7 @@ class Surface:
         self.filter = "nearest"
 
     @staticmethod
-    def from_rgba8(width: int, height: int, byts) -> "Surface":
+    def from_rgba8(width: int, height: int, byts) -> Surface:
         _assert_dim(width, "width")
         _assert_dim(height, "height")
         length = width * height * 4
@@ -48,12 +48,12 @@ class Surface:
         data = (arr.astype(np.float64) * (1.0 / 255.0)).astype(np.float32)
         return Surface(width, height, data)
 
-    def clone(self) -> "Surface":
+    def clone(self) -> Surface:
         s = Surface(self.width, self.height, self.data.copy())
         s.filter = self.filter
         return s
 
-    def clear(self, color=(0.0, 0.0, 0.0, 0.0)) -> "Surface":
+    def clear(self, color=(0.0, 0.0, 0.0, 0.0)) -> Surface:
         if len(color) != 4:
             raise TypeError("color must contain four components")
         rgba = np.asarray(color, dtype=np.float32)

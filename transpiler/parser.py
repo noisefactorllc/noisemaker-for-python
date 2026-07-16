@@ -6,6 +6,8 @@ on already-preprocessed GLSL (no #directives, no structs beyond flat ones).
 
 from __future__ import annotations
 
+from typing import ClassVar
+
 from .lexer import tokenize
 
 SCALAR = {"void", "bool", "int", "uint", "float"}
@@ -15,8 +17,20 @@ SAMPLER = {"sampler2D", "sampler3D", "samplerCube", "sampler2DArray"}
 TYPES = SCALAR | VEC | MAT | SAMPLER
 
 QUALIFIERS = {
-    "const", "uniform", "in", "out", "inout", "flat", "smooth", "noperspective",
-    "centroid", "invariant", "highp", "mediump", "lowp", "precise",
+    "const",
+    "uniform",
+    "in",
+    "out",
+    "inout",
+    "flat",
+    "smooth",
+    "noperspective",
+    "centroid",
+    "invariant",
+    "highp",
+    "mediump",
+    "lowp",
+    "precise",
 }
 CONTROL = {"if", "else", "for", "while", "do", "return", "break", "continue", "discard", "struct"}
 
@@ -323,10 +337,17 @@ class Parser:
             return {"k": "cond", "c": c, "a": a, "b": b}
         return c
 
-    _BIN = [
-        {"||"}, {"&&"}, {"|"}, {"^"}, {"&"},
-        {"==", "!="}, {"<", ">", "<=", ">="}, {"<<", ">>"},
-        {"+", "-"}, {"*", "/", "%"},
+    _BIN: ClassVar = [
+        {"||"},
+        {"&&"},
+        {"|"},
+        {"^"},
+        {"&"},
+        {"==", "!="},
+        {"<", ">", "<=", ">="},
+        {"<<", ">>"},
+        {"+", "-"},
+        {"*", "/", "%"},
     ]
 
     def binary(self, level):

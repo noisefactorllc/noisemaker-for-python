@@ -53,10 +53,7 @@ def normalize(source: str, runtime_defines: dict | None = None) -> dict:
         out_lines.append(line)
 
     # Declare runtime-define uniforms (they were lowered to runtime branches).
-    decls = "".join(
-        f"uniform {'float' if t == 'float' else 'int'} {name};\n"
-        for name, t in runtime_defines.items()
-    )
+    decls = "".join(f"uniform {'float' if t == 'float' else 'int'} {name};\n" for name, t in runtime_defines.items())
     return {"source": decls + "\n".join(out_lines), "outputs": outputs or ["fragColor"], "varyings": varyings}
 
 
@@ -200,10 +197,16 @@ def _eval(directive: str, head: str, defines: dict, runtime_defines: dict | None
     expr = _expand(expr, defines)
     # undefined identifiers evaluate to 0 in C/GLSL #if
     expr = _IDENT.sub(lambda m: m.group(0) if m.group(0) in ("true", "false") else "0", expr)
-    py = (expr.replace("&&", " and ").replace("||", " or ").replace("!", " not ")
-          .replace(" not =", " !=").replace("true", "1").replace("false", "0"))
+    py = (
+        expr.replace("&&", " and ")
+        .replace("||", " or ")
+        .replace("!", " not ")
+        .replace(" not =", " !=")
+        .replace("true", "1")
+        .replace("false", "0")
+    )
     py = re.sub(r"(?<![<>=!])=(?!=)", "==", py)  # stray single = (rare) -> ==
     try:
-        return bool(eval(py, {"__builtins__": {}}, {}))  # noqa: S307 - bounded, digits/ops only
+        return bool(eval(py, {"__builtins__": {}}, {}))
     except Exception:
         return False

@@ -77,6 +77,7 @@ def test_lru_eviction_evicts_least_recently_used():
         def _factory():
             calls[tag] += 1
             return _source_for(digit)
+
         return _factory
 
     # Fill the cache with "a" then "b" -> both fit exactly.

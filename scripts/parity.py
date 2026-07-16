@@ -38,21 +38,39 @@ def _ext_texture():
     if _EXT_TEX is None:
         from noisemaker_cpu.png import encode_png
         from noisemaker_cpu.surface import Surface
+
         d = np.zeros(SIZE * SIZE * 4, dtype=np.float32)
         for y in range(SIZE):
             for x in range(SIZE):
                 i = (y * SIZE + x) * 4
-                d[i] = x / (SIZE - 1); d[i + 1] = y / (SIZE - 1)
-                d[i + 2] = ((x + y) % SIZE) / (SIZE - 1); d[i + 3] = 1.0
+                d[i] = x / (SIZE - 1)
+                d[i + 1] = y / (SIZE - 1)
+                d[i + 2] = ((x + y) % SIZE) / (SIZE - 1)
+                d[i + 3] = 1.0
         with open(EXT_PNG, "wb") as f:
             f.write(encode_png(Surface(SIZE, SIZE, d)))
-        _EXT_TEX = decode_png(open(EXT_PNG, "rb").read())
+        with open(EXT_PNG, "rb") as f:
+            _EXT_TEX = decode_png(f.read())
     return _EXT_TEX
 
 
 def js_effect(effect_id: str, out: str, input_png: str | None = None):
-    cmd = ["node", CLI, "effect", effect_id, "--width", str(SIZE), "--height", str(SIZE),
-           "--seed", str(SEED), "--time", str(TIME), "--output", out]
+    cmd = [
+        "node",
+        CLI,
+        "effect",
+        effect_id,
+        "--width",
+        str(SIZE),
+        "--height",
+        str(SIZE),
+        "--seed",
+        str(SEED),
+        "--time",
+        str(TIME),
+        "--output",
+        out,
+    ]
     if input_png:
         cmd += ["--input", input_png]
     subprocess.run(cmd, cwd=CPU_DIR, check=True, capture_output=True, timeout=120)
@@ -61,8 +79,9 @@ def js_effect(effect_id: str, out: str, input_png: str | None = None):
 
 
 def _solid(color=None):
-    return render_effect("synth/solid", {} if color is None else {"color": color},
-                         width=SIZE, height=SIZE, seed=SEED, time=TIME)
+    return render_effect(
+        "synth/solid", {} if color is None else {"color": color}, width=SIZE, height=SIZE, seed=SEED, time=TIME
+    )
 
 
 def py_render(effect_id: str, kind: str, ext: str | None = None):
@@ -74,8 +93,11 @@ def py_render(effect_id: str, kind: str, ext: str | None = None):
     inputs = {"inputTex": _solid()}
     if ext:
         inputs[ext] = _ext_texture()
-    surf = [pn for pn, sp in _meta()["effects"][effect_id]["params"].items()
-            if isinstance(sp, dict) and sp.get("type") == "surface"]
+    surf = [
+        pn
+        for pn, sp in _meta()["effects"][effect_id]["params"].items()
+        if isinstance(sp, dict) and sp.get("type") == "surface"
+    ]
     for i, pname in enumerate(surf):
         src = _solid("#0cf" if i % 2 else "#f30")
         spec = _meta()["effects"][effect_id]["params"][pname]
@@ -116,8 +138,10 @@ def main():
         d = int(np.max(np.abs(ja - pa)))
         (ok if d <= 2 else diffs).append(eid if d <= 2 else (eid, d))
 
-    print(f"\n=== PARITY: {len(ok)}/{len(ids)} pass (<=2)  |  {len(diffs)} diff  |  "
-          f"{sum(len(v) for v in errors.values())} runtime-error  |  {len(oracle_err)} oracle-error ===\n")
+    print(
+        f"\n=== PARITY: {len(ok)}/{len(ids)} pass (<=2)  |  {len(diffs)} diff  |  "
+        f"{sum(len(v) for v in errors.values())} runtime-error  |  {len(oracle_err)} oracle-error ===\n"
+    )
     if errors:
         print("RUNTIME ERRORS (grouped — these drive runtime-stdlib work):")
         for msg, lst in sorted(errors.items(), key=lambda kv: -len(kv[1])):

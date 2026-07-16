@@ -80,21 +80,23 @@ _USER_AGENT = "noisemaker-python-transpiler (+https://noisedeck.app)"
 # effects (persistent sim state, live audio/MIDI input) that don't fit a
 # stateless single-frame GLSL -> Python pixel kernel.
 _NAMESPACE_EXCLUSIONS = frozenset({"filter3d", "synth3d", "points", "render"})
-_ID_EXCLUSIONS = frozenset({
-    "filter/convolutionFeedback",
-    "filter/feedback",
-    "filter/motionBlur",
-    "filter/temporalAberration",
-    "synth/cellularAutomata",
-    "synth/mnca",
-    "synth/navierStokes",
-    "synth/reactionDiffusion",
-    "synth/roll",
-    "synth/scope",
-    "synth/spectrum",
-    "classicNoisedeck/noise3d",
-    "classicNoisedeck/shapes3d",
-})
+_ID_EXCLUSIONS = frozenset(
+    {
+        "filter/convolutionFeedback",
+        "filter/feedback",
+        "filter/motionBlur",
+        "filter/temporalAberration",
+        "synth/cellularAutomata",
+        "synth/mnca",
+        "synth/navierStokes",
+        "synth/reactionDiffusion",
+        "synth/roll",
+        "synth/scope",
+        "synth/spectrum",
+        "classicNoisedeck/noise3d",
+        "classicNoisedeck/shapes3d",
+    }
+)
 
 
 class CDNError(RuntimeError):
@@ -139,9 +141,7 @@ def fetch_manifest(version: str = CDN_VERSION) -> dict:
     Returns the manifest verbatim: a dict keyed by effect id (e.g.
     "synth/solid") -> {description, glsl, tags, wgsl, starter, hasTex, ...}.
     """
-    text = _cached_text(
-        version, "effects/manifest.json", f"{CDN_BASE}/{version}/effects/manifest.json"
-    )
+    text = _cached_text(version, "effects/manifest.json", f"{CDN_BASE}/{version}/effects/manifest.json")
     return json.loads(text)
 
 
@@ -356,11 +356,16 @@ def fetch_effect(effect_id: str, version: str = CDN_VERSION) -> dict:
     if override is not None:
         # Definition is JS-computed (loops/spreads) and unreadable statically;
         # use the hand-ported params/passes but keep the GLSL from the CDN.
-        result = {"id": effect_id, "namespace": override["namespace"], "func": override["func"],
-                  "params": override["params"], "passes": override["passes"],
-                  "textures": override.get("textures", {}),
-                  "externalTexture": override.get("externalTexture"),
-                  "programs": _extract_programs(bundle)}
+        result = {
+            "id": effect_id,
+            "namespace": override["namespace"],
+            "func": override["func"],
+            "params": override["params"],
+            "passes": override["passes"],
+            "textures": override.get("textures", {}),
+            "externalTexture": override.get("externalTexture"),
+            "programs": _extract_programs(bundle),
+        }
     else:
         result = {
             "id": effect_id,

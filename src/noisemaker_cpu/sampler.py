@@ -40,7 +40,7 @@ def sample_nearest(surface, u: float, v: float) -> np.ndarray:
     x = _clamp(math.floor(u * width), 0, width - 1)
     y = _clamp(math.floor(v * height), 0, height - 1)
     source = (y * width + x) * 4
-    return surface.data[source:source + 4].astype(np.float32)
+    return surface.data[source : source + 4].astype(np.float32)
 
 
 def sample_nearest_bottom_left(surface, u: float, v: float) -> np.ndarray:
@@ -56,7 +56,7 @@ def sample_nearest_bottom_left(surface, u: float, v: float) -> np.ndarray:
     shader_y = _clamp(math.floor(v * height), 0, height - 1)
     y = height - 1 - shader_y
     source = (y * width + x) * 4
-    return surface.data[source:source + 4].astype(np.float32)
+    return surface.data[source : source + 4].astype(np.float32)
 
 
 def sample_bilinear(surface, u: float, v: float) -> np.ndarray:
@@ -84,10 +84,10 @@ def sample_bilinear(surface, u: float, v: float) -> np.ndarray:
 
     # Widen to float64 first, matching JS's implicit widening of
     # Float32Array reads to double before arithmetic.
-    c00 = data[p00:p00 + 4].astype(np.float64)
-    c10 = data[p10:p10 + 4].astype(np.float64)
-    c01 = data[p01:p01 + 4].astype(np.float64)
-    c11 = data[p11:p11 + 4].astype(np.float64)
+    c00 = data[p00 : p00 + 4].astype(np.float64)
+    c10 = data[p10 : p10 + 4].astype(np.float64)
+    c01 = data[p01 : p01 + 4].astype(np.float64)
+    c11 = data[p11 : p11 + 4].astype(np.float64)
 
     top = c00 + (c10 - c00) * tx
     bottom = c01 + (c11 - c01) * tx

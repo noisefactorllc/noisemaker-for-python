@@ -65,8 +65,8 @@ def run_pass_deriv(kernel, ctx: Ctx, width: int, height: int) -> Surface:
         kernel(ctx, [0.0, 0.0, 0.0, 0.0])
         return rt._deriv_log
 
-    lane_cache = {}   # (quadX, quadY) -> [LL, LR, UL, UR] logs
-    diff_cache = {}   # (quadX, quadY, xParity, yParity) -> fine diffs
+    lane_cache = {}  # (quadX, quadY) -> [LL, LR, UL, UR] logs
+    diff_cache = {}  # (quadX, quadY, xParity, yParity) -> fine diffs
     for y in range(height):
         fy = height - y - 0.5
         for x in range(width):

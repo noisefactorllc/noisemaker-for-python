@@ -12,13 +12,13 @@ import os
 
 import numpy as np
 
-from .kernel_loader import KernelCache
-from .pass_runner import Ctx, run_pass, run_pass_deriv
-from .runtime import F32, Runtime, f32
 from .adapters import get_adapter
 from .adapters._palette_data import PALETTE_DATA
 from .draw_ops import get_draw_op
+from .kernel_loader import KernelCache
 from .overlay_gen import OVERLAY_EFFECTS, render_worm_overlay
+from .pass_runner import Ctx, run_pass, run_pass_deriv
+from .runtime import F32, Runtime, f32
 from .surface import Surface
 from .texture_format import quantize_texture
 
@@ -108,16 +108,19 @@ def _remap_uniform_data(u, width, height):
     """Pack synth/remap's std140 `data[267]` block from the bound uniforms —
     port of noisemaker-cpu renderer.js remapUniformData. At the default
     zoneCount=0 this yields the background color for every pixel."""
+
     def g(name, default):
         v = u.get(name)
         return default if v is None else v
+
     data = [np.zeros(4, dtype=F32) for _ in range(267)]
     bg = np.asarray(g("bgColor", [0, 0, 0]), dtype=F32)
     data[0] = np.array([bg[0], bg[1], bg[2], g("bgAlpha", 1)], dtype=F32)
     data[1] = np.array([g("zoneCount", 0), g("smoothEdge", 0.04), 0, g("time", 0)], dtype=F32)
     for zone in range(8):
-        data[2 + zone] = np.array([g(f"zone{zone}_count", 0), g(f"zone{zone}_active", 0),
-                                   0, g(f"zone{zone}_alpha", 1)], dtype=F32)
+        data[2 + zone] = np.array(
+            [g(f"zone{zone}_count", 0), g(f"zone{zone}_active", 0), 0, g(f"zone{zone}_alpha", 1)], dtype=F32
+        )
         for pair in range(32):
             data[10 + zone * 32 + pair] = np.asarray(g(f"zone{zone}_v{pair}", [0, 0, 0, 0]), dtype=F32)
     data[266] = np.array([width, height, 0, 0], dtype=F32)
@@ -138,16 +141,18 @@ def _canonical_uniforms(width, height, time, seed, effect_uniforms):
         "motion": np.zeros(4, dtype=F32),
     }
     u.update(effect_uniforms)  # effect params override base defaults
-    u.update({  # canonical values always win
-        "resolution": res,
-        "fullResolution": res,
-        "tileOffset": np.zeros(2, dtype=F32),
-        "aspectRatio": aspect,
-        "aspect": aspect,
-        "time": f32(time),
-        "globalTime": f32(time),
-        "deltaTime": 0,
-    })
+    u.update(
+        {  # canonical values always win
+            "resolution": res,
+            "fullResolution": res,
+            "tileOffset": np.zeros(2, dtype=F32),
+            "aspectRatio": aspect,
+            "aspect": aspect,
+            "time": f32(time),
+            "globalTime": f32(time),
+            "deltaTime": 0,
+        }
+    )
     return u
 
 
@@ -187,8 +192,9 @@ def render_effect(effect_id, params=None, inputs=None, width=256, height=256, se
     # cosine-palette coefficients from the shared table, overriding the
     # paletteAmp/Freq/Offset/Phase/Mode uniforms (reference renderer.js).
     if eff.get("namespace") == "classicNoisedeck":
-        pal = next((pn for pn, sp in eff["params"].items()
-                    if isinstance(sp, dict) and sp.get("type") == "palette"), None)
+        pal = next(
+            (pn for pn, sp in eff["params"].items() if isinstance(sp, dict) and sp.get("type") == "palette"), None
+        )
         if pal is not None:
             idx = _coerce(eff["params"][pal], params.get(pal))
             if isinstance(idx, int) and 0 < idx <= len(PALETTE_DATA):
@@ -219,7 +225,9 @@ def render_effect(effect_id, params=None, inputs=None, width=256, height=256, se
                 for pn in ("seed", "density"):
                     if pn in eff["params"]:
                         gp = eff["params"][pn]
-                        gen[pn] = _coerce(gp, seed) if pn == "seed" and "seed" not in params else _coerce(gp, params.get(pn))
+                        gen[pn] = (
+                            _coerce(gp, seed) if pn == "seed" and "seed" not in params else _coerce(gp, params.get(pn))
+                        )
                 attachments[tname] = render_worm_overlay(effect_id, width, height, gen)
 
     for p in eff["passes"]:
@@ -250,7 +258,7 @@ def render_effect(effect_id, params=None, inputs=None, width=256, height=256, se
             # CPU-only draw op (e.g. point-scatter). A fresh destination seeds
             # from the prior same-name attachment (accumulator) or clears, then
             # the op writes into it.
-            src = textures.get(list((p.get("inputs") or {}).values() or ["inputTex"])[0]) or textures["inputTex"]
+            src = textures.get(next(iter((p.get("inputs") or {}).values()), "inputTex")) or textures["inputTex"]
             result = Surface(width, height)
             prev = attachments.get(out_names[0]) if out_names else None
             if prev is not None and prev.data.shape == result.data.shape:

@@ -16,7 +16,7 @@ classifiers = [
 dependencies = ["numpy>=1.26", "click>=8"]
 
 [project.optional-dependencies]
-dev = ["pytest>=8"]
+dev = ["pytest>=8", "ruff>=0.6"]
 # Build-time only: the transpiler (transpiler/) fetches + parses CDN shader
 # bundles. Not required at runtime.
 build = ["json5>=0.9"]
@@ -29,3 +29,18 @@ where = ["src"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
+
+[tool.ruff]
+line-length = 120
+target-version = "py311"
+# Generated/vendored data — never lint or format: the transpiler-emitted bundle
+# and the vendored cosine-palette coefficient table.
+extend-exclude = ["src/noisemaker_cpu/bundle", "src/noisemaker_cpu/adapters/_palette_data.py"]
+
+[tool.ruff.lint]
+select = ["E", "F", "W", "I", "B", "UP", "C4", "SIM", "RUF"]
+ignore = [
+    "E741",   # single-letter names carry meaning here (oklab L/M/S, GLSL swizzles)
+    "SIM108", # ternary hurts readability where a branch carries an explanatory comment
+    "RUF002", # `×`/`—` in docstrings is intentional typography (e.g. "2×2 quad")
+]

@@ -18,6 +18,7 @@ def register(key):
     def deco(factory):
         CANONICAL_ADAPTERS[key] = factory
         return factory
+
     return deco
 
 
@@ -25,7 +26,5 @@ def get_adapter(effect_id, program):
     return CANONICAL_ADAPTERS.get(f"{effect_id}:{program}")
 
 
-# Import adapter modules so they self-register.
-from . import crt  # noqa: E402,F401
-from . import palette  # noqa: E402,F401
-from . import snow  # noqa: E402,F401
+# Import adapter modules (deferred to the bottom) so they self-register.
+from . import crt, palette, snow  # noqa: E402, F401

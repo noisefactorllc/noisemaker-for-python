@@ -31,9 +31,9 @@ import math
 
 import numpy as np
 
+from ..sampler import sample_bilinear, sample_nearest_bottom_left
 from . import register
 from ._palette_data import PALETTE_DATA
-from ..sampler import sample_bilinear, sample_nearest_bottom_left
 
 F32 = np.float32
 _TAU = 6.283185307179586
@@ -45,7 +45,7 @@ def f32(x) -> float:
 
 def _to_int32(x) -> int:
     """JS `x | 0`: ToInt32 — truncate toward zero, then wrap to signed 32-bit."""
-    n = int(math.trunc(float(x))) & 0xFFFFFFFF
+    n = math.trunc(float(x)) & 0xFFFFFFFF
     return n - 0x100000000 if n >= 0x80000000 else n
 
 
@@ -144,9 +144,7 @@ def palette_factory(rt, base_kernel):
 
         color = [0.0, 0.0, 0.0]
         for channel in range(3):
-            raw = entry[8 + channel] + entry[channel] * math.cos(
-                _TAU * (entry[4 + channel] * t + entry[12 + channel])
-            )
+            raw = entry[8 + channel] + entry[channel] * math.cos(_TAU * (entry[4 + channel] * t + entry[12 + channel]))
             color[channel] = f32(_clamp01(raw))
 
         mode = _to_int32(entry[3])
