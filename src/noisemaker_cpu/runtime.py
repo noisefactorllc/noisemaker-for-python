@@ -161,16 +161,19 @@ class Runtime:
         return v[idx]
 
     def assign_swizzle(self, vec, sw: str, value):
+        # Copy-on-write: preserve dtype (int vectors stay integer) and give GLSL
+        # value semantics (`vec a = b; a.x = 1` must not mutate b). The emitted
+        # `obj = rt.assign_swizzle(obj, ...)` rebinds obj to this fresh copy.
+        v = np.array(vec)
         idx = [_SWIZZLE[c] for c in sw]
-        v = np.asarray(vec, dtype=F32)
         if _is_scalar(value):
             for j in idx:
-                v[j] = F32(value)
+                v[j] = value
         else:
-            val = np.asarray(value, dtype=F32).ravel()
+            val = np.asarray(value).ravel()
             for k, j in enumerate(idx):
-                v[j] = F32(val[k])
-        return vec
+                v[j] = val[k]
+        return v
 
     # ---- operators ----
     def binary(self, op, a, b, width=None, base="float"):

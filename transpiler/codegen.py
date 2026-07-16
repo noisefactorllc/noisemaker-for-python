@@ -412,7 +412,8 @@ class CodeGen:
             sw = target["field"]
             if base_op:
                 cur = f"rt.swizzle({obj_code}, {q(sw)})"
-                b = "float"
+                ob = base_of(obj_t)
+                b = "uint" if ob == "uint" else ("int" if ob == "int" else "float")
                 rhs = f"rt.binary({q(base_op)}, {cur}, {v_code}, {len(sw)}, {q(b)})"
             else:
                 rhs = v_code
