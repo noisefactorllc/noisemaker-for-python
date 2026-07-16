@@ -16,6 +16,7 @@ from .kernel_loader import KernelCache
 from .pass_runner import Ctx, run_pass, run_pass_deriv
 from .runtime import F32, Runtime, f32
 from .adapters import get_adapter
+from .adapters._palette_data import PALETTE_DATA
 from .draw_ops import get_draw_op
 from .overlay_gen import OVERLAY_EFFECTS, render_worm_overlay
 from .surface import Surface
@@ -156,6 +157,22 @@ def render_effect(effect_id, params=None, inputs=None, width=256, height=256, se
             effect_uniforms[spec["uniform"]] = val
         if spec.get("define") is not None:
             effect_uniforms[spec["define"]] = val
+
+    # classicNoisedeck palette presets: a `palette`-type param > 0 selects
+    # cosine-palette coefficients from the shared table, overriding the
+    # paletteAmp/Freq/Offset/Phase/Mode uniforms (reference renderer.js).
+    if eff.get("namespace") == "classicNoisedeck":
+        pal = next((pn for pn, sp in eff["params"].items()
+                    if isinstance(sp, dict) and sp.get("type") == "palette"), None)
+        if pal is not None:
+            idx = _coerce(eff["params"][pal], params.get(pal))
+            if isinstance(idx, int) and 0 < idx <= len(PALETTE_DATA):
+                e = PALETTE_DATA[idx - 1]
+                effect_uniforms["paletteAmp"] = np.array(e[0:3], dtype=F32)
+                effect_uniforms["paletteFreq"] = np.array(e[4:7], dtype=F32)
+                effect_uniforms["paletteOffset"] = np.array(e[8:11], dtype=F32)
+                effect_uniforms["palettePhase"] = np.array(e[12:15], dtype=F32)
+                effect_uniforms["paletteMode"] = 3 if e[3] == 0 else int(e[3])
 
     uniforms = _canonical_uniforms(width, height, time, seed, effect_uniforms)
     blank = Surface(1, 1)
