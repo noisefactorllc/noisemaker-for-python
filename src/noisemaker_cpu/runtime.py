@@ -44,6 +44,9 @@ class Runtime:
         self._deriv_log = []         # record: list of (op, value)
         self._deriv_diffs = None     # replay: precomputed diff per call index
         self._deriv_i = 0
+        # Per-render stdlib overrides (CPU adapters replace e.g. `sin` with a
+        # range-reduced variant): name -> fn(*args) returning the final value.
+        self.stdlib_override = {}
 
     def begin_pixel(self, ctx=None):
         self._ctx = ctx
@@ -259,6 +262,9 @@ class Runtime:
 
     # ---- component-wise builtins ----
     def component_wise(self, name, *args, width=None):
+        ov = self.stdlib_override.get(name)
+        if ov is not None:
+            return ov(*args)
         if name == "atan" and len(args) == 2:  # atan(y, x) -> atan2
             r = np.arctan2(np.asarray(args[0], dtype=np.float64), np.asarray(args[1], dtype=np.float64))
             return f32(float(r)) if all(_is_scalar(a) for a in args) else np.asarray(r, dtype=F32)

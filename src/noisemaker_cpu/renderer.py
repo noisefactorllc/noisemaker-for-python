@@ -15,6 +15,7 @@ import numpy as np
 from .kernel_loader import KernelCache
 from .pass_runner import Ctx, run_pass, run_pass_deriv
 from .runtime import F32, Runtime, f32
+from .adapters import get_adapter
 from .surface import Surface
 from .texture_format import quantize_texture
 
@@ -190,6 +191,9 @@ def render_effect(effect_id, params=None, inputs=None, width=256, height=256, se
             seed=seed,
         )
         kernel = _kernel_for(p["key"])
+        adapter = get_adapter(effect_id, p["program"])
+        if adapter is not None:
+            kernel = adapter(rt, kernel)
         runner = run_pass_deriv if getattr(kernel, "uses_derivatives", False) else run_pass
         result = runner(kernel, ctx, width, height)
         # Quantize the pass output to its declared texture format (rgba16f half
