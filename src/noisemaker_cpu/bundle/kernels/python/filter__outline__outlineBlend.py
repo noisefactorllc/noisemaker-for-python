@@ -15,7 +15,7 @@ def run_pixel(ctx, out):
         globalCoord = rt.binary("+", rt.swizzle(ctx.frag_coord, "xy"), _u_tileOffset, 2, "float")
         dimensions = rt.texture_size(_u_inputTex)
         if (bool(rt.binary("==", rt.swizzle(dimensions, "x"), rt.i(0))) or bool(rt.binary("==", rt.swizzle(dimensions, "y"), rt.i(0)))):
-            g.fragColor = rt.construct(4, rt.f(0.0))
+            g.fragColor[:] = rt.construct(4, rt.f(0.0))
             return
         uv = rt.binary("/", rt.swizzle(ctx.frag_coord, "xy"), rt.construct(2, dimensions), 2, "float")
         base = rt.texture(_u_inputTex, uv)
@@ -23,7 +23,7 @@ def run_pixel(ctx, out):
         strength = rt.component_wise("clamp", rt.swizzle(edges, "r"), rt.f(0.0), rt.f(1.0), width=1)
         outlineColor = (rt.construct(3, rt.f(1.0)) if rt.binary(">", _u_invert, rt.f(0.5)) else rt.construct(3, rt.f(0.0)))
         out_rgb = rt.component_wise("mix", rt.swizzle(base, "rgb"), outlineColor, strength, width=3)
-        g.fragColor = rt.construct(4, out_rgb, rt.swizzle(base, "a"))
+        g.fragColor[:] = rt.construct(4, out_rgb, rt.swizzle(base, "a"))
     main__void()
     _c = g.fragColor
     out[0] = rt.f32(_c[0]); out[1] = rt.f32(_c[1]); out[2] = rt.f32(_c[2]); out[3] = rt.f32(_c[3])

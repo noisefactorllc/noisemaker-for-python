@@ -19,7 +19,7 @@ def run_pixel(ctx, out):
         blur = rt.texture(_u_blurTex, uv)
         diff = rt.binary("-", rt.swizzle(src, "rgb"), rt.swizzle(blur, "rgb"), 3, "float")
         hp = (rt.construct(3, rt.binary("+", lum__vec3(diff), rt.f(0.5), 1, "float")) if _u_mono else rt.binary("+", diff, rt.f(0.5), 3, "float"))
-        g.fragColor = rt.construct(4, rt.component_wise("clamp", hp, rt.f(0.0), rt.f(1.0), width=3), rt.swizzle(src, "a"))
+        g.fragColor[:] = rt.construct(4, rt.component_wise("clamp", hp, rt.f(0.0), rt.f(1.0), width=3), rt.swizzle(src, "a"))
     main__void()
     _c = g.fragColor
     out[0] = rt.f32(_c[0]); out[1] = rt.f32(_c[1]); out[2] = rt.f32(_c[2]); out[3] = rt.f32(_c[3])

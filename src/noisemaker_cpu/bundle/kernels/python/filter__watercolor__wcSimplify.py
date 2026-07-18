@@ -14,8 +14,8 @@ def run_pixel(ctx, out):
         b = rt.copy(b, "float")
         lo = rt.component_wise("min", a, b, width=3)
         hi = rt.component_wise("max", a, b, width=3)
-        a = lo
-        b = hi
+        a[:] = lo
+        b[:] = hi
         return (None, a, b)
     def main__void():
         stride = rt.component_wise("mix", rt.f(3.0), rt.f(1.0), rt.binary("/", rt.component_wise("clamp", _u_detail, rt.f(0.0), rt.f(100.0), width=1), rt.f(100.0), 1, "float"), width=1)
@@ -58,7 +58,7 @@ def run_pixel(ctx, out):
         _retc, p4, p2 = sort2__vec3_vec3(p4, p2)
         _retc, p6, p4 = sort2__vec3_vec3(p6, p4)
         _retc, p4, p2 = sort2__vec3_vec3(p4, p2)
-        g.fragColor = rt.construct(4, p4, rt.swizzle(s4, "a"))
+        g.fragColor[:] = rt.construct(4, p4, rt.swizzle(s4, "a"))
     main__void()
     _c = g.fragColor
     out[0] = rt.f32(_c[0]); out[1] = rt.f32(_c[1]); out[2] = rt.f32(_c[2]); out[3] = rt.f32(_c[3])

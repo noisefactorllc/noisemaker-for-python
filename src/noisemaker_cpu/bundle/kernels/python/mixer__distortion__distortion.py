@@ -77,14 +77,14 @@ def run_pixel(ctx, out):
     def wrapCoords__vec2(st):
         st = rt.copy(st, "float")
         if rt.binary("==", _u_wrap, rt.i(0)):
-            st = rt.component_wise("abs", rt.binary("-", rt.component_wise("mod", st, rt.f(2.0), width=2), rt.f(1.0), 2, "float"), width=2)
-            st = rt.binary("-", rt.f(1.0), st, 2, "float")
+            st[:] = rt.component_wise("abs", rt.binary("-", rt.component_wise("mod", st, rt.f(2.0), width=2), rt.f(1.0), 2, "float"), width=2)
+            st[:] = rt.binary("-", rt.f(1.0), st, 2, "float")
         else:
             if rt.binary("==", _u_wrap, rt.i(1)):
-                st = rt.component_wise("fract", st, width=2)
+                st[:] = rt.component_wise("fract", st, width=2)
             else:
                 if rt.binary("==", _u_wrap, rt.i(2)):
-                    st = rt.component_wise("clamp", st, rt.f(0.0), rt.f(1.0), width=2)
+                    st[:] = rt.component_wise("clamp", st, rt.f(0.0), rt.f(1.0), width=2)
         return st
     def applyDisplacement__vec2_sampler2D_sampler2D(uv, mapTex, targetTex):
         uv = rt.copy(uv, "float")
@@ -101,10 +101,10 @@ def run_pixel(ctx, out):
             dx = rt.dFdx(displacedUV)
             dy = rt.dFdy(displacedUV)
             col = rt.construct(4, rt.f(0.0))
-            col = rt.binary("+", col, rt.texture(targetTex, rt.binary("+", rt.binary("+", displacedUV, rt.binary("*", dx, rt.unary("-", rt.f(0.375)), 2, "float"), 2, "float"), rt.binary("*", dy, rt.unary("-", rt.f(0.125)), 2, "float"), 2, "float")), 4, "float")
-            col = rt.binary("+", col, rt.texture(targetTex, rt.binary("+", rt.binary("+", displacedUV, rt.binary("*", dx, rt.f(0.125), 2, "float"), 2, "float"), rt.binary("*", dy, rt.unary("-", rt.f(0.375)), 2, "float"), 2, "float")), 4, "float")
-            col = rt.binary("+", col, rt.texture(targetTex, rt.binary("+", rt.binary("+", displacedUV, rt.binary("*", dx, rt.f(0.375), 2, "float"), 2, "float"), rt.binary("*", dy, rt.f(0.125), 2, "float"), 2, "float")), 4, "float")
-            col = rt.binary("+", col, rt.texture(targetTex, rt.binary("+", rt.binary("+", displacedUV, rt.binary("*", dx, rt.unary("-", rt.f(0.125)), 2, "float"), 2, "float"), rt.binary("*", dy, rt.f(0.375), 2, "float"), 2, "float")), 4, "float")
+            col[:] = rt.binary("+", col, rt.texture(targetTex, rt.binary("+", rt.binary("+", displacedUV, rt.binary("*", dx, rt.unary("-", rt.f(0.375)), 2, "float"), 2, "float"), rt.binary("*", dy, rt.unary("-", rt.f(0.125)), 2, "float"), 2, "float")), 4, "float")
+            col[:] = rt.binary("+", col, rt.texture(targetTex, rt.binary("+", rt.binary("+", displacedUV, rt.binary("*", dx, rt.f(0.125), 2, "float"), 2, "float"), rt.binary("*", dy, rt.unary("-", rt.f(0.375)), 2, "float"), 2, "float")), 4, "float")
+            col[:] = rt.binary("+", col, rt.texture(targetTex, rt.binary("+", rt.binary("+", displacedUV, rt.binary("*", dx, rt.f(0.375), 2, "float"), 2, "float"), rt.binary("*", dy, rt.f(0.125), 2, "float"), 2, "float")), 4, "float")
+            col[:] = rt.binary("+", col, rt.texture(targetTex, rt.binary("+", rt.binary("+", displacedUV, rt.binary("*", dx, rt.unary("-", rt.f(0.125)), 2, "float"), 2, "float"), rt.binary("*", dy, rt.f(0.375), 2, "float"), 2, "float")), 4, "float")
             return rt.binary("*", col, rt.f(0.25), 4, "float")
         else:
             return rt.texture(targetTex, displacedUV)
@@ -121,10 +121,10 @@ def run_pixel(ctx, out):
             dx = rt.dFdx(refractedUV)
             dy = rt.dFdy(refractedUV)
             col = rt.construct(4, rt.f(0.0))
-            col = rt.binary("+", col, rt.texture(targetTex, rt.binary("+", rt.binary("+", refractedUV, rt.binary("*", dx, rt.unary("-", rt.f(0.375)), 2, "float"), 2, "float"), rt.binary("*", dy, rt.unary("-", rt.f(0.125)), 2, "float"), 2, "float")), 4, "float")
-            col = rt.binary("+", col, rt.texture(targetTex, rt.binary("+", rt.binary("+", refractedUV, rt.binary("*", dx, rt.f(0.125), 2, "float"), 2, "float"), rt.binary("*", dy, rt.unary("-", rt.f(0.375)), 2, "float"), 2, "float")), 4, "float")
-            col = rt.binary("+", col, rt.texture(targetTex, rt.binary("+", rt.binary("+", refractedUV, rt.binary("*", dx, rt.f(0.375), 2, "float"), 2, "float"), rt.binary("*", dy, rt.f(0.125), 2, "float"), 2, "float")), 4, "float")
-            col = rt.binary("+", col, rt.texture(targetTex, rt.binary("+", rt.binary("+", refractedUV, rt.binary("*", dx, rt.unary("-", rt.f(0.125)), 2, "float"), 2, "float"), rt.binary("*", dy, rt.f(0.375), 2, "float"), 2, "float")), 4, "float")
+            col[:] = rt.binary("+", col, rt.texture(targetTex, rt.binary("+", rt.binary("+", refractedUV, rt.binary("*", dx, rt.unary("-", rt.f(0.375)), 2, "float"), 2, "float"), rt.binary("*", dy, rt.unary("-", rt.f(0.125)), 2, "float"), 2, "float")), 4, "float")
+            col[:] = rt.binary("+", col, rt.texture(targetTex, rt.binary("+", rt.binary("+", refractedUV, rt.binary("*", dx, rt.f(0.125), 2, "float"), 2, "float"), rt.binary("*", dy, rt.unary("-", rt.f(0.375)), 2, "float"), 2, "float")), 4, "float")
+            col[:] = rt.binary("+", col, rt.texture(targetTex, rt.binary("+", rt.binary("+", refractedUV, rt.binary("*", dx, rt.f(0.375), 2, "float"), 2, "float"), rt.binary("*", dy, rt.f(0.125), 2, "float"), 2, "float")), 4, "float")
+            col[:] = rt.binary("+", col, rt.texture(targetTex, rt.binary("+", rt.binary("+", refractedUV, rt.binary("*", dx, rt.unary("-", rt.f(0.125)), 2, "float"), 2, "float"), rt.binary("*", dy, rt.f(0.375), 2, "float"), 2, "float")), 4, "float")
             return rt.binary("*", col, rt.f(0.25), 4, "float")
         else:
             return rt.texture(targetTex, refractedUV)
@@ -199,22 +199,22 @@ def run_pixel(ctx, out):
         color = rt.construct(4, 0.0)
         if rt.binary("==", _u_mode, rt.i(0)):
             if rt.binary("==", _u_mapSource, rt.i(0)):
-                color = applyDisplacement__vec2_sampler2D_sampler2D(uv, _u_inputTex, _u_tex)
+                color[:] = applyDisplacement__vec2_sampler2D_sampler2D(uv, _u_inputTex, _u_tex)
             else:
-                color = applyDisplacement__vec2_sampler2D_sampler2D(uv, _u_tex, _u_inputTex)
+                color[:] = applyDisplacement__vec2_sampler2D_sampler2D(uv, _u_tex, _u_inputTex)
         else:
             if rt.binary("==", _u_mode, rt.i(1)):
                 if rt.binary("==", _u_mapSource, rt.i(0)):
-                    color = applyRefraction__vec2_vec2_sampler2D_sampler2D(uv, texelSize, _u_inputTex, _u_tex)
+                    color[:] = applyRefraction__vec2_vec2_sampler2D_sampler2D(uv, texelSize, _u_inputTex, _u_tex)
                 else:
-                    color = applyRefraction__vec2_vec2_sampler2D_sampler2D(uv, texelSize, _u_tex, _u_inputTex)
+                    color[:] = applyRefraction__vec2_vec2_sampler2D_sampler2D(uv, texelSize, _u_tex, _u_inputTex)
             else:
                 if rt.binary("==", _u_mode, rt.i(2)):
                     if rt.binary("==", _u_mapSource, rt.i(0)):
-                        color = applyReflection__vec2_vec2_vec2_sampler2D_sampler2D(uv, globalUV, texelSize, _u_inputTex, _u_tex)
+                        color[:] = applyReflection__vec2_vec2_vec2_sampler2D_sampler2D(uv, globalUV, texelSize, _u_inputTex, _u_tex)
                     else:
-                        color = applyReflection__vec2_vec2_vec2_sampler2D_sampler2D(uv, globalUV, texelSize, _u_tex, _u_inputTex)
-        g.fragColor = color
+                        color[:] = applyReflection__vec2_vec2_vec2_sampler2D_sampler2D(uv, globalUV, texelSize, _u_tex, _u_inputTex)
+        g.fragColor[:] = color
     main__void()
     _c = g.fragColor
     out[0] = rt.f32(_c[0]); out[1] = rt.f32(_c[1]); out[2] = rt.f32(_c[2]); out[3] = rt.f32(_c[3])

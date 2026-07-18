@@ -30,7 +30,7 @@ def run_pixel(ctx, out):
         v = rt.component_wise("clamp", v, rt.f(0.0), rt.f(1.0), width=1)
         outColor = rt.component_wise("clamp", rt.binary("*", rt.construct(3, v), rt.construct(3, rt.f(0.96), rt.f(0.98), rt.f(1.02)), 3, "float"), rt.f(0.0), rt.f(1.0), width=3)
         src = rt.texture(_u_inputTex, uv)
-        g.fragColor = rt.construct(4, outColor, rt.swizzle(src, "a"))
+        g.fragColor[:] = rt.construct(4, outColor, rt.swizzle(src, "a"))
     main__void()
     _c = g.fragColor
     out[0] = rt.f32(_c[0]); out[1] = rt.f32(_c[1]); out[2] = rt.f32(_c[2]); out[3] = rt.f32(_c[3])

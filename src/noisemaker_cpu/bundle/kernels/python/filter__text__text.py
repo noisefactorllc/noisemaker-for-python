@@ -22,7 +22,7 @@ def run_pixel(ctx, out):
         matteAlpha = _u_matteOpacity
         rgb = rt.binary("+", rt.binary("+", rt.binary("*", rt.swizzle(text, "rgb"), textPresence, 3, "float"), rt.binary("*", rt.binary("*", rt.swizzle(inputColor, "rgb"), rt.binary("-", rt.f(1.0), textPresence, 1, "float"), 3, "float"), rt.binary("-", rt.f(1.0), matteAlpha, 1, "float"), 3, "float"), 3, "float"), rt.binary("*", rt.binary("*", _u_matteColor, matteAlpha, 3, "float"), rt.binary("-", rt.f(1.0), textPresence, 1, "float"), 3, "float"), 3, "float")
         alpha = rt.component_wise("max", textPresence, rt.component_wise("mix", rt.swizzle(inputColor, "a"), rt.f(1.0), matteAlpha, width=1), width=1)
-        g.fragColor = rt.construct(4, rgb, alpha)
+        g.fragColor[:] = rt.construct(4, rgb, alpha)
     main__void()
     _c = g.fragColor
     out[0] = rt.f32(_c[0]); out[1] = rt.f32(_c[1]); out[2] = rt.f32(_c[2]); out[3] = rt.f32(_c[3])

@@ -25,6 +25,15 @@ def f32(x) -> float:
     return float(np.float32(x))
 
 
+def _snap32(v):
+    """Snap a float vector to f32 at a storage/consumption boundary — JS keeps
+    vectors in Float32Array, so every element read/written is f32. `binary`/`unary`
+    defer rounding (stay float64) so compound expressions round only once here.
+    Int vectors pass through unchanged (uvec hash seeds keep full precision)."""
+    a = np.asarray(v)
+    return a if np.issubdtype(a.dtype, np.integer) else a.astype(F32)
+
+
 def _s32(x) -> int:
     """Wrap a Python int to signed 32-bit (GLSL int overflow semantics)."""
     return ((int(x) + 0x80000000) & _U32) - 0x80000000
@@ -172,21 +181,25 @@ class Runtime:
     def swizzle(self, vec, sw: str):
         idx = [_SWIZZLE[c] for c in sw]
         v = np.asarray(vec)  # preserve dtype (int vectors must stay integer)
-        if len(idx) == 1:
-            return int(v[idx[0]]) if np.issubdtype(v.dtype, np.integer) else float(v[idx[0]])
-        return v[idx]
+        if np.issubdtype(v.dtype, np.integer):
+            return int(v[idx[0]]) if len(idx) == 1 else v[idx]
+        v = v.astype(F32)  # JS reads a stored f32 element (binary defers the round)
+        return float(v[idx[0]]) if len(idx) == 1 else v[idx]
 
     def assign_swizzle(self, vec, sw: str, value):
         # Copy-on-write: preserve dtype (int vectors stay integer) and give GLSL
         # value semantics (`vec a = b; a.x = 1` must not mutate b). The emitted
         # `obj = rt.assign_swizzle(obj, ...)` rebinds obj to this fresh copy.
-        v = np.array(vec)
+        # A stored vector is f32 in JS; snap the base and the assigned value so the
+        # write happens at f32 (binary defers rounding). Int vectors stay integer.
+        base = np.asarray(vec)
+        v = np.array(base if np.issubdtype(base.dtype, np.integer) else base.astype(F32))
         idx = [_SWIZZLE[c] for c in sw]
         if _is_scalar(value):
             for j in idx:
                 v[j] = value
         else:
-            val = np.asarray(value).ravel()
+            val = np.asarray(_snap32(value)).ravel()
             for k, j in enumerate(idx):
                 v[j] = val[k]
         return v
@@ -197,8 +210,17 @@ class Runtime:
             return self._logical(op, a, b)
         if base in ("int", "uint") or op in ("&", "|", "^", "<<", ">>"):
             return self._int_binary(op, a, b, "uint" if base == "uint" else "int")
-        av = a if _is_scalar(a) else np.asarray(a, dtype=F32)
-        bv = b if _is_scalar(b) else np.asarray(b, dtype=F32)
+        # Compute in float64 and DEFER the float32 rounding — mirrors JS, which reads
+        # Float32Array elements as float64, evaluates the whole component expression
+        # in float64, and rounds to f32 only when the result is stored into a
+        # Float32Array (a `new PooledFloat32Array([...])` at an assignment or a
+        # function argument). So a compound like `uv - i + dot` rounds ONCE, not after
+        # each op. Rounding per-op double-rounds and accumulates sub-ULP error through
+        # the noise generator's simplex; the f32 rounding instead happens at the
+        # consumption boundaries below (swizzle, dot, component_wise, construct,
+        # assign_swizzle, output), each of which snaps its float vector inputs to f32.
+        av = a if _is_scalar(a) else np.asarray(a, dtype=np.float64)
+        bv = b if _is_scalar(b) else np.asarray(b, dtype=np.float64)
         if op == "+":
             r = np.add(av, bv)
         elif op == "-":
@@ -212,12 +234,8 @@ class Runtime:
         else:
             raise ValueError(f"unsupported binary op {op!r}")
         if _is_scalar(av) and _is_scalar(bv):
-            # Match the reference engine: scalar float arithmetic accumulates in
-            # float64 (raw JS ops), rounded to float32 only at vec/output
-            # boundaries (construct, swizzle, out). Per-op rounding diverges in
-            # long chains (noise). Vectors stay float32 (Float32Array semantics).
             return float(r)
-        return np.asarray(r, dtype=F32)
+        return np.asarray(r, dtype=np.float64)
 
     def _int_binary(self, op, a, b, base):
         if _is_scalar(a) and _is_scalar(b):
@@ -253,7 +271,8 @@ class Runtime:
 
     def unary(self, op, a, width=None):
         if op == "-":
-            return f32(-a) if _is_scalar(a) else np.asarray(-np.asarray(a, dtype=F32), dtype=F32)
+            # Defer f32 rounding for vectors (negation is exact anyway); scalars stay float64.
+            return (-a) if _is_scalar(a) else np.asarray(-np.asarray(a, dtype=np.float64), dtype=np.float64)
         if op == "!":
             return not bool(a)
         if op == "+":
@@ -279,7 +298,9 @@ class Runtime:
         # Compute in float64 (like JS Math.*), then round to float32 (fround) —
         # matches the reference engine's transcendentals; a float32 sin/pow path
         # diverges enough to blow the +/-2 tolerance in noise chains.
-        arrs = [a if _is_scalar(a) else np.asarray(a, dtype=np.float64) for a in args]
+        # Snap vector args to f32 first (JS applies these to stored Float32Array
+        # values), then compute in float64 and round the result to f32.
+        arrs = [a if _is_scalar(a) else np.asarray(_snap32(a), dtype=np.float64) for a in args]
         fn = _COMPONENT.get(name)
         if fn is None:
             raise ValueError(f"unsupported builtin {name!r}")
@@ -292,8 +313,10 @@ class Runtime:
     def texture(self, sampler, uv):
         from .sampler import sample_bilinear, sample_nearest_bottom_left
 
-        u = float(uv[0])
-        v = float(uv[1])
+        # Sample at f32 coords — JS reads the uv from a stored Float32Array (binary
+        # defers the round). float64 coords would floor/interpolate a hair differently.
+        u = f32(float(uv[0]))
+        v = f32(float(uv[1]))
         if getattr(sampler, "filter", "nearest") == "linear":
             return sample_bilinear(sampler, u, v)
         return sample_nearest_bottom_left(sampler, u, v)
@@ -341,21 +364,27 @@ class Runtime:
             return int(x) & _U32
         return np.asarray(x).astype(np.int64) & _U32
 
-    # ---- vector geometry (accumulate float64, round to float32 once) ----
+    # ---- vector geometry (snap args to f32, accumulate float64, round once) ----
     def dot(self, a, b, width=None):
-        return f32(float(np.dot(np.asarray(a, dtype=np.float64), np.asarray(b, dtype=np.float64))))
+        return f32(float(np.dot(np.asarray(_snap32(a), dtype=np.float64), np.asarray(_snap32(b), dtype=np.float64))))
 
     def length(self, a, width=None):
-        v = np.asarray(a, dtype=np.float64)
-        return f32(float(np.sqrt(np.dot(v, v))))
+        # JS length is F32(sqrt(dot)), and its dot is itself F32-rounded — so the
+        # squared magnitude is rounded to f32 before the sqrt. Match that.
+        v = np.asarray(_snap32(a), dtype=np.float64)
+        return f32(float(np.sqrt(f32(float(np.dot(v, v))))))
 
     def distance(self, a, b, width=None):
-        d = np.asarray(a, dtype=np.float64) - np.asarray(b, dtype=np.float64)
+        d = np.asarray(_snap32(a), dtype=np.float64) - np.asarray(_snap32(b), dtype=np.float64)
         return f32(float(np.sqrt(np.dot(d, d))))
 
     def normalize(self, a, width=None):
-        v = np.asarray(a, dtype=np.float64)
-        mag = np.sqrt(np.dot(v, v))
+        v = np.asarray(_snap32(a), dtype=np.float64)
+        # JS normalize divides by length(), which is f32-rounded (float(Math.sqrt)).
+        # Dividing by the full-precision float64 magnitude instead diverges ~1 ULP —
+        # invisible in most chains but decisive where it feeds a branch (parallax's
+        # ray-march break snaps a nearest-sampled height to a different texel).
+        mag = float(F32(np.sqrt(np.dot(v, v))))
         if mag == 0.0:
             return np.zeros(v.shape[0], dtype=F32)
         return (v / mag).astype(F32)

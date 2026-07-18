@@ -33,7 +33,7 @@ def run_pixel(ctx, out):
         v = rt.assign_swizzle(v, "x", rt.binary("+", rt.swizzle(v, "x"), rt.binary("*", rt.swizzle(v, "y"), rt.swizzle(v, "z"), 1, "uint"), 1, "uint"))
         v = rt.assign_swizzle(v, "y", rt.binary("+", rt.swizzle(v, "y"), rt.binary("*", rt.swizzle(v, "z"), rt.swizzle(v, "x"), 1, "uint"), 1, "uint"))
         v = rt.assign_swizzle(v, "z", rt.binary("+", rt.swizzle(v, "z"), rt.binary("*", rt.swizzle(v, "x"), rt.swizzle(v, "y"), 1, "uint"), 1, "uint"))
-        v = rt.binary("^", v, rt.binary(">>", v, rt.construct(3, rt.i(16), base="uint"), 3, "uint"), 3, "uint")
+        v[:] = rt.binary("^", v, rt.binary(">>", v, rt.construct(3, rt.i(16), base="uint"), 3, "uint"), 3, "uint")
         v = rt.assign_swizzle(v, "x", rt.binary("+", rt.swizzle(v, "x"), rt.binary("*", rt.swizzle(v, "y"), rt.swizzle(v, "z"), 1, "uint"), 1, "uint"))
         v = rt.assign_swizzle(v, "y", rt.binary("+", rt.swizzle(v, "y"), rt.binary("*", rt.swizzle(v, "z"), rt.swizzle(v, "x"), 1, "uint"), 1, "uint"))
         v = rt.assign_swizzle(v, "z", rt.binary("+", rt.swizzle(v, "z"), rt.binary("*", rt.swizzle(v, "x"), rt.swizzle(v, "y"), 1, "uint"), 1, "uint"))
@@ -154,14 +154,14 @@ def run_pixel(ctx, out):
         texel = rt.texel_fetch(_u_inputTex, coords, rt.i(0))
         blend_alpha = rt.component_wise("clamp", _u_alpha, rt.f(0.0), rt.f(1.0), width=1)
         if rt.binary("<=", blend_alpha, rt.f(0.0)):
-            g.fragColor = texel
+            g.fragColor[:] = texel
             return
         effective_time = (rt.f(0.0) if rt.binary(">", _u_pause, rt.f(0.5)) else _u_time)
         rs = rt.component_wise("max", _u_renderScale, rt.f(1.0), width=1)
         noise_value = sample_grain_noise__uvec2_vec2_float_float(global_pixel, rt.construct(2, rt.binary("/", rt.construct(1, u_width), rs, 1, "float"), rt.binary("/", rt.construct(1, u_height), rs, 1, "float")), effective_time, rt.f(100.0))
         noise_rgb = rt.construct(3, noise_value)
         mixed_rgb = rt.component_wise("mix", rt.swizzle(texel, "rgb"), noise_rgb, blend_alpha, width=3)
-        g.fragColor = rt.construct(4, clamp01__float(rt.swizzle(mixed_rgb, "x")), clamp01__float(rt.swizzle(mixed_rgb, "y")), clamp01__float(rt.swizzle(mixed_rgb, "z")), rt.swizzle(texel, "a"))
+        g.fragColor[:] = rt.construct(4, clamp01__float(rt.swizzle(mixed_rgb, "x")), clamp01__float(rt.swizzle(mixed_rgb, "y")), clamp01__float(rt.swizzle(mixed_rgb, "z")), rt.swizzle(texel, "a"))
     main__void()
     _c = g.fragColor
     out[0] = rt.f32(_c[0]); out[1] = rt.f32(_c[1]); out[2] = rt.f32(_c[2]); out[3] = rt.f32(_c[3])

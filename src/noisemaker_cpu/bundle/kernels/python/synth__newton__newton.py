@@ -83,8 +83,8 @@ def run_pixel(ctx, out):
         bi = rt.copy(bi, "float")
         rr = rt.copy(rr, "float")
         ri = rt.copy(ri, "float")
-        rr = df64_sub__vec2_vec2(df64_mul__vec2_vec2(ar, br), df64_mul__vec2_vec2(ai, bi))
-        ri = df64_add__vec2_vec2(df64_mul__vec2_vec2(ar, bi), df64_mul__vec2_vec2(ai, br))
+        rr[:] = df64_sub__vec2_vec2(df64_mul__vec2_vec2(ar, br), df64_mul__vec2_vec2(ai, bi))
+        ri[:] = df64_add__vec2_vec2(df64_mul__vec2_vec2(ar, bi), df64_mul__vec2_vec2(ai, br))
         return (None, rr, ri)
     def transformCoords_df64__vec2_vec2_vec2_float_float_vec2_vec2(fragCoord, cX_df, cY_df, z_zoom, rot, re_df, im_df):
         fragCoord = rt.copy(fragCoord, "float")
@@ -96,12 +96,12 @@ def run_pixel(ctx, out):
         angle = rt.binary("/", rt.binary("*", rt.unary("-", rot), g.TAU, 1, "float"), rt.f(360.0), 1, "float")
         c = rt.component_wise("cos", angle, width=1)
         s = rt.component_wise("sin", angle, width=1)
-        uv = rt.matrix_mult(rt.construct(4, c, rt.unary("-", s), s, c), uv, 2)
+        uv[:] = rt.matrix_mult(rt.construct(4, c, rt.unary("-", s), s, c), uv, 2)
         scale = rt.binary("/", rt.f(2.5), z_zoom, 1, "float")
         uv_re_df = df64_mul_f__vec2_float(df64_from__float(rt.swizzle(uv, "x")), scale)
         uv_im_df = df64_mul_f__vec2_float(df64_from__float(rt.swizzle(uv, "y")), scale)
-        re_df = df64_add__vec2_vec2(uv_re_df, cX_df)
-        im_df = df64_add__vec2_vec2(uv_im_df, cY_df)
+        re_df[:] = df64_add__vec2_vec2(uv_re_df, cX_df)
+        im_df[:] = df64_add__vec2_vec2(uv_im_df, cY_df)
         return (None, re_df, im_df)
     def getPOI__int(idx):
         if rt.binary("==", idx, rt.i(1)):
@@ -137,13 +137,13 @@ def run_pixel(ctx, out):
         p = [rt.construct(4, 0.0), rt.f(0.0), rt.f(0.0)]
         if rt.binary(">", poiIdx, rt.i(0)):
             p = getPOI__int(poiIdx)
-            cHi = rt.binary("+", rt.swizzle(p[0], "xy"), rt.construct(2, _u_centerHiX, _u_centerHiY), 2, "float")
-            cLo = rt.binary("+", rt.swizzle(p[0], "zw"), rt.construct(2, _u_centerLoX, _u_centerLoY), 2, "float")
+            cHi[:] = rt.binary("+", rt.swizzle(p[0], "xy"), rt.construct(2, _u_centerHiX, _u_centerHiY), 2, "float")
+            cLo[:] = rt.binary("+", rt.swizzle(p[0], "zw"), rt.construct(2, _u_centerLoX, _u_centerLoY), 2, "float")
             effDegree = p[1]
             effZoomDepth = rt.component_wise("min", _u_zoomDepth, p[2], width=1)
         else:
-            cHi = rt.construct(2, _u_centerHiX, _u_centerHiY)
-            cLo = rt.construct(2, _u_centerLoX, _u_centerLoY)
+            cHi[:] = rt.construct(2, _u_centerHiX, _u_centerHiY)
+            cLo[:] = rt.construct(2, _u_centerLoX, _u_centerLoY)
         zoom = rt.f(0.0)
         zoomPhase = rt.f(0.0)
         if rt.binary(">", _u_zoomSpeed, rt.f(0.0)):
@@ -200,8 +200,8 @@ def run_pixel(ctx, out):
                 tr = rt.construct(2, 0.0)
                 ti = rt.construct(2, 0.0)
                 _retc, tr, ti = df64_cmul__vec2_vec2_vec2_vec2_vec2_vec2(pwr, pwi, zr_df, zi_df, tr, ti)
-                pwr = tr
-                pwi = ti
+                pwr[:] = tr
+                pwi[:] = ti
             znr = rt.construct(2, 0.0)
             zni = rt.construct(2, 0.0)
             _retc, znr, zni = df64_cmul__vec2_vec2_vec2_vec2_vec2_vec2(pwr, pwi, zr_df, zi_df, znr, zni)
@@ -219,8 +219,8 @@ def run_pixel(ctx, out):
             ni = df64_sub__vec2_vec2(df64_mul__vec2_vec2(fzi, fpzr), df64_mul__vec2_vec2(fzr, fpzi))
             dr = df64_mul_f__vec2_float(nr, inv_denom)
             di = df64_mul_f__vec2_float(ni, inv_denom)
-            zr_df = df64_sub__vec2_vec2(zr_df, df64_mul_f__vec2_float(dr, effRelax))
-            zi_df = df64_sub__vec2_vec2(zi_df, df64_mul_f__vec2_float(di, effRelax))
+            zr_df[:] = df64_sub__vec2_vec2(zr_df, df64_mul_f__vec2_float(dr, effRelax))
+            zi_df[:] = df64_sub__vec2_vec2(zi_df, df64_mul_f__vec2_float(di, effRelax))
             zx = df64_to_float__vec2(zr_df)
             zy = df64_to_float__vec2(zi_df)
             if rt.binary(">", rt.binary("+", rt.binary("*", zx, zx, 1, "float"), rt.binary("*", zy, zy, 1, "float"), 1, "float"), bailout):
@@ -262,7 +262,7 @@ def run_pixel(ctx, out):
                     value = rt.binary("/", rt.binary("+", rt.construct(1, convergedRoot), rt.binary("/", smoothIter, maxIterF, 1, "float"), 1, "float"), numRootsF, 1, "float")
         if doInvert:
             value = rt.binary("-", rt.f(1.0), value, 1, "float")
-        g.fragColor = rt.construct(4, rt.construct(3, value), rt.f(1.0))
+        g.fragColor[:] = rt.construct(4, rt.construct(3, value), rt.f(1.0))
     main__void()
     _c = g.fragColor
     out[0] = rt.f32(_c[0]); out[1] = rt.f32(_c[1]); out[2] = rt.f32(_c[2]); out[3] = rt.f32(_c[3])

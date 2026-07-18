@@ -59,7 +59,7 @@ def run_pixel(ctx, out):
         texel = rt.texel_fetch(_u_inputTex, coords, rt.i(0))
         alphaVal = rt.component_wise("clamp", _u_alpha, rt.f(0.0), rt.f(1.0), width=1)
         if rt.binary("==", alphaVal, rt.f(0.0)):
-            g.fragColor = texel
+            g.fragColor[:] = texel
             return
         pixelCoord = rt.construct(2, rt.binary("+", rt.swizzle(ctx.frag_coord, "x"), rt.swizzle(_u_tileOffset, "x"), 1, "float"), rt.binary("+", rt.swizzle(ctx.frag_coord, "y"), rt.swizzle(_u_tileOffset, "y"), 1, "float"))
         timeVal = (rt.f(0.0) if rt.binary(">", _u_pause, rt.f(0.5)) else _u_time)
@@ -71,7 +71,7 @@ def run_pixel(ctx, out):
         limiter_mask = rt.binary("*", rt.component_wise("pow", rt.component_wise("min", limiter_value, rt.f(0.99), width=1), exponent, width=1), alphaVal, 1, "float")
         static_color = rt.construct(3, static_value)
         mixed_rgb = rt.component_wise("mix", rt.swizzle(texel, "xyz"), static_color, rt.construct(3, limiter_mask), width=3)
-        g.fragColor = rt.construct(4, mixed_rgb, rt.swizzle(texel, "w"))
+        g.fragColor[:] = rt.construct(4, mixed_rgb, rt.swizzle(texel, "w"))
     main__void()
     _c = g.fragColor
     out[0] = rt.f32(_c[0]); out[1] = rt.f32(_c[1]); out[2] = rt.f32(_c[2]); out[3] = rt.f32(_c[3])

@@ -30,7 +30,7 @@ def run_pixel(ctx, out):
                 t = rt.binary("/", rt.binary("-", luma, threshLow, 1, "float"), rt.binary("-", threshHigh, threshLow, 1, "float"), 1, "float")
                 bloomFactor = rt.binary("*", rt.binary("*", t, t, 1, "float"), rt.binary("-", rt.f(3.0), rt.binary("*", rt.f(2.0), t, 1, "float"), 1, "float"), 1, "float")
         brightColor = rt.binary("*", rt.swizzle(color, "rgb"), bloomFactor, 3, "float")
-        g.fragColor = rt.construct(4, brightColor, rt.swizzle(color, "a"))
+        g.fragColor[:] = rt.construct(4, brightColor, rt.swizzle(color, "a"))
     main__void()
     _c = g.fragColor
     out[0] = rt.f32(_c[0]); out[1] = rt.f32(_c[1]); out[2] = rt.f32(_c[2]); out[3] = rt.f32(_c[3])

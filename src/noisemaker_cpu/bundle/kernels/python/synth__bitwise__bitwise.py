@@ -73,17 +73,17 @@ def run_pixel(ctx, out):
         hueScale = rt.f(0.0)
         if rt.binary("==", _u_colorMode, rt.i(0)):
             v = bitOp__int_int_int_int(x, y, _u_operation, _u_mask)
-            g.fragColor = rt.construct(4, v, v, v, rt.f(1.0))
+            g.fragColor[:] = rt.construct(4, v, v, v, rt.f(1.0))
         else:
             if rt.binary("==", _u_colorMode, rt.i(1)):
                 r = bitOp__int_int_int_int(x, y, _u_operation, _u_mask)
                 _g = bitOp__int_int_int_int(rt.binary("+", x, _u_colorOffset, 1, "int"), y, _u_operation, _u_mask)
                 b = bitOp__int_int_int_int(x, rt.binary("+", y, _u_colorOffset, 1, "int"), _u_operation, _u_mask)
-                g.fragColor = rt.construct(4, r, _g, b, rt.f(1.0))
+                g.fragColor[:] = rt.construct(4, r, _g, b, rt.f(1.0))
             else:
                 v = bitOp__int_int_int_int(x, y, _u_operation, _u_mask)
                 hueScale = rt.binary("/", rt.construct(1, _u_mask), rt.construct(1, rt.binary("+", _u_mask, rt.i(1), 1, "int")), 1, "float")
-                g.fragColor = rt.construct(4, hsv2rgb__vec3(rt.construct(3, rt.binary("*", v, hueScale, 1, "float"), rt.f(1.0), rt.f(1.0))), rt.f(1.0))
+                g.fragColor[:] = rt.construct(4, hsv2rgb__vec3(rt.construct(3, rt.binary("*", v, hueScale, 1, "float"), rt.f(1.0), rt.f(1.0))), rt.f(1.0))
     main__void()
     _c = g.fragColor
     out[0] = rt.f32(_c[0]); out[1] = rt.f32(_c[1]); out[2] = rt.f32(_c[2]); out[3] = rt.f32(_c[3])

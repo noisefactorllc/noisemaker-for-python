@@ -124,10 +124,10 @@ def run_pixel(ctx, out):
         angle = rt.binary("/", rt.binary("*", rt.unary("-", _u_rotation), g.TAU, 1, "float"), rt.f(360.0), 1, "float")
         cs = rt.component_wise("cos", angle, width=1)
         sn = rt.component_wise("sin", angle, width=1)
-        uv = rt.matrix_mult(rt.construct(4, cs, rt.unary("-", sn), sn, cs), uv, 2)
+        uv[:] = rt.matrix_mult(rt.construct(4, cs, rt.unary("-", sn), sn, cs), uv, 2)
         scale = rt.binary("/", rt.f(2.5), zm, 1, "float")
-        reDF = df64_add__vec2_vec2(df64_mul_f__vec2_float(df64_from__float(rt.swizzle(uv, "x")), scale), df64_from__float(_u_centerX))
-        imDF = df64_add__vec2_vec2(df64_mul_f__vec2_float(df64_from__float(rt.swizzle(uv, "y")), scale), df64_from__float(_u_centerY))
+        reDF[:] = df64_add__vec2_vec2(df64_mul_f__vec2_float(df64_from__float(rt.swizzle(uv, "x")), scale), df64_from__float(_u_centerX))
+        imDF[:] = df64_add__vec2_vec2(df64_mul_f__vec2_float(df64_from__float(rt.swizzle(uv, "y")), scale), df64_from__float(_u_centerY))
         return (None, reDF, imDF)
     def juliaIterate__vec2_vec2_vec2_int_float_int(z0Re, z0Im, c, maxIter, freq, trap):
         z0Re = rt.copy(z0Re, "float")
@@ -156,12 +156,12 @@ def run_pixel(ctx, out):
             if rt.binary(">=", n, maxIter):
                 break
             zF = rt.construct(2, rt.swizzle(zRe, "x"), rt.swizzle(zIm, "x"))
-            dz = rt.binary("*", rt.f(2.0), cmul__vec2_vec2(zF, dz), 2, "float")
+            dz[:] = rt.binary("*", rt.f(2.0), cmul__vec2_vec2(zF, dz), 2, "float")
             zRe2 = df64_mul__vec2_vec2(zRe, zRe)
             zIm2 = df64_mul__vec2_vec2(zIm, zIm)
             zReIm = df64_mul__vec2_vec2(zRe, zIm)
-            zRe = df64_add__vec2_vec2(df64_sub__vec2_vec2(zRe2, zIm2), df64_from__float(rt.swizzle(c, "x")))
-            zIm = df64_add__vec2_vec2(df64_mul_f__vec2_float(zReIm, rt.f(2.0)), df64_from__float(rt.swizzle(c, "y")))
+            zRe[:] = df64_add__vec2_vec2(df64_sub__vec2_vec2(zRe2, zIm2), df64_from__float(rt.swizzle(c, "x")))
+            zIm[:] = df64_add__vec2_vec2(df64_mul_f__vec2_float(zReIm, rt.f(2.0)), df64_from__float(rt.swizzle(c, "y")))
             zMag2 = rt.binary("+", rt.binary("*", rt.swizzle(zRe, "x"), rt.swizzle(zRe, "x"), 1, "float"), rt.binary("*", rt.swizzle(zIm, "x"), rt.swizzle(zIm, "x"), 1, "float"), 1, "float")
             if rt.binary(">", zMag2, bail2):
                 break
@@ -183,7 +183,7 @@ def run_pixel(ctx, out):
             period = rt.binary("+", period, rt.i(1), 1, "int")
             if rt.binary("==", period, rt.i(20)):
                 period = rt.i(0)
-                zSlow = zHi
+                zSlow[:] = zHi
             else:
                 if rt.binary("<", rt.distance(zHi, zSlow), rt.f(1e-10)):
                     i = rt.construct(1, maxIter)
@@ -249,8 +249,8 @@ def run_pixel(ctx, out):
             zRe2 = df64_mul__vec2_vec2(zRe, zRe)
             zIm2 = df64_mul__vec2_vec2(zIm, zIm)
             zReIm = df64_mul__vec2_vec2(zRe, zIm)
-            zRe = df64_add__vec2_vec2(df64_sub__vec2_vec2(zRe2, zIm2), df64_from__float(rt.swizzle(c, "x")))
-            zIm = df64_add__vec2_vec2(df64_mul_f__vec2_float(zReIm, rt.f(2.0)), df64_from__float(rt.swizzle(c, "y")))
+            zRe[:] = df64_add__vec2_vec2(df64_sub__vec2_vec2(zRe2, zIm2), df64_from__float(rt.swizzle(c, "x")))
+            zIm[:] = df64_add__vec2_vec2(df64_mul_f__vec2_float(zReIm, rt.f(2.0)), df64_from__float(rt.swizzle(c, "y")))
             zMag2 = rt.binary("+", rt.binary("*", rt.swizzle(zRe, "x"), rt.swizzle(zRe, "x"), 1, "float"), rt.binary("*", rt.swizzle(zIm, "x"), rt.swizzle(zIm, "x"), 1, "float"), 1, "float")
             if rt.binary(">", zMag2, bail2):
                 break
@@ -307,7 +307,7 @@ def run_pixel(ctx, out):
                             value = outputSmoothIteration__struct1_float(r, rt.construct(1, _u_iterations))
         if _u_invert:
             value = rt.binary("-", rt.f(1.0), value, 1, "float")
-        g.fragColor = rt.construct(4, rt.construct(3, value), rt.f(1.0))
+        g.fragColor[:] = rt.construct(4, rt.construct(3, value), rt.f(1.0))
     main__void()
     _c = g.fragColor
     out[0] = rt.f32(_c[0]); out[1] = rt.f32(_c[1]); out[2] = rt.f32(_c[2]); out[3] = rt.f32(_c[3])

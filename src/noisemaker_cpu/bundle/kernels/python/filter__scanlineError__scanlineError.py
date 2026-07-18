@@ -134,11 +134,11 @@ def run_pixel(ctx, out):
         return wrapped
     def pcg__uvec3(v):
         v = rt.copy(v, "uint")
-        v = rt.binary("+", rt.binary("*", v, rt.i(1664525), 3, "uint"), rt.i(1013904223), 3, "uint")
+        v[:] = rt.binary("+", rt.binary("*", v, rt.i(1664525), 3, "uint"), rt.i(1013904223), 3, "uint")
         v = rt.assign_swizzle(v, "x", rt.binary("+", rt.swizzle(v, "x"), rt.binary("*", rt.swizzle(v, "y"), rt.swizzle(v, "z"), 1, "uint"), 1, "uint"))
         v = rt.assign_swizzle(v, "y", rt.binary("+", rt.swizzle(v, "y"), rt.binary("*", rt.swizzle(v, "z"), rt.swizzle(v, "x"), 1, "uint"), 1, "uint"))
         v = rt.assign_swizzle(v, "z", rt.binary("+", rt.swizzle(v, "z"), rt.binary("*", rt.swizzle(v, "x"), rt.swizzle(v, "y"), 1, "uint"), 1, "uint"))
-        v = rt.binary("^", v, rt.binary(">>", v, rt.i(16), 3, "uint"), 3, "uint")
+        v[:] = rt.binary("^", v, rt.binary(">>", v, rt.i(16), 3, "uint"), 3, "uint")
         v = rt.assign_swizzle(v, "x", rt.binary("+", rt.swizzle(v, "x"), rt.binary("*", rt.swizzle(v, "y"), rt.swizzle(v, "z"), 1, "uint"), 1, "uint"))
         v = rt.assign_swizzle(v, "y", rt.binary("+", rt.swizzle(v, "y"), rt.binary("*", rt.swizzle(v, "z"), rt.swizzle(v, "x"), 1, "uint"), 1, "uint"))
         v = rt.assign_swizzle(v, "z", rt.binary("+", rt.swizzle(v, "z"), rt.binary("*", rt.swizzle(v, "x"), rt.swizzle(v, "y"), 1, "uint"), 1, "uint"))
@@ -191,7 +191,7 @@ def run_pixel(ctx, out):
         tile_width = rt.construct(1, rt.swizzle(input_size, "x"), base="uint")
         tile_height = rt.construct(1, rt.swizzle(input_size, "y"), base="uint")
         if (bool((bool((bool(rt.binary("==", tile_width, rt.i(0))) or bool(rt.binary("==", tile_height, rt.i(0))))) or bool(rt.binary(">=", rt.swizzle(gid, "x"), tile_width)))) or bool(rt.binary(">=", rt.swizzle(gid, "y"), tile_height))):
-            g.fragColor = rt.construct(4, rt.f(0.0))
+            g.fragColor[:] = rt.construct(4, rt.f(0.0))
             return
         fullRes = (rt.binary("/", _u_fullResolution, _u_renderScale, 2, "float") if rt.binary(">", rt.swizzle(_u_fullResolution, "x"), rt.f(0.0)) else rt.construct(2, input_size))
         width_f = rt.swizzle(fullRes, "x")
@@ -247,9 +247,9 @@ def run_pixel(ctx, out):
             scanBase = rt.binary("+", rt.component_wise("floor", rt.binary("*", height_f, rt.f(0.5), 1, "float"), width=1), rt.f(1.0), 1, "float")
             scanFreq = rt.construct(2, 0.0)
             if rt.binary("<", height_f, width_f):
-                scanFreq = rt.construct(2, rt.binary("*", scanBase, rt.binary("/", height_f, width_f, 1, "float"), 1, "float"), scanBase)
+                scanFreq[:] = rt.construct(2, rt.binary("*", scanBase, rt.binary("/", height_f, width_f, 1, "float"), 1, "float"), scanBase)
             else:
-                scanFreq = rt.construct(2, scanBase, rt.binary("*", scanBase, rt.binary("/", width_f, height_f, 1, "float"), 1, "float"))
+                scanFreq[:] = rt.construct(2, scanBase, rt.binary("*", scanBase, rt.binary("/", width_f, height_f, 1, "float"), 1, "float"))
             scanDest = vhs_scanNoise__vec2_vec2_float_float(destCoord, scanFreq, time_value, rt.binary("*", speed_value, rt.f(100.0), 1, "float"))
             fullWidth = (rt.swizzle(_u_fullResolution, "x") if rt.binary(">", rt.swizzle(_u_fullResolution, "x"), rt.f(0.0)) else width_f)
             shiftAmount = rt.component_wise("floor", rt.binary("*", rt.binary("*", rt.binary("*", rt.binary("*", scanDest, fullWidth, 1, "float"), gradDest, 1, "float"), gradDest, 1, "float"), _u_distortion, 1, "float"), width=1)
@@ -265,7 +265,7 @@ def run_pixel(ctx, out):
             gradSource = vhs_gradValue__float_float_float_float(yNorm, rt.f(5.0), time_value, speed_value)
             noiseColor = rt.construct(3, scanSource)
             blended = rt.component_wise("mix", rt.swizzle(srcTexel, "rgb"), noiseColor, rt.binary("*", gradSource, _u_noise, 1, "float"), width=3)
-            g.fragColor = rt.construct(4, blended, rt.swizzle(srcTexel, "a"))
+            g.fragColor[:] = rt.construct(4, blended, rt.swizzle(srcTexel, "a"))
         else:
             base_coord = rt.construct(2, rt.construct(1, rt.swizzle(gid, "x"), base="int"), rt.construct(1, rt.swizzle(gid, "y"), base="int"), base="int")
             input_texel = rt.texel_fetch(_u_inputTex, base_coord, rt.i(0))
@@ -295,7 +295,7 @@ def run_pixel(ctx, out):
             texel = rt.texel_fetch(_u_inputTex, rt.construct(2, localSampleX, rt.construct(1, rt.swizzle(gid, "y"), base="int"), base="int"), rt.i(0))
             additive = rt.component_wise("clamp", rt.binary("*", rt.binary("*", rt.binary("*", line_weighted, white_weighted, 1, "float"), rt.f(4.0), 1, "float"), _u_noise, 1, "float"), rt.f(0.0), rt.f(4.0), width=1)
             boosted = rt.component_wise("clamp", rt.binary("+", rt.swizzle(texel, "rgb"), rt.construct(3, additive), 3, "float"), rt.construct(3, rt.f(0.0)), rt.construct(3, rt.f(1.0)), width=3)
-            g.fragColor = rt.construct(4, boosted, rt.swizzle(texel, "a"))
+            g.fragColor[:] = rt.construct(4, boosted, rt.swizzle(texel, "a"))
     main__void()
     _c = g.fragColor
     out[0] = rt.f32(_c[0]); out[1] = rt.f32(_c[1]); out[2] = rt.f32(_c[2]); out[3] = rt.f32(_c[3])

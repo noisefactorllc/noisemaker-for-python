@@ -39,21 +39,21 @@ def run_pixel(ctx, out):
         m = rt.binary("-", v, c, 1, "float")
         rgb = rt.construct(3, 0.0)
         if rt.binary("<", hp, rt.f(1.0)):
-            rgb = rt.construct(3, c, x, rt.f(0.0))
+            rgb[:] = rt.construct(3, c, x, rt.f(0.0))
         else:
             if rt.binary("<", hp, rt.f(2.0)):
-                rgb = rt.construct(3, x, c, rt.f(0.0))
+                rgb[:] = rt.construct(3, x, c, rt.f(0.0))
             else:
                 if rt.binary("<", hp, rt.f(3.0)):
-                    rgb = rt.construct(3, rt.f(0.0), c, x)
+                    rgb[:] = rt.construct(3, rt.f(0.0), c, x)
                 else:
                     if rt.binary("<", hp, rt.f(4.0)):
-                        rgb = rt.construct(3, rt.f(0.0), x, c)
+                        rgb[:] = rt.construct(3, rt.f(0.0), x, c)
                     else:
                         if rt.binary("<", hp, rt.f(5.0)):
-                            rgb = rt.construct(3, x, rt.f(0.0), c)
+                            rgb[:] = rt.construct(3, x, rt.f(0.0), c)
                         else:
-                            rgb = rt.construct(3, c, rt.f(0.0), x)
+                            rgb[:] = rt.construct(3, c, rt.f(0.0), x)
         return rt.binary("+", rgb, rt.construct(3, m), 3, "float")
     def oklab2linear__vec3(lab):
         lab = rt.copy(lab, "float")
@@ -114,17 +114,17 @@ def run_pixel(ctx, out):
         paletteColor = cosinePalette__float_vec3_vec3_vec3_vec3(t, offset, amp, freq, phase)
         finalColor = rt.construct(3, 0.0)
         if rt.binary("==", _u_colorMode, rt.i(1)):
-            finalColor = hsv2rgb__vec3(paletteColor)
+            finalColor[:] = hsv2rgb__vec3(paletteColor)
         else:
             if rt.binary("==", _u_colorMode, rt.i(2)):
-                finalColor = oklab2rgb__vec3(paletteColor)
+                finalColor[:] = oklab2rgb__vec3(paletteColor)
             else:
                 if rt.binary("==", _u_colorMode, rt.i(3)):
-                    finalColor = oklch2rgb__vec3(paletteColor)
+                    finalColor[:] = oklch2rgb__vec3(paletteColor)
                 else:
-                    finalColor = paletteColor
+                    finalColor[:] = paletteColor
         blendedColor = rt.component_wise("mix", rt.swizzle(inputColor, "rgb"), finalColor, _u_alpha, width=3)
-        g.fragColor = rt.construct(4, blendedColor, rt.swizzle(inputColor, "a"))
+        g.fragColor[:] = rt.construct(4, blendedColor, rt.swizzle(inputColor, "a"))
     main__void()
     _c = g.fragColor
     out[0] = rt.f32(_c[0]); out[1] = rt.f32(_c[1]); out[2] = rt.f32(_c[2]); out[3] = rt.f32(_c[3])

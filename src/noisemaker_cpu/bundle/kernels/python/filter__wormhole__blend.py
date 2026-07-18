@@ -43,11 +43,11 @@ def run_pixel(ctx, out):
         mean = rt.binary("/", sum, count, 1, "float")
         normalized = rt.construct(3, 0.0)
         if rt.binary(">", mean, rt.f(0.0)):
-            normalized = rt.component_wise("clamp", rt.binary("/", rt.swizzle(accum, "rgb"), rt.binary("*", mean, rt.f(4.0), 1, "float"), 3, "float"), rt.f(0.0), rt.f(1.0), width=3)
+            normalized[:] = rt.component_wise("clamp", rt.binary("/", rt.swizzle(accum, "rgb"), rt.binary("*", mean, rt.f(4.0), 1, "float"), 3, "float"), rt.f(0.0), rt.f(1.0), width=3)
         else:
-            normalized = rt.swizzle(accum, "rgb")
+            normalized[:] = rt.swizzle(accum, "rgb")
         sqrtVal = rt.component_wise("sqrt", normalized, width=3)
-        g.fragColor = rt.construct(4, rt.component_wise("mix", rt.swizzle(src, "rgb"), sqrtVal, _u_alpha, width=3), rt.swizzle(src, "a"))
+        g.fragColor[:] = rt.construct(4, rt.component_wise("mix", rt.swizzle(src, "rgb"), sqrtVal, _u_alpha, width=3), rt.swizzle(src, "a"))
     main__void()
     _c = g.fragColor
     out[0] = rt.f32(_c[0]); out[1] = rt.f32(_c[1]); out[2] = rt.f32(_c[2]); out[3] = rt.f32(_c[3])

@@ -20,20 +20,20 @@ def run_pixel(ctx, out):
         globalCoord = rt.binary("+", rt.swizzle(ctx.frag_coord, "xy"), _u_tileOffset, 2, "float")
         st = rt.binary("/", globalCoord, _u_fullResolution, 2, "float")
         c = rt.construct(2, rt.unary("-", _u_centerX), _u_centerY)
-        st = rt.binary("-", st, c, 2, "float")
+        st[:] = rt.binary("-", st, c, 2, "float")
         st = rt.assign_swizzle(st, "x", rt.binary("*", rt.swizzle(st, "x"), _u_aspect, 1, "float"))
-        st = rt.binary("/", st, rt.construct(2, _u_scaleX, _u_scaleY), 2, "float")
+        st[:] = rt.binary("/", st, rt.construct(2, _u_scaleX, _u_scaleY), 2, "float")
         st = rt.assign_swizzle(st, "x", rt.binary("/", rt.swizzle(st, "x"), _u_aspect, 1, "float"))
-        st = rt.binary("+", st, c, 2, "float")
+        st[:] = rt.binary("+", st, c, 2, "float")
         localUV = rt.binary("/", rt.binary("-", rt.binary("*", st, _u_fullResolution, 2, "float"), _u_tileOffset, 2, "float"), _u_resolution, 2, "float")
         if rt.binary("==", _u_wrap, rt.i(0)):
-            localUV = rt.component_wise("abs", rt.binary("-", rt.component_wise("mod", rt.binary("+", localUV, rt.f(1.0), 2, "float"), rt.f(2.0), width=2), rt.f(1.0), 2, "float"), width=2)
+            localUV[:] = rt.component_wise("abs", rt.binary("-", rt.component_wise("mod", rt.binary("+", localUV, rt.f(1.0), 2, "float"), rt.f(2.0), width=2), rt.f(1.0), 2, "float"), width=2)
         else:
             if rt.binary("==", _u_wrap, rt.i(1)):
-                localUV = rt.component_wise("fract", localUV, width=2)
+                localUV[:] = rt.component_wise("fract", localUV, width=2)
             else:
-                localUV = rt.component_wise("clamp", localUV, rt.f(0.0), rt.f(1.0), width=2)
-        g.fragColor = rt.construct(4, rt.swizzle(rt.texture(_u_inputTex, localUV), "rgb"), rt.f(1.0))
+                localUV[:] = rt.component_wise("clamp", localUV, rt.f(0.0), rt.f(1.0), width=2)
+        g.fragColor[:] = rt.construct(4, rt.swizzle(rt.texture(_u_inputTex, localUV), "rgb"), rt.f(1.0))
     main__void()
     _c = g.fragColor
     out[0] = rt.f32(_c[0]); out[1] = rt.f32(_c[1]); out[2] = rt.f32(_c[2]); out[3] = rt.f32(_c[3])

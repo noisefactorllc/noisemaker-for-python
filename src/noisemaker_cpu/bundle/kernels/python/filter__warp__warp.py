@@ -19,11 +19,11 @@ def run_pixel(ctx, out):
     g.fragColor = rt.construct(4, 0.0)
     def pcg__uvec3(v):
         v = rt.copy(v, "uint")
-        v = rt.binary("+", rt.binary("*", v, rt.construct(1, rt.i(1664525), base="uint"), 3, "uint"), rt.construct(1, rt.i(1013904223), base="uint"), 3, "uint")
+        v[:] = rt.binary("+", rt.binary("*", v, rt.construct(1, rt.i(1664525), base="uint"), 3, "uint"), rt.construct(1, rt.i(1013904223), base="uint"), 3, "uint")
         v = rt.assign_swizzle(v, "x", rt.binary("+", rt.swizzle(v, "x"), rt.binary("*", rt.swizzle(v, "y"), rt.swizzle(v, "z"), 1, "uint"), 1, "uint"))
         v = rt.assign_swizzle(v, "y", rt.binary("+", rt.swizzle(v, "y"), rt.binary("*", rt.swizzle(v, "z"), rt.swizzle(v, "x"), 1, "uint"), 1, "uint"))
         v = rt.assign_swizzle(v, "z", rt.binary("+", rt.swizzle(v, "z"), rt.binary("*", rt.swizzle(v, "x"), rt.swizzle(v, "y"), 1, "uint"), 1, "uint"))
-        v = rt.binary("^", v, rt.binary(">>", v, rt.construct(1, rt.i(16), base="uint"), 3, "uint"), 3, "uint")
+        v[:] = rt.binary("^", v, rt.binary(">>", v, rt.construct(1, rt.i(16), base="uint"), 3, "uint"), 3, "uint")
         v = rt.assign_swizzle(v, "x", rt.binary("+", rt.swizzle(v, "x"), rt.binary("*", rt.swizzle(v, "y"), rt.swizzle(v, "z"), 1, "uint"), 1, "uint"))
         v = rt.assign_swizzle(v, "y", rt.binary("+", rt.swizzle(v, "y"), rt.binary("*", rt.swizzle(v, "z"), rt.swizzle(v, "x"), 1, "uint"), 1, "uint"))
         v = rt.assign_swizzle(v, "z", rt.binary("+", rt.swizzle(v, "z"), rt.binary("*", rt.swizzle(v, "x"), rt.swizzle(v, "y"), 1, "uint"), 1, "uint"))
@@ -49,7 +49,7 @@ def run_pixel(ctx, out):
     def perlinNoise__vec2_vec2(st, noiseScale):
         st = rt.copy(st, "float")
         noiseScale = rt.copy(noiseScale, "float")
-        st = rt.binary("*", st, noiseScale, 2, "float")
+        st[:] = rt.binary("*", st, noiseScale, 2, "float")
         cell = rt.component_wise("floor", st, width=2)
         tl = grid__vec2_vec2(st, cell)
         tr = grid__vec2_vec2(st, rt.construct(2, rt.binary("+", rt.swizzle(cell, "x"), rt.f(1.0), 1, "float"), rt.swizzle(cell, "y")))
@@ -70,24 +70,24 @@ def run_pixel(ctx, out):
         uv = rt.assign_swizzle(uv, "x", rt.binary("+", rt.swizzle(uv, "x"), dx, 1, "float"))
         uv = rt.assign_swizzle(uv, "y", rt.binary("+", rt.swizzle(uv, "y"), dy, 1, "float"))
         if rt.binary("==", _u_wrap, rt.i(0)):
-            uv = rt.component_wise("abs", rt.binary("-", rt.component_wise("mod", rt.binary("+", uv, rt.f(1.0), 2, "float"), rt.f(2.0), width=2), rt.f(1.0), 2, "float"), width=2)
+            uv[:] = rt.component_wise("abs", rt.binary("-", rt.component_wise("mod", rt.binary("+", uv, rt.f(1.0), 2, "float"), rt.f(2.0), width=2), rt.f(1.0), 2, "float"), width=2)
         else:
             if rt.binary("==", _u_wrap, rt.i(1)):
-                uv = rt.component_wise("mod", uv, rt.f(1.0), width=2)
+                uv[:] = rt.component_wise("mod", uv, rt.f(1.0), width=2)
             else:
-                uv = rt.component_wise("clamp", uv, rt.f(0.0), rt.f(1.0), width=2)
+                uv[:] = rt.component_wise("clamp", uv, rt.f(0.0), rt.f(1.0), width=2)
         col = rt.construct(4, 0.0)
         if _u_antialias:
             dx = rt.dFdx(uv)
             dy = rt.dFdy(uv)
             col = rt.construct(4, rt.f(0.0))
-            col = rt.binary("+", col, rt.texture(_u_inputTex, rt.binary("+", rt.binary("+", uv, rt.binary("*", dx, rt.unary("-", rt.f(0.375)), 2, "float"), 2, "float"), rt.binary("*", dy, rt.unary("-", rt.f(0.125)), 2, "float"), 2, "float")), 4, "float")
-            col = rt.binary("+", col, rt.texture(_u_inputTex, rt.binary("+", rt.binary("+", uv, rt.binary("*", dx, rt.f(0.125), 2, "float"), 2, "float"), rt.binary("*", dy, rt.unary("-", rt.f(0.375)), 2, "float"), 2, "float")), 4, "float")
-            col = rt.binary("+", col, rt.texture(_u_inputTex, rt.binary("+", rt.binary("+", uv, rt.binary("*", dx, rt.f(0.375), 2, "float"), 2, "float"), rt.binary("*", dy, rt.f(0.125), 2, "float"), 2, "float")), 4, "float")
-            col = rt.binary("+", col, rt.texture(_u_inputTex, rt.binary("+", rt.binary("+", uv, rt.binary("*", dx, rt.unary("-", rt.f(0.125)), 2, "float"), 2, "float"), rt.binary("*", dy, rt.f(0.375), 2, "float"), 2, "float")), 4, "float")
-            g.fragColor = rt.binary("*", col, rt.f(0.25), 4, "float")
+            col[:] = rt.binary("+", col, rt.texture(_u_inputTex, rt.binary("+", rt.binary("+", uv, rt.binary("*", dx, rt.unary("-", rt.f(0.375)), 2, "float"), 2, "float"), rt.binary("*", dy, rt.unary("-", rt.f(0.125)), 2, "float"), 2, "float")), 4, "float")
+            col[:] = rt.binary("+", col, rt.texture(_u_inputTex, rt.binary("+", rt.binary("+", uv, rt.binary("*", dx, rt.f(0.125), 2, "float"), 2, "float"), rt.binary("*", dy, rt.unary("-", rt.f(0.375)), 2, "float"), 2, "float")), 4, "float")
+            col[:] = rt.binary("+", col, rt.texture(_u_inputTex, rt.binary("+", rt.binary("+", uv, rt.binary("*", dx, rt.f(0.375), 2, "float"), 2, "float"), rt.binary("*", dy, rt.f(0.125), 2, "float"), 2, "float")), 4, "float")
+            col[:] = rt.binary("+", col, rt.texture(_u_inputTex, rt.binary("+", rt.binary("+", uv, rt.binary("*", dx, rt.unary("-", rt.f(0.125)), 2, "float"), 2, "float"), rt.binary("*", dy, rt.f(0.375), 2, "float"), 2, "float")), 4, "float")
+            g.fragColor[:] = rt.binary("*", col, rt.f(0.25), 4, "float")
         else:
-            g.fragColor = rt.texture(_u_inputTex, uv)
+            g.fragColor[:] = rt.texture(_u_inputTex, uv)
     main__void()
     _c = g.fragColor
     out[0] = rt.f32(_c[0]); out[1] = rt.f32(_c[1]); out[2] = rt.f32(_c[2]); out[3] = rt.f32(_c[3])

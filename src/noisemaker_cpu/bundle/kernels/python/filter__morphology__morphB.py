@@ -34,8 +34,8 @@ def run_pixel(ctx, out):
                 sU = rt.texture(_u_inputTex, rt.binary("+", uv, o, 2, "float"))
                 hi = rt.component_wise("max", acc, rt.component_wise("max", sD, sU, width=4), width=4)
                 lo = rt.component_wise("min", acc, rt.component_wise("min", sD, sU, width=4), width=4)
-                acc = rt.component_wise("mix", hi, lo, rt.construct(1, _u_mode), width=4)
-        g.fragColor = acc
+                acc[:] = rt.component_wise("mix", hi, lo, rt.construct(1, _u_mode), width=4)
+        g.fragColor[:] = acc
     main__void()
     _c = g.fragColor
     out[0] = rt.f32(_c[0]); out[1] = rt.f32(_c[1]); out[2] = rt.f32(_c[2]); out[3] = rt.f32(_c[3])

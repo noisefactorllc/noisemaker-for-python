@@ -102,7 +102,7 @@ def run_pixel(ctx, out):
             ridged = rt.binary("-", rt.f(1.0), rt.component_wise("abs", rt.binary("-", rt.binary("*", samp, rt.f(2.0), 1, "float"), rt.f(1.0), 1, "float"), width=1), 1, "float")
             accum = rt.binary("+", accum, rt.binary("*", ridged, amplitude, 1, "float"), 1, "float")
             total = rt.binary("+", total, amplitude, 1, "float")
-            freq = rt.binary("*", freq, rt.f(2.0), 2, "float")
+            freq[:] = rt.binary("*", freq, rt.f(2.0), 2, "float")
             amplitude = rt.binary("*", amplitude, rt.f(0.55), 1, "float")
         return (clamp01__float(rt.binary("/", accum, total, 1, "float")) if rt.binary(">", total, rt.f(0.0)) else clamp01__float(accum))
     def height_stucco__vec2_vec2_float(uv, base_freq, motion):
@@ -124,7 +124,7 @@ def run_pixel(ctx, out):
             samp = value_noise__vec2_vec2_float_uint(uv, freq, rt.binary("+", motion, rt.binary("*", rt.construct(1, octave), rt.f(0.37), 1, "float"), 1, "float"), salt)
             accum = rt.binary("+", accum, rt.binary("*", samp, amplitude, 1, "float"), 1, "float")
             total = rt.binary("+", total, amplitude, 1, "float")
-            freq = rt.binary("*", freq, rt.f(2.0), 2, "float")
+            freq[:] = rt.binary("*", freq, rt.f(2.0), 2, "float")
             amplitude = rt.binary("*", amplitude, rt.f(0.5), 1, "float")
         return (clamp01__float(rt.binary("/", accum, total, 1, "float")) if rt.binary(">", total, rt.f(0.0)) else clamp01__float(accum))
     def height_canvas__vec2_vec2_float(uv, base_freq, motion):
@@ -306,7 +306,7 @@ def run_pixel(ctx, out):
         pixel_step = rt.binary("/", rt.f(1.0), dims, 2, "float")
         a = rt.component_wise("clamp", _u_alpha, rt.f(0.0), rt.f(1.0), width=1)
         if rt.binary("<=", a, rt.f(0.0)):
-            g.fragColor = base_color
+            g.fragColor[:] = base_color
             return
         globalDims = rt.construct(2, 0.0)
         globalPixel = rt.construct(2, 0.0)
@@ -322,7 +322,7 @@ def run_pixel(ctx, out):
             if (not (_u_mono)):
                 material = rt.assign_swizzle(material, "g", shape_material__float(material_value__vec2_vec2_vec2_float_uint(globalPixel, globalDims, ctx.uv, materialMotion, rt.i(1757159915))))
                 material = rt.assign_swizzle(material, "b", shape_material__float(material_value__vec2_vec2_vec2_float_uint(globalPixel, globalDims, ctx.uv, materialMotion, rt.i(48610963))))
-            g.fragColor = rt.construct(4, rt.component_wise("clamp", rt.component_wise("mix", rt.swizzle(base_color, "rgb"), material, a, width=3), rt.f(0.0), rt.f(1.0), width=3), rt.swizzle(base_color, "a"))
+            g.fragColor[:] = rt.construct(4, rt.component_wise("clamp", rt.component_wise("mix", rt.swizzle(base_color, "rgb"), material, a, width=3), rt.f(0.0), rt.f(1.0), width=3), rt.swizzle(base_color, "a"))
             return
         freq_scale = rt.f(0.0)
         if rt.binary("==", _u_MODE, rt.i(4)):
@@ -349,7 +349,7 @@ def run_pixel(ctx, out):
         base_factor = rt.binary("+", rt.f(0.9), rt.binary("*", h_center, rt.f(0.35), 1, "float"), 1, "float")
         factor = rt.component_wise("clamp", rt.binary("+", base_factor, rt.binary("*", highlight_mix, rt.f(0.35), 1, "float"), 1, "float"), rt.f(0.85), rt.f(1.6), width=1)
         scaled_rgb = rt.component_wise("clamp", rt.binary("*", rt.swizzle(base_color, "rgb"), factor, 3, "float"), rt.f(0.0), rt.f(1.0), width=3)
-        g.fragColor = rt.construct(4, rt.component_wise("mix", rt.swizzle(base_color, "rgb"), scaled_rgb, a, width=3), rt.swizzle(base_color, "a"))
+        g.fragColor[:] = rt.construct(4, rt.component_wise("mix", rt.swizzle(base_color, "rgb"), scaled_rgb, a, width=3), rt.swizzle(base_color, "a"))
     main__void()
     _c = g.fragColor
     out[0] = rt.f32(_c[0]); out[1] = rt.f32(_c[1]); out[2] = rt.f32(_c[2]); out[3] = rt.f32(_c[3])

@@ -38,11 +38,11 @@ def run_pixel(ctx, out):
         return rt.binary("+", outMin, rt.binary("/", rt.binary("*", rt.binary("-", outMax, outMin, 1, "float"), rt.binary("-", value, inMin, 1, "float"), 1, "float"), rt.binary("-", inMax, inMin, 1, "float"), 1, "float"), 1, "float")
     def pcg__uvec3(v):
         v = rt.copy(v, "uint")
-        v = rt.binary("+", rt.binary("*", v, rt.construct(1, rt.i(1664525), base="uint"), 3, "uint"), rt.construct(1, rt.i(1013904223), base="uint"), 3, "uint")
+        v[:] = rt.binary("+", rt.binary("*", v, rt.construct(1, rt.i(1664525), base="uint"), 3, "uint"), rt.construct(1, rt.i(1013904223), base="uint"), 3, "uint")
         v = rt.assign_swizzle(v, "x", rt.binary("+", rt.swizzle(v, "x"), rt.binary("*", rt.swizzle(v, "y"), rt.swizzle(v, "z"), 1, "uint"), 1, "uint"))
         v = rt.assign_swizzle(v, "y", rt.binary("+", rt.swizzle(v, "y"), rt.binary("*", rt.swizzle(v, "z"), rt.swizzle(v, "x"), 1, "uint"), 1, "uint"))
         v = rt.assign_swizzle(v, "z", rt.binary("+", rt.swizzle(v, "z"), rt.binary("*", rt.swizzle(v, "x"), rt.swizzle(v, "y"), 1, "uint"), 1, "uint"))
-        v = rt.binary("^", v, rt.binary(">>", v, rt.construct(1, rt.i(16), base="uint"), 3, "uint"), 3, "uint")
+        v[:] = rt.binary("^", v, rt.binary(">>", v, rt.construct(1, rt.i(16), base="uint"), 3, "uint"), 3, "uint")
         v = rt.assign_swizzle(v, "x", rt.binary("+", rt.swizzle(v, "x"), rt.binary("*", rt.swizzle(v, "y"), rt.swizzle(v, "z"), 1, "uint"), 1, "uint"))
         v = rt.assign_swizzle(v, "y", rt.binary("+", rt.swizzle(v, "y"), rt.binary("*", rt.swizzle(v, "z"), rt.swizzle(v, "x"), 1, "uint"), 1, "uint"))
         v = rt.assign_swizzle(v, "z", rt.binary("+", rt.swizzle(v, "z"), rt.binary("*", rt.swizzle(v, "x"), rt.swizzle(v, "y"), 1, "uint"), 1, "uint"))
@@ -63,24 +63,24 @@ def run_pixel(ctx, out):
         m = rt.binary("-", v, c, 1, "float")
         rgb = rt.construct(3, 0.0)
         if (bool(rt.binary("<=", rt.f(0.0), h)) and bool(rt.binary("<", h, rt.binary("/", rt.f(1.0), rt.f(6.0), 1, "float")))):
-            rgb = rt.construct(3, c, x, rt.f(0.0))
+            rgb[:] = rt.construct(3, c, x, rt.f(0.0))
         else:
             if (bool(rt.binary("<=", rt.binary("/", rt.f(1.0), rt.f(6.0), 1, "float"), h)) and bool(rt.binary("<", h, rt.binary("/", rt.f(2.0), rt.f(6.0), 1, "float")))):
-                rgb = rt.construct(3, x, c, rt.f(0.0))
+                rgb[:] = rt.construct(3, x, c, rt.f(0.0))
             else:
                 if (bool(rt.binary("<=", rt.binary("/", rt.f(2.0), rt.f(6.0), 1, "float"), h)) and bool(rt.binary("<", h, rt.binary("/", rt.f(3.0), rt.f(6.0), 1, "float")))):
-                    rgb = rt.construct(3, rt.f(0.0), c, x)
+                    rgb[:] = rt.construct(3, rt.f(0.0), c, x)
                 else:
                     if (bool(rt.binary("<=", rt.binary("/", rt.f(3.0), rt.f(6.0), 1, "float"), h)) and bool(rt.binary("<", h, rt.binary("/", rt.f(4.0), rt.f(6.0), 1, "float")))):
-                        rgb = rt.construct(3, rt.f(0.0), x, c)
+                        rgb[:] = rt.construct(3, rt.f(0.0), x, c)
                     else:
                         if (bool(rt.binary("<=", rt.binary("/", rt.f(4.0), rt.f(6.0), 1, "float"), h)) and bool(rt.binary("<", h, rt.binary("/", rt.f(5.0), rt.f(6.0), 1, "float")))):
-                            rgb = rt.construct(3, x, rt.f(0.0), c)
+                            rgb[:] = rt.construct(3, x, rt.f(0.0), c)
                         else:
                             if (bool(rt.binary("<=", rt.binary("/", rt.f(5.0), rt.f(6.0), 1, "float"), h)) and bool(rt.binary("<", h, rt.f(1.0)))):
-                                rgb = rt.construct(3, c, rt.f(0.0), x)
+                                rgb[:] = rt.construct(3, c, rt.f(0.0), x)
                             else:
-                                rgb = rt.construct(3, rt.f(0.0), rt.f(0.0), rt.f(0.0))
+                                rgb[:] = rt.construct(3, rt.f(0.0), rt.f(0.0), rt.f(0.0))
         return rt.binary("+", rgb, rt.construct(3, m, m, m), 3, "float")
     def rgb2hsv__vec3(rgb):
         rgb = rt.copy(rgb, "float")
@@ -135,13 +135,13 @@ def run_pixel(ctx, out):
         t = rt.binary("+", rt.binary("*", t, _u_repeatPalette, 1, "float"), rt.binary("*", _u_rotatePalette, rt.f(0.01), 1, "float"), 1, "float")
         color = rt.binary("+", a, rt.binary("*", b, rt.component_wise("cos", rt.binary("*", rt.f(6.28318), rt.binary("+", rt.binary("*", c, t, 3, "float"), d, 3, "float"), 3, "float"), width=3), 3, "float"), 3, "float")
         if rt.binary("==", _u_paletteMode, rt.i(1)):
-            color = hsv2rgb__vec3(color)
+            color[:] = hsv2rgb__vec3(color)
         else:
             if rt.binary("==", _u_paletteMode, rt.i(2)):
                 color = rt.assign_swizzle(color, "g", rt.binary("+", rt.binary("*", rt.swizzle(color, "g"), rt.unary("-", rt.f(0.509)), 1, "float"), rt.f(0.276), 1, "float"))
                 color = rt.assign_swizzle(color, "b", rt.binary("+", rt.binary("*", rt.swizzle(color, "b"), rt.unary("-", rt.f(0.509)), 1, "float"), rt.f(0.198), 1, "float"))
-                color = linear_srgb_from_oklab__vec3(color)
-                color = linearToSrgb__vec3(color)
+                color[:] = linear_srgb_from_oklab__vec3(color)
+                color[:] = linearToSrgb__vec3(color)
         return color
     def luminance__vec3(color):
         color = rt.copy(color, "float")
@@ -150,9 +150,9 @@ def run_pixel(ctx, out):
         st = rt.copy(st, "float")
         rot = map__float_float_float_float_float(rot, rt.f(0.0), rt.f(360.0), rt.f(0.0), rt.f(2.0))
         angle = rt.binary("*", rot, rt.f(3.14159265359), 1, "float")
-        st = rt.binary("-", st, rt.construct(2, rt.binary("/", rt.binary("*", rt.f(0.5), rt.swizzle(_u_fullResolution, "x"), 1, "float"), rt.swizzle(_u_fullResolution, "y"), 1, "float"), rt.f(0.5)), 2, "float")
-        st = rt.matrix_mult(rt.construct(4, rt.component_wise("cos", angle, width=1), rt.unary("-", rt.component_wise("sin", angle, width=1)), rt.component_wise("sin", angle, width=1), rt.component_wise("cos", angle, width=1)), st, 2)
-        st = rt.binary("+", st, rt.construct(2, rt.binary("/", rt.binary("*", rt.f(0.5), rt.swizzle(_u_fullResolution, "x"), 1, "float"), rt.swizzle(_u_fullResolution, "y"), 1, "float"), rt.f(0.5)), 2, "float")
+        st[:] = rt.binary("-", st, rt.construct(2, rt.binary("/", rt.binary("*", rt.f(0.5), rt.swizzle(_u_fullResolution, "x"), 1, "float"), rt.swizzle(_u_fullResolution, "y"), 1, "float"), rt.f(0.5)), 2, "float")
+        st[:] = rt.matrix_mult(rt.construct(4, rt.component_wise("cos", angle, width=1), rt.unary("-", rt.component_wise("sin", angle, width=1)), rt.component_wise("sin", angle, width=1), rt.component_wise("cos", angle, width=1)), st, 2)
+        st[:] = rt.binary("+", st, rt.construct(2, rt.binary("/", rt.binary("*", rt.f(0.5), rt.swizzle(_u_fullResolution, "x"), 1, "float"), rt.swizzle(_u_fullResolution, "y"), 1, "float"), rt.f(0.5)), 2, "float")
         return st
     def polarShape__vec2_int(st, sides):
         st = rt.copy(st, "float")
@@ -162,7 +162,7 @@ def run_pixel(ctx, out):
     def shapeDistance__vec2_vec2_int_float(st, offset, type, scale):
         st = rt.copy(st, "float")
         offset = rt.copy(offset, "float")
-        st = rt.binary("+", st, offset, 2, "float")
+        st[:] = rt.binary("+", st, offset, 2, "float")
         d = rt.f(1.0)
         if rt.binary("==", type, rt.i(0)):
             d = rt.length(rt.binary("*", st, rt.f(1.2), 2, "float"))
@@ -198,10 +198,10 @@ def run_pixel(ctx, out):
         return rt.binary("-", rt.component_wise("min", a, b, width=1), rt.binary("*", rt.binary("*", rt.binary("*", h, h, 1, "float"), k, 1, "float"), rt.binary("/", rt.f(1.0), rt.f(4.0), 1, "float"), 1, "float"), 1, "float")
     def cells__vec2_float_float_int(st, freq, cellSize, sides):
         st = rt.copy(st, "float")
-        st = rt.binary("-", st, rt.construct(2, rt.binary("/", rt.binary("*", rt.f(0.5), rt.swizzle(_u_fullResolution, "x"), 1, "float"), rt.swizzle(_u_fullResolution, "y"), 1, "float"), rt.f(0.5)), 2, "float")
-        st = rt.binary("*", st, freq, 2, "float")
-        st = rt.binary("+", st, rt.construct(2, rt.binary("/", rt.binary("*", rt.f(0.5), rt.swizzle(_u_fullResolution, "x"), 1, "float"), rt.swizzle(_u_fullResolution, "y"), 1, "float"), rt.f(0.5)), 2, "float")
-        st = rt.binary("+", st, rt.swizzle(prng__vec3(rt.construct(3, rt.construct(1, _u_seed))), "xy"), 2, "float")
+        st[:] = rt.binary("-", st, rt.construct(2, rt.binary("/", rt.binary("*", rt.f(0.5), rt.swizzle(_u_fullResolution, "x"), 1, "float"), rt.swizzle(_u_fullResolution, "y"), 1, "float"), rt.f(0.5)), 2, "float")
+        st[:] = rt.binary("*", st, freq, 2, "float")
+        st[:] = rt.binary("+", st, rt.construct(2, rt.binary("/", rt.binary("*", rt.f(0.5), rt.swizzle(_u_fullResolution, "x"), 1, "float"), rt.swizzle(_u_fullResolution, "y"), 1, "float"), rt.f(0.5)), 2, "float")
+        st[:] = rt.binary("+", st, rt.swizzle(prng__vec3(rt.construct(3, rt.construct(1, _u_seed))), "xy"), 2, "float")
         i = rt.component_wise("floor", st, width=2)
         f = rt.component_wise("fract", st, width=2)
         d = rt.f(1.0)
@@ -227,7 +227,7 @@ def run_pixel(ctx, out):
                 r1 = rt.binary("-", rt.binary("*", prng__vec3(rt.construct(3, rt.construct(1, _u_seed), wrap)), rt.f(0.5), 3, "float"), rt.f(0.25), 3, "float")
                 r2 = rt.binary("-", rt.binary("*", prng__vec3(rt.construct(3, wrap, rt.construct(1, _u_seed))), rt.f(2.0), 3, "float"), rt.f(1.0), 3, "float")
                 spd = rt.component_wise("floor", _u_speed, width=1)
-                point = rt.binary("+", point, rt.construct(2, rt.binary("*", rt.component_wise("sin", rt.binary("+", rt.binary("*", rt.binary("*", _u_time, rt.f(6.28318530718), 1, "float"), spd, 1, "float"), rt.swizzle(r2, "x"), 1, "float"), width=1), rt.swizzle(r1, "x"), 1, "float"), rt.binary("*", rt.component_wise("cos", rt.binary("+", rt.binary("*", rt.binary("*", _u_time, rt.f(6.28318530718), 1, "float"), spd, 1, "float"), rt.swizzle(r2, "y"), 1, "float"), width=1), rt.swizzle(r1, "y"), 1, "float")), 2, "float")
+                point[:] = rt.binary("+", point, rt.construct(2, rt.binary("*", rt.component_wise("sin", rt.binary("+", rt.binary("*", rt.binary("*", _u_time, rt.f(6.28318530718), 1, "float"), spd, 1, "float"), rt.swizzle(r2, "x"), 1, "float"), width=1), rt.swizzle(r1, "x"), 1, "float"), rt.binary("*", rt.component_wise("cos", rt.binary("+", rt.binary("*", rt.binary("*", _u_time, rt.f(6.28318530718), 1, "float"), spd, 1, "float"), rt.swizzle(r2, "y"), 1, "float"), width=1), rt.swizzle(r1, "y"), 1, "float")), 2, "float")
                 diff = rt.binary("-", rt.binary("+", n, point, 2, "float"), f, 2, "float")
                 dist = shapeDistance__vec2_vec2_int_float(rt.construct(2, rt.swizzle(diff, "x"), rt.unary("-", rt.swizzle(diff, "y"))), rt.construct(2, rt.f(0.0)), sides, cellSize)
                 if rt.binary("==", _u_shape, rt.i(1)):
@@ -289,8 +289,8 @@ def run_pixel(ctx, out):
                         if rt.binary("==", _u_cyclePalette, rt.i(1)):
                             d = rt.binary("-", d, _u_time, 1, "float")
                     color = rt.assign_swizzle(color, "rgb", pal__float(d))
-        st = rt.binary("/", globalCoord, _u_fullResolution, 2, "float")
-        g.fragColor = color
+        st[:] = rt.binary("/", globalCoord, _u_fullResolution, 2, "float")
+        g.fragColor[:] = color
     main__void()
     _c = g.fragColor
     out[0] = rt.f32(_c[0]); out[1] = rt.f32(_c[1]); out[2] = rt.f32(_c[2]); out[3] = rt.f32(_c[3])

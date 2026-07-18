@@ -53,7 +53,7 @@ def run_pixel(ctx, out):
             if not (rt.binary("<", i, rt.i(9))):
                 break
             texSample = rt.swizzle(rt.texture(_u_inputTex, rt.binary("/", rt.binary("-", rt.binary("*", rt.binary("+", uv, rt.binary("*", rt.binary("*", offsets[int(i)], _u_amount, 2, "float"), _u_renderScale, 2, "float"), 2, "float"), _u_fullResolution, 2, "float"), _u_tileOffset, 2, "float"), rt.construct(2, rt.texture_size(_u_inputTex)), 2, "float")), "rgb")
-            conv = rt.binary("+", conv, rt.binary("*", texSample, kernel[int(i)], 3, "float"), 3, "float")
+            conv[:] = rt.binary("+", conv, rt.binary("*", texSample, kernel[int(i)], 3, "float"), 3, "float")
         return conv
     def colorGeneralEmboss__vec2_vec2(uv, texelSize):
         uv = rt.copy(uv, "float")
@@ -94,7 +94,7 @@ def run_pixel(ctx, out):
             rotatedPx = rt.binary("*", rt.construct(2, rt.binary("+", rt.binary("*", ct, rt.swizzle(basePx, "x"), 1, "float"), rt.binary("*", st, rt.swizzle(basePx, "y"), 1, "float"), 1, "float"), rt.binary("+", rt.binary("*", rt.unary("-", st), rt.swizzle(basePx, "x"), 1, "float"), rt.binary("*", ct, rt.swizzle(basePx, "y"), 1, "float"), 1, "float")), _u_height, 2, "float")
             offsetUV = rt.binary("*", rt.binary("*", rt.binary("*", rotatedPx, texelSize, 2, "float"), _u_amount, 2, "float"), _u_renderScale, 2, "float")
             texSample = rt.swizzle(rt.texture(_u_inputTex, rt.binary("/", rt.binary("-", rt.binary("*", rt.binary("+", uv, offsetUV, 2, "float"), _u_fullResolution, 2, "float"), _u_tileOffset, 2, "float"), rt.construct(2, rt.texture_size(_u_inputTex)), 2, "float")), "rgb")
-            conv = rt.binary("+", conv, rt.binary("*", texSample, kernel[int(i)], 3, "float"), 3, "float")
+            conv[:] = rt.binary("+", conv, rt.binary("*", texSample, kernel[int(i)], 3, "float"), 3, "float")
         return conv
     def grayEmboss__vec2_vec3(uv, centerRGB):
         uv = rt.copy(uv, "float")
@@ -122,12 +122,12 @@ def run_pixel(ctx, out):
         result = rt.construct(3, 0.0)
         if rt.binary("==", _u_STYLE, rt.i(0)):
             if (bool(rt.binary("==", _u_angle, rt.f(135.0))) and bool(rt.binary("==", _u_height, rt.f(1.0)))):
-                result = colorDefaultEmboss__vec2_vec2(uv, colorTexelSize)
+                result[:] = colorDefaultEmboss__vec2_vec2(uv, colorTexelSize)
             else:
-                result = colorGeneralEmboss__vec2_vec2(uv, colorTexelSize)
+                result[:] = colorGeneralEmboss__vec2_vec2(uv, colorTexelSize)
         else:
-            result = grayEmboss__vec2_vec3(uv, rt.swizzle(origColor, "rgb"))
-        g.fragColor = rt.construct(4, rt.component_wise("clamp", result, rt.f(0.0), rt.f(1.0), width=3), rt.swizzle(origColor, "a"))
+            result[:] = grayEmboss__vec2_vec3(uv, rt.swizzle(origColor, "rgb"))
+        g.fragColor[:] = rt.construct(4, rt.component_wise("clamp", result, rt.f(0.0), rt.f(1.0), width=3), rt.swizzle(origColor, "a"))
     main__void()
     _c = g.fragColor
     out[0] = rt.f32(_c[0]); out[1] = rt.f32(_c[1]); out[2] = rt.f32(_c[2]); out[3] = rt.f32(_c[3])

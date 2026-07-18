@@ -31,7 +31,7 @@ def run_pixel(ctx, out):
             if (bool(rt.binary(">", otherLum, myLum)) or bool((bool(rt.binary("==", otherLum, myLum)) and bool(rt.binary("<", sampleX, x))))):
                 brighterCount = rt.binary("+", brighterCount, rt.i(1), 1, "int")
         estimatedRank = rt.binary("/", rt.construct(1, brighterCount), rt.construct(1, NUM_SAMPLES), 1, "float")
-        g.fragColor = rt.construct(4, estimatedRank, myLum, rt.binary("/", rt.construct(1, x), rt.construct(1, rt.binary("-", width, rt.i(1), 1, "int")), 1, "float"), rt.f(1.0))
+        g.fragColor[:] = rt.construct(4, estimatedRank, myLum, rt.binary("/", rt.construct(1, x), rt.construct(1, rt.binary("-", width, rt.i(1), 1, "int")), 1, "float"), rt.f(1.0))
     main__void()
     _c = g.fragColor
     out[0] = rt.f32(_c[0]); out[1] = rt.f32(_c[1]); out[2] = rt.f32(_c[2]); out[3] = rt.f32(_c[3])

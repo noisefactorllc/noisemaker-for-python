@@ -19,11 +19,11 @@ def run_pixel(ctx, out):
     g.fragColor = rt.construct(4, 0.0)
     def pcg__uvec3(v):
         v = rt.copy(v, "uint")
-        v = rt.binary("+", rt.binary("*", v, rt.i(1664525), 3, "uint"), rt.i(1013904223), 3, "uint")
+        v[:] = rt.binary("+", rt.binary("*", v, rt.i(1664525), 3, "uint"), rt.i(1013904223), 3, "uint")
         v = rt.assign_swizzle(v, "x", rt.binary("+", rt.swizzle(v, "x"), rt.binary("*", rt.swizzle(v, "y"), rt.swizzle(v, "z"), 1, "uint"), 1, "uint"))
         v = rt.assign_swizzle(v, "y", rt.binary("+", rt.swizzle(v, "y"), rt.binary("*", rt.swizzle(v, "z"), rt.swizzle(v, "x"), 1, "uint"), 1, "uint"))
         v = rt.assign_swizzle(v, "z", rt.binary("+", rt.swizzle(v, "z"), rt.binary("*", rt.swizzle(v, "x"), rt.swizzle(v, "y"), 1, "uint"), 1, "uint"))
-        v = rt.binary("^", v, rt.binary(">>", v, rt.i(16), 3, "uint"), 3, "uint")
+        v[:] = rt.binary("^", v, rt.binary(">>", v, rt.i(16), 3, "uint"), 3, "uint")
         v = rt.assign_swizzle(v, "x", rt.binary("+", rt.swizzle(v, "x"), rt.binary("*", rt.swizzle(v, "y"), rt.swizzle(v, "z"), 1, "uint"), 1, "uint"))
         v = rt.assign_swizzle(v, "y", rt.binary("+", rt.swizzle(v, "y"), rt.binary("*", rt.swizzle(v, "z"), rt.swizzle(v, "x"), 1, "uint"), 1, "uint"))
         v = rt.assign_swizzle(v, "z", rt.binary("+", rt.swizzle(v, "z"), rt.binary("*", rt.swizzle(v, "x"), rt.swizzle(v, "y"), 1, "uint"), 1, "uint"))
@@ -65,7 +65,7 @@ def run_pixel(ctx, out):
                 best_dist = dist
                 best_index = i
         s = rt.construct(3, rt.binary("+", seed_f, rt.f(100.0), 1, "float"), rt.binary("*", rt.construct(1, best_index), rt.f(13.37), 1, "float"), rt.f(5.0))
-        cell_color = rt.component_wise("mix", hash33__vec3(s), _u_color, rt.f(0.6), width=3)
+        cell_color[:] = rt.component_wise("mix", hash33__vec3(s), _u_color, rt.f(0.6), width=3)
         cell_dist = best_dist
         return (None, cell_color, cell_dist)
     def centerMask__vec2(uv):
@@ -82,7 +82,7 @@ def run_pixel(ctx, out):
         base = rt.texel_fetch(_u_inputTex, coords, rt.i(0))
         blend_alpha = rt.component_wise("clamp", _u_alpha, rt.f(0.0), rt.f(1.0), width=1)
         if rt.binary("<=", blend_alpha, rt.f(0.0)):
-            g.fragColor = base
+            g.fragColor[:] = base
             return
         seed_f = rt.construct(1, _u_seed)
         t = rt.binary("*", _u_time, _u_speed, 1, "float")
@@ -108,14 +108,14 @@ def run_pixel(ctx, out):
         nb1 = rt.component_wise("clamp", rt.binary("+", coords, rt.construct(2, rt.unary("-", rt.i(2)), rt.i(0), base="int"), 2, "int"), rt.construct(2, rt.i(0), base="int"), rt.binary("-", tileDims, rt.i(1), 2, "int"), width=2)
         nb2 = rt.component_wise("clamp", rt.binary("+", coords, rt.construct(2, rt.i(0), rt.i(2), base="int"), 2, "int"), rt.construct(2, rt.i(0), base="int"), rt.binary("-", tileDims, rt.i(1), 2, "int"), width=2)
         nb3 = rt.component_wise("clamp", rt.binary("+", coords, rt.construct(2, rt.i(0), rt.unary("-", rt.i(2)), base="int"), 2, "int"), rt.construct(2, rt.i(0), base="int"), rt.binary("-", tileDims, rt.i(1), 2, "int"), width=2)
-        soft_accum = rt.binary("+", soft_accum, rt.swizzle(rt.texel_fetch(_u_inputTex, nb0, rt.i(0)), "rgb"), 3, "float")
-        soft_accum = rt.binary("+", soft_accum, rt.swizzle(rt.texel_fetch(_u_inputTex, nb1, rt.i(0)), "rgb"), 3, "float")
-        soft_accum = rt.binary("+", soft_accum, rt.swizzle(rt.texel_fetch(_u_inputTex, nb2, rt.i(0)), "rgb"), 3, "float")
-        soft_accum = rt.binary("+", soft_accum, rt.swizzle(rt.texel_fetch(_u_inputTex, nb3, rt.i(0)), "rgb"), 3, "float")
+        soft_accum[:] = rt.binary("+", soft_accum, rt.swizzle(rt.texel_fetch(_u_inputTex, nb0, rt.i(0)), "rgb"), 3, "float")
+        soft_accum[:] = rt.binary("+", soft_accum, rt.swizzle(rt.texel_fetch(_u_inputTex, nb1, rt.i(0)), "rgb"), 3, "float")
+        soft_accum[:] = rt.binary("+", soft_accum, rt.swizzle(rt.texel_fetch(_u_inputTex, nb2, rt.i(0)), "rgb"), 3, "float")
+        soft_accum[:] = rt.binary("+", soft_accum, rt.swizzle(rt.texel_fetch(_u_inputTex, nb3, rt.i(0)), "rgb"), 3, "float")
         soft_w = rt.binary("+", soft_w, rt.f(4.0), 1, "float")
         vaseline = rt.binary("/", soft_accum, soft_w, 3, "float")
         final_color = rt.component_wise("mix", rt.swizzle(base, "rgb"), rt.component_wise("mix", masked, vaseline, blend_alpha, width=3), blend_alpha, width=3)
-        g.fragColor = rt.construct(4, rt.component_wise("clamp", final_color, rt.construct(3, rt.f(0.0)), rt.construct(3, rt.f(1.0)), width=3), rt.swizzle(base, "a"))
+        g.fragColor[:] = rt.construct(4, rt.component_wise("clamp", final_color, rt.construct(3, rt.f(0.0)), rt.construct(3, rt.f(1.0)), width=3), rt.swizzle(base, "a"))
     main__void()
     _c = g.fragColor
     out[0] = rt.f32(_c[0]); out[1] = rt.f32(_c[1]); out[2] = rt.f32(_c[2]); out[3] = rt.f32(_c[3])

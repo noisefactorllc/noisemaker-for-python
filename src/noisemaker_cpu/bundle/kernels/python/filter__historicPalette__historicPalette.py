@@ -29,9 +29,9 @@ def run_pixel(ctx, out):
         b3 = rt.component_wise("smoothstep", rt.binary("-", t3, blendWidth, 1, "float"), rt.binary("+", t3, blendWidth, 1, "float"), lum, width=1)
         b4 = rt.component_wise("smoothstep", rt.binary("-", t4, blendWidth, 1, "float"), rt.binary("+", t4, blendWidth, 1, "float"), lum, width=1)
         result = rt.component_wise("mix", pal[0], pal[1], b1, width=3)
-        result = rt.component_wise("mix", result, pal[2], b2, width=3)
-        result = rt.component_wise("mix", result, pal[3], b3, width=3)
-        result = rt.component_wise("mix", result, pal[4], b4, width=3)
+        result[:] = rt.component_wise("mix", result, pal[2], b2, width=3)
+        result[:] = rt.component_wise("mix", result, pal[3], b3, width=3)
+        result[:] = rt.component_wise("mix", result, pal[4], b4, width=3)
         d = rt.f(0.0)
         wrapFactor = rt.f(0.0)
         wrapColor = rt.construct(3, 0.0)
@@ -41,7 +41,7 @@ def run_pixel(ctx, out):
             wrapFactor = rt.component_wise("smoothstep", rt.unary("-", blendWidth), blendWidth, d, width=1)
             wrapColor = rt.component_wise("mix", pal[4], pal[0], wrapFactor, width=3)
             wrapMask = rt.binary("-", rt.f(1.0), rt.component_wise("smoothstep", rt.f(0.0), blendWidth, rt.component_wise("abs", d, width=1), width=1), 1, "float")
-            result = rt.component_wise("mix", result, wrapColor, wrapMask, width=3)
+            result[:] = rt.component_wise("mix", result, wrapColor, wrapMask, width=3)
         return result
     def main__void():
         globalCoord = rt.binary("+", rt.swizzle(ctx.frag_coord, "xy"), _u_tileOffset, 2, "float")
@@ -60,7 +60,7 @@ def run_pixel(ctx, out):
         pal = g.PALETTES[int(idx)]
         paletteColor = sampleHistoricPalette__struct1_float_float(pal, t, _u_smoothness)
         blendedColor = rt.component_wise("mix", rt.swizzle(inputColor, "rgb"), paletteColor, _u_alpha, width=3)
-        g.fragColor = rt.construct(4, blendedColor, rt.swizzle(inputColor, "a"))
+        g.fragColor[:] = rt.construct(4, blendedColor, rt.swizzle(inputColor, "a"))
     main__void()
     _c = g.fragColor
     out[0] = rt.f32(_c[0]); out[1] = rt.f32(_c[1]); out[2] = rt.f32(_c[2]); out[3] = rt.f32(_c[3])

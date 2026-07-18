@@ -20,7 +20,7 @@ def run_pixel(ctx, out):
     def hash12__vec2(p):
         p = rt.copy(p, "float")
         p3 = rt.component_wise("fract", rt.binary("*", rt.construct(3, rt.swizzle(p, "xyx")), rt.f(0.1031), 3, "float"), width=3)
-        p3 = rt.binary("+", p3, rt.dot(p3, rt.binary("+", rt.swizzle(p3, "yzx"), rt.f(33.33), 3, "float")), 3, "float")
+        p3[:] = rt.binary("+", p3, rt.dot(p3, rt.binary("+", rt.swizzle(p3, "yzx"), rt.f(33.33), 3, "float")), 3, "float")
         return rt.component_wise("fract", rt.binary("*", rt.binary("+", rt.swizzle(p3, "x"), rt.swizzle(p3, "y"), 1, "float"), rt.swizzle(p3, "z"), 1, "float"), width=1)
     def vnoise__vec2(p):
         p = rt.copy(p, "float")
@@ -41,7 +41,7 @@ def run_pixel(ctx, out):
             if not (rt.binary("<", i, rt.i(5))):
                 break
             v = rt.binary("+", v, rt.binary("*", a, vnoise__vec2(p), 1, "float"), 1, "float")
-            p = rt.binary("*", p, rt.f(2.03), 2, "float")
+            p[:] = rt.binary("*", p, rt.f(2.03), 2, "float")
             a = rt.binary("*", a, rt.f(0.5), 1, "float")
         return v
     def tonemap2__float_vec3_vec3(t, ink, paper):
@@ -60,7 +60,7 @@ def run_pixel(ctx, out):
         aa = rt.binary("+", rt.component_wise("max", rt.fwidth(t), rt.f(0.01), width=1), rt.binary("*", rt.binary("/", _u_roughness, rt.f(100.0), 1, "float"), rt.f(0.05), 1, "float"), 1, "float")
         m = rt.component_wise("smoothstep", rt.binary("-", b, aa, 1, "float"), rt.binary("+", b, aa, 1, "float"), t, width=1)
         outColor = tonemap2__float_vec3_vec3(m, _u_inkColor, _u_paperColor)
-        g.fragColor = rt.construct(4, outColor, rt.swizzle(src, "a"))
+        g.fragColor[:] = rt.construct(4, outColor, rt.swizzle(src, "a"))
     main__void()
     _c = g.fragColor
     out[0] = rt.f32(_c[0]); out[1] = rt.f32(_c[1]); out[2] = rt.f32(_c[2]); out[3] = rt.f32(_c[3])

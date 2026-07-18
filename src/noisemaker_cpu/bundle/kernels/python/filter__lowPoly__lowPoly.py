@@ -22,11 +22,11 @@ def run_pixel(ctx, out):
     g.TAU = rt.f(6.28318530718)
     def pcg__uvec3(v):
         v = rt.copy(v, "uint")
-        v = rt.binary("+", rt.binary("*", v, rt.i(1664525), 3, "uint"), rt.i(1013904223), 3, "uint")
+        v[:] = rt.binary("+", rt.binary("*", v, rt.i(1664525), 3, "uint"), rt.i(1013904223), 3, "uint")
         v = rt.assign_swizzle(v, "x", rt.binary("+", rt.swizzle(v, "x"), rt.binary("*", rt.swizzle(v, "y"), rt.swizzle(v, "z"), 1, "uint"), 1, "uint"))
         v = rt.assign_swizzle(v, "y", rt.binary("+", rt.swizzle(v, "y"), rt.binary("*", rt.swizzle(v, "z"), rt.swizzle(v, "x"), 1, "uint"), 1, "uint"))
         v = rt.assign_swizzle(v, "z", rt.binary("+", rt.swizzle(v, "z"), rt.binary("*", rt.swizzle(v, "x"), rt.swizzle(v, "y"), 1, "uint"), 1, "uint"))
-        v = rt.binary("^", v, rt.binary(">>", v, rt.i(16), 3, "uint"), 3, "uint")
+        v[:] = rt.binary("^", v, rt.binary(">>", v, rt.i(16), 3, "uint"), 3, "uint")
         v = rt.assign_swizzle(v, "x", rt.binary("+", rt.swizzle(v, "x"), rt.binary("*", rt.swizzle(v, "y"), rt.swizzle(v, "z"), 1, "uint"), 1, "uint"))
         v = rt.assign_swizzle(v, "y", rt.binary("+", rt.swizzle(v, "y"), rt.binary("*", rt.swizzle(v, "z"), rt.swizzle(v, "x"), 1, "uint"), 1, "uint"))
         v = rt.assign_swizzle(v, "z", rt.binary("+", rt.swizzle(v, "z"), rt.binary("*", rt.swizzle(v, "x"), rt.swizzle(v, "y"), 1, "uint"), 1, "uint"))
@@ -46,7 +46,7 @@ def run_pixel(ctx, out):
             animRand = hash2__vec2_float(siteCellF, rt.binary("+", s, rt.f(100.0), 1, "float"))
             angle = rt.binary("+", rt.binary("*", _u_time, g.TAU, 1, "float"), rt.binary("*", rt.swizzle(animRand, "x"), g.TAU, 1, "float"), 1, "float")
             radius = rt.binary("*", rt.swizzle(animRand, "y"), spd, 1, "float")
-            offset = rt.component_wise("clamp", rt.binary("+", offset, rt.binary("*", rt.construct(2, rt.component_wise("cos", angle, width=1), rt.component_wise("sin", angle, width=1)), radius, 2, "float"), 2, "float"), rt.f(0.0), rt.f(1.0), width=2)
+            offset[:] = rt.component_wise("clamp", rt.binary("+", offset, rt.binary("*", rt.construct(2, rt.component_wise("cos", angle, width=1), rt.component_wise("sin", angle, width=1)), radius, 2, "float"), 2, "float"), rt.f(0.0), rt.f(1.0), width=2)
         return rt.binary("/", rt.binary("+", siteCellF, offset, 2, "float"), n, 2, "float")
     def main__void():
         globalCoord = rt.binary("+", rt.swizzle(ctx.frag_coord, "xy"), _u_tileOffset, 2, "float")
@@ -95,16 +95,16 @@ def run_pixel(ctx, out):
                     animRand = hash2__vec2_float(neighborF, rt.binary("+", s, rt.f(100.0), 1, "float"))
                     angle = rt.binary("+", rt.binary("*", _u_time, g.TAU, 1, "float"), rt.binary("*", rt.swizzle(animRand, "x"), g.TAU, 1, "float"), 1, "float")
                     radius = rt.binary("*", rt.swizzle(animRand, "y"), spd, 1, "float")
-                    offset = rt.component_wise("clamp", rt.binary("+", offset, rt.binary("*", rt.construct(2, rt.component_wise("cos", angle, width=1), rt.component_wise("sin", angle, width=1)), radius, 2, "float"), 2, "float"), rt.f(0.0), rt.f(1.0), width=2)
+                    offset[:] = rt.component_wise("clamp", rt.binary("+", offset, rt.binary("*", rt.construct(2, rt.component_wise("cos", angle, width=1), rt.component_wise("sin", angle, width=1)), radius, 2, "float"), 2, "float"), rt.f(0.0), rt.f(1.0), width=2)
                 point = rt.binary("/", rt.binary("+", neighborF, offset, 2, "float"), n, 2, "float")
                 d = rt.distance(auv, point)
                 if rt.binary("<", d, minDist):
                     thirdDist = secondDist
                     secondDist = minDist
                     minDist = d
-                    nearestPoint = point
+                    nearestPoint[:] = point
                     if rt.binary(">", _u_LP_BORDER, rt.i(0)):
-                        nearestCell = neighbor
+                        nearestCell[:] = neighbor
                 else:
                     if rt.binary("<", d, secondDist):
                         thirdDist = secondDist
@@ -122,17 +122,17 @@ def run_pixel(ctx, out):
         raw = rt.f(0.0)
         distField = rt.f(0.0)
         if rt.binary("==", _u_mode, rt.i(0)):
-            result = rt.swizzle(cellColor, "rgb")
+            result[:] = rt.swizzle(cellColor, "rgb")
         else:
             if rt.binary("==", _u_mode, rt.i(1)):
                 edgeDist = rt.component_wise("clamp", rt.binary("*", rt.binary("*", rt.binary("-", secondDist, minDist, 1, "float"), n, 1, "float"), rt.f(2.0), 1, "float"), rt.f(0.0), rt.f(1.0), width=1)
                 edgeFactor = rt.component_wise("mix", _u_edgeStrength, rt.f(0.0), edgeDist, width=1)
-                result = rt.component_wise("mix", rt.swizzle(cellColor, "rgb"), _u_edgeColor, edgeFactor, width=3)
+                result[:] = rt.component_wise("mix", rt.swizzle(cellColor, "rgb"), _u_edgeColor, edgeFactor, width=3)
             else:
                 selectedDist = (secondDist if rt.binary("==", _u_mode, rt.i(2)) else thirdDist)
                 raw = rt.component_wise("clamp", rt.binary("*", selectedDist, n, 1, "float"), rt.f(0.0), rt.f(1.0), width=1)
                 distField = rt.component_wise("pow", raw, rt.component_wise("mix", rt.f(0.5), rt.f(3.0), _u_edgeStrength, width=1), width=1)
-                result = rt.binary("*", rt.swizzle(cellColor, "rgb"), distField, 3, "float")
+                result[:] = rt.binary("*", rt.swizzle(cellColor, "rgb"), distField, 3, "float")
         modeResult = rt.construct(3, 0.0)
         borderMask = rt.f(0.0)
         if (bool(rt.binary(">", _u_LP_BORDER, rt.i(0))) or bool(rt.binary(">", _u_LP_LIGHT, rt.i(0)))):
@@ -163,8 +163,8 @@ def run_pixel(ctx, out):
                     candidateDist = rt.distance(auv, candidatePoint)
                     if rt.binary("<", candidateDist, borderNearestDist):
                         borderNearestDist = candidateDist
-                        borderNearestPoint = candidatePoint
-                        borderNearestCell = candidateCell
+                        borderNearestPoint[:] = candidatePoint
+                        borderNearestCell[:] = candidateCell
             distToEdge = rt.f(10000000000.0)
             dy = rt.unary("-", rt.i(2))
             _for4_first = True
@@ -197,16 +197,16 @@ def run_pixel(ctx, out):
             borderHalfWidth = rt.binary("*", rt.binary("/", rt.construct(1, _u_LP_BORDER), rt.f(100.0), 1, "float"), cellRadius, 1, "float")
             borderFeather = rt.component_wise("max", rt.fwidth(distToEdge), rt.f(1e-06), width=1)
             borderMask = rt.binary("-", rt.f(1.0), rt.component_wise("smoothstep", rt.binary("-", borderHalfWidth, borderFeather, 1, "float"), rt.binary("+", borderHalfWidth, borderFeather, 1, "float"), distToEdge, width=1), 1, "float")
-            result = rt.component_wise("mix", modeResult, _u_edgeColor, borderMask, width=3)
+            result[:] = rt.component_wise("mix", modeResult, _u_edgeColor, borderMask, width=3)
         if rt.binary(">", _u_LP_LIGHT, rt.i(0)):
             intensity = rt.component_wise("clamp", rt.binary("/", rt.construct(1, _u_LP_LIGHT), rt.f(100.0), 1, "float"), rt.f(0.0), rt.f(1.0), width=1)
             paneValue = rt.component_wise("max", rt.component_wise("max", rt.swizzle(modeResult, "r"), rt.swizzle(modeResult, "g"), width=1), rt.swizzle(modeResult, "b"), width=1)
             exposure = rt.component_wise("mix", rt.f(1.0), rt.f(2.25), intensity, width=1)
             litValue = rt.binary("-", rt.f(1.0), rt.component_wise("pow", rt.component_wise("max", rt.binary("-", rt.f(1.0), paneValue, 1, "float"), rt.f(0.0), width=1), exposure, width=1), 1, "float")
             litMode = (rt.binary("*", modeResult, rt.binary("/", litValue, paneValue, 1, "float"), 3, "float") if rt.binary(">", paneValue, rt.f(1e-06)) else modeResult)
-            result = rt.component_wise("mix", litMode, _u_edgeColor, borderMask, width=3)
+            result[:] = rt.component_wise("mix", litMode, _u_edgeColor, borderMask, width=3)
         original = rt.texture(_u_inputTex, uv)
-        g.fragColor = rt.construct(4, rt.component_wise("mix", rt.swizzle(original, "rgb"), result, _u_alpha, width=3), rt.swizzle(original, "a"))
+        g.fragColor[:] = rt.construct(4, rt.component_wise("mix", rt.swizzle(original, "rgb"), result, _u_alpha, width=3), rt.swizzle(original, "a"))
     main__void()
     _c = g.fragColor
     out[0] = rt.f32(_c[0]); out[1] = rt.f32(_c[1]); out[2] = rt.f32(_c[2]); out[3] = rt.f32(_c[3])

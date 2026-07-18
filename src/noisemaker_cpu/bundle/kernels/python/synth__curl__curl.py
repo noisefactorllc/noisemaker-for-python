@@ -30,7 +30,7 @@ def run_pixel(ctx, out):
         v = rt.copy(v, "float")
         C = rt.construct(2, rt.binary("/", rt.f(1.0), rt.f(6.0), 1, "float"), rt.binary("/", rt.f(1.0), rt.f(3.0), 1, "float"))
         D = rt.construct(4, rt.f(0.0), rt.f(0.5), rt.f(1.0), rt.f(2.0))
-        v = rt.binary("+", v, rt.binary("*", rt.construct(1, _u_seed), rt.f(0.1271), 1, "float"), 3, "float")
+        v[:] = rt.binary("+", v, rt.binary("*", rt.construct(1, _u_seed), rt.f(0.1271), 1, "float"), 3, "float")
         i = rt.component_wise("floor", rt.binary("+", v, rt.dot(v, rt.swizzle(C, "yyy")), 3, "float"), width=3)
         x0 = rt.binary("+", rt.binary("-", v, i, 3, "float"), rt.dot(i, rt.swizzle(C, "xxx")), 3, "float")
         _g = rt.component_wise("step", rt.swizzle(x0, "yzx"), rt.swizzle(x0, "xyz"), width=3)
@@ -40,7 +40,7 @@ def run_pixel(ctx, out):
         x1 = rt.binary("+", rt.binary("-", x0, i1, 3, "float"), rt.swizzle(C, "xxx"), 3, "float")
         x2 = rt.binary("+", rt.binary("-", x0, i2, 3, "float"), rt.swizzle(C, "yyy"), 3, "float")
         x3 = rt.binary("-", x0, rt.swizzle(D, "yyy"), 3, "float")
-        i = rt.component_wise("mod", i, rt.f(289.0), width=3)
+        i[:] = rt.component_wise("mod", i, rt.f(289.0), width=3)
         p = permute__vec4(rt.binary("+", rt.binary("+", permute__vec4(rt.binary("+", rt.binary("+", permute__vec4(rt.binary("+", rt.swizzle(i, "z"), rt.construct(4, rt.f(0.0), rt.swizzle(i1, "z"), rt.swizzle(i2, "z"), rt.f(1.0)), 4, "float")), rt.swizzle(i, "y"), 4, "float"), rt.construct(4, rt.f(0.0), rt.swizzle(i1, "y"), rt.swizzle(i2, "y"), rt.f(1.0)), 4, "float")), rt.swizzle(i, "x"), 4, "float"), rt.construct(4, rt.f(0.0), rt.swizzle(i1, "x"), rt.swizzle(i2, "x"), rt.f(1.0)), 4, "float"))
         n_ = rt.f(0.142857142857)
         ns = rt.binary("-", rt.binary("*", n_, rt.swizzle(D, "wyz"), 3, "float"), rt.swizzle(D, "xzx"), 3, "float")
@@ -62,12 +62,12 @@ def run_pixel(ctx, out):
         p2 = rt.construct(3, rt.swizzle(a1, "xy"), rt.swizzle(h, "z"))
         p3 = rt.construct(3, rt.swizzle(a1, "zw"), rt.swizzle(h, "w"))
         norm = taylorInvSqrt__vec4(rt.construct(4, rt.dot(p0, p0), rt.dot(p1, p1), rt.dot(p2, p2), rt.dot(p3, p3)))
-        p0 = rt.binary("*", p0, rt.swizzle(norm, "x"), 3, "float")
-        p1 = rt.binary("*", p1, rt.swizzle(norm, "y"), 3, "float")
-        p2 = rt.binary("*", p2, rt.swizzle(norm, "z"), 3, "float")
-        p3 = rt.binary("*", p3, rt.swizzle(norm, "w"), 3, "float")
+        p0[:] = rt.binary("*", p0, rt.swizzle(norm, "x"), 3, "float")
+        p1[:] = rt.binary("*", p1, rt.swizzle(norm, "y"), 3, "float")
+        p2[:] = rt.binary("*", p2, rt.swizzle(norm, "z"), 3, "float")
+        p3[:] = rt.binary("*", p3, rt.swizzle(norm, "w"), 3, "float")
         m = rt.component_wise("max", rt.binary("-", rt.f(0.6), rt.construct(4, rt.dot(x0, x0), rt.dot(x1, x1), rt.dot(x2, x2), rt.dot(x3, x3)), 4, "float"), rt.f(0.0), width=4)
-        m = rt.binary("*", m, m, 4, "float")
+        m[:] = rt.binary("*", m, m, 4, "float")
         return rt.binary("*", rt.f(42.0), rt.dot(rt.binary("*", m, m, 4, "float"), rt.construct(4, rt.dot(p0, x0), rt.dot(p1, x1), rt.dot(p2, x2), rt.dot(p3, x3))), 1, "float")
     def fbmSimplex3D__vec3(p):
         p = rt.copy(p, "float")
@@ -123,26 +123,26 @@ def run_pixel(ctx, out):
         centered = rt.binary("*", rt.binary("-", uv, rt.f(0.5), 2, "float"), rt.construct(2, aspect, rt.f(1.0)), 2, "float")
         p = rt.construct(3, rt.binary("*", centered, rt.binary("-", rt.f(21.0), _u_scale, 1, "float"), 2, "float"), rt.f(0.5))
         curl = curlNoise3D__vec3(p)
-        curl = rt.binary("+", rt.binary("*", rt.component_wise("tanh", rt.binary("*", curl, _u_intensity, 3, "float"), width=3), rt.f(0.5), 3, "float"), rt.f(0.5), 3, "float")
+        curl[:] = rt.binary("+", rt.binary("*", rt.component_wise("tanh", rt.binary("*", curl, _u_intensity, 3, "float"), width=3), rt.f(0.5), 3, "float"), rt.f(0.5), 3, "float")
         color = rt.construct(3, 0.0)
         if rt.binary("==", _u_OUTPUT_MODE, rt.i(0)):
-            color = rt.construct(3, rt.swizzle(curl, "x"))
+            color[:] = rt.construct(3, rt.swizzle(curl, "x"))
         else:
             if rt.binary("==", _u_OUTPUT_MODE, rt.i(1)):
-                color = rt.construct(3, rt.swizzle(curl, "y"))
+                color[:] = rt.construct(3, rt.swizzle(curl, "y"))
             else:
                 if rt.binary("==", _u_OUTPUT_MODE, rt.i(2)):
-                    color = rt.construct(3, rt.swizzle(curl, "z"))
+                    color[:] = rt.construct(3, rt.swizzle(curl, "z"))
                 else:
                     if rt.binary("==", _u_OUTPUT_MODE, rt.i(3)):
-                        color = curl
+                        color[:] = curl
                     else:
                         curlCentered = rt.binary("-", rt.binary("*", curl, rt.f(2.0), 3, "float"), rt.f(1.0), 3, "float")
                         mag = rt.length(curlCentered)
-                        color = rt.construct(3, mag)
+                        color[:] = rt.construct(3, mag)
         if _u_RIDGES:
-            color = rt.binary("-", rt.f(1.0), rt.component_wise("abs", rt.binary("-", rt.binary("*", color, rt.f(2.0), 3, "float"), rt.f(1.0), 3, "float"), width=3), 3, "float")
-        g.fragColor = rt.construct(4, color, rt.f(1.0))
+            color[:] = rt.binary("-", rt.f(1.0), rt.component_wise("abs", rt.binary("-", rt.binary("*", color, rt.f(2.0), 3, "float"), rt.f(1.0), 3, "float"), width=3), 3, "float")
+        g.fragColor[:] = rt.construct(4, color, rt.f(1.0))
     main__void()
     _c = g.fragColor
     out[0] = rt.f32(_c[0]); out[1] = rt.f32(_c[1]); out[2] = rt.f32(_c[2]); out[3] = rt.f32(_c[3])

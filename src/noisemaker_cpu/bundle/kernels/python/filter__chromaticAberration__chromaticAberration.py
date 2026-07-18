@@ -31,7 +31,7 @@ def run_pixel(ctx, out):
         aberrated = rt.construct(3, rt.swizzle(red, "r"), rt.swizzle(green, "g"), rt.swizzle(blue, "b"))
         edges = rt.binary("-", aberrated, rt.swizzle(green, "rgb"), 3, "float")
         original = rt.binary("*", rt.swizzle(green, "rgb"), map__float_float_float_float_float(_u_passthru, rt.f(0.0), rt.f(100.0), rt.f(0.0), rt.f(2.0)), 3, "float")
-        g.fragColor = rt.construct(4, rt.component_wise("min", rt.binary("+", edges, original, 3, "float"), rt.f(1.0), width=3), rt.swizzle(green, "a"))
+        g.fragColor[:] = rt.construct(4, rt.component_wise("min", rt.binary("+", edges, original, 3, "float"), rt.f(1.0), width=3), rt.swizzle(green, "a"))
     main__void()
     _c = g.fragColor
     out[0] = rt.f32(_c[0]); out[1] = rt.f32(_c[1]); out[2] = rt.f32(_c[2]); out[3] = rt.f32(_c[3])

@@ -23,11 +23,11 @@ def run_pixel(ctx, out):
     g.fragColor = rt.construct(4, 0.0)
     def pcg__uvec3(v):
         v = rt.copy(v, "uint")
-        v = rt.binary("+", rt.binary("*", v, rt.construct(1, rt.i(1664525), base="uint"), 3, "uint"), rt.construct(1, rt.i(1013904223), base="uint"), 3, "uint")
+        v[:] = rt.binary("+", rt.binary("*", v, rt.construct(1, rt.i(1664525), base="uint"), 3, "uint"), rt.construct(1, rt.i(1013904223), base="uint"), 3, "uint")
         v = rt.assign_swizzle(v, "x", rt.binary("+", rt.swizzle(v, "x"), rt.binary("*", rt.swizzle(v, "y"), rt.swizzle(v, "z"), 1, "uint"), 1, "uint"))
         v = rt.assign_swizzle(v, "y", rt.binary("+", rt.swizzle(v, "y"), rt.binary("*", rt.swizzle(v, "z"), rt.swizzle(v, "x"), 1, "uint"), 1, "uint"))
         v = rt.assign_swizzle(v, "z", rt.binary("+", rt.swizzle(v, "z"), rt.binary("*", rt.swizzle(v, "x"), rt.swizzle(v, "y"), 1, "uint"), 1, "uint"))
-        v = rt.binary("^", v, rt.binary(">>", v, rt.construct(1, rt.i(16), base="uint"), 3, "uint"), 3, "uint")
+        v[:] = rt.binary("^", v, rt.binary(">>", v, rt.construct(1, rt.i(16), base="uint"), 3, "uint"), 3, "uint")
         v = rt.assign_swizzle(v, "x", rt.binary("+", rt.swizzle(v, "x"), rt.binary("*", rt.swizzle(v, "y"), rt.swizzle(v, "z"), 1, "uint"), 1, "uint"))
         v = rt.assign_swizzle(v, "y", rt.binary("+", rt.swizzle(v, "y"), rt.binary("*", rt.swizzle(v, "z"), rt.swizzle(v, "x"), 1, "uint"), 1, "uint"))
         v = rt.assign_swizzle(v, "z", rt.binary("+", rt.swizzle(v, "z"), rt.binary("*", rt.swizzle(v, "x"), rt.swizzle(v, "y"), 1, "uint"), 1, "uint"))
@@ -86,7 +86,7 @@ def run_pixel(ctx, out):
     def snow__vec4_vec2(color, st):
         color = rt.copy(color, "float")
         st = rt.copy(st, "float")
-        st = rt.binary("+", rt.swizzle(ctx.frag_coord, "xy"), _u_tileOffset, 2, "float")
+        st[:] = rt.binary("+", rt.swizzle(ctx.frag_coord, "xy"), _u_tileOffset, 2, "float")
         amt = rt.binary("/", _u_snowAmt, rt.f(100.0), 1, "float")
         noise = rt.swizzle(prng__vec3(rt.construct(3, st, rt.binary("*", _u_time, rt.f(1000.0), 1, "float"))), "x")
         mask = rt.f(0.0)
@@ -107,7 +107,7 @@ def run_pixel(ctx, out):
         freq = rt.construct(2, rt.f(1.0))
         freq = rt.assign_swizzle(freq, "x", rt.binary("*", rt.swizzle(freq, "x"), map__float_float_float_float_float(_u_xChonk, rt.f(1.0), rt.f(100.0), rt.f(50.0), rt.f(1.0)), 1, "float"))
         freq = rt.assign_swizzle(freq, "y", rt.binary("*", rt.swizzle(freq, "y"), map__float_float_float_float_float(_u_yChonk, rt.f(1.0), rt.f(100.0), rt.f(50.0), rt.f(1.0)), 1, "float"))
-        freq = rt.binary("*", freq, rt.construct(2, periodicFunction__float(rt.binary("-", rt.swizzle(prng__vec3(rt.construct(3, rt.component_wise("floor", rt.binary("*", st, freq, 2, "float"), width=2), rt.f(0.0))), "x"), _u_time, 1, "float"))), 2, "float")
+        freq[:] = rt.binary("*", freq, rt.construct(2, periodicFunction__float(rt.binary("-", rt.swizzle(prng__vec3(rt.construct(3, rt.component_wise("floor", rt.binary("*", st, freq, 2, "float"), width=2), rt.f(0.0))), "x"), _u_time, 1, "float"))), 2, "float")
         _g = map__float_float_float_float_float(_u_glitchiness, rt.f(0.0), rt.f(100.0), rt.f(0.0), rt.f(1.0))
         xDrift = rt.binary("*", rt.swizzle(prng__vec3(rt.construct(3, rt.binary("+", rt.component_wise("floor", rt.binary("*", st, freq, 2, "float"), width=2), rt.f(10.0), 2, "float"), rt.f(0.0))), "x"), _g, 1, "float")
         yDrift = rt.binary("*", rt.swizzle(prng__vec3(rt.construct(3, rt.binary("-", rt.component_wise("floor", rt.binary("*", st, freq, 2, "float"), width=2), rt.f(10.0), 2, "float"), rt.f(0.0))), "x"), _g, 1, "float")
@@ -120,7 +120,7 @@ def run_pixel(ctx, out):
         st = rt.assign_swizzle(st, "y", rt.component_wise("mod", rt.binary("+", rt.swizzle(st, "y"), rt.binary("*", rt.component_wise("sin", rt.binary("*", yOffset, rt.f(6.28318530718), 1, "float"), width=1), refract, 1, "float"), 1, "float"), rt.f(1.0), width=1))
         diff = rt.construct(2, rt.binary("-", rt.f(0.5), st, 2, "float"))
         if _u_aspectLens:
-            diff = rt.binary("-", rt.construct(2, rt.binary("/", rt.binary("*", rt.f(0.5), rt.swizzle(_u_fullResolution, "x"), 1, "float"), rt.swizzle(_u_fullResolution, "y"), 1, "float"), rt.f(0.5)), rt.construct(2, rt.binary("/", rt.binary("*", rt.swizzle(st, "x"), rt.swizzle(_u_fullResolution, "x"), 1, "float"), rt.swizzle(_u_fullResolution, "y"), 1, "float"), rt.swizzle(st, "y")), 2, "float")
+            diff[:] = rt.binary("-", rt.construct(2, rt.binary("/", rt.binary("*", rt.f(0.5), rt.swizzle(_u_fullResolution, "x"), 1, "float"), rt.swizzle(_u_fullResolution, "y"), 1, "float"), rt.f(0.5)), rt.construct(2, rt.binary("/", rt.binary("*", rt.swizzle(st, "x"), rt.swizzle(_u_fullResolution, "x"), 1, "float"), rt.swizzle(_u_fullResolution, "y"), 1, "float"), rt.swizzle(st, "y")), 2, "float")
         centerDist = rt.length(diff)
         distort = rt.f(0.0)
         zoom = rt.f(1.0)
@@ -146,16 +146,16 @@ def run_pixel(ctx, out):
         uv = rt.binary("/", globalCoord, _u_fullResolution, 2, "float")
         color = rt.construct(4, rt.f(0.0))
         blendy = periodicFunction__float(rt.binary("-", _u_time, offsets__vec2(uv), 1, "float"))
-        color = glitch__vec2(uv)
-        color = scanlines__vec4_vec2(color, uv)
-        color = snow__vec4_vec2(color, uv)
+        color[:] = glitch__vec2(uv)
+        color[:] = scanlines__vec4_vec2(color, uv)
+        color[:] = snow__vec4_vec2(color, uv)
         if rt.binary("<", _u_vignetteAmt, rt.f(0.0)):
             color = rt.assign_swizzle(color, "rgb", rt.component_wise("mix", rt.binary("-", rt.binary("*", rt.swizzle(color, "rgb"), rt.f(1.0), 3, "float"), rt.component_wise("pow", rt.binary("*", rt.length(rt.binary("-", rt.f(0.5), uv, 2, "float")), rt.f(1.125), 1, "float"), rt.f(2.0), width=1), 3, "float"), rt.swizzle(color, "rgb"), map__float_float_float_float_float(_u_vignetteAmt, rt.unary("-", rt.f(100.0)), rt.f(0.0), rt.f(0.0), rt.f(1.0)), width=3))
             color = rt.assign_swizzle(color, "a", rt.component_wise("max", rt.swizzle(color, "a"), rt.binary("*", rt.length(rt.binary("-", rt.f(0.5), uv, 2, "float")), map__float_float_float_float_float(_u_vignetteAmt, rt.unary("-", rt.f(100.0)), rt.f(0.0), rt.f(1.0), rt.f(0.0)), 1, "float"), width=1))
         else:
             color = rt.assign_swizzle(color, "rgb", rt.component_wise("mix", rt.swizzle(color, "rgb"), rt.binary("-", rt.f(1.0), rt.binary("-", rt.binary("-", rt.f(1.0), rt.binary("*", rt.swizzle(color, "rgb"), rt.f(1.0), 3, "float"), 3, "float"), rt.component_wise("pow", rt.binary("*", rt.length(rt.binary("-", rt.f(0.5), uv, 2, "float")), rt.f(1.125), 1, "float"), rt.f(2.0), width=1), 3, "float"), 3, "float"), map__float_float_float_float_float(_u_vignetteAmt, rt.f(0.0), rt.f(100.0), rt.f(0.0), rt.f(1.0)), width=3))
             color = rt.assign_swizzle(color, "a", rt.component_wise("max", rt.swizzle(color, "a"), rt.binary("*", rt.length(rt.binary("-", rt.f(0.5), uv, 2, "float")), map__float_float_float_float_float(_u_vignetteAmt, rt.unary("-", rt.f(100.0)), rt.f(0.0), rt.f(1.0), rt.f(0.0)), 1, "float"), width=1))
-        g.fragColor = color
+        g.fragColor[:] = color
     main__void()
     _c = g.fragColor
     out[0] = rt.f32(_c[0]); out[1] = rt.f32(_c[1]); out[2] = rt.f32(_c[2]); out[3] = rt.f32(_c[3])

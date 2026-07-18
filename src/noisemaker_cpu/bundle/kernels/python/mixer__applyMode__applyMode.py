@@ -37,24 +37,24 @@ def run_pixel(ctx, out):
         b = rgb2hsv__vec3(rt.swizzle(color2, "rgb"))
         resultHSV = rt.construct(3, 0.0)
         if rt.binary("==", _u_mode, rt.i(0)):
-            resultHSV = rt.construct(3, rt.swizzle(a, "x"), rt.swizzle(a, "y"), rt.swizzle(b, "z"))
+            resultHSV[:] = rt.construct(3, rt.swizzle(a, "x"), rt.swizzle(a, "y"), rt.swizzle(b, "z"))
         else:
             if rt.binary("==", _u_mode, rt.i(1)):
-                resultHSV = rt.construct(3, rt.swizzle(b, "x"), rt.swizzle(a, "y"), rt.swizzle(a, "z"))
+                resultHSV[:] = rt.construct(3, rt.swizzle(b, "x"), rt.swizzle(a, "y"), rt.swizzle(a, "z"))
             else:
-                resultHSV = rt.construct(3, rt.swizzle(a, "x"), rt.swizzle(b, "y"), rt.swizzle(a, "z"))
+                resultHSV[:] = rt.construct(3, rt.swizzle(a, "x"), rt.swizzle(b, "y"), rt.swizzle(a, "z"))
         middle = rt.construct(4, hsv2rgb__vec3(resultHSV), rt.f(1.0))
         amt = map__float_float_float_float_float(_u_mixAmt, rt.unary("-", rt.f(100.0)), rt.f(100.0), rt.f(0.0), rt.f(1.0))
         color = rt.construct(4, 0.0)
         factor = rt.f(0.0)
         if rt.binary("<", amt, rt.f(0.5)):
             factor = rt.binary("*", amt, rt.f(2.0), 1, "float")
-            color = rt.component_wise("mix", color1, middle, factor, width=4)
+            color[:] = rt.component_wise("mix", color1, middle, factor, width=4)
         else:
             factor = rt.binary("*", rt.binary("-", amt, rt.f(0.5), 1, "float"), rt.f(2.0), 1, "float")
-            color = rt.component_wise("mix", middle, color2, factor, width=4)
+            color[:] = rt.component_wise("mix", middle, color2, factor, width=4)
         color = rt.assign_swizzle(color, "a", rt.component_wise("max", rt.swizzle(color1, "a"), rt.swizzle(color2, "a"), width=1))
-        g.fragColor = color
+        g.fragColor[:] = color
     main__void()
     _c = g.fragColor
     out[0] = rt.f32(_c[0]); out[1] = rt.f32(_c[1]); out[2] = rt.f32(_c[2]); out[3] = rt.f32(_c[3])

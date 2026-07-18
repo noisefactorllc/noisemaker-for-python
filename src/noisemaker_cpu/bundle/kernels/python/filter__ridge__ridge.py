@@ -22,7 +22,7 @@ def run_pixel(ctx, out):
         texel = rt.texture(_u_inputTex, uv)
         ridged = ridge_transform__vec4_float(texel, _u_level)
         out_color = rt.construct(4, rt.swizzle(ridged, "xyz"), rt.f(1.0))
-        g.fragColor = out_color
+        g.fragColor[:] = out_color
     main__void()
     _c = g.fragColor
     out[0] = rt.f32(_c[0]); out[1] = rt.f32(_c[1]); out[2] = rt.f32(_c[2]); out[3] = rt.f32(_c[3])

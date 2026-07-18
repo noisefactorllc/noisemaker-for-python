@@ -84,39 +84,39 @@ def run_pixel(ctx, out):
         cX_df = rt.copy(cX_df, "float")
         cY_df = rt.copy(cY_df, "float")
         if rt.binary("==", index, rt.i(1)):
-            cX_df = rt.construct(2, rt.unary("-", rt.f(0.7445398569107056)), rt.unary("-", rt.f(3.4452027897e-09)))
-            cY_df = rt.construct(2, rt.f(0.12172377109527588), rt.f(2.7991489404e-09))
+            cX_df[:] = rt.construct(2, rt.unary("-", rt.f(0.7445398569107056)), rt.unary("-", rt.f(3.4452027897e-09)))
+            cY_df[:] = rt.construct(2, rt.f(0.12172377109527588), rt.f(2.7991489404e-09))
         else:
             if rt.binary("==", index, rt.i(2)):
-                cX_df = rt.construct(2, rt.f(0.29833000898361206), rt.unary("-", rt.f(8.9836120765e-09)))
-                cY_df = rt.construct(2, rt.f(0.0011099999537691474), rt.f(4.6230852696e-11))
+                cX_df[:] = rt.construct(2, rt.f(0.29833000898361206), rt.unary("-", rt.f(8.9836120765e-09)))
+                cY_df[:] = rt.construct(2, rt.f(0.0011099999537691474), rt.f(4.6230852696e-11))
             else:
                 if rt.binary("==", index, rt.i(3)):
-                    cX_df = rt.construct(2, rt.unary("-", rt.f(1.7548776865005493)), rt.f(2.0253856592e-08))
-                    cY_df = rt.construct(2, rt.f(0.0), rt.f(0.0))
+                    cX_df[:] = rt.construct(2, rt.unary("-", rt.f(1.7548776865005493)), rt.f(2.0253856592e-08))
+                    cY_df[:] = rt.construct(2, rt.f(0.0), rt.f(0.0))
                 else:
                     if rt.binary("==", index, rt.i(4)):
-                        cX_df = rt.construct(2, rt.unary("-", rt.f(1.7400623559951782)), rt.unary("-", rt.f(2.6584161761e-08)))
-                        cY_df = rt.construct(2, rt.f(0.028175339102745056), rt.f(6.7646594229e-10))
+                        cX_df[:] = rt.construct(2, rt.unary("-", rt.f(1.7400623559951782)), rt.unary("-", rt.f(2.6584161761e-08)))
+                        cY_df[:] = rt.construct(2, rt.f(0.028175339102745056), rt.f(6.7646594229e-10))
                     else:
                         if rt.binary("==", index, rt.i(5)):
-                            cX_df = rt.construct(2, rt.unary("-", rt.f(1.4011552333831787)), rt.f(4.4291128098e-08))
-                            cY_df = rt.construct(2, rt.f(0.0), rt.f(0.0))
+                            cX_df[:] = rt.construct(2, rt.unary("-", rt.f(1.4011552333831787)), rt.f(4.4291128098e-08))
+                            cY_df[:] = rt.construct(2, rt.f(0.0), rt.f(0.0))
                         else:
                             if rt.binary("==", index, rt.i(6)):
-                                cX_df = rt.construct(2, rt.f(0.37500011920928955), rt.f(8.5257595428e-10))
-                                cY_df = rt.construct(2, rt.unary("-", rt.f(0.21663938462734222)), rt.unary("-", rt.f(3.8103704636e-09)))
+                                cX_df[:] = rt.construct(2, rt.f(0.37500011920928955), rt.f(8.5257595428e-10))
+                                cY_df[:] = rt.construct(2, rt.unary("-", rt.f(0.21663938462734222)), rt.unary("-", rt.f(3.8103704636e-09)))
                             else:
                                 if rt.binary("==", index, rt.i(7)):
-                                    cX_df = rt.construct(2, rt.unary("-", rt.f(0.7445389032363892)), rt.unary("-", rt.f(1.6763610833e-08)))
-                                    cY_df = rt.construct(2, rt.f(0.12172418087720871), rt.unary("-", rt.f(8.7720870845e-10)))
+                                    cX_df[:] = rt.construct(2, rt.unary("-", rt.f(0.7445389032363892)), rt.unary("-", rt.f(1.6763610833e-08)))
+                                    cY_df[:] = rt.construct(2, rt.f(0.12172418087720871), rt.unary("-", rt.f(8.7720870845e-10)))
                                 else:
                                     if rt.binary("==", index, rt.i(8)):
-                                        cX_df = rt.construct(2, rt.unary("-", rt.f(1.2553445100784302)), rt.unary("-", rt.f(1.4721569741e-08)))
-                                        cY_df = rt.construct(2, rt.unary("-", rt.f(0.3822004497051239)), rt.unary("-", rt.f(1.3294876089e-08)))
+                                        cX_df[:] = rt.construct(2, rt.unary("-", rt.f(1.2553445100784302)), rt.unary("-", rt.f(1.4721569741e-08)))
+                                        cY_df[:] = rt.construct(2, rt.unary("-", rt.f(0.3822004497051239)), rt.unary("-", rt.f(1.3294876089e-08)))
                                     else:
-                                        cX_df = rt.construct(2, _u_centerHiX, _u_centerLoX)
-                                        cY_df = rt.construct(2, _u_centerHiY, _u_centerLoY)
+                                        cX_df[:] = rt.construct(2, _u_centerHiX, _u_centerLoX)
+                                        cY_df[:] = rt.construct(2, _u_centerHiY, _u_centerLoY)
         return (None, cX_df, cY_df)
     def transformCoords_df64__vec2_vec2_vec2_float_float_vec2_vec2(fragCoord, cX_df, cY_df, z, rot, re_df, im_df):
         fragCoord = rt.copy(fragCoord, "float")
@@ -128,10 +128,10 @@ def run_pixel(ctx, out):
         angle = rt.binary("/", rt.binary("*", rt.unary("-", rot), g.TAU, 1, "float"), rt.f(360.0), 1, "float")
         c = rt.component_wise("cos", angle, width=1)
         s = rt.component_wise("sin", angle, width=1)
-        uv = rt.matrix_mult(rt.construct(4, c, rt.unary("-", s), s, c), uv, 2)
+        uv[:] = rt.matrix_mult(rt.construct(4, c, rt.unary("-", s), s, c), uv, 2)
         scale = rt.binary("/", rt.f(2.5), z, 1, "float")
-        re_df = df64_add__vec2_vec2(df64_from__float(rt.binary("*", rt.swizzle(uv, "x"), scale, 1, "float")), cX_df)
-        im_df = df64_add__vec2_vec2(df64_from__float(rt.binary("*", rt.swizzle(uv, "y"), scale, 1, "float")), cY_df)
+        re_df[:] = df64_add__vec2_vec2(df64_from__float(rt.binary("*", rt.swizzle(uv, "x"), scale, 1, "float")), cX_df)
+        im_df[:] = df64_add__vec2_vec2(df64_from__float(rt.binary("*", rt.swizzle(uv, "y"), scale, 1, "float")), cY_df)
         return (None, re_df, im_df)
     def inCardioid__float_float(x, y):
         y2 = rt.binary("*", y, y, 1, "float")
@@ -159,8 +159,8 @@ def run_pixel(ctx, out):
         if (bool(inCardioid__float_float(cx, cy)) or bool(inPeriod2Bulb__float_float(cx, cy))):
             smoothIter = rt.construct(1, maxIter)
             rawIter = rt.construct(1, maxIter)
-            z_final = rt.construct(2, rt.f(0.0))
-            dz_final = rt.construct(2, rt.f(0.0))
+            z_final[:] = rt.construct(2, rt.f(0.0))
+            dz_final[:] = rt.construct(2, rt.f(0.0))
             stripeAcc = rt.f(0.0)
             trapMin = rt.f(1e+20)
             return (None, smoothIter, rawIter, z_final, dz_final, stripeAcc, trapMin)
@@ -182,14 +182,14 @@ def run_pixel(ctx, out):
                 break
             zx = df64_to_float__vec2(zr)
             zy = df64_to_float__vec2(zi)
-            dz = rt.construct(2, rt.binary("+", rt.binary("*", rt.f(2.0), rt.binary("-", rt.binary("*", zx, rt.swizzle(dz, "x"), 1, "float"), rt.binary("*", zy, rt.swizzle(dz, "y"), 1, "float"), 1, "float"), 1, "float"), rt.f(1.0), 1, "float"), rt.binary("*", rt.f(2.0), rt.binary("+", rt.binary("*", zx, rt.swizzle(dz, "y"), 1, "float"), rt.binary("*", zy, rt.swizzle(dz, "x"), 1, "float"), 1, "float"), 1, "float"))
+            dz[:] = rt.construct(2, rt.binary("+", rt.binary("*", rt.f(2.0), rt.binary("-", rt.binary("*", zx, rt.swizzle(dz, "x"), 1, "float"), rt.binary("*", zy, rt.swizzle(dz, "y"), 1, "float"), 1, "float"), 1, "float"), rt.f(1.0), 1, "float"), rt.binary("*", rt.f(2.0), rt.binary("+", rt.binary("*", zx, rt.swizzle(dz, "y"), 1, "float"), rt.binary("*", zy, rt.swizzle(dz, "x"), 1, "float"), 1, "float"), 1, "float"))
             zr2 = df64_mul__vec2_vec2(zr, zr)
             zi2 = df64_mul__vec2_vec2(zi, zi)
             zri = df64_mul__vec2_vec2(zr, zi)
             new_zr = df64_add__vec2_vec2(df64_sub__vec2_vec2(zr2, zi2), c_re)
             new_zi = df64_add__vec2_vec2(df64_mul_f__vec2_float(zri, rt.f(2.0)), c_im)
-            zr = new_zr
-            zi = new_zi
+            zr[:] = new_zr
+            zi[:] = new_zi
             post_zx = df64_to_float__vec2(zr)
             post_zy = df64_to_float__vec2(zi)
             post_mag2 = rt.binary("+", rt.binary("*", post_zx, post_zx, 1, "float"), rt.binary("*", post_zy, post_zy, 1, "float"), 1, "float")
@@ -202,8 +202,8 @@ def run_pixel(ctx, out):
         rawIter = i
         fx = df64_to_float__vec2(zr)
         fy = df64_to_float__vec2(zi)
-        z_final = rt.construct(2, fx, fy)
-        dz_final = dz
+        z_final[:] = rt.construct(2, fx, fy)
+        dz_final[:] = dz
         stripeAcc = stripe
         trapMin = trap
         mag2 = rt.dot(z_final, z_final)
@@ -323,7 +323,7 @@ def run_pixel(ctx, out):
                             value = outputSmoothIteration__float_float_int(smoothI, rawI, maxIter)
         if rt.binary(">", _u_invert, rt.f(0.5)):
             value = rt.binary("-", rt.f(1.0), value, 1, "float")
-        g.fragColor = rt.construct(4, rt.construct(3, value), rt.f(1.0))
+        g.fragColor[:] = rt.construct(4, rt.construct(3, value), rt.f(1.0))
     main__void()
     _c = g.fragColor
     out[0] = rt.f32(_c[0]); out[1] = rt.f32(_c[1]); out[2] = rt.f32(_c[2]); out[3] = rt.f32(_c[3])

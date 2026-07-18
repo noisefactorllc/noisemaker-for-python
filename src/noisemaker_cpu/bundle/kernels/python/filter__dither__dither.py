@@ -182,11 +182,11 @@ def run_pixel(ctx, out):
         return rt.binary("/", rt.f(21.0), rt.f(64.0), 1, "float")
     def pcg__uvec3(v):
         v = rt.copy(v, "uint")
-        v = rt.binary("+", rt.binary("*", v, rt.i(1664525), 3, "uint"), rt.i(1013904223), 3, "uint")
+        v[:] = rt.binary("+", rt.binary("*", v, rt.i(1664525), 3, "uint"), rt.i(1013904223), 3, "uint")
         v = rt.assign_swizzle(v, "x", rt.binary("+", rt.swizzle(v, "x"), rt.binary("*", rt.swizzle(v, "y"), rt.swizzle(v, "z"), 1, "uint"), 1, "uint"))
         v = rt.assign_swizzle(v, "y", rt.binary("+", rt.swizzle(v, "y"), rt.binary("*", rt.swizzle(v, "z"), rt.swizzle(v, "x"), 1, "uint"), 1, "uint"))
         v = rt.assign_swizzle(v, "z", rt.binary("+", rt.swizzle(v, "z"), rt.binary("*", rt.swizzle(v, "x"), rt.swizzle(v, "y"), 1, "uint"), 1, "uint"))
-        v = rt.binary("^", v, rt.binary(">>", v, rt.i(16), 3, "uint"), 3, "uint")
+        v[:] = rt.binary("^", v, rt.binary(">>", v, rt.i(16), 3, "uint"), 3, "uint")
         v = rt.assign_swizzle(v, "x", rt.binary("+", rt.swizzle(v, "x"), rt.binary("*", rt.swizzle(v, "y"), rt.swizzle(v, "z"), 1, "uint"), 1, "uint"))
         v = rt.assign_swizzle(v, "y", rt.binary("+", rt.swizzle(v, "y"), rt.binary("*", rt.swizzle(v, "z"), rt.swizzle(v, "x"), 1, "uint"), 1, "uint"))
         v = rt.assign_swizzle(v, "z", rt.binary("+", rt.swizzle(v, "z"), rt.binary("*", rt.swizzle(v, "x"), rt.swizzle(v, "y"), 1, "uint"), 1, "uint"))
@@ -263,7 +263,7 @@ def run_pixel(ctx, out):
             dist = colorDistance__vec3_vec3(color, pal[int(i)])
             if rt.binary("<", dist, minDist):
                 minDist = dist
-                closest = pal[int(i)]
+                closest[:] = pal[int(i)]
         return closest
     def findClosest15__vec3_vec3(color, pal):
         color = rt.copy(color, "float")
@@ -281,7 +281,7 @@ def run_pixel(ctx, out):
             dist = colorDistance__vec3_vec3(color, pal[int(i)])
             if rt.binary("<", dist, minDist):
                 minDist = dist
-                closest = pal[int(i)]
+                closest[:] = pal[int(i)]
         return closest
     def findClosest16__vec3_vec3(color, pal):
         color = rt.copy(color, "float")
@@ -299,7 +299,7 @@ def run_pixel(ctx, out):
             dist = colorDistance__vec3_vec3(color, pal[int(i)])
             if rt.binary("<", dist, minDist):
                 minDist = dist
-                closest = pal[int(i)]
+                closest[:] = pal[int(i)]
         return closest
     def findClosestPaletteColor__vec3_int(color, paletteType):
         color = rt.copy(color, "float")
@@ -335,7 +335,7 @@ def run_pixel(ctx, out):
     def ditherWithPalette__vec3_float_float_int(color, ditherValue, thresh, paletteType):
         color = rt.copy(color, "float")
         dithered = rt.binary("+", color, rt.binary("*", rt.binary("+", rt.binary("-", ditherValue, rt.f(0.5), 1, "float"), thresh, 1, "float"), rt.f(0.25), 1, "float"), 3, "float")
-        dithered = rt.component_wise("clamp", dithered, rt.f(0.0), rt.f(1.0), width=3)
+        dithered[:] = rt.component_wise("clamp", dithered, rt.f(0.0), rt.f(1.0), width=3)
         return findClosestPaletteColor__vec3_int(dithered, paletteType)
     def fsQuantize__vec3(v):
         v = rt.copy(v, "float")
@@ -357,7 +357,7 @@ def run_pixel(ctx, out):
         texSize = rt.copy(texSize, "int")
         pGlobal = rt.binary("*", rt.binary("+", rt.construct(2, cell), rt.f(0.5), 2, "float"), cellSize, 2, "float")
         pLocal = rt.binary("-", rt.construct(2, rt.component_wise("floor", pGlobal, width=2), base="int"), rt.construct(2, _u_tileOffset, base="int"), 2, "int")
-        pLocal = rt.component_wise("clamp", pLocal, rt.construct(2, rt.i(0), base="int"), rt.binary("-", texSize, rt.i(1), 2, "int"), width=2)
+        pLocal[:] = rt.component_wise("clamp", pLocal, rt.construct(2, rt.i(0), base="int"), rt.binary("-", texSize, rt.i(1), 2, "int"), width=2)
         return rt.swizzle(rt.texel_fetch(_u_inputTex, pLocal, rt.i(0)), "rgb")
     def errorDiffusion__vec2_float_ivec2(globalCoord, cellSize, texSize):
         globalCoord = rt.copy(globalCoord, "float")
@@ -410,20 +410,20 @@ def run_pixel(ctx, out):
                     src = fsFetchCell__ivec2_float_ivec2(rt.binary("+", blockOrigin, rt.construct(2, c, r, base="int"), 2, "int"), cellSize, texSize)
                     v = rt.component_wise("clamp", rt.binary("+", rt.binary("+", rt.binary("+", src, errRow[int(rt.binary("+", rt.binary("+", c, g.FS_APRON_MAX, 1, "int"), rt.i(1), 1, "int"))], 3, "float"), rightErr, 3, "float"), bias, 3, "float"), rt.f(0.0), rt.f(1.0), width=3)
                     err = rt.binary("-", v, fsQuantize__vec3(v), 3, "float")
-                    rightErr = rt.binary("*", err, rt.binary("/", rt.f(7.0), rt.f(16.0), 1, "float"), 3, "float")
+                    rightErr[:] = rt.binary("*", err, rt.binary("/", rt.f(7.0), rt.f(16.0), 1, "float"), 3, "float")
                     errRow[int(rt.binary("+", c, g.FS_APRON_MAX, 1, "int"))] = rt.binary("+", errRow[int(rt.binary("+", c, g.FS_APRON_MAX, 1, "int"))], rt.binary("*", err, rt.binary("/", rt.f(3.0), rt.f(16.0), 1, "float"), 3, "float"), 3, "float")
                     errRow[int(rt.binary("+", rt.binary("+", c, g.FS_APRON_MAX, 1, "int"), rt.i(1), 1, "int"))] = rt.binary("+", diag, rt.binary("*", err, rt.binary("/", rt.f(5.0), rt.f(16.0), 1, "float"), 3, "float"), 3, "float")
-                    diag = rt.binary("*", err, rt.binary("/", rt.f(1.0), rt.f(16.0), 1, "float"), 3, "float")
+                    diag[:] = rt.binary("*", err, rt.binary("/", rt.f(1.0), rt.f(16.0), 1, "float"), 3, "float")
             incoming = rt.construct(3, 0.0)
             if lastRow:
                 incoming = errRow[int(rt.binary("+", g.FS_APRON_MAX, rt.i(1), 1, "int"))]
                 if rt.binary("==", lx, rt.i(1)):
-                    incoming = errRow[int(rt.binary("+", g.FS_APRON_MAX, rt.i(2), 1, "int"))]
+                    incoming[:] = errRow[int(rt.binary("+", g.FS_APRON_MAX, rt.i(2), 1, "int"))]
                 if rt.binary("==", lx, rt.i(2)):
-                    incoming = errRow[int(rt.binary("+", g.FS_APRON_MAX, rt.i(3), 1, "int"))]
+                    incoming[:] = errRow[int(rt.binary("+", g.FS_APRON_MAX, rt.i(3), 1, "int"))]
                 if rt.binary("==", lx, rt.i(3)):
-                    incoming = errRow[int(rt.binary("+", g.FS_APRON_MAX, rt.i(4), 1, "int"))]
-                carried = rt.binary("+", incoming, rightErr, 3, "float")
+                    incoming[:] = errRow[int(rt.binary("+", g.FS_APRON_MAX, rt.i(4), 1, "int"))]
+                carried[:] = rt.binary("+", incoming, rightErr, 3, "float")
         src = rt.swizzle(rt.texel_fetch(_u_inputTex, rt.construct(2, rt.swizzle(ctx.frag_coord, "xy"), base="int"), rt.i(0)), "rgb")
         v = rt.component_wise("clamp", rt.binary("+", rt.binary("+", src, carried, 3, "float"), bias, 3, "float"), rt.f(0.0), rt.f(1.0), width=3)
         return fsQuantize__vec3(v)
@@ -435,15 +435,15 @@ def run_pixel(ctx, out):
         result = rt.construct(3, 0.0)
         ditherValue = rt.f(0.0)
         if rt.binary("==", _u_ditherType, g.DITHER_ERROR_DIFFUSION):
-            result = errorDiffusion__vec2_float_ivec2(globalCoord, rt.binary("*", _u_matrixScale, _u_renderScale, 1, "float"), texSize)
+            result[:] = errorDiffusion__vec2_float_ivec2(globalCoord, rt.binary("*", _u_matrixScale, _u_renderScale, 1, "float"), texSize)
         else:
             ditherValue = getDitherThreshold__vec2_int_float(globalCoord, _u_ditherType, rt.binary("*", _u_matrixScale, _u_renderScale, 1, "float"))
             if rt.binary("==", _u_palette, g.PALETTE_INPUT):
-                result = quantizeWithDither__vec3_float_float_float(rt.swizzle(color, "rgb"), rt.construct(1, _u_levels), ditherValue, _u_threshold)
+                result[:] = quantizeWithDither__vec3_float_float_float(rt.swizzle(color, "rgb"), rt.construct(1, _u_levels), ditherValue, _u_threshold)
             else:
-                result = ditherWithPalette__vec3_float_float_int(rt.swizzle(color, "rgb"), ditherValue, _u_threshold, _u_palette)
-        result = rt.component_wise("mix", rt.swizzle(color, "rgb"), result, _u_mixAmount, width=3)
-        g.fragColor = rt.construct(4, result, rt.swizzle(color, "a"))
+                result[:] = ditherWithPalette__vec3_float_float_int(rt.swizzle(color, "rgb"), ditherValue, _u_threshold, _u_palette)
+        result[:] = rt.component_wise("mix", rt.swizzle(color, "rgb"), result, _u_mixAmount, width=3)
+        g.fragColor[:] = rt.construct(4, result, rt.swizzle(color, "a"))
     main__void()
     _c = g.fragColor
     out[0] = rt.f32(_c[0]); out[1] = rt.f32(_c[1]); out[2] = rt.f32(_c[2]); out[3] = rt.f32(_c[3])

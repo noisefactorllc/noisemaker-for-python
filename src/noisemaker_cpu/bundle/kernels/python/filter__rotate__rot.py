@@ -24,19 +24,19 @@ def run_pixel(ctx, out):
             angle = rt.binary("+", angle, rt.binary("*", rt.binary("*", _u_time, rt.f(360.0), 1, "float"), rt.construct(1, _u_speed), 1, "float"), 1, "float")
         aspect = rt.binary("/", rt.construct(1, rt.swizzle(texSize, "x")), rt.construct(1, rt.swizzle(texSize, "y")), 1, "float")
         center = rt.construct(2, rt.f(0.5))
-        uv = rt.binary("-", uv, center, 2, "float")
+        uv[:] = rt.binary("-", uv, center, 2, "float")
         uv = rt.assign_swizzle(uv, "x", rt.binary("*", rt.swizzle(uv, "x"), aspect, 1, "float"))
-        uv = rt.matrix_mult(rotate2D__float(rt.binary("/", rt.binary("*", rt.unary("-", angle), g.TAU, 1, "float"), rt.f(360.0), 1, "float")), uv, 2)
+        uv[:] = rt.matrix_mult(rotate2D__float(rt.binary("/", rt.binary("*", rt.unary("-", angle), g.TAU, 1, "float"), rt.f(360.0), 1, "float")), uv, 2)
         uv = rt.assign_swizzle(uv, "x", rt.binary("/", rt.swizzle(uv, "x"), aspect, 1, "float"))
-        uv = rt.binary("+", uv, center, 2, "float")
+        uv[:] = rt.binary("+", uv, center, 2, "float")
         if rt.binary("==", _u_wrap, rt.i(0)):
-            uv = rt.component_wise("abs", rt.binary("-", rt.component_wise("mod", rt.binary("+", uv, rt.f(1.0), 2, "float"), rt.f(2.0), width=2), rt.f(1.0), 2, "float"), width=2)
+            uv[:] = rt.component_wise("abs", rt.binary("-", rt.component_wise("mod", rt.binary("+", uv, rt.f(1.0), 2, "float"), rt.f(2.0), width=2), rt.f(1.0), 2, "float"), width=2)
         else:
             if rt.binary("==", _u_wrap, rt.i(1)):
-                uv = rt.component_wise("fract", uv, width=2)
+                uv[:] = rt.component_wise("fract", uv, width=2)
             else:
-                uv = rt.component_wise("clamp", uv, rt.f(0.0), rt.f(1.0), width=2)
-        g.fragColor = rt.texture(_u_inputTex, uv)
+                uv[:] = rt.component_wise("clamp", uv, rt.f(0.0), rt.f(1.0), width=2)
+        g.fragColor[:] = rt.texture(_u_inputTex, uv)
     main__void()
     _c = g.fragColor
     out[0] = rt.f32(_c[0]); out[1] = rt.f32(_c[1]); out[2] = rt.f32(_c[2]); out[3] = rt.f32(_c[3])

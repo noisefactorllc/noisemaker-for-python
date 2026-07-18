@@ -312,7 +312,7 @@ def run_pixel(ctx, out):
             return
         alphaVal = rt.component_wise("clamp", _u_alpha, rt.f(0.0), rt.f(1.0), width=1)
         if rt.binary("==", alphaVal, rt.f(0.0)):
-            g.fragColor = rt.texel_fetch(_u_inputTex, rt.construct(2, rt.construct(1, rt.swizzle(global_id, "x"), base="int"), rt.construct(1, rt.swizzle(global_id, "y"), base="int"), base="int"), rt.i(0))
+            g.fragColor[:] = rt.texel_fetch(_u_inputTex, rt.construct(2, rt.construct(1, rt.swizzle(global_id, "x"), base="int"), rt.construct(1, rt.swizzle(global_id, "y"), base="int"), base="int"), rt.i(0))
             return
         rs = rt.component_wise("max", _u_renderScale, rt.f(1.0), width=1)
         fullRes = (_u_fullResolution if rt.binary(">", rt.swizzle(_u_fullResolution, "x"), rt.f(0.0)) else _u_resolution)
@@ -332,7 +332,7 @@ def run_pixel(ctx, out):
         base_color = rt.swizzle(base_sample, "xyz")
         alpha = rt.swizzle(base_sample, "w")
         color = rt.component_wise("mix", base_color, rt.binary("*", rt.binary("+", base_color, scan_value, 3, "float"), scan_value, 3, "float"), rt.f(0.5), width=3)
-        color = rt.component_wise("clamp", color, rt.construct(3, rt.f(0.0)), rt.construct(3, rt.f(1.0)), width=3)
+        color[:] = rt.component_wise("clamp", color, rt.construct(3, rt.f(0.0)), rt.construct(3, rt.f(1.0)), width=3)
         seed_base = rt.f(0.0)
         displacement_base = rt.f(0.0)
         simplex_value = rt.f(0.0)
@@ -388,18 +388,18 @@ def run_pixel(ctx, out):
             blue_offsets = compute_lens_offsets__vec2_float_float_vec2_float_float_float(rt.construct(2, blue_sample_x, y), width_f, height_f, freq, time, speed, displacement)
             blue_scan_val = sample_scanline_bilinear__float_float_float_float_vec2_float(rt.binary("+", blue_sample_x, rt.swizzle(blue_offsets, "x"), 1, "float"), rt.binary("+", y, rt.swizzle(blue_offsets, "y"), 1, "float"), width_f, height_f, scanline_base, ppb)
             blue_blended = rt.component_wise("mix", blue_base_col, rt.binary("*", rt.binary("+", blue_base_col, blue_scan_val, 3, "float"), blue_scan_val, 3, "float"), rt.f(0.5), width=3)
-            color = rt.construct(3, rt.swizzle(adjust_hue__vec3_float(red_blended, hue_shift), "r"), rt.swizzle(adjust_hue__vec3_float(green_blended, hue_shift), "g"), rt.swizzle(adjust_hue__vec3_float(blue_blended, hue_shift), "b"))
-            color = adjust_hue__vec3_float(color, rt.unary("-", hue_shift))
-            color = adjust_saturation__vec3_float(color, rt.f(1.125))
+            color[:] = rt.construct(3, rt.swizzle(adjust_hue__vec3_float(red_blended, hue_shift), "r"), rt.swizzle(adjust_hue__vec3_float(green_blended, hue_shift), "g"), rt.swizzle(adjust_hue__vec3_float(blue_blended, hue_shift), "b"))
+            color[:] = adjust_hue__vec3_float(color, rt.unary("-", hue_shift))
+            color[:] = adjust_saturation__vec3_float(color, rt.f(1.125))
             vignette_alpha = rt.binary("*", random_scalar__float(rt.binary("+", seed_base, rt.f(3.17), 1, "float")), rt.f(0.175), 1, "float")
             vignette_mask = singularity
             color = rt.assign_swizzle(color, "x", apply_vignette__float_float_float_float(rt.swizzle(color, "x"), rt.f(0.0), vignette_mask, vignette_alpha))
             color = rt.assign_swizzle(color, "y", apply_vignette__float_float_float_float(rt.swizzle(color, "y"), rt.f(0.0), vignette_mask, vignette_alpha))
             color = rt.assign_swizzle(color, "z", apply_vignette__float_float_float_float(rt.swizzle(color, "z"), rt.f(0.0), vignette_mask, vignette_alpha))
         local_mean = rt.binary("*", rt.binary("+", rt.binary("+", rt.swizzle(color, "x"), rt.swizzle(color, "y"), 1, "float"), rt.swizzle(color, "z"), 1, "float"), g.INV_THREE, 1, "float")
-        color = rt.component_wise("clamp", rt.binary("+", rt.binary("*", rt.binary("-", color, local_mean, 3, "float"), rt.f(1.25), 3, "float"), local_mean, 3, "float"), rt.construct(3, rt.f(0.0)), rt.construct(3, rt.f(1.0)), width=3)
-        color = rt.component_wise("mix", base_color, color, alphaVal, width=3)
-        g.fragColor = rt.construct(4, color, rt.swizzle(base_sample, "w"))
+        color[:] = rt.component_wise("clamp", rt.binary("+", rt.binary("*", rt.binary("-", color, local_mean, 3, "float"), rt.f(1.25), 3, "float"), local_mean, 3, "float"), rt.construct(3, rt.f(0.0)), rt.construct(3, rt.f(1.0)), width=3)
+        color[:] = rt.component_wise("mix", base_color, color, alphaVal, width=3)
+        g.fragColor[:] = rt.construct(4, color, rt.swizzle(base_sample, "w"))
     main__void()
     _c = g.fragColor
     out[0] = rt.f32(_c[0]); out[1] = rt.f32(_c[1]); out[2] = rt.f32(_c[2]); out[3] = rt.f32(_c[3])

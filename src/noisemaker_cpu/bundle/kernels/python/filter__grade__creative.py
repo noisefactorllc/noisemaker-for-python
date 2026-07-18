@@ -88,19 +88,19 @@ def run_pixel(ctx, out):
         shadowWeight = rt.binary("-", rt.f(1.0), rt.component_wise("smoothstep", rt.f(0.0), balancePoint, luma, width=1), 1, "float")
         highlightWeight = rt.component_wise("smoothstep", balancePoint, rt.f(1.0), luma, width=1)
         tintedRgb = rgb
-        tintedRgb = rt.binary("+", tintedRgb, rt.binary("*", rt.binary("*", shadowShift, shadowWeight, 3, "float"), rt.f(0.3), 3, "float"), 3, "float")
-        tintedRgb = rt.binary("+", tintedRgb, rt.binary("*", rt.binary("*", highlightShift, highlightWeight, 3, "float"), rt.f(0.3), 3, "float"), 3, "float")
+        tintedRgb[:] = rt.binary("+", tintedRgb, rt.binary("*", rt.binary("*", shadowShift, shadowWeight, 3, "float"), rt.f(0.3), 3, "float"), 3, "float")
+        tintedRgb[:] = rt.binary("+", tintedRgb, rt.binary("*", rt.binary("*", highlightShift, highlightWeight, 3, "float"), rt.f(0.3), 3, "float"), 3, "float")
         return tintedRgb
     def main__void():
         globalCoord = rt.binary("+", rt.swizzle(ctx.frag_coord, "xy"), _u_tileOffset, 2, "float")
         coord = rt.construct(2, rt.swizzle(ctx.frag_coord, "xy"), base="int")
         color = rt.texel_fetch(_u_inputTex, coord, rt.i(0))
         rgb = srgbToLinear__vec3(rt.swizzle(color, "rgb"))
-        rgb = applyVibrance__vec3_float(rgb, _u_vibrance)
-        rgb = applyFadedFilm__vec3_float(rgb, _u_fadedFilm)
-        rgb = applySplitTone__vec3_vec3_vec3_float(rgb, _u_shadowTint, _u_highlightTint, _u_splitToneBalance)
-        rgb = linearToSrgb__vec3(rt.component_wise("max", rgb, rt.construct(3, rt.f(0.0)), width=3))
-        g.fragColor = rt.construct(4, rgb, rt.swizzle(color, "a"))
+        rgb[:] = applyVibrance__vec3_float(rgb, _u_vibrance)
+        rgb[:] = applyFadedFilm__vec3_float(rgb, _u_fadedFilm)
+        rgb[:] = applySplitTone__vec3_vec3_vec3_float(rgb, _u_shadowTint, _u_highlightTint, _u_splitToneBalance)
+        rgb[:] = linearToSrgb__vec3(rt.component_wise("max", rgb, rt.construct(3, rt.f(0.0)), width=3))
+        g.fragColor[:] = rt.construct(4, rgb, rt.swizzle(color, "a"))
     main__void()
     _c = g.fragColor
     out[0] = rt.f32(_c[0]); out[1] = rt.f32(_c[1]); out[2] = rt.f32(_c[2]); out[3] = rt.f32(_c[3])

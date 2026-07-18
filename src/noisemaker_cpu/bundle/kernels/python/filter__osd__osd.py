@@ -54,7 +54,7 @@ def run_pixel(ctx, out):
         scanline = rt.binary("-", rt.f(1.0), rt.binary("*", rt.binary("*", rt.f(0.03), blend_alpha, 1, "float"), rt.construct(1, rt.binary("&", rt.binary("/", rt.swizzle(globalCoord, "y"), scanlineStep, 1, "int"), rt.i(1), 1, "int")), 1, "float"), 1, "float")
         base_rgb = rt.binary("*", rt.swizzle(texel, "rgb"), scanline, 3, "float")
         if rt.binary("<=", blend_alpha, rt.f(0.0)):
-            g.fragColor = rt.construct(4, base_rgb, rt.swizzle(texel, "a"))
+            g.fragColor[:] = rt.construct(4, base_rgb, rt.swizzle(texel, "a"))
             return
         base_seed = rt.construct(1, rt.component_wise("max", _u_seed, rt.f(1.0), width=1), base="uint")
         glyph_count = rt.binary("+", rt.i(3), rt.construct(1, rt.binary("%", hash2__uint_uint(base_seed, rt.i(42)), rt.i(4), 1, "uint"), base="int"), 1, "int")
@@ -86,7 +86,7 @@ def run_pixel(ctx, out):
         panel_x1 = rt.binary("+", rt.binary("+", origin_x, overlay_w, 1, "int"), panel_pad, 1, "int")
         panel_y1 = rt.binary("+", rt.binary("+", origin_y, overlay_h, 1, "int"), panel_pad, 1, "int")
         if (bool((bool((bool(rt.binary("<", rt.swizzle(globalCoord, "x"), panel_x0)) or bool(rt.binary(">=", rt.swizzle(globalCoord, "x"), panel_x1)))) or bool(rt.binary("<", rt.swizzle(globalCoord, "y"), panel_y0)))) or bool(rt.binary(">=", rt.swizzle(globalCoord, "y"), panel_y1))):
-            g.fragColor = rt.construct(4, base_rgb, rt.swizzle(texel, "a"))
+            g.fragColor[:] = rt.construct(4, base_rgb, rt.swizzle(texel, "a"))
             return
         lx = rt.binary("-", rt.swizzle(globalCoord, "x"), origin_x, 1, "int")
         ly = rt.binary("-", rt.swizzle(globalCoord, "y"), origin_y, 1, "int")
@@ -110,12 +110,12 @@ def run_pixel(ctx, out):
                 mask = sample_glyph__int_int_int_int(digit, within_glyph_x, local_y, iScale)
         panel_bg = rt.binary("*", base_rgb, rt.binary("-", rt.f(1.0), rt.binary("*", rt.f(0.5), blend_alpha, 1, "float"), 1, "float"), 3, "float")
         if rt.binary("<", mask, rt.f(0.5)):
-            g.fragColor = rt.construct(4, rt.component_wise("clamp", panel_bg, rt.f(0.0), rt.f(1.0), width=3), rt.swizzle(texel, "a"))
+            g.fragColor[:] = rt.construct(4, rt.component_wise("clamp", panel_bg, rt.f(0.0), rt.f(1.0), width=3), rt.swizzle(texel, "a"))
             return
         osd_color = rt.construct(3, rt.f(0.7), rt.f(1.0), rt.f(0.75))
         highlight = rt.component_wise("max", panel_bg, rt.binary("*", osd_color, mask, 3, "float"), width=3)
         blended = rt.component_wise("mix", panel_bg, highlight, blend_alpha, width=3)
-        g.fragColor = rt.construct(4, rt.component_wise("clamp", blended, rt.f(0.0), rt.f(1.0), width=3), rt.swizzle(texel, "a"))
+        g.fragColor[:] = rt.construct(4, rt.component_wise("clamp", blended, rt.f(0.0), rt.f(1.0), width=3), rt.swizzle(texel, "a"))
     main__void()
     _c = g.fragColor
     out[0] = rt.f32(_c[0]); out[1] = rt.f32(_c[1]); out[2] = rt.f32(_c[2]); out[3] = rt.f32(_c[3])

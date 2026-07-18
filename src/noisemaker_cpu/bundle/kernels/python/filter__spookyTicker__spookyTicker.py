@@ -54,13 +54,13 @@ def run_pixel(ctx, out):
         px = rt.construct(1, rt.component_wise("floor", rt.binary("*", rt.swizzle(ctx.uv, "x"), rt.swizzle(dims, "x"), 1, "float"), width=1), base="int")
         pyFromBottom = rt.construct(1, rt.component_wise("floor", rt.binary("*", rt.binary("-", rt.f(1.0), rt.swizzle(ctx.uv, "y"), 1, "float"), rt.swizzle(dims, "y"), 1, "float"), width=1), base="int")
         if rt.binary(">=", pyFromBottom, totalH):
-            g.fragColor = src
+            g.fragColor[:] = src
             return
         rowStride = rt.binary("+", CELL_H, ROW_GAP, 1, "int")
         rowIdx = rt.binary("/", pyFromBottom, rowStride, 1, "int")
         localY = rt.binary("-", pyFromBottom, rt.binary("*", rowIdx, rowStride, 1, "int"), 1, "int")
         if (bool(rt.binary(">=", rowIdx, _u_rows)) or bool(rt.binary(">=", localY, CELL_H))):
-            g.fragColor = src
+            g.fragColor[:] = src
             return
         rowSeed = rt.construct(1, hash_mix__uint(rt.binary("+", rt.construct(1, rowIdx, base="uint"), baseSeed, 1, "uint")), base="int")
         mask = ticker_row_mask__int_int_int_float_int_int(px, localY, rowSeed, t, CELL_W, iScale)
@@ -70,9 +70,9 @@ def run_pixel(ctx, out):
         if rt.binary("<", shadowLocalY, CELL_H):
             shadow = ticker_row_mask__int_int_int_float_int_int(rt.binary("+", px, shadowOff, 1, "int"), shadowLocalY, rowSeed, t, CELL_W, iScale)
         result = rt.swizzle(src, "rgb")
-        result = rt.binary("*", result, rt.binary("-", rt.f(1.0), rt.binary("*", rt.binary("*", shadow, rt.f(0.4), 1, "float"), _u_alpha, 1, "float"), 1, "float"), 3, "float")
-        result = rt.component_wise("max", result, rt.binary("*", rt.construct(3, mask), _u_alpha, 3, "float"), width=3)
-        g.fragColor = rt.construct(4, rt.component_wise("clamp", result, rt.f(0.0), rt.f(1.0), width=3), rt.swizzle(src, "a"))
+        result[:] = rt.binary("*", result, rt.binary("-", rt.f(1.0), rt.binary("*", rt.binary("*", shadow, rt.f(0.4), 1, "float"), _u_alpha, 1, "float"), 1, "float"), 3, "float")
+        result[:] = rt.component_wise("max", result, rt.binary("*", rt.construct(3, mask), _u_alpha, 3, "float"), width=3)
+        g.fragColor[:] = rt.construct(4, rt.component_wise("clamp", result, rt.f(0.0), rt.f(1.0), width=3), rt.swizzle(src, "a"))
     main__void()
     _c = g.fragColor
     out[0] = rt.f32(_c[0]); out[1] = rt.f32(_c[1]); out[2] = rt.f32(_c[2]); out[3] = rt.f32(_c[3])

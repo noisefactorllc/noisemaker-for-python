@@ -24,7 +24,7 @@ def run_pixel(ctx, out):
         blueGlobalUV = rt.binary("-", globalUV, rt.construct(2, boundedDisplacement, rt.f(0.0)), 2, "float")
         blueLocalUV = rt.binary("/", rt.binary("-", rt.binary("*", blueGlobalUV, _u_fullResolution, 2, "float"), _u_tileOffset, 2, "float"), rt.construct(2, rt.texture_size(_u_inputTex)), 2, "float")
         blue = rt.texture(_u_inputTex, blueLocalUV)
-        g.fragColor = rt.construct(4, rt.swizzle(red, "r"), rt.swizzle(green, "g"), rt.swizzle(blue, "b"), rt.swizzle(green, "a"))
+        g.fragColor[:] = rt.construct(4, rt.swizzle(red, "r"), rt.swizzle(green, "g"), rt.swizzle(blue, "b"), rt.swizzle(green, "a"))
     main__void()
     _c = g.fragColor
     out[0] = rt.f32(_c[0]); out[1] = rt.f32(_c[1]); out[2] = rt.f32(_c[2]); out[3] = rt.f32(_c[3])

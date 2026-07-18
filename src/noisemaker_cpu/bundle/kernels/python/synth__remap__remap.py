@@ -71,7 +71,7 @@ def run_pixel(ctx, out):
                 xCross = rt.binary("+", rt.binary("/", rt.binary("*", rt.binary("-", rt.swizzle(prev, "x"), rt.swizzle(cur, "x"), 1, "float"), rt.binary("-", rt.swizzle(p, "y"), rt.swizzle(cur, "y"), 1, "float"), 1, "float"), rt.binary("+", rt.binary("-", rt.swizzle(prev, "y"), rt.swizzle(cur, "y"), 1, "float"), rt.f(1e-09), 1, "float"), 1, "float"), rt.swizzle(cur, "x"), 1, "float")
                 if rt.binary("<", rt.swizzle(p, "x"), xCross):
                     inside = (not (inside))
-            prev = cur
+            prev[:] = cur
         return inside
     def distToZoneEdge__vec2_int(p, zoneIdx):
         p = rt.copy(p, "float")
@@ -96,7 +96,7 @@ def run_pixel(ctx, out):
             t = rt.component_wise("clamp", rt.binary("/", rt.dot(rt.binary("-", p, prev, 2, "float"), ab), len2, 1, "float"), rt.f(0.0), rt.f(1.0), width=1)
             closest = rt.binary("+", prev, rt.binary("*", t, ab, 2, "float"), 2, "float")
             d = rt.component_wise("min", d, rt.length(rt.binary("-", p, closest, 2, "float")), width=1)
-            prev = cur
+            prev[:] = cur
         return d
     def main__void():
         globalCoord = rt.binary("+", rt.swizzle(ctx.frag_coord, "xy"), _u_tileOffset, 2, "float")
@@ -129,8 +129,8 @@ def run_pixel(ctx, out):
             edgeWidth = rt.binary("*", smoothEdge, rt.f(0.05), 1, "float")
             edge = (rt.component_wise("smoothstep", rt.f(0.0), edgeWidth, distToZoneEdge__vec2_int(p, z), width=1) if rt.binary(">", edgeWidth, rt.f(0.0)) else rt.f(1.0))
             a = rt.binary("*", zAlpha, edge, 1, "float")
-            result = rt.construct(4, rt.component_wise("mix", rt.swizzle(result, "rgb"), rt.swizzle(src, "rgb"), a, width=3), rt.component_wise("max", rt.swizzle(result, "a"), rt.binary("*", rt.swizzle(src, "a"), a, 1, "float"), width=1))
-        g.fragColor = result
+            result[:] = rt.construct(4, rt.component_wise("mix", rt.swizzle(result, "rgb"), rt.swizzle(src, "rgb"), a, width=3), rt.component_wise("max", rt.swizzle(result, "a"), rt.binary("*", rt.swizzle(src, "a"), a, 1, "float"), width=1))
+        g.fragColor[:] = result
     main__void()
     _c = g.fragColor
     out[0] = rt.f32(_c[0]); out[1] = rt.f32(_c[1]); out[2] = rt.f32(_c[2]); out[3] = rt.f32(_c[3])

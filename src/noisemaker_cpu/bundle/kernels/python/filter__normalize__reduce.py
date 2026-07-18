@@ -40,7 +40,7 @@ def run_pixel(ctx, out):
                 pixelMax = rt.component_wise("max", rt.component_wise("max", rt.swizzle(color, "r"), rt.swizzle(color, "g"), width=1), rt.swizzle(color, "b"), width=1)
                 minVal = rt.component_wise("min", minVal, pixelMin, width=1)
                 maxVal = rt.component_wise("max", maxVal, pixelMax, width=1)
-        g.fragColor = rt.construct(4, minVal, maxVal, rt.f(0.0), rt.f(1.0))
+        g.fragColor[:] = rt.construct(4, minVal, maxVal, rt.f(0.0), rt.f(1.0))
     main__void()
     _c = g.fragColor
     out[0] = rt.f32(_c[0]); out[1] = rt.f32(_c[1]); out[2] = rt.f32(_c[2]); out[3] = rt.f32(_c[3])

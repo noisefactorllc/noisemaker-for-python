@@ -64,14 +64,14 @@ def run_pixel(ctx, out):
         if _u_antialias:
             dx = rt.dFdx(tunnelCoords)
             dy = rt.dFdy(tunnelCoords)
-            color = rt.construct(4, rt.f(0.0))
-            color = rt.binary("+", color, rt.texture(_u_inputTex, rt.binary("+", rt.binary("+", tunnelCoords, rt.binary("*", dx, rt.unary("-", rt.f(0.375)), 2, "float"), 2, "float"), rt.binary("*", dy, rt.unary("-", rt.f(0.125)), 2, "float"), 2, "float")), 4, "float")
-            color = rt.binary("+", color, rt.texture(_u_inputTex, rt.binary("+", rt.binary("+", tunnelCoords, rt.binary("*", dx, rt.f(0.125), 2, "float"), 2, "float"), rt.binary("*", dy, rt.unary("-", rt.f(0.375)), 2, "float"), 2, "float")), 4, "float")
-            color = rt.binary("+", color, rt.texture(_u_inputTex, rt.binary("+", rt.binary("+", tunnelCoords, rt.binary("*", dx, rt.f(0.375), 2, "float"), 2, "float"), rt.binary("*", dy, rt.f(0.125), 2, "float"), 2, "float")), 4, "float")
-            color = rt.binary("+", color, rt.texture(_u_inputTex, rt.binary("+", rt.binary("+", tunnelCoords, rt.binary("*", dx, rt.unary("-", rt.f(0.125)), 2, "float"), 2, "float"), rt.binary("*", dy, rt.f(0.375), 2, "float"), 2, "float")), 4, "float")
-            color = rt.binary("*", color, rt.f(0.25), 4, "float")
+            color[:] = rt.construct(4, rt.f(0.0))
+            color[:] = rt.binary("+", color, rt.texture(_u_inputTex, rt.binary("+", rt.binary("+", tunnelCoords, rt.binary("*", dx, rt.unary("-", rt.f(0.375)), 2, "float"), 2, "float"), rt.binary("*", dy, rt.unary("-", rt.f(0.125)), 2, "float"), 2, "float")), 4, "float")
+            color[:] = rt.binary("+", color, rt.texture(_u_inputTex, rt.binary("+", rt.binary("+", tunnelCoords, rt.binary("*", dx, rt.f(0.125), 2, "float"), 2, "float"), rt.binary("*", dy, rt.unary("-", rt.f(0.375)), 2, "float"), 2, "float")), 4, "float")
+            color[:] = rt.binary("+", color, rt.texture(_u_inputTex, rt.binary("+", rt.binary("+", tunnelCoords, rt.binary("*", dx, rt.f(0.375), 2, "float"), 2, "float"), rt.binary("*", dy, rt.f(0.125), 2, "float"), 2, "float")), 4, "float")
+            color[:] = rt.binary("+", color, rt.texture(_u_inputTex, rt.binary("+", rt.binary("+", tunnelCoords, rt.binary("*", dx, rt.unary("-", rt.f(0.125)), 2, "float"), 2, "float"), rt.binary("*", dy, rt.f(0.375), 2, "float"), 2, "float")), 4, "float")
+            color[:] = rt.binary("*", color, rt.f(0.25), 4, "float")
         else:
-            color = rt.texture(_u_inputTex, tunnelCoords)
+            color[:] = rt.texture(_u_inputTex, tunnelCoords)
         centerMask = rt.f(0.0)
         amt = rt.f(0.0)
         if rt.binary("!=", _u_center, rt.f(0.0)):
@@ -81,7 +81,7 @@ def run_pixel(ctx, out):
                 color = rt.assign_swizzle(color, "rgb", rt.binary("*", rt.swizzle(color, "rgb"), rt.component_wise("mix", rt.f(1.0), centerMask, rt.unary("-", amt), width=1), 3, "float"))
             else:
                 color = rt.assign_swizzle(color, "rgb", rt.component_wise("mix", rt.swizzle(color, "rgb"), rt.construct(3, rt.f(1.0)), rt.binary("*", rt.binary("-", rt.f(1.0), centerMask, 1, "float"), amt, 1, "float"), width=3))
-        g.fragColor = color
+        g.fragColor[:] = color
     main__void()
     _c = g.fragColor
     out[0] = rt.f32(_c[0]); out[1] = rt.f32(_c[1]); out[2] = rt.f32(_c[2]); out[3] = rt.f32(_c[3])

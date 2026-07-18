@@ -96,7 +96,7 @@ def run_pixel(ctx, out):
         blended = applyBlendMode__vec4_vec4_int(centerColor, edgeColor, _u_blendMode)
         color = rt.component_wise("mix", centerColor, blended, mask, width=4)
         color = rt.assign_swizzle(color, "a", rt.component_wise("max", rt.swizzle(edgeColor, "a"), rt.swizzle(centerColor, "a"), width=1))
-        g.fragColor = color
+        g.fragColor[:] = color
     main__void()
     _c = g.fragColor
     out[0] = rt.f32(_c[0]); out[1] = rt.f32(_c[1]); out[2] = rt.f32(_c[2]); out[3] = rt.f32(_c[3])

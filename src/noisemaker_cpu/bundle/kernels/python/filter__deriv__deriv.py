@@ -28,7 +28,7 @@ def run_pixel(ctx, out):
         dx = rt.binary("-", center, right, 3, "float")
         dy = rt.binary("-", center, bottom, 3, "float")
         dist = rt.binary("*", rt.distance(dx, dy), rt.f(2.5), 1, "float")
-        g.fragColor = rt.construct(4, rt.component_wise("clamp", rt.binary("*", rt.swizzle(color, "rgb"), dist, 3, "float"), rt.f(0.0), rt.f(1.0), width=3), rt.swizzle(color, "a"))
+        g.fragColor[:] = rt.construct(4, rt.component_wise("clamp", rt.binary("*", rt.swizzle(color, "rgb"), dist, 3, "float"), rt.f(0.0), rt.f(1.0), width=3), rt.swizzle(color, "a"))
     main__void()
     _c = g.fragColor
     out[0] = rt.f32(_c[0]); out[1] = rt.f32(_c[1]); out[2] = rt.f32(_c[2]); out[3] = rt.f32(_c[3])

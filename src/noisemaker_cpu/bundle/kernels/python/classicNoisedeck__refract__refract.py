@@ -44,7 +44,7 @@ def run_pixel(ctx, out):
             if not (rt.binary("<", i, rt.i(9))):
                 break
             color = rt.swizzle(rt.texture(_u_inputTex, rt.binary("+", localUV, rt.binary("*", offset[int(i)], rt.component_wise("floor", map__float_float_float_float_float(_u_amount, rt.f(0.0), rt.f(100.0), rt.f(0.0), rt.f(20.0)), width=1), 2, "float"), 2, "float")), "rgb")
-            conv = rt.binary("+", conv, rt.binary("*", color, kernel[int(i)], 3, "float"), 3, "float")
+            conv[:] = rt.binary("+", conv, rt.binary("*", color, kernel[int(i)], 3, "float"), 3, "float")
             kernelWeight = rt.binary("+", kernelWeight, kernel[int(i)], 1, "float")
         if divide:
             conv = rt.assign_swizzle(conv, "rgb", rt.binary("/", rt.swizzle(conv, "rgb"), kernelWeight, 3, "float"))
@@ -97,68 +97,68 @@ def run_pixel(ctx, out):
         middle = rt.construct(4, 0.0)
         amt = map__float_float_float_float_float(_u_mixAmt, rt.f(0.0), rt.f(100.0), rt.f(0.0), rt.f(1.0))
         if rt.binary("==", _u_blendMode, rt.i(0)):
-            middle = rt.component_wise("min", rt.binary("+", color1, color2, 4, "float"), rt.f(1.0), width=4)
+            middle[:] = rt.component_wise("min", rt.binary("+", color1, color2, 4, "float"), rt.f(1.0), width=4)
         else:
             if rt.binary("==", _u_blendMode, rt.i(2)):
-                middle = (color2 if rt.binary("==", color2, rt.construct(4, rt.f(0.0))) else rt.component_wise("max", rt.binary("-", rt.f(1.0), rt.binary("/", rt.binary("-", rt.f(1.0), color1, 4, "float"), color2, 4, "float"), 4, "float"), rt.construct(4, rt.f(0.0)), width=4))
+                middle[:] = (color2 if rt.binary("==", color2, rt.construct(4, rt.f(0.0))) else rt.component_wise("max", rt.binary("-", rt.f(1.0), rt.binary("/", rt.binary("-", rt.f(1.0), color1, 4, "float"), color2, 4, "float"), 4, "float"), rt.construct(4, rt.f(0.0)), width=4))
             else:
                 if rt.binary("==", _u_blendMode, rt.i(3)):
-                    middle = (color2 if rt.binary("==", color2, rt.construct(4, rt.f(1.0))) else rt.component_wise("min", rt.binary("/", color1, rt.binary("-", rt.f(1.0), color2, 4, "float"), 4, "float"), rt.construct(4, rt.f(1.0)), width=4))
+                    middle[:] = (color2 if rt.binary("==", color2, rt.construct(4, rt.f(1.0))) else rt.component_wise("min", rt.binary("/", color1, rt.binary("-", rt.f(1.0), color2, 4, "float"), 4, "float"), rt.construct(4, rt.f(1.0)), width=4))
                 else:
                     if rt.binary("==", _u_blendMode, rt.i(4)):
-                        middle = rt.component_wise("min", color1, color2, width=4)
+                        middle[:] = rt.component_wise("min", color1, color2, width=4)
                     else:
                         if rt.binary("==", _u_blendMode, rt.i(5)):
-                            middle = rt.component_wise("abs", rt.binary("-", color1, color2, 4, "float"), width=4)
+                            middle[:] = rt.component_wise("abs", rt.binary("-", color1, color2, 4, "float"), width=4)
                         else:
                             if rt.binary("==", _u_blendMode, rt.i(6)):
-                                middle = rt.binary("-", rt.binary("+", color1, color2, 4, "float"), rt.binary("*", rt.binary("*", rt.f(2.0), color1, 4, "float"), color2, 4, "float"), 4, "float")
+                                middle[:] = rt.binary("-", rt.binary("+", color1, color2, 4, "float"), rt.binary("*", rt.binary("*", rt.f(2.0), color1, 4, "float"), color2, 4, "float"), 4, "float")
                             else:
                                 if rt.binary("==", _u_blendMode, rt.i(7)):
-                                    middle = (color2 if rt.binary("==", color2, rt.construct(4, rt.f(1.0))) else rt.component_wise("min", rt.binary("/", rt.binary("*", color1, color1, 4, "float"), rt.binary("-", rt.f(1.0), color2, 4, "float"), 4, "float"), rt.construct(4, rt.f(1.0)), width=4))
+                                    middle[:] = (color2 if rt.binary("==", color2, rt.construct(4, rt.f(1.0))) else rt.component_wise("min", rt.binary("/", rt.binary("*", color1, color1, 4, "float"), rt.binary("-", rt.f(1.0), color2, 4, "float"), 4, "float"), rt.construct(4, rt.f(1.0)), width=4))
                                 else:
                                     if rt.binary("==", _u_blendMode, rt.i(8)):
-                                        middle = rt.construct(4, blendOverlay__float_float(rt.swizzle(color2, "r"), rt.swizzle(color1, "r")), blendOverlay__float_float(rt.swizzle(color2, "g"), rt.swizzle(color1, "g")), blendOverlay__float_float(rt.swizzle(color2, "b"), rt.swizzle(color1, "b")), rt.component_wise("mix", rt.swizzle(color1, "a"), rt.swizzle(color2, "a"), rt.f(0.5), width=1))
+                                        middle[:] = rt.construct(4, blendOverlay__float_float(rt.swizzle(color2, "r"), rt.swizzle(color1, "r")), blendOverlay__float_float(rt.swizzle(color2, "g"), rt.swizzle(color1, "g")), blendOverlay__float_float(rt.swizzle(color2, "b"), rt.swizzle(color1, "b")), rt.component_wise("mix", rt.swizzle(color1, "a"), rt.swizzle(color2, "a"), rt.f(0.5), width=1))
                                     else:
                                         if rt.binary("==", _u_blendMode, rt.i(9)):
-                                            middle = rt.component_wise("max", color1, color2, width=4)
+                                            middle[:] = rt.component_wise("max", color1, color2, width=4)
                                         else:
                                             if rt.binary("==", _u_blendMode, rt.i(10)):
-                                                middle = rt.component_wise("mix", color1, color2, rt.f(0.5), width=4)
+                                                middle[:] = rt.component_wise("mix", color1, color2, rt.f(0.5), width=4)
                                             else:
                                                 if rt.binary("==", _u_blendMode, rt.i(11)):
-                                                    middle = rt.binary("*", color1, color2, 4, "float")
+                                                    middle[:] = rt.binary("*", color1, color2, 4, "float")
                                                 else:
                                                     if rt.binary("==", _u_blendMode, rt.i(12)):
-                                                        middle = rt.binary("-", rt.construct(4, rt.f(1.0)), rt.component_wise("abs", rt.binary("-", rt.binary("-", rt.construct(4, rt.f(1.0)), color1, 4, "float"), color2, 4, "float"), width=4), 4, "float")
+                                                        middle[:] = rt.binary("-", rt.construct(4, rt.f(1.0)), rt.component_wise("abs", rt.binary("-", rt.binary("-", rt.construct(4, rt.f(1.0)), color1, 4, "float"), color2, 4, "float"), width=4), 4, "float")
                                                     else:
                                                         if rt.binary("==", _u_blendMode, rt.i(13)):
-                                                            middle = rt.construct(4, blendOverlay__float_float(rt.swizzle(color1, "r"), rt.swizzle(color2, "r")), blendOverlay__float_float(rt.swizzle(color1, "g"), rt.swizzle(color2, "g")), blendOverlay__float_float(rt.swizzle(color1, "b"), rt.swizzle(color2, "b")), rt.component_wise("mix", rt.swizzle(color1, "a"), rt.swizzle(color2, "a"), rt.f(0.5), width=1))
+                                                            middle[:] = rt.construct(4, blendOverlay__float_float(rt.swizzle(color1, "r"), rt.swizzle(color2, "r")), blendOverlay__float_float(rt.swizzle(color1, "g"), rt.swizzle(color2, "g")), blendOverlay__float_float(rt.swizzle(color1, "b"), rt.swizzle(color2, "b")), rt.component_wise("mix", rt.swizzle(color1, "a"), rt.swizzle(color2, "a"), rt.f(0.5), width=1))
                                                         else:
                                                             if rt.binary("==", _u_blendMode, rt.i(14)):
-                                                                middle = rt.binary("+", rt.binary("-", rt.component_wise("min", color1, color2, width=4), rt.component_wise("max", color1, color2, width=4), 4, "float"), rt.construct(4, rt.f(1.0)), 4, "float")
+                                                                middle[:] = rt.binary("+", rt.binary("-", rt.component_wise("min", color1, color2, width=4), rt.component_wise("max", color1, color2, width=4), 4, "float"), rt.construct(4, rt.f(1.0)), 4, "float")
                                                             else:
                                                                 if rt.binary("==", _u_blendMode, rt.i(15)):
-                                                                    middle = (color1 if rt.binary("==", color1, rt.construct(4, rt.f(1.0))) else rt.component_wise("min", rt.binary("/", rt.binary("*", color2, color2, 4, "float"), rt.binary("-", rt.f(1.0), color1, 4, "float"), 4, "float"), rt.construct(4, rt.f(1.0)), width=4))
+                                                                    middle[:] = (color1 if rt.binary("==", color1, rt.construct(4, rt.f(1.0))) else rt.component_wise("min", rt.binary("/", rt.binary("*", color2, color2, 4, "float"), rt.binary("-", rt.f(1.0), color1, 4, "float"), 4, "float"), rt.construct(4, rt.f(1.0)), width=4))
                                                                 else:
                                                                     if rt.binary("==", _u_blendMode, rt.i(16)):
-                                                                        middle = rt.binary("-", rt.f(1.0), rt.binary("*", rt.binary("-", rt.f(1.0), color1, 4, "float"), rt.binary("-", rt.f(1.0), color2, 4, "float"), 4, "float"), 4, "float")
+                                                                        middle[:] = rt.binary("-", rt.f(1.0), rt.binary("*", rt.binary("-", rt.f(1.0), color1, 4, "float"), rt.binary("-", rt.f(1.0), color2, 4, "float"), 4, "float"), 4, "float")
                                                                     else:
                                                                         if rt.binary("==", _u_blendMode, rt.i(17)):
-                                                                            middle = rt.construct(4, blendSoftLight__float_float(rt.swizzle(color1, "r"), rt.swizzle(color2, "r")), blendSoftLight__float_float(rt.swizzle(color1, "g"), rt.swizzle(color2, "g")), blendSoftLight__float_float(rt.swizzle(color1, "b"), rt.swizzle(color2, "b")), rt.component_wise("mix", rt.swizzle(color1, "a"), rt.swizzle(color2, "a"), rt.f(0.5), width=1))
+                                                                            middle[:] = rt.construct(4, blendSoftLight__float_float(rt.swizzle(color1, "r"), rt.swizzle(color2, "r")), blendSoftLight__float_float(rt.swizzle(color1, "g"), rt.swizzle(color2, "g")), blendSoftLight__float_float(rt.swizzle(color1, "b"), rt.swizzle(color2, "b")), rt.component_wise("mix", rt.swizzle(color1, "a"), rt.swizzle(color2, "a"), rt.f(0.5), width=1))
                                                                         else:
                                                                             if rt.binary("==", _u_blendMode, rt.i(18)):
-                                                                                middle = rt.component_wise("max", rt.binary("-", rt.binary("+", color1, color2, 4, "float"), rt.f(1.0), 4, "float"), rt.f(0.0), width=4)
+                                                                                middle[:] = rt.component_wise("max", rt.binary("-", rt.binary("+", color1, color2, 4, "float"), rt.f(1.0), 4, "float"), rt.f(0.0), width=4)
         if rt.binary("==", amt, rt.f(0.5)):
-            color = middle
+            color[:] = middle
         else:
             if rt.binary("<", amt, rt.f(0.5)):
                 amt = map__float_float_float_float_float(amt, rt.f(0.0), rt.f(0.5), rt.f(0.0), rt.f(1.0))
-                color = rt.component_wise("mix", color1, middle, amt, width=4)
+                color[:] = rt.component_wise("mix", color1, middle, amt, width=4)
             else:
                 if rt.binary(">", amt, rt.f(0.5)):
                     amt = map__float_float_float_float_float(amt, rt.f(0.5), rt.f(1.0), rt.f(0.0), rt.f(1.0))
-                    color = rt.component_wise("mix", middle, color2, amt, width=4)
+                    color[:] = rt.component_wise("mix", middle, color2, amt, width=4)
         return rt.swizzle(color, "rgb")
     def main__void():
         globalCoord = rt.binary("+", rt.swizzle(ctx.frag_coord, "xy"), _u_tileOffset, 2, "float")
@@ -180,17 +180,17 @@ def run_pixel(ctx, out):
                 uv = rt.assign_swizzle(uv, "y", rt.binary("+", rt.swizzle(uv, "y"), rt.binary("*", desaturate__vec3(derivX__vec3_vec2_bool(rt.swizzle(inputColor, "rgb"), uv, False)), displacement, 1, "float"), 1, "float"))
                 uv = rt.assign_swizzle(uv, "x", rt.binary("+", rt.swizzle(uv, "x"), rt.binary("*", desaturate__vec3(derivY__vec3_vec2_bool(rt.swizzle(inputColor, "rgb"), uv, False)), displacement, 1, "float"), 1, "float"))
         if rt.binary("==", _u_wrap, rt.i(0)):
-            uv = rt.component_wise("abs", rt.binary("-", rt.component_wise("mod", rt.binary("+", uv, rt.f(1.0), 2, "float"), rt.f(2.0), width=2), rt.f(1.0), 2, "float"), width=2)
+            uv[:] = rt.component_wise("abs", rt.binary("-", rt.component_wise("mod", rt.binary("+", uv, rt.f(1.0), 2, "float"), rt.f(2.0), width=2), rt.f(1.0), 2, "float"), width=2)
         else:
             if rt.binary("==", _u_wrap, rt.i(1)):
-                uv = rt.component_wise("mod", uv, rt.f(1.0), width=2)
+                uv[:] = rt.component_wise("mod", uv, rt.f(1.0), width=2)
             else:
                 if rt.binary("==", _u_wrap, rt.i(2)):
-                    uv = rt.component_wise("clamp", uv, rt.f(0.0), rt.f(1.0), width=2)
+                    uv[:] = rt.component_wise("clamp", uv, rt.f(0.0), rt.f(1.0), width=2)
         warpedLocalUV = rt.binary("/", rt.binary("-", rt.binary("*", uv, _u_fullResolution, 2, "float"), _u_tileOffset, 2, "float"), rt.construct(2, rt.texture_size(_u_inputTex)), 2, "float")
-        color = rt.texture(_u_inputTex, warpedLocalUV)
+        color[:] = rt.texture(_u_inputTex, warpedLocalUV)
         color = rt.assign_swizzle(color, "rgb", blend__vec4_vec4(inputColor, color))
-        g.fragColor = color
+        g.fragColor[:] = color
     main__void()
     _c = g.fragColor
     out[0] = rt.f32(_c[0]); out[1] = rt.f32(_c[1]); out[2] = rt.f32(_c[2]); out[3] = rt.f32(_c[3])

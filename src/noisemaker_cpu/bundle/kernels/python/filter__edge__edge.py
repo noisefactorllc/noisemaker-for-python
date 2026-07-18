@@ -87,7 +87,7 @@ def run_pixel(ctx, out):
         centerWeight = rt.f(0.0)
         centerSample = rt.construct(3, 0.0)
         if rt.binary("==", kernelType, rt.i(2)):
-            conv = contourConv__vec2_vec2_vec3_float_bool_bool(rt.swizzle(ctx.frag_coord, "xy"), texelSize, rt.swizzle(origColor, "rgb"), rt.binary("/", _u_level, rt.f(100.0), 1, "float"), useLuma, rt.binary(">", _u_contourSide, rt.f(0.5)))
+            conv[:] = contourConv__vec2_vec2_vec3_float_bool_bool(rt.swizzle(ctx.frag_coord, "xy"), texelSize, rt.swizzle(origColor, "rgb"), rt.binary("/", _u_level, rt.f(100.0), 1, "float"), useLuma, rt.binary(">", _u_contourSide, rt.f(0.5)))
         else:
             dy = rt.unary("-", rt.i(3))
             _for0_first = True
@@ -116,16 +116,16 @@ def run_pixel(ctx, out):
                     localUV = rt.binary("*", sampleCoord, texelSize, 2, "float")
                     s = rt.swizzle(rt.texture(_u_inputTex, localUV), "rgb")
                     if useLuma:
-                        conv = rt.binary("+", conv, rt.binary("*", rt.construct(3, rt.dot(s, g.LUMA)), w, 3, "float"), 3, "float")
+                        conv[:] = rt.binary("+", conv, rt.binary("*", rt.construct(3, rt.dot(s, g.LUMA)), w, 3, "float"), 3, "float")
                     else:
-                        conv = rt.binary("+", conv, rt.binary("*", s, w, 3, "float"), 3, "float")
+                        conv[:] = rt.binary("+", conv, rt.binary("*", s, w, 3, "float"), 3, "float")
                     centerWeight = rt.binary("-", centerWeight, w, 1, "float")
             centerSample = rt.swizzle(origColor, "rgb")
             if useLuma:
-                centerSample = rt.construct(3, rt.dot(centerSample, g.LUMA))
-            conv = rt.binary("+", conv, rt.binary("*", centerSample, centerWeight, 3, "float"), 3, "float")
-        conv = rt.binary("*", conv, rt.binary("/", _u_amount, rt.f(50.0), 1, "float"), 3, "float")
-        conv = rt.component_wise("clamp", conv, rt.f(0.0), rt.f(1.0), width=3)
+                centerSample[:] = rt.construct(3, rt.dot(centerSample, g.LUMA))
+            conv[:] = rt.binary("+", conv, rt.binary("*", centerSample, centerWeight, 3, "float"), 3, "float")
+        conv[:] = rt.binary("*", conv, rt.binary("/", _u_amount, rt.f(50.0), 1, "float"), 3, "float")
+        conv[:] = rt.component_wise("clamp", conv, rt.f(0.0), rt.f(1.0), width=3)
         thresh = rt.f(0.0)
         edge = rt.f(0.0)
         mask = rt.f(0.0)
@@ -137,13 +137,13 @@ def run_pixel(ctx, out):
             else:
                 edge = rt.dot(conv, g.LUMA)
             mask = rt.component_wise("smoothstep", rt.binary("-", thresh, rt.f(0.01), 1, "float"), rt.binary("+", thresh, rt.f(0.01), 1, "float"), edge, width=1)
-            conv = rt.binary("*", conv, mask, 3, "float")
+            conv[:] = rt.binary("*", conv, mask, 3, "float")
         if doInvert:
-            conv = rt.binary("-", rt.f(1.0), conv, 3, "float")
+            conv[:] = rt.binary("-", rt.f(1.0), conv, 3, "float")
         edgeColor = rt.construct(4, conv, rt.swizzle(origColor, "a"))
         blended = applyBlend__vec4_vec4_int(edgeColor, origColor, blendMode)
         m = rt.binary("/", _u_mixAmt, rt.f(100.0), 1, "float")
-        g.fragColor = rt.construct(4, rt.component_wise("mix", rt.swizzle(origColor, "rgb"), rt.swizzle(blended, "rgb"), m, width=3), rt.swizzle(origColor, "a"))
+        g.fragColor[:] = rt.construct(4, rt.component_wise("mix", rt.swizzle(origColor, "rgb"), rt.swizzle(blended, "rgb"), m, width=3), rt.swizzle(origColor, "a"))
     main__void()
     _c = g.fragColor
     out[0] = rt.f32(_c[0]); out[1] = rt.f32(_c[1]); out[2] = rt.f32(_c[2]); out[3] = rt.f32(_c[3])

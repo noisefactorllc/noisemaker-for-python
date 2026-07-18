@@ -46,9 +46,9 @@ def run_pixel(ctx, out):
         colorB = rt.texture(_u_tex, rt.binary("/", rt.swizzle(ctx.frag_coord, "xy"), rt.construct(2, rt.texture_size(_u_tex)), 2, "float"))
         mapColor = rt.construct(3, 0.0)
         if rt.binary("==", _u_mapSource, rt.i(0)):
-            mapColor = rt.swizzle(colorA, "rgb")
+            mapColor[:] = rt.swizzle(colorA, "rgb")
         else:
-            mapColor = rt.swizzle(colorB, "rgb")
+            mapColor[:] = rt.swizzle(colorB, "rgb")
         if rt.binary(">", _u_quantize, rt.i(0)):
             mapColor = rt.assign_swizzle(mapColor, "r", quantizeValue__float_int(rt.swizzle(mapColor, "r"), _u_quantize))
             mapColor = rt.assign_swizzle(mapColor, "g", quantizeValue__float_int(rt.swizzle(mapColor, "g"), _u_quantize))
@@ -62,7 +62,7 @@ def run_pixel(ctx, out):
         if rt.binary("==", _u_mode, rt.i(0)):
             lum = getLuminosity__vec3(mapColor)
             blendFactor = calculateBlendFactor__float_float_float(lum, _u_threshold, _u_range)
-            result = rt.component_wise("mix", colorA, colorB, blendFactor, width=4)
+            result[:] = rt.component_wise("mix", colorA, colorB, blendFactor, width=4)
         else:
             blendR = calculateBlendFactor__float_float_float(rt.swizzle(mapColor, "r"), _u_thresholdR, _u_rangeR)
             blendG = calculateBlendFactor__float_float_float(rt.swizzle(mapColor, "g"), _u_thresholdG, _u_rangeG)
@@ -71,7 +71,7 @@ def run_pixel(ctx, out):
             result = rt.assign_swizzle(result, "g", rt.component_wise("mix", rt.swizzle(colorA, "g"), rt.swizzle(colorB, "g"), blendG, width=1))
             result = rt.assign_swizzle(result, "b", rt.component_wise("mix", rt.swizzle(colorA, "b"), rt.swizzle(colorB, "b"), blendB, width=1))
             result = rt.assign_swizzle(result, "a", rt.component_wise("mix", rt.swizzle(colorA, "a"), rt.swizzle(colorB, "a"), rt.binary("/", rt.binary("+", rt.binary("+", blendR, blendG, 1, "float"), blendB, 1, "float"), rt.f(3.0), 1, "float"), width=1))
-        g.fragColor = result
+        g.fragColor[:] = result
     main__void()
     _c = g.fragColor
     out[0] = rt.f32(_c[0]); out[1] = rt.f32(_c[1]); out[2] = rt.f32(_c[2]); out[3] = rt.f32(_c[3])

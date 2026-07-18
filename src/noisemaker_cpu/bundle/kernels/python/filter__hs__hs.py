@@ -43,21 +43,21 @@ def run_pixel(ctx, out):
         m = rt.binary("-", v, c, 1, "float")
         rgb = rt.construct(3, 0.0)
         if rt.binary("<", h, rt.binary("/", rt.f(1.0), rt.f(6.0), 1, "float")):
-            rgb = rt.construct(3, c, x, rt.f(0.0))
+            rgb[:] = rt.construct(3, c, x, rt.f(0.0))
         else:
             if rt.binary("<", h, rt.binary("/", rt.f(2.0), rt.f(6.0), 1, "float")):
-                rgb = rt.construct(3, x, c, rt.f(0.0))
+                rgb[:] = rt.construct(3, x, c, rt.f(0.0))
             else:
                 if rt.binary("<", h, rt.binary("/", rt.f(3.0), rt.f(6.0), 1, "float")):
-                    rgb = rt.construct(3, rt.f(0.0), c, x)
+                    rgb[:] = rt.construct(3, rt.f(0.0), c, x)
                 else:
                     if rt.binary("<", h, rt.binary("/", rt.f(4.0), rt.f(6.0), 1, "float")):
-                        rgb = rt.construct(3, rt.f(0.0), x, c)
+                        rgb[:] = rt.construct(3, rt.f(0.0), x, c)
                     else:
                         if rt.binary("<", h, rt.binary("/", rt.f(5.0), rt.f(6.0), 1, "float")):
-                            rgb = rt.construct(3, x, rt.f(0.0), c)
+                            rgb[:] = rt.construct(3, x, rt.f(0.0), c)
                         else:
-                            rgb = rt.construct(3, c, rt.f(0.0), x)
+                            rgb[:] = rt.construct(3, c, rt.f(0.0), x)
         return rt.binary("+", rgb, m, 3, "float")
     def main__void():
         globalCoord = rt.binary("+", rt.swizzle(ctx.frag_coord, "xy"), _u_tileOffset, 2, "float")
@@ -68,7 +68,7 @@ def run_pixel(ctx, out):
         hsv = rt.assign_swizzle(hsv, "x", rt.component_wise("fract", rt.binary("+", rt.binary("*", rt.swizzle(hsv, "x"), map__float_float_float_float_float(_u_hueRange, rt.f(0.0), rt.f(200.0), rt.f(0.0), rt.f(2.0)), 1, "float"), rt.binary("/", _u_rotation, rt.f(360.0), 1, "float"), 1, "float"), width=1))
         hsv = rt.assign_swizzle(hsv, "y", rt.binary("*", rt.swizzle(hsv, "y"), _u_saturation, 1, "float"))
         color = rt.assign_swizzle(color, "rgb", hsv2rgb__vec3(hsv))
-        g.fragColor = color
+        g.fragColor[:] = color
     main__void()
     _c = g.fragColor
     out[0] = rt.f32(_c[0]); out[1] = rt.f32(_c[1]); out[2] = rt.f32(_c[2]); out[3] = rt.f32(_c[3])

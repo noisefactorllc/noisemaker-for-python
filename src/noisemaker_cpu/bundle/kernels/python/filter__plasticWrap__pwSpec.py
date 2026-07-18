@@ -46,7 +46,7 @@ def run_pixel(ctx, out):
         spec = rt.component_wise("clamp", rt.binary("+", rt.binary("*", spec, rt.f(1.35), 1, "float"), rt.binary("*", ridge, rt.f(0.75), 1, "float"), 1, "float"), rt.f(0.0), rt.f(1.0), width=1)
         specColor = rt.component_wise("clamp", rt.binary("*", rt.construct(3, spec), rt.binary("/", _u_highlight, rt.f(100.0), 1, "float"), 3, "float"), rt.f(0.0), rt.f(1.0), width=3)
         outc = rt.binary("-", rt.construct(3, rt.f(1.0)), rt.binary("*", rt.binary("-", rt.construct(3, rt.f(1.0)), rt.swizzle(src, "rgb"), 3, "float"), rt.binary("-", rt.construct(3, rt.f(1.0)), specColor, 3, "float"), 3, "float"), 3, "float")
-        g.fragColor = rt.construct(4, outc, rt.swizzle(src, "a"))
+        g.fragColor[:] = rt.construct(4, outc, rt.swizzle(src, "a"))
     main__void()
     _c = g.fragColor
     out[0] = rt.f32(_c[0]); out[1] = rt.f32(_c[1]); out[2] = rt.f32(_c[2]); out[3] = rt.f32(_c[3])

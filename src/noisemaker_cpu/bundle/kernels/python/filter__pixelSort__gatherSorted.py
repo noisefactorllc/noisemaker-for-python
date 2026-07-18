@@ -38,7 +38,7 @@ def run_pixel(ctx, out):
                 bestDiff = diff
                 bestX = sampleX
         result = rt.texel_fetch(_u_preparedTex, rt.construct(2, bestX, y, base="int"), rt.i(0))
-        g.fragColor = result
+        g.fragColor[:] = result
     main__void()
     _c = g.fragColor
     out[0] = rt.f32(_c[0]); out[1] = rt.f32(_c[1]); out[2] = rt.f32(_c[2]); out[3] = rt.f32(_c[3])

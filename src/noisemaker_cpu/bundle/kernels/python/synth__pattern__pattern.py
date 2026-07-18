@@ -54,7 +54,7 @@ def run_pixel(ctx, out):
         return rt.binary("-", rt.f(1.0), rt.component_wise("smoothstep", rt.binary("-", radius, _u_smoothness, 1, "float"), rt.binary("+", radius, _u_smoothness, 1, "float"), d, width=1), 1, "float")
     def hexDist__vec2(p):
         p = rt.copy(p, "float")
-        p = rt.component_wise("abs", p, width=2)
+        p[:] = rt.component_wise("abs", p, width=2)
         return rt.component_wise("max", rt.binary("+", rt.binary("*", rt.swizzle(p, "x"), rt.f(0.5), 1, "float"), rt.binary("*", rt.swizzle(p, "y"), rt.binary("/", rt.f(1.7320508075688772), rt.f(2.0), 1, "float"), 1, "float"), 1, "float"), rt.swizzle(p, "x"), width=1)
     def hexagons__vec2_float(p, t):
         p = rt.copy(p, "float")
@@ -133,13 +133,13 @@ def run_pixel(ctx, out):
     def main__void():
         globalCoord = rt.binary("+", rt.swizzle(ctx.frag_coord, "xy"), _u_tileOffset, 2, "float")
         st = rt.binary("/", globalCoord, _u_fullResolution, 2, "float")
-        st = rt.binary("*", rt.binary("-", st, rt.f(0.5), 2, "float"), rt.f(2.0), 2, "float")
+        st[:] = rt.binary("*", rt.binary("-", st, rt.f(0.5), 2, "float"), rt.f(2.0), 2, "float")
         st = rt.assign_swizzle(st, "x", rt.binary("*", rt.swizzle(st, "x"), _u_aspect, 1, "float"))
         rad = rt.binary("/", rt.binary("*", _u_rotation, rt.f(3.14159265359), 1, "float"), rt.f(180.0), 1, "float")
-        st = rotate2D__vec2_float(st, rad)
+        st[:] = rotate2D__vec2_float(st, rad)
         centered = (bool((bool(rt.binary("==", _u_patternType, rt.i(1))) or bool(rt.binary("==", _u_patternType, rt.i(5))))) or bool(rt.binary("==", _u_patternType, rt.i(6))))
         if (bool((not (centered))) and bool(rt.binary("==", _u_animation, rt.i(2)))):
-            st = rotate2D__vec2_float(st, rt.binary("*", rt.binary("*", _u_time, rt.f(6.28318530718), 1, "float"), rt.component_wise("floor", _u_speed, width=1), 1, "float"))
+            st[:] = rotate2D__vec2_float(st, rt.binary("*", rt.binary("*", _u_time, rt.f(6.28318530718), 1, "float"), rt.component_wise("floor", _u_speed, width=1), 1, "float"))
         st = rt.assign_swizzle(st, "x", rt.binary("+", rt.swizzle(st, "x"), rt.binary("*", rt.swizzle(st, "y"), _u_skew, 1, "float"), 1, "float"))
         p = rt.binary("*", st, rt.binary("-", rt.f(21.0), _u_scale, 1, "float"), 2, "float")
         panPeriod = rt.f(0.0)
@@ -183,7 +183,7 @@ def run_pixel(ctx, out):
                                                     if rt.binary("==", _u_patternType, rt.i(11)):
                                                         m = zigzag__vec2_float(p, _u_thickness)
         color = rt.component_wise("mix", _u_bgColor, _u_fgColor, m, width=3)
-        g.fragColor = rt.construct(4, color, rt.f(1.0))
+        g.fragColor[:] = rt.construct(4, color, rt.f(1.0))
     main__void()
     _c = g.fragColor
     out[0] = rt.f32(_c[0]); out[1] = rt.f32(_c[1]); out[2] = rt.f32(_c[2]); out[3] = rt.f32(_c[3])

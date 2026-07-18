@@ -124,16 +124,16 @@ def run_pixel(ctx, out):
         coord = rt.construct(2, rt.swizzle(ctx.frag_coord, "xy"), base="int")
         color = rt.texel_fetch(_u_inputTex, coord, rt.i(0))
         if rt.binary("==", _u_hslEnable, rt.i(0)):
-            g.fragColor = color
+            g.fragColor[:] = color
             return
         rgb = srgbToLinear__vec3(rt.swizzle(color, "rgb"))
         hsl = rgbToHsl__vec3(rgb)
         matte = computeHslKey__vec3_float_float_float_float_float_float_float(hsl, _u_hslHueCenter, _u_hslHueRange, _u_hslSatMin, _u_hslSatMax, _u_hslLumMin, _u_hslLumMax, _u_hslFeather)
         correctedHsl = applyHslCorrection__vec3_float_float_float(hsl, _u_hslHueShift, _u_hslSatAdjust, _u_hslLumAdjust)
         correctedRgb = hslToRgb__vec3(correctedHsl)
-        rgb = rt.component_wise("mix", rgb, correctedRgb, matte, width=3)
-        rgb = linearToSrgb__vec3(rt.component_wise("max", rgb, rt.construct(3, rt.f(0.0)), width=3))
-        g.fragColor = rt.construct(4, rgb, rt.swizzle(color, "a"))
+        rgb[:] = rt.component_wise("mix", rgb, correctedRgb, matte, width=3)
+        rgb[:] = linearToSrgb__vec3(rt.component_wise("max", rgb, rt.construct(3, rt.f(0.0)), width=3))
+        g.fragColor[:] = rt.construct(4, rgb, rt.swizzle(color, "a"))
     main__void()
     _c = g.fragColor
     out[0] = rt.f32(_c[0]); out[1] = rt.f32(_c[1]); out[2] = rt.f32(_c[2]); out[3] = rt.f32(_c[3])

@@ -189,7 +189,7 @@ def run_pixel(ctx, out):
         dirRad = rt.binary("/", rt.binary("*", _u_direction, g.TAU, 1, "float"), rt.f(360.0), 1, "float")
         dc = rt.component_wise("cos", dirRad, width=1)
         ds = rt.component_wise("sin", dirRad, width=1)
-        offset = rt.construct(2, rt.binary("-", rt.binary("*", rt.swizzle(offset, "x"), dc, 1, "float"), rt.binary("*", rt.swizzle(offset, "y"), ds, 1, "float"), 1, "float"), rt.binary("+", rt.binary("*", rt.swizzle(offset, "x"), ds, 1, "float"), rt.binary("*", rt.swizzle(offset, "y"), dc, 1, "float"), 1, "float"))
+        offset[:] = rt.construct(2, rt.binary("-", rt.binary("*", rt.swizzle(offset, "x"), dc, 1, "float"), rt.binary("*", rt.swizzle(offset, "y"), ds, 1, "float"), 1, "float"), rt.binary("+", rt.binary("*", rt.swizzle(offset, "x"), ds, 1, "float"), rt.binary("*", rt.swizzle(offset, "y"), dc, 1, "float"), 1, "float"))
         sample_pos = rt.binary("+", base_pos, offset, 2, "float")
         sampled = sample_bilinear__vec2_float_float(sample_pos, rt.swizzle(_u_resolution, "x"), rt.swizzle(_u_resolution, "y"))
         if rt.binary("==", channel, rt.i(0)):
@@ -208,7 +208,7 @@ def run_pixel(ctx, out):
         coords = rt.construct(2, rt.construct(1, rt.swizzle(global_id, "x"), base="int"), rt.construct(1, rt.swizzle(global_id, "y"), base="int"))
         original = rt.texel_fetch(_u_inputTex, rt.construct(2, coords, base="int"), rt.i(0))
         if rt.binary("==", _u_displacement, rt.f(0.0)):
-            g.fragColor = original
+            g.fragColor[:] = original
             return
         fullRes = (_u_fullResolution if rt.binary(">", rt.swizzle(_u_fullResolution, "x"), rt.f(0.0)) else _u_resolution)
         width_f = rt.swizzle(fullRes, "x")
@@ -216,7 +216,7 @@ def run_pixel(ctx, out):
         uv = rt.binary("/", rt.binary("+", rt.construct(2, rt.binary("+", rt.construct(1, rt.swizzle(global_id, "x")), rt.swizzle(_u_tileOffset, "x"), 1, "float"), rt.binary("+", rt.construct(1, rt.swizzle(global_id, "y")), rt.swizzle(_u_tileOffset, "y"), 1, "float")), rt.construct(2, rt.f(0.5), rt.f(0.5)), 2, "float"), rt.construct(2, rt.component_wise("max", width_f, rt.f(1.0), width=1), rt.component_wise("max", height_f, rt.f(1.0), width=1)), 2, "float")
         mask = singularity_mask__vec2_float_float(uv, width_f, height_f)
         if rt.binary("<=", mask, rt.f(0.0)):
-            g.fragColor = original
+            g.fragColor[:] = original
             return
         renderScale = (rt.binary("/", rt.swizzle(_u_fullResolution, "x"), rt.component_wise("max", rt.swizzle(_u_resolution, "x"), rt.f(1.0), width=1), 1, "float") if rt.binary(">", rt.swizzle(_u_fullResolution, "x"), rt.f(0.0)) else rt.f(1.0))
         isTiling = rt.binary(">", renderScale, rt.f(1.01))
@@ -231,7 +231,7 @@ def run_pixel(ctx, out):
         green = warped_channel_value__uint_uvec2_vec2_float_float_vec2_float_float_float_float(rt.i(1), coord, base_pos, width_f, height_f, freq, clampedDisplacement, mask, _u_time, _u_speed)
         blue = warped_channel_value__uint_uvec2_vec2_float_float_vec2_float_float_float_float(rt.i(2), coord, base_pos, width_f, height_f, freq, clampedDisplacement, mask, _u_time, _u_speed)
         alpha = clamp01__float(rt.swizzle(original, "w"))
-        g.fragColor = rt.construct(4, red, green, blue, alpha)
+        g.fragColor[:] = rt.construct(4, red, green, blue, alpha)
     main__void()
     _c = g.fragColor
     out[0] = rt.f32(_c[0]); out[1] = rt.f32(_c[1]); out[2] = rt.f32(_c[2]); out[3] = rt.f32(_c[3])

@@ -50,7 +50,7 @@ def run_pixel(ctx, out):
         glow = rt.binary("*", rt.binary("*", edge, rt.swizzle(base, "rgb"), 3, "float"), rt.f(2.0), 3, "float")
         result = rt.binary("-", rt.construct(3, rt.f(1.0)), rt.binary("*", rt.binary("-", rt.construct(3, rt.f(1.0)), rt.swizzle(base, "rgb"), 3, "float"), rt.binary("-", rt.construct(3, rt.f(1.0)), glow, 3, "float"), 3, "float"), 3, "float")
         mixed = rt.component_wise("mix", rt.swizzle(base, "rgb"), result, _u_alpha, width=3)
-        g.fragColor = rt.construct(4, rt.component_wise("clamp", mixed, rt.f(0.0), rt.f(1.0), width=3), rt.swizzle(base, "a"))
+        g.fragColor[:] = rt.construct(4, rt.component_wise("clamp", mixed, rt.f(0.0), rt.f(1.0), width=3), rt.swizzle(base, "a"))
     main__void()
     _c = g.fragColor
     out[0] = rt.f32(_c[0]); out[1] = rt.f32(_c[1]); out[2] = rt.f32(_c[2]); out[3] = rt.f32(_c[3])

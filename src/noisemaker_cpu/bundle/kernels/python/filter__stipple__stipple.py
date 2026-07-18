@@ -18,12 +18,12 @@ def run_pixel(ctx, out):
     def hash12__vec2(p):
         p = rt.copy(p, "float")
         p3 = rt.component_wise("fract", rt.binary("*", rt.construct(3, rt.swizzle(p, "xyx")), rt.f(0.1031), 3, "float"), width=3)
-        p3 = rt.binary("+", p3, rt.dot(p3, rt.binary("+", rt.swizzle(p3, "yzx"), rt.f(33.33), 3, "float")), 3, "float")
+        p3[:] = rt.binary("+", p3, rt.dot(p3, rt.binary("+", rt.swizzle(p3, "yzx"), rt.f(33.33), 3, "float")), 3, "float")
         return rt.component_wise("fract", rt.binary("*", rt.binary("+", rt.swizzle(p3, "x"), rt.swizzle(p3, "y"), 1, "float"), rt.swizzle(p3, "z"), 1, "float"), width=1)
     def hash22__vec2(p):
         p = rt.copy(p, "float")
         p3 = rt.component_wise("fract", rt.binary("*", rt.construct(3, rt.swizzle(p, "xyx")), rt.construct(3, rt.f(0.1031), rt.f(0.103), rt.f(0.0973)), 3, "float"), width=3)
-        p3 = rt.binary("+", p3, rt.dot(p3, rt.binary("+", rt.swizzle(p3, "yzx"), rt.f(33.33), 3, "float")), 3, "float")
+        p3[:] = rt.binary("+", p3, rt.dot(p3, rt.binary("+", rt.swizzle(p3, "yzx"), rt.f(33.33), 3, "float")), 3, "float")
         return rt.component_wise("fract", rt.binary("*", rt.binary("+", rt.swizzle(p3, "xx"), rt.swizzle(p3, "yz"), 2, "float"), rt.swizzle(p3, "zy"), 2, "float"), width=2)
     def lum__vec3(c):
         c = rt.copy(c, "float")
@@ -47,7 +47,7 @@ def run_pixel(ctx, out):
             if not (rt.binary("<", i, rt.i(5))):
                 break
             v = rt.binary("+", v, rt.binary("*", a, vnoise__vec2(p), 1, "float"), 1, "float")
-            p = rt.binary("*", p, rt.f(2.03), 2, "float")
+            p[:] = rt.binary("*", p, rt.f(2.03), 2, "float")
             a = rt.binary("*", a, rt.f(0.5), 1, "float")
         return v
     def voronoiCell__vec2_float_float(p, jitter, seedVal):
@@ -77,7 +77,7 @@ def run_pixel(ctx, out):
                 d = rt.dot(rt.binary("-", pt, f, 2, "float"), rt.binary("-", pt, f, 2, "float"))
                 if rt.binary("<", d, best):
                     best = d
-                    res = rt.construct(4, rt.binary("+", _g, pt, 2, "float"), rt.binary("+", _g, cell, 2, "float"))
+                    res[:] = rt.construct(4, rt.binary("+", _g, pt, 2, "float"), rt.binary("+", _g, cell, 2, "float"))
         return res
     def tonemap2__float_vec3_vec3(t, ink, paper):
         ink = rt.copy(ink, "float")
@@ -119,28 +119,28 @@ def run_pixel(ctx, out):
             d = rt.length(rt.binary("-", p, rt.swizzle(cell, "xy"), 2, "float"))
             aa = rt.component_wise("max", rt.binary("*", rt.fwidth(d), rt.f(1.5), 1, "float"), rt.f(1e-05), width=1)
             inside = rt.binary("-", rt.f(1.0), rt.component_wise("smoothstep", rt.binary("-", radius, aa, 1, "float"), rt.binary("+", radius, aa, 1, "float"), d, width=1), 1, "float")
-            result = rt.component_wise("mix", _u_paperColor, seedColor, inside, width=3)
+            result[:] = rt.component_wise("mix", _u_paperColor, seedColor, inside, width=3)
         else:
             if (bool((bool(rt.binary("==", _u_MODE, rt.i(1))) or bool(rt.binary("==", _u_MODE, rt.i(2))))) or bool(rt.binary("==", _u_MODE, rt.i(3)))):
                 gc = globalCoord
                 if rt.binary("==", _u_MODE, rt.i(3)):
-                    gc = rotate2D__vec2_float(gc, rt.f(45.0))
+                    gc[:] = rotate2D__vec2_float(gc, rt.f(45.0))
                 noiseP = rt.construct(2, 0.0)
                 if rt.binary("==", _u_MODE, rt.i(1)):
-                    noiseP = rt.binary("/", gc, _u_grainSize, 2, "float")
+                    noiseP[:] = rt.binary("/", gc, _u_grainSize, 2, "float")
                 else:
-                    noiseP = rt.binary("*", gc, rt.construct(2, rt.binary("/", rt.f(1.0), _u_grainSize, 1, "float"), rt.binary("/", rt.f(1.0), rt.binary("*", _u_grainSize, rt.f(8.0), 1, "float"), 1, "float")), 2, "float")
+                    noiseP[:] = rt.binary("*", gc, rt.construct(2, rt.binary("/", rt.f(1.0), _u_grainSize, 1, "float"), rt.binary("/", rt.f(1.0), rt.binary("*", _u_grainSize, rt.f(8.0), 1, "float"), 1, "float")), 2, "float")
                 n = vnoise__vec2(rt.binary("+", noiseP, rt.binary("*", rt.construct(1, _u_seed), rt.f(101.7), 1, "float"), 2, "float"))
                 n = rt.binary("+", n, rt.binary("/", rt.binary("-", _u_density, rt.f(50.0), 1, "float"), rt.f(100.0), 1, "float"), 1, "float")
                 src = rt.swizzle(rt.texture(_u_inputTex, uv), "rgb")
-                result = rt.construct(3, rt.component_wise("step", n, rt.swizzle(src, "r"), width=1), rt.component_wise("step", n, rt.swizzle(src, "g"), width=1), rt.component_wise("step", n, rt.swizzle(src, "b"), width=1))
+                result[:] = rt.construct(3, rt.component_wise("step", n, rt.swizzle(src, "r"), width=1), rt.component_wise("step", n, rt.swizzle(src, "g"), width=1), rt.component_wise("step", n, rt.swizzle(src, "b"), width=1))
             else:
                 src = rt.swizzle(rt.texture(_u_inputTex, uv), "rgb")
                 l = lum__vec3(src)
                 clumpNoise = rt.binary("*", fbm__vec2(rt.binary("+", rt.binary("/", globalCoord, rt.binary("*", _u_grainSize, rt.f(4.0), 1, "float"), 2, "float"), rt.binary("*", rt.construct(1, _u_seed), rt.f(101.7), 1, "float"), 2, "float")), rt.component_wise("mix", rt.f(1.2), rt.f(0.6), l, width=1), 1, "float")
                 clumpNoise = rt.binary("+", clumpNoise, rt.binary("/", rt.binary("-", _u_density, rt.f(50.0), 1, "float"), rt.f(100.0), 1, "float"), 1, "float")
-                result = tonemap2__float_vec3_vec3(rt.component_wise("step", clumpNoise, l, width=1), rt.construct(3, rt.f(0.05)), rt.construct(3, rt.f(0.97)))
-        g.fragColor = rt.construct(4, result, alpha)
+                result[:] = tonemap2__float_vec3_vec3(rt.component_wise("step", clumpNoise, l, width=1), rt.construct(3, rt.f(0.05)), rt.construct(3, rt.f(0.97)))
+        g.fragColor[:] = rt.construct(4, result, alpha)
     main__void()
     _c = g.fragColor
     out[0] = rt.f32(_c[0]); out[1] = rt.f32(_c[1]); out[2] = rt.f32(_c[2]); out[3] = rt.f32(_c[3])

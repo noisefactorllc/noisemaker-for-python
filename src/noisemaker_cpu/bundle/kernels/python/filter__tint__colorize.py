@@ -60,16 +60,16 @@ def run_pixel(ctx, out):
         tintHue = rt.f(0.0)
         base_hsv = rt.construct(3, 0.0)
         if rt.binary("==", m, rt.i(1)):
-            tinted = rt.binary("*", base_rgb, _u_color, 3, "float")
+            tinted[:] = rt.binary("*", base_rgb, _u_color, 3, "float")
         else:
             if rt.binary("==", m, rt.i(2)):
                 tintHue = rt.swizzle(rgb_to_hsv__vec3(_u_color), "x")
                 base_hsv = rgb_to_hsv__vec3(base_rgb)
-                tinted = rt.component_wise("clamp", hsv_to_rgb__vec3(rt.construct(3, tintHue, rt.component_wise("clamp", rt.swizzle(base_rgb, "y"), rt.f(0.0), rt.f(1.0), width=1), rt.component_wise("clamp", rt.swizzle(base_hsv, "z"), rt.f(0.0), rt.f(1.0), width=1))), rt.f(0.0), rt.f(1.0), width=3)
+                tinted[:] = rt.component_wise("clamp", hsv_to_rgb__vec3(rt.construct(3, tintHue, rt.component_wise("clamp", rt.swizzle(base_rgb, "y"), rt.f(0.0), rt.f(1.0), width=1), rt.component_wise("clamp", rt.swizzle(base_hsv, "z"), rt.f(0.0), rt.f(1.0), width=1))), rt.f(0.0), rt.f(1.0), width=3)
             else:
-                tinted = _u_color
+                tinted[:] = _u_color
         rgb = rt.component_wise("mix", base_rgb, tinted, _u_alpha, width=3)
-        g.fragColor = rt.construct(4, rgb, rt.swizzle(base, "a"))
+        g.fragColor[:] = rt.construct(4, rgb, rt.swizzle(base, "a"))
     main__void()
     _c = g.fragColor
     out[0] = rt.f32(_c[0]); out[1] = rt.f32(_c[1]); out[2] = rt.f32(_c[2]); out[3] = rt.f32(_c[3])

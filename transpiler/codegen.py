@@ -531,6 +531,15 @@ class CodeGen:
                 rhs = f"rt.binary({q(base_op)}, {tcode}, {v_code}, {width_of(tt)}, {q(b)})"
             else:
                 rhs = v_code
+            # JS's glsl-transpiler reuses a pooled Float32Array for a vector variable:
+            # reassignment mutates it in place, so a prior alias (`vec2 prev = cur;`,
+            # which both engines emit as a reference, not a copy) tracks the update.
+            # Rebinding to a fresh array instead breaks that alias and diverges from
+            # the oracle — e.g. parallax's ray-march refinement, where prevUV aliases
+            # rayUV and `mix(rayUV, prevUV, w)` collapses to a no-op. Mutate vectors in
+            # place to match; scalars are immutable and index targets already do.
+            if target["k"] == "id" and width_of(tt) > 1:
+                return (f"{tcode}[:] = {rhs}", tt)
             return (f"{tcode} = {rhs}", tt)
         if target["k"] == "member":
             obj_code, obj_t = self.expr(target["obj"], scope)

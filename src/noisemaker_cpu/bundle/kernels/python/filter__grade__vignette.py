@@ -53,10 +53,10 @@ def run_pixel(ctx, out):
         centered = rt.binary("-", uv, rt.f(0.5), 2, "float")
         scale = rt.construct(2, 0.0)
         if rt.binary(">", roundness, rt.f(0.0)):
-            scale = rt.component_wise("mix", aspectRatio, rt.construct(2, rt.f(1.0)), roundness, width=2)
+            scale[:] = rt.component_wise("mix", aspectRatio, rt.construct(2, rt.f(1.0)), roundness, width=2)
         else:
-            scale = rt.component_wise("mix", aspectRatio, rt.binary("*", aspectRatio, rt.construct(2, rt.binary("+", rt.f(1.0), rt.component_wise("abs", roundness, width=1), 1, "float"), rt.binary("-", rt.f(1.0), rt.binary("*", rt.component_wise("abs", roundness, width=1), rt.f(0.5), 1, "float"), 1, "float")), 2, "float"), rt.unary("-", roundness), width=2)
-        centered = rt.binary("*", centered, scale, 2, "float")
+            scale[:] = rt.component_wise("mix", aspectRatio, rt.binary("*", aspectRatio, rt.construct(2, rt.binary("+", rt.f(1.0), rt.component_wise("abs", roundness, width=1), 1, "float"), rt.binary("-", rt.f(1.0), rt.binary("*", rt.component_wise("abs", roundness, width=1), rt.f(0.5), 1, "float"), 1, "float")), 2, "float"), rt.unary("-", roundness), width=2)
+        centered[:] = rt.binary("*", centered, scale, 2, "float")
         dist = rt.binary("*", rt.length(centered), rt.f(2.0), 1, "float")
         inner = rt.binary("-", midpoint, rt.binary("*", feather, rt.f(0.5), 1, "float"), 1, "float")
         outer = rt.binary("+", midpoint, rt.binary("*", feather, rt.f(0.5), 1, "float"), 1, "float")
@@ -85,18 +85,18 @@ def run_pixel(ctx, out):
         coord = rt.construct(2, rt.swizzle(ctx.frag_coord, "xy"), base="int")
         color = rt.texel_fetch(_u_inputTex, coord, rt.i(0))
         if rt.binary("<", rt.component_wise("abs", _u_vignetteAmount, width=1), rt.f(0.001)):
-            g.fragColor = color
+            g.fragColor[:] = color
             return
         rgb = srgbToLinear__vec3(rt.swizzle(color, "rgb"))
         aspectRatio = rt.construct(2, rt.f(1.0))
         if rt.binary(">", rt.swizzle(fullRes, "x"), rt.swizzle(fullRes, "y")):
-            aspectRatio = rt.construct(2, rt.binary("/", rt.swizzle(fullRes, "x"), rt.swizzle(fullRes, "y"), 1, "float"), rt.f(1.0))
+            aspectRatio[:] = rt.construct(2, rt.binary("/", rt.swizzle(fullRes, "x"), rt.swizzle(fullRes, "y"), 1, "float"), rt.f(1.0))
         else:
-            aspectRatio = rt.construct(2, rt.f(1.0), rt.binary("/", rt.swizzle(fullRes, "y"), rt.swizzle(fullRes, "x"), 1, "float"))
+            aspectRatio[:] = rt.construct(2, rt.f(1.0), rt.binary("/", rt.swizzle(fullRes, "y"), rt.swizzle(fullRes, "x"), 1, "float"))
         vignetteMask = computeVignette__vec2_vec2_float_float_float(globalUV, aspectRatio, _u_vignetteMidpoint, _u_vignetteRoundness, _u_vignetteFeather)
-        rgb = applyVignette__vec3_float_float_float(rgb, vignetteMask, _u_vignetteAmount, _u_vigHiProtect)
-        rgb = linearToSrgb__vec3(rt.component_wise("max", rgb, rt.construct(3, rt.f(0.0)), width=3))
-        g.fragColor = rt.construct(4, rgb, rt.swizzle(color, "a"))
+        rgb[:] = applyVignette__vec3_float_float_float(rgb, vignetteMask, _u_vignetteAmount, _u_vigHiProtect)
+        rgb[:] = linearToSrgb__vec3(rt.component_wise("max", rgb, rt.construct(3, rt.f(0.0)), width=3))
+        g.fragColor[:] = rt.construct(4, rgb, rt.swizzle(color, "a"))
     main__void()
     _c = g.fragColor
     out[0] = rt.f32(_c[0]); out[1] = rt.f32(_c[1]); out[2] = rt.f32(_c[2]); out[3] = rt.f32(_c[3])

@@ -28,7 +28,7 @@ def run_pixel(ctx, out):
             if rt.binary(">", lum, maxLum):
                 maxLum = lum
                 brightestX = sampleX
-        g.fragColor = rt.construct(4, rt.binary("/", rt.construct(1, brightestX), rt.construct(1, rt.binary("-", width, rt.i(1), 1, "int")), 1, "float"), maxLum, rt.f(0.0), rt.f(1.0))
+        g.fragColor[:] = rt.construct(4, rt.binary("/", rt.construct(1, brightestX), rt.construct(1, rt.binary("-", width, rt.i(1), 1, "int")), 1, "float"), maxLum, rt.f(0.0), rt.f(1.0))
     main__void()
     _c = g.fragColor
     out[0] = rt.f32(_c[0]); out[1] = rt.f32(_c[1]); out[2] = rt.f32(_c[2]); out[3] = rt.f32(_c[3])

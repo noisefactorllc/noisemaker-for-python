@@ -85,7 +85,7 @@ def run_pixel(ctx, out):
             east_luma = rt.swizzle(east_texel, "x")
         maxDiff = rt.component_wise("max", rt.component_wise("max", rt.component_wise("abs", rt.binary("-", center_luma, north_luma, 1, "float"), width=1), rt.component_wise("abs", rt.binary("-", center_luma, south_luma, 1, "float"), width=1), width=1), rt.component_wise("max", rt.component_wise("abs", rt.binary("-", center_luma, west_luma, 1, "float"), width=1), rt.component_wise("abs", rt.binary("-", center_luma, east_luma, 1, "float"), width=1), width=1), width=1)
         if rt.binary("<", maxDiff, _u_threshold):
-            g.fragColor = center_texel
+            g.fragColor[:] = center_texel
             return
         weight_center = rt.f(1.0)
         weight_north = weight_from_luma__float_float(center_luma, north_luma)
@@ -104,9 +104,9 @@ def run_pixel(ctx, out):
                 result_texel = rt.assign_swizzle(result_texel, "z", rt.swizzle(center_texel, "z"))
         else:
             blended_rgb = rt.binary("/", rt.binary("+", rt.binary("+", rt.binary("+", rt.binary("+", rt.binary("*", center_rgb, weight_center, 3, "float"), rt.binary("*", north_rgb, weight_north, 3, "float"), 3, "float"), rt.binary("*", south_rgb, weight_south, 3, "float"), 3, "float"), rt.binary("*", west_rgb, weight_west, 3, "float"), 3, "float"), rt.binary("*", east_rgb, weight_east, 3, "float"), 3, "float"), weight_sum, 3, "float")
-            result_texel = rt.construct(4, blended_rgb, rt.swizzle(result_texel, "w"))
+            result_texel[:] = rt.construct(4, blended_rgb, rt.swizzle(result_texel, "w"))
         result_texel = rt.assign_swizzle(result_texel, "w", rt.swizzle(center_texel, "w"))
-        g.fragColor = rt.component_wise("mix", center_texel, result_texel, _u_strength, width=4)
+        g.fragColor[:] = rt.component_wise("mix", center_texel, result_texel, _u_strength, width=4)
     main__void()
     _c = g.fragColor
     out[0] = rt.f32(_c[0]); out[1] = rt.f32(_c[1]); out[2] = rt.f32(_c[2]); out[3] = rt.f32(_c[3])

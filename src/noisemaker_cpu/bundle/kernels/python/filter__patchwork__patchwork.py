@@ -40,7 +40,7 @@ def run_pixel(ctx, out):
                 if not (rt.binary("<=", i, rt.i(1))):
                     break
                 p = rt.binary("+", centerPx, rt.binary("*", rt.construct(2, rt.construct(1, i), rt.construct(1, j)), sp, 2, "float"), 2, "float")
-                sum = rt.binary("+", sum, rt.texture(_u_inputTex, toSampleUV__vec2(p)), 4, "float")
+                sum[:] = rt.binary("+", sum, rt.texture(_u_inputTex, toSampleUV__vec2(p)), 4, "float")
         return rt.binary("*", sum, rt.binary("/", rt.f(1.0), rt.f(9.0), 1, "float"), 4, "float")
     def main__void():
         globalCoord = rt.binary("+", rt.swizzle(ctx.frag_coord, "xy"), _u_tileOffset, 2, "float")
@@ -74,18 +74,18 @@ def run_pixel(ctx, out):
             edgeNormal = rt.construct(2, 0.0)
             if rt.binary("==", dMin, dLeft):
                 neighborIdx = rt.assign_swizzle(neighborIdx, "x", rt.binary("-", rt.swizzle(neighborIdx, "x"), rt.f(1.0), 1, "float"))
-                edgeNormal = rt.construct(2, rt.unary("-", rt.f(1.0)), rt.f(0.0))
+                edgeNormal[:] = rt.construct(2, rt.unary("-", rt.f(1.0)), rt.f(0.0))
             else:
                 if rt.binary("==", dMin, dRight):
                     neighborIdx = rt.assign_swizzle(neighborIdx, "x", rt.binary("+", rt.swizzle(neighborIdx, "x"), rt.f(1.0), 1, "float"))
-                    edgeNormal = rt.construct(2, rt.f(1.0), rt.f(0.0))
+                    edgeNormal[:] = rt.construct(2, rt.f(1.0), rt.f(0.0))
                 else:
                     if rt.binary("==", dMin, dBottom):
                         neighborIdx = rt.assign_swizzle(neighborIdx, "y", rt.binary("-", rt.swizzle(neighborIdx, "y"), rt.f(1.0), 1, "float"))
-                        edgeNormal = rt.construct(2, rt.f(0.0), rt.unary("-", rt.f(1.0)))
+                        edgeNormal[:] = rt.construct(2, rt.f(0.0), rt.unary("-", rt.f(1.0)))
                     else:
                         neighborIdx = rt.assign_swizzle(neighborIdx, "y", rt.binary("+", rt.swizzle(neighborIdx, "y"), rt.f(1.0), 1, "float"))
-                        edgeNormal = rt.construct(2, rt.f(0.0), rt.f(1.0))
+                        edgeNormal[:] = rt.construct(2, rt.f(0.0), rt.f(1.0))
             neighborCenter = rt.binary("+", imgCenter, rt.binary("*", rt.binary("+", neighborIdx, rt.f(0.5), 2, "float"), _u_squareSize, 2, "float"), 2, "float")
             hNeighbor = lum__vec3(rt.swizzle(cellAvgColor3x3__vec2(neighborCenter), "rgb"))
             dh = rt.binary("-", h, hNeighbor, 1, "float")
@@ -94,7 +94,7 @@ def run_pixel(ctx, out):
             signTerm = rt.dot(edgeNormal, lightDir)
             bevelMul = rt.binary("+", rt.f(1.0), rt.binary("*", rt.binary("*", rt.binary("*", rt.f(0.35), rt.binary("/", _u_relief, rt.f(100.0), 1, "float"), 1, "float"), rt.component_wise("sign", dh, width=1), 1, "float"), signTerm, 1, "float"), 1, "float")
         result = rt.component_wise("clamp", rt.binary("*", rt.binary("*", cellColor, topFaceShade, 3, "float"), bevelMul, 3, "float"), rt.f(0.0), rt.f(1.0), width=3)
-        g.fragColor = rt.construct(4, result, rt.swizzle(srcOwn, "a"))
+        g.fragColor[:] = rt.construct(4, result, rt.swizzle(srcOwn, "a"))
     main__void()
     _c = g.fragColor
     out[0] = rt.f32(_c[0]); out[1] = rt.f32(_c[1]); out[2] = rt.f32(_c[2]); out[3] = rt.f32(_c[3])

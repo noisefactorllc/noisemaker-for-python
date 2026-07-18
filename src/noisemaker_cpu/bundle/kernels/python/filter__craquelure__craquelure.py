@@ -16,12 +16,12 @@ def run_pixel(ctx, out):
     def hash12__vec2(p):
         p = rt.copy(p, "float")
         p3 = rt.component_wise("fract", rt.binary("*", rt.construct(3, rt.swizzle(p, "xyx")), rt.f(0.1031), 3, "float"), width=3)
-        p3 = rt.binary("+", p3, rt.dot(p3, rt.binary("+", rt.swizzle(p3, "yzx"), rt.f(33.33), 3, "float")), 3, "float")
+        p3[:] = rt.binary("+", p3, rt.dot(p3, rt.binary("+", rt.swizzle(p3, "yzx"), rt.f(33.33), 3, "float")), 3, "float")
         return rt.component_wise("fract", rt.binary("*", rt.binary("+", rt.swizzle(p3, "x"), rt.swizzle(p3, "y"), 1, "float"), rt.swizzle(p3, "z"), 1, "float"), width=1)
     def hash22__vec2(p):
         p = rt.copy(p, "float")
         p3 = rt.component_wise("fract", rt.binary("*", rt.construct(3, rt.swizzle(p, "xyx")), rt.construct(3, rt.f(0.1031), rt.f(0.103), rt.f(0.0973)), 3, "float"), width=3)
-        p3 = rt.binary("+", p3, rt.dot(p3, rt.binary("+", rt.swizzle(p3, "yzx"), rt.f(33.33), 3, "float")), 3, "float")
+        p3[:] = rt.binary("+", p3, rt.dot(p3, rt.binary("+", rt.swizzle(p3, "yzx"), rt.f(33.33), 3, "float")), 3, "float")
         return rt.component_wise("fract", rt.binary("*", rt.binary("+", rt.swizzle(p3, "xx"), rt.swizzle(p3, "yz"), 2, "float"), rt.swizzle(p3, "zy"), 2, "float"), width=2)
     def vnoise__vec2(p):
         p = rt.copy(p, "float")
@@ -96,7 +96,7 @@ def run_pixel(ctx, out):
         shadeMul = rt.binary("+", rt.f(1.0), rt.binary("*", rt.binary("*", rt.binary("*", rt.binary("-", shade, rt.f(0.6), 1, "float"), rt.f(2.0), 1, "float"), rt.binary("/", rt.binary("*", rt.f(0.25), _u_depth, 1, "float"), rt.f(100.0), 1, "float"), 1, "float"), wallMask, 1, "float"), 1, "float")
         darkened = rt.binary("*", rt.swizzle(src, "rgb"), rt.component_wise("mix", rt.f(1.0), rt.binary("+", rt.f(0.35), rt.binary("*", rt.binary("/", _u_brightness, rt.f(100.0), 1, "float"), rt.f(0.5), 1, "float"), 1, "float"), kC, width=1), 3, "float")
         result = rt.component_wise("clamp", rt.binary("*", darkened, shadeMul, 3, "float"), rt.f(0.0), rt.f(1.0), width=3)
-        g.fragColor = rt.construct(4, result, rt.swizzle(src, "a"))
+        g.fragColor[:] = rt.construct(4, result, rt.swizzle(src, "a"))
     main__void()
     _c = g.fragColor
     out[0] = rt.f32(_c[0]); out[1] = rt.f32(_c[1]); out[2] = rt.f32(_c[2]); out[3] = rt.f32(_c[3])

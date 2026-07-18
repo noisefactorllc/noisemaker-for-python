@@ -24,11 +24,11 @@ def run_pixel(ctx, out):
         st = rt.copy(st, "float")
         aspectRatio = rt.binary("/", rt.swizzle(_u_fullResolution, "x"), rt.swizzle(_u_fullResolution, "y"), 1, "float")
         st = rt.assign_swizzle(st, "x", rt.binary("*", rt.swizzle(st, "x"), aspectRatio, 1, "float"))
-        st = rt.binary("-", st, rt.construct(2, rt.binary("*", aspectRatio, rt.f(0.5), 1, "float"), rt.f(0.5)), 2, "float")
+        st[:] = rt.binary("-", st, rt.construct(2, rt.binary("*", aspectRatio, rt.f(0.5), 1, "float"), rt.f(0.5)), 2, "float")
         c = rt.component_wise("cos", angle, width=1)
         s = rt.component_wise("sin", angle, width=1)
-        st = rt.matrix_mult(rt.construct(4, c, rt.unary("-", s), s, c), st, 2)
-        st = rt.binary("+", st, rt.construct(2, rt.binary("*", aspectRatio, rt.f(0.5), 1, "float"), rt.f(0.5)), 2, "float")
+        st[:] = rt.matrix_mult(rt.construct(4, c, rt.unary("-", s), s, c), st, 2)
+        st[:] = rt.binary("+", st, rt.construct(2, rt.binary("*", aspectRatio, rt.f(0.5), 1, "float"), rt.f(0.5)), 2, "float")
         st = rt.assign_swizzle(st, "x", rt.binary("/", rt.swizzle(st, "x"), aspectRatio, 1, "float"))
         return st
     def getColor__int(idx):
@@ -50,11 +50,11 @@ def run_pixel(ctx, out):
         return rt.component_wise("mix", getColor__int(idx), getColor__int(next), localT, width=3)
     def pcg__uvec3(v):
         v = rt.copy(v, "uint")
-        v = rt.binary("+", rt.binary("*", v, rt.construct(1, rt.i(1664525), base="uint"), 3, "uint"), rt.construct(1, rt.i(1013904223), base="uint"), 3, "uint")
+        v[:] = rt.binary("+", rt.binary("*", v, rt.construct(1, rt.i(1664525), base="uint"), 3, "uint"), rt.construct(1, rt.i(1013904223), base="uint"), 3, "uint")
         v = rt.assign_swizzle(v, "x", rt.binary("+", rt.swizzle(v, "x"), rt.binary("*", rt.swizzle(v, "y"), rt.swizzle(v, "z"), 1, "uint"), 1, "uint"))
         v = rt.assign_swizzle(v, "y", rt.binary("+", rt.swizzle(v, "y"), rt.binary("*", rt.swizzle(v, "z"), rt.swizzle(v, "x"), 1, "uint"), 1, "uint"))
         v = rt.assign_swizzle(v, "z", rt.binary("+", rt.swizzle(v, "z"), rt.binary("*", rt.swizzle(v, "x"), rt.swizzle(v, "y"), 1, "uint"), 1, "uint"))
-        v = rt.binary("^", v, rt.binary(">>", v, rt.construct(1, rt.i(16), base="uint"), 3, "uint"), 3, "uint")
+        v[:] = rt.binary("^", v, rt.binary(">>", v, rt.construct(1, rt.i(16), base="uint"), 3, "uint"), 3, "uint")
         v = rt.assign_swizzle(v, "x", rt.binary("+", rt.swizzle(v, "x"), rt.binary("*", rt.swizzle(v, "y"), rt.swizzle(v, "z"), 1, "uint"), 1, "uint"))
         v = rt.assign_swizzle(v, "y", rt.binary("+", rt.swizzle(v, "y"), rt.binary("*", rt.swizzle(v, "z"), rt.swizzle(v, "x"), 1, "uint"), 1, "uint"))
         v = rt.assign_swizzle(v, "z", rt.binary("+", rt.swizzle(v, "z"), rt.binary("*", rt.swizzle(v, "x"), rt.swizzle(v, "y"), 1, "uint"), 1, "uint"))
@@ -108,7 +108,7 @@ def run_pixel(ctx, out):
         rotatedCentered = centered
         c = rt.component_wise("cos", angle, width=1)
         s = rt.component_wise("sin", angle, width=1)
-        rotatedCentered = rt.matrix_mult(rt.construct(4, c, rt.unary("-", s), s, c), centered, 2)
+        rotatedCentered[:] = rt.matrix_mult(rt.construct(4, c, rt.unary("-", s), s, c), centered, 2)
         color = rt.construct(3, 0.0)
         t = rt.f(0.0)
         timeOffset = rt.binary("*", _u_time, _u_speed, 1, "float")
@@ -127,12 +127,12 @@ def run_pixel(ctx, out):
             a = rt.component_wise("atan", rt.swizzle(rotatedCentered, "y"), rt.swizzle(rotatedCentered, "x"), width=1)
             t = rt.binary("/", rt.binary("+", a, rt.f(3.14159265359), 1, "float"), rt.f(6.28318530718), 1, "float")
             t = rt.component_wise("fract", rt.binary("+", rt.binary("*", t, rt.construct(1, _u_repeat), 1, "float"), timeOffset, 1, "float"), width=1)
-            color = blendColors__float(t)
+            color[:] = blendColors__float(t)
         else:
             if rt.binary("==", _u_gradientType, rt.i(1)):
                 t = rt.binary("+", rt.component_wise("abs", rt.swizzle(rotatedCentered, "x"), width=1), rt.component_wise("abs", rt.swizzle(rotatedCentered, "y"), width=1), 1, "float")
                 t = rt.component_wise("fract", rt.binary("+", rt.binary("*", t, rt.construct(1, _u_repeat), 1, "float"), timeOffset, 1, "float"), width=1)
-                color = blendColors__float(t)
+                color[:] = blendColors__float(t)
             else:
                 if rt.binary("==", _u_gradientType, rt.i(2)):
                     cornerSt = rotate2D__vec2_float(st, angle)
@@ -142,33 +142,33 @@ def run_pixel(ctx, out):
                     cBR = (_u_color4 if rt.binary(">=", _u_colorCount, rt.i(4)) else cBL)
                     top = rt.component_wise("mix", cTL, cTR, rt.swizzle(cornerSt, "x"), width=3)
                     bottom = rt.component_wise("mix", cBL, cBR, rt.swizzle(cornerSt, "x"), width=3)
-                    color = rt.component_wise("mix", bottom, top, rt.swizzle(cornerSt, "y"), width=3)
+                    color[:] = rt.component_wise("mix", bottom, top, rt.swizzle(cornerSt, "y"), width=3)
                 else:
                     if rt.binary("==", _u_gradientType, rt.i(3)):
                         t = rt.swizzle(rotatedSt, "y")
                         t = rt.component_wise("fract", rt.binary("+", rt.binary("*", t, rt.construct(1, _u_repeat), 1, "float"), timeOffset, 1, "float"), width=1)
-                        color = blendColors__float(t)
+                        color[:] = blendColors__float(t)
                     else:
                         if rt.binary("==", _u_gradientType, rt.i(4)):
                             noiseSt = rt.binary("*", rotatedCentered, rt.f(4.0), 2, "float")
                             t = fbmNoise__vec2(noiseSt)
                             t = rt.component_wise("fract", rt.binary("+", rt.binary("*", t, rt.construct(1, _u_repeat), 1, "float"), timeOffset, 1, "float"), width=1)
-                            color = blendColors__float(t)
+                            color[:] = blendColors__float(t)
                         else:
                             if rt.binary("==", _u_gradientType, rt.i(5)):
                                 rotatedPoint = rt.matrix_mult(rt.construct(4, c, rt.unary("-", s), s, c), centered, 2)
                                 dist = rt.binary("*", rt.length(rotatedPoint), rt.f(2.0), 1, "float")
                                 t = dist
                                 t = rt.component_wise("fract", rt.binary("+", rt.binary("*", t, rt.construct(1, _u_repeat), 1, "float"), timeOffset, 1, "float"), width=1)
-                                color = blendColors__float(t)
+                                color[:] = blendColors__float(t)
                             else:
                                 if rt.binary("==", _u_gradientType, rt.i(6)):
                                     a = rt.component_wise("atan", rt.swizzle(rotatedCentered, "y"), rt.swizzle(rotatedCentered, "x"), width=1)
                                     dist = rt.length(centered)
                                     t = rt.component_wise("fract", rt.binary("+", rt.binary("/", a, rt.f(6.28318530718), 1, "float"), rt.binary("*", dist, rt.f(2.0), 1, "float"), 1, "float"), width=1)
                                     t = rt.component_wise("fract", rt.binary("+", rt.binary("*", t, rt.construct(1, _u_repeat), 1, "float"), timeOffset, 1, "float"), width=1)
-                                    color = blendColors__float(t)
-        g.fragColor = rt.construct(4, color, rt.f(1.0))
+                                    color[:] = blendColors__float(t)
+        g.fragColor[:] = rt.construct(4, color, rt.f(1.0))
     main__void()
     _c = g.fragColor
     out[0] = rt.f32(_c[0]); out[1] = rt.f32(_c[1]); out[2] = rt.f32(_c[2]); out[3] = rt.f32(_c[3])

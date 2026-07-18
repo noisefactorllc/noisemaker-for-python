@@ -43,7 +43,7 @@ def run_pixel(ctx, out):
         texSize = rt.texture_size(_u_inputTex)
         pixel = rt.construct(2, rt.swizzle(ctx.frag_coord, "xy"), base="int")
         if (bool(rt.binary(">=", rt.swizzle(pixel, "x"), rt.swizzle(texSize, "x"))) or bool(rt.binary(">=", rt.swizzle(pixel, "y"), rt.swizzle(texSize, "y")))):
-            g.fragColor = rt.construct(4, rt.f(0.0))
+            g.fragColor[:] = rt.construct(4, rt.f(0.0))
             return
         texel = rt.texel_fetch(_u_inputTex, pixel, rt.i(0))
         referenceValue = value_map_component__vec4(texel)
@@ -59,7 +59,7 @@ def run_pixel(ctx, out):
         sampleX = rt.component_wise("min", sampleX, rt.binary("-", rt.swizzle(texSize, "x"), rt.i(1), 1, "int"), width=1)
         sampleY = rt.component_wise("min", sampleY, rt.binary("-", rt.swizzle(texSize, "y"), rt.i(1), 1, "int"), width=1)
         sampled = rt.texel_fetch(_u_inputTex, rt.construct(2, sampleX, sampleY, base="int"), rt.i(0))
-        g.fragColor = sampled
+        g.fragColor[:] = sampled
     main__void()
     _c = g.fragColor
     out[0] = rt.f32(_c[0]); out[1] = rt.f32(_c[1]); out[2] = rt.f32(_c[2]); out[3] = rt.f32(_c[3])

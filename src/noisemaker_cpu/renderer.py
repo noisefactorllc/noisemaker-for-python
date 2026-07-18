@@ -15,6 +15,7 @@ import numpy as np
 from .adapters import get_adapter
 from .adapters._palette_data import PALETTE_DATA
 from .draw_ops import get_draw_op
+from .dsl import compile_dsl
 from .kernel_loader import KernelCache
 from .overlay_gen import OVERLAY_EFFECTS, render_worm_overlay
 from .pass_runner import Ctx, run_pass, run_pass_deriv
@@ -232,18 +233,26 @@ def render_effect(effect_id, params=None, inputs=None, width=256, height=256, se
                         )
                 attachments[tname] = render_worm_overlay(effect_id, width, height, gen)
 
+    # Texture filtering must match the JS oracle: it sets filter='linear' ONLY on
+    # the declared external texture (renderer.js buildBindings); every pooled
+    # surface (inputTex, heightMap, mixer surface params) has no filter set, so
+    # `surface.filter === 'linear'` is false and the JS sampler uses NEAREST. The
+    # difference is invisible at texel-center (identity) sampling but decisive for
+    # warp/displacement/refraction effects that sample at fractional coordinates.
+    external_tex = eff.get("externalTexture")
+
     for p in eff["passes"]:
         textures = _DefaultTex(blank)
         for sampler, surf in surface_params.items():
             if surf is not None:
-                surf.filter = "linear"
+                surf.filter = "linear" if sampler == external_tex else "nearest"
                 textures[sampler] = surf
         for sampler_name, source in (p.get("inputs") or {}).items():
             # An earlier pass's named attachment wins over a same-named external
             # input (e.g. `inputTex` reused as an intermediate attach name).
             surf = attachments.get(source) or inputs.get(source) or inputs.get(sampler_name) or result
             if surf is not None:
-                surf.filter = "linear"
+                surf.filter = "linear" if sampler_name == external_tex else "nearest"
                 textures[sampler_name] = surf
         # Pass-level uniform aliases: the definition may expose a param under one
         # name (e.g. `color`) while this pass's GLSL declares another (`splatColor`).
@@ -287,3 +296,54 @@ def render_effect(effect_id, params=None, inputs=None, width=256, height=256, se
         for attach_name in out_names:
             attachments[attach_name] = result
     return result
+
+
+def _resolve_surface_marker(marker, current, surfaces):
+    """Turn a compiled surface binding into a Surface (or None for unbound)."""
+    if marker == "@current":
+        return current
+    _, name = marker
+    surf = surfaces.get(name)
+    if surf is None:
+        raise ValueError(f"Surface {name} has not been written")
+    return surf
+
+
+def _run_effect_step(step, current, surfaces, external_textures, width, height, seed, time):
+    # Mirror the JS renderer's per-step binding: the chain's current image is the
+    # effect's inputTex; each surface param is bound by param name (the path
+    # render_effect resolves), and external textures (imageTex/textTex/named) pass
+    # straight through. Explicit surface args and inputTex-defaults win over them.
+    inputs = dict(external_textures or {})
+    if current is not None:
+        inputs["inputTex"] = current
+    for pname, marker in step["surfaces"].items():
+        surf = _resolve_surface_marker(marker, current, surfaces)
+        if surf is not None:
+            inputs[pname] = surf
+    return render_effect(step["effect_id"], step["params"], inputs, width=width, height=height, seed=seed, time=time)
+
+
+def render_dsl(source, width=512, height=512, seed=1, time=0.0, external_textures=None, seed_surfaces=None) -> Surface:
+    """Render a Polymorphic DSL program on the CPU — the Python counterpart of
+    noisemaker-cpu's CpuRenderer.render(). Compiles the program to a plan, then
+    threads each chain's `current` surface through read/write/effect steps over a
+    named-surface map (o0..o7), running one render_effect per effect step."""
+    plan = compile_dsl(source, _meta()["effects"])
+    surfaces = dict(seed_surfaces or {})
+    for chain in plan["chains"]:
+        current = None
+        for step in chain["steps"]:
+            kind = step["kind"]
+            if kind == "read":
+                current = surfaces.get(step["surface"])
+                if current is None:
+                    raise ValueError(f"Surface {step['surface']} has not been written")
+            elif kind == "write":
+                surfaces[step["surface"]] = current
+            else:
+                current = _run_effect_step(step, current, surfaces, external_textures, width, height, seed, time)
+    rendered = surfaces.get(plan["render_surface"])
+    if rendered is None:
+        raise ValueError(f"Surface {plan['render_surface']} has not been written")
+    return rendered

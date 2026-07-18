@@ -28,7 +28,7 @@ def run_pixel(ctx, out):
                 else:
                     v = rt.swizzle(c, "a")
         v = rt.component_wise("fract", rt.binary("+", rt.binary("*", v, _u_scale, 1, "float"), _u_offset, 1, "float"), width=1)
-        g.fragColor = rt.construct(4, rt.construct(3, v), rt.f(1.0))
+        g.fragColor[:] = rt.construct(4, rt.construct(3, v), rt.f(1.0))
     main__void()
     _c = g.fragColor
     out[0] = rt.f32(_c[0]); out[1] = rt.f32(_c[1]); out[2] = rt.f32(_c[2]); out[3] = rt.f32(_c[3])

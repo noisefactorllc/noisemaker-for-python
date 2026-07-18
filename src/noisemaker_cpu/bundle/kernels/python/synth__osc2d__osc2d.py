@@ -54,12 +54,12 @@ def run_pixel(ctx, out):
         globalCoord = rt.binary("+", rt.swizzle(ctx.frag_coord, "xy"), _u_tileOffset, 2, "float")
         res = _u_fullResolution
         if rt.binary("<", rt.swizzle(res, "x"), rt.f(1.0)):
-            res = rt.construct(2, rt.f(1024.0), rt.f(1024.0))
+            res[:] = rt.construct(2, rt.f(1024.0), rt.f(1024.0))
         st = rt.binary("/", rt.binary("+", rt.swizzle(ctx.frag_coord, "xy"), _u_tileOffset, 2, "float"), res, 2, "float")
-        st = rt.binary("-", st, rt.f(0.5), 2, "float")
+        st[:] = rt.binary("-", st, rt.f(0.5), 2, "float")
         st = rt.assign_swizzle(st, "x", rt.binary("*", rt.swizzle(st, "x"), _u_aspect, 1, "float"))
         rotRad = rt.binary("/", rt.binary("*", _u_rotation, g.PI, 1, "float"), rt.f(180.0), 1, "float")
-        st = rotate2D__vec2_float(st, rotRad)
+        st[:] = rotate2D__vec2_float(st, rotRad)
         spatialPos = rt.binary("+", rt.swizzle(st, "y"), rt.f(0.5), 1, "float")
         freq = rt.construct(1, _u_frequency)
         spatialPhase = rt.binary("*", rt.swizzle(st, "y"), freq, 1, "float")
@@ -98,7 +98,7 @@ def run_pixel(ctx, out):
                                 valueNoise = tilingNoise1D__float_float_float(spatialPos, freq, rt.construct(1, _u_seed))
                                 scaledTime = rt.binary("*", periodicValue__float_float(_u_time, timeNoise), _u_speed, 1, "float")
                                 val = periodicValue__float_float(scaledTime, valueNoise)
-        g.fragColor = rt.construct(4, rt.construct(3, val), rt.f(1.0))
+        g.fragColor[:] = rt.construct(4, rt.construct(3, val), rt.f(1.0))
     main__void()
     _c = g.fragColor
     out[0] = rt.f32(_c[0]); out[1] = rt.f32(_c[1]); out[2] = rt.f32(_c[2]); out[3] = rt.f32(_c[3])

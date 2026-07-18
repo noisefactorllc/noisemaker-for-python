@@ -18,7 +18,7 @@ def run_pixel(ctx, out):
     def hash12__vec2(p):
         p = rt.copy(p, "float")
         p3 = rt.component_wise("fract", rt.binary("*", rt.construct(3, rt.swizzle(p, "xyx")), rt.f(0.1031), 3, "float"), width=3)
-        p3 = rt.binary("+", p3, rt.dot(p3, rt.binary("+", rt.swizzle(p3, "yzx"), rt.f(33.33), 3, "float")), 3, "float")
+        p3[:] = rt.binary("+", p3, rt.dot(p3, rt.binary("+", rt.swizzle(p3, "yzx"), rt.f(33.33), 3, "float")), 3, "float")
         return rt.component_wise("fract", rt.binary("*", rt.binary("+", rt.swizzle(p3, "x"), rt.swizzle(p3, "y"), 1, "float"), rt.swizzle(p3, "z"), 1, "float"), width=1)
     def vnoise__vec2(p):
         p = rt.copy(p, "float")
@@ -39,7 +39,7 @@ def run_pixel(ctx, out):
             if not (rt.binary("<", i, rt.i(5))):
                 break
             v = rt.binary("+", v, rt.binary("*", a, vnoise__vec2(p), 1, "float"), 1, "float")
-            p = rt.binary("*", p, rt.f(2.03), 2, "float")
+            p[:] = rt.binary("*", p, rt.f(2.03), 2, "float")
             a = rt.binary("*", a, rt.f(0.5), 1, "float")
         return v
     def lum__vec3(c):
@@ -79,7 +79,7 @@ def run_pixel(ctx, out):
                 if not (rt.binary("<=", dx, rt.i(1))):
                     break
                 w = rt.binary("*", (rt.f(2.0) if rt.binary("==", dx, rt.i(0)) else rt.f(1.0)), (rt.f(2.0) if rt.binary("==", dy, rt.i(0)) else rt.f(1.0)), 1, "float")
-                sum = rt.binary("+", sum, rt.binary("*", rt.swizzle(rt.texture(_u_flatTex, rt.binary("+", uv, rt.binary("*", rt.construct(2, rt.construct(1, dx), rt.construct(1, dy)), px, 2, "float"), 2, "float")), "rgb"), w, 3, "float"), 3, "float")
+                sum[:] = rt.binary("+", sum, rt.binary("*", rt.swizzle(rt.texture(_u_flatTex, rt.binary("+", uv, rt.binary("*", rt.construct(2, rt.construct(1, dx), rt.construct(1, dy)), px, 2, "float"), 2, "float")), "rgb"), w, 3, "float"), 3, "float")
                 wsum = rt.binary("+", wsum, w, 1, "float")
         return rt.binary("/", sum, wsum, 3, "float")
     def sCurve__float(x):
@@ -130,8 +130,8 @@ def run_pixel(ctx, out):
         globalCoord = rt.binary("+", rt.component_wise("floor", rt.swizzle(ctx.frag_coord, "xy"), width=2), _u_tileOffset, 2, "float")
         outc = modeColor__vec2_vec3_vec2(uv, c, globalCoord)
         grained = rt.binary("*", outc, rt.binary("+", rt.f(0.85), rt.binary("*", rt.f(0.3), vnoise__vec2(rt.binary("/", globalCoord, rt.f(2.0), 2, "float")), 1, "float"), 1, "float"), 3, "float")
-        outc = rt.component_wise("mix", outc, grained, rt.binary("*", rt.binary("/", _u_textureAmount, rt.f(100.0), 1, "float"), rt.f(0.5), 1, "float"), width=3)
-        g.fragColor = rt.construct(4, rt.component_wise("clamp", outc, rt.f(0.0), rt.f(1.0), width=3), rt.swizzle(src, "a"))
+        outc[:] = rt.component_wise("mix", outc, grained, rt.binary("*", rt.binary("/", _u_textureAmount, rt.f(100.0), 1, "float"), rt.f(0.5), 1, "float"), width=3)
+        g.fragColor[:] = rt.construct(4, rt.component_wise("clamp", outc, rt.f(0.0), rt.f(1.0), width=3), rt.swizzle(src, "a"))
     main__void()
     _c = g.fragColor
     out[0] = rt.f32(_c[0]); out[1] = rt.f32(_c[1]); out[2] = rt.f32(_c[2]); out[3] = rt.f32(_c[3])

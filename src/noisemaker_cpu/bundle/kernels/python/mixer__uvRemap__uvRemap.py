@@ -36,23 +36,23 @@ def run_pixel(ctx, out):
         sampleFromB = (rt.i(1) if rt.binary("==", _u_mapSource, rt.i(0)) else rt.i(0))
         rawUV = rt.construct(2, 0.0)
         if rt.binary("==", _u_channel, rt.i(0)):
-            rawUV = rt.swizzle(mapColor, "rg")
+            rawUV[:] = rt.swizzle(mapColor, "rg")
         else:
             if rt.binary("==", _u_channel, rt.i(1)):
-                rawUV = rt.construct(2, rt.swizzle(mapColor, "r"), rt.swizzle(mapColor, "b"))
+                rawUV[:] = rt.construct(2, rt.swizzle(mapColor, "r"), rt.swizzle(mapColor, "b"))
             else:
-                rawUV = rt.construct(2, rt.swizzle(mapColor, "g"), rt.swizzle(mapColor, "b"))
+                rawUV[:] = rt.construct(2, rt.swizzle(mapColor, "g"), rt.swizzle(mapColor, "b"))
         s = rt.binary("/", _u_scale, rt.f(100.0), 1, "float")
         remappedUV = rt.binary("+", rt.binary("*", rawUV, s, 2, "float"), _u_offset, 2, "float")
-        remappedUV = applyWrap__vec2_int(remappedUV, _u_wrap)
+        remappedUV[:] = applyWrap__vec2_int(remappedUV, _u_wrap)
         sampleUV = rt.binary("/", rt.binary("-", rt.binary("*", remappedUV, _u_fullResolution, 2, "float"), _u_tileOffset, 2, "float"), _u_resolution, 2, "float")
-        sampleUV = rt.component_wise("fract", sampleUV, width=2)
+        sampleUV[:] = rt.component_wise("fract", sampleUV, width=2)
         result = rt.construct(4, 0.0)
         if rt.binary("==", sampleFromB, rt.i(1)):
-            result = rt.texture(_u_tex, sampleUV)
+            result[:] = rt.texture(_u_tex, sampleUV)
         else:
-            result = rt.texture(_u_inputTex, sampleUV)
-        g.fragColor = result
+            result[:] = rt.texture(_u_inputTex, sampleUV)
+        g.fragColor[:] = result
     main__void()
     _c = g.fragColor
     out[0] = rt.f32(_c[0]); out[1] = rt.f32(_c[1]); out[2] = rt.f32(_c[2]); out[3] = rt.f32(_c[3])

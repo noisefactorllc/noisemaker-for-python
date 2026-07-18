@@ -60,12 +60,12 @@ def run_pixel(ctx, out):
             if not (rt.binary("<", i, rt.i(9))):
                 break
             texSample = rt.swizzle(rt.texture(_u_inputTex, rt.binary("/", rt.binary("-", rt.binary("*", rt.binary("+", uv, rt.binary("*", rt.binary("*", offsets[int(i)], _u_amount, 2, "float"), _u_renderScale, 2, "float"), 2, "float"), _u_fullResolution, 2, "float"), _u_tileOffset, 2, "float"), rt.construct(2, rt.texture_size(_u_inputTex)), 2, "float")), "rgb")
-            convX = rt.binary("+", convX, rt.binary("*", texSample, sobel_x[int(i)], 3, "float"), 3, "float")
-            convY = rt.binary("+", convY, rt.binary("*", texSample, sobel_y[int(i)], 3, "float"), 3, "float")
+            convX[:] = rt.binary("+", convX, rt.binary("*", texSample, sobel_x[int(i)], 3, "float"), 3, "float")
+            convY[:] = rt.binary("+", convY, rt.binary("*", texSample, sobel_y[int(i)], 3, "float"), 3, "float")
         dist = rt.distance(convX, convY)
         result = rt.binary("*", rt.swizzle(origColor, "rgb"), dist, 3, "float")
         blended = rt.component_wise("mix", rt.swizzle(origColor, "rgb"), result, _u_alpha, width=3)
-        g.fragColor = rt.construct(4, blended, rt.swizzle(origColor, "a"))
+        g.fragColor[:] = rt.construct(4, blended, rt.swizzle(origColor, "a"))
     main__void()
     _c = g.fragColor
     out[0] = rt.f32(_c[0]); out[1] = rt.f32(_c[1]); out[2] = rt.f32(_c[2]); out[3] = rt.f32(_c[3])

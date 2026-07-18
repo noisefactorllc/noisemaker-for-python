@@ -32,21 +32,21 @@ def run_pixel(ctx, out):
         m = rt.binary("-", v, c, 1, "float")
         rgb = rt.construct(3, 0.0)
         if rt.binary("<", hp, rt.f(1.0)):
-            rgb = rt.construct(3, c, x, rt.f(0.0))
+            rgb[:] = rt.construct(3, c, x, rt.f(0.0))
         else:
             if rt.binary("<", hp, rt.f(2.0)):
-                rgb = rt.construct(3, x, c, rt.f(0.0))
+                rgb[:] = rt.construct(3, x, c, rt.f(0.0))
             else:
                 if rt.binary("<", hp, rt.f(3.0)):
-                    rgb = rt.construct(3, rt.f(0.0), c, x)
+                    rgb[:] = rt.construct(3, rt.f(0.0), c, x)
                 else:
                     if rt.binary("<", hp, rt.f(4.0)):
-                        rgb = rt.construct(3, rt.f(0.0), x, c)
+                        rgb[:] = rt.construct(3, rt.f(0.0), x, c)
                     else:
                         if rt.binary("<", hp, rt.f(5.0)):
-                            rgb = rt.construct(3, x, rt.f(0.0), c)
+                            rgb[:] = rt.construct(3, x, rt.f(0.0), c)
                         else:
-                            rgb = rt.construct(3, c, rt.f(0.0), x)
+                            rgb[:] = rt.construct(3, c, rt.f(0.0), x)
         return rt.binary("+", rgb, rt.construct(3, m), 3, "float")
     def oklab2linear__vec3(lab):
         lab = rt.copy(lab, "float")
@@ -83,7 +83,7 @@ def run_pixel(ctx, out):
         uv = rt.binary("/", rt.swizzle(ctx.frag_coord, "xy"), texSize, 2, "float")
         inputColor = rt.texture(_u_inputTex, uv)
         if (bool(rt.binary("<=", _u_paletteIndex, rt.i(0))) or bool(rt.binary(">", _u_paletteIndex, g.PALETTE_COUNT))):
-            g.fragColor = inputColor
+            g.fragColor[:] = inputColor
             return
         lum = rt.dot(rt.swizzle(inputColor, "rgb"), rt.construct(3, rt.f(0.299), rt.f(0.587), rt.f(0.114)))
         t = rt.binary("+", rt.binary("*", lum, _u_repeat, 1, "float"), rt.binary("*", _u_offset, rt.f(0.01), 1, "float"), 1, "float")
@@ -97,14 +97,14 @@ def run_pixel(ctx, out):
         paletteColor = cosinePalette__float_vec3_vec3_vec3_vec3(t, rt.swizzle(entry[0], "xyz"), rt.swizzle(entry[1], "xyz"), rt.swizzle(entry[2], "xyz"), rt.swizzle(entry[3], "xyz"))
         finalColor = rt.construct(3, 0.0)
         if rt.binary("==", mode, g.MODE_HSV):
-            finalColor = hsv2rgb__vec3(paletteColor)
+            finalColor[:] = hsv2rgb__vec3(paletteColor)
         else:
             if rt.binary("==", mode, g.MODE_OKLAB):
-                finalColor = oklab2rgb__vec3(paletteColor)
+                finalColor[:] = oklab2rgb__vec3(paletteColor)
             else:
-                finalColor = paletteColor
+                finalColor[:] = paletteColor
         blendedColor = rt.component_wise("mix", rt.swizzle(inputColor, "rgb"), finalColor, _u_alpha, width=3)
-        g.fragColor = rt.construct(4, blendedColor, rt.swizzle(inputColor, "a"))
+        g.fragColor[:] = rt.construct(4, blendedColor, rt.swizzle(inputColor, "a"))
     main__void()
     _c = g.fragColor
     out[0] = rt.f32(_c[0]); out[1] = rt.f32(_c[1]); out[2] = rt.f32(_c[2]); out[3] = rt.f32(_c[3])

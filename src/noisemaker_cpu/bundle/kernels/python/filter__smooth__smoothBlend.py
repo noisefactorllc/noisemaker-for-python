@@ -94,7 +94,7 @@ def run_pixel(ctx, out):
             if rt.binary(">=", i, count):
                 break
             offset = rt.binary("*", getSampleOffset__int_int(i, count), _u_radius, 2, "float")
-            sum = rt.binary("+", sum, sampleBilinear__vec2_ivec2(rt.binary("+", uv, rt.binary("*", offset, texelSize, 2, "float"), 2, "float"), texSize), 4, "float")
+            sum[:] = rt.binary("+", sum, sampleBilinear__vec2_ivec2(rt.binary("+", uv, rt.binary("*", offset, texelSize, 2, "float"), 2, "float"), texSize), 4, "float")
         return rt.binary("/", sum, rt.construct(1, count), 4, "float")
     def searchEdge__ivec2_ivec2_ivec2_int(coord, dir, maxC, component):
         coord = rt.copy(coord, "int")
@@ -137,7 +137,7 @@ def run_pixel(ctx, out):
             edgeLength = rt.binary("+", rt.binary("+", distLeft, distRight, 1, "float"), rt.f(1.0), 1, "float")
             weight = rt.component_wise("clamp", rt.binary("/", rt.binary("*", _u_radius, rt.f(0.5), 1, "float"), rt.component_wise("sqrt", edgeLength, width=1), 1, "float"), rt.f(0.0), rt.f(0.5), width=1)
             neighbor = rt.texel_fetch(_u_inputTex, rt.component_wise("clamp", rt.binary("+", coord, rt.construct(2, rt.i(0), rt.i(1), base="int"), 2, "int"), rt.construct(2, rt.i(0), base="int"), maxC, width=2), rt.i(0))
-            blended = rt.component_wise("mix", blended, neighbor, weight, width=4)
+            blended[:] = rt.component_wise("mix", blended, neighbor, weight, width=4)
         distUp = rt.f(0.0)
         distDown = rt.f(0.0)
         if rt.binary(">", edgeV, rt.f(0.5)):
@@ -146,7 +146,7 @@ def run_pixel(ctx, out):
             edgeLength = rt.binary("+", rt.binary("+", distUp, distDown, 1, "float"), rt.f(1.0), 1, "float")
             weight = rt.component_wise("clamp", rt.binary("/", rt.binary("*", _u_radius, rt.f(0.5), 1, "float"), rt.component_wise("sqrt", edgeLength, width=1), 1, "float"), rt.f(0.0), rt.f(0.5), width=1)
             neighbor = rt.texel_fetch(_u_inputTex, rt.component_wise("clamp", rt.binary("+", coord, rt.construct(2, rt.i(1), rt.i(0), base="int"), 2, "int"), rt.construct(2, rt.i(0), base="int"), maxC, width=2), rt.i(0))
-            blended = rt.component_wise("mix", blended, neighbor, weight, width=4)
+            blended[:] = rt.component_wise("mix", blended, neighbor, weight, width=4)
         return blended
     def edgeBlur__ivec2(texSize):
         texSize = rt.copy(texSize, "int")
@@ -183,7 +183,7 @@ def run_pixel(ctx, out):
                     continue
                 d = rt.construct(1, rt.binary("+", rt.binary("*", dx, dx, 1, "int"), rt.binary("*", dy, dy, 1, "int"), 1, "int"))
                 w = rt.component_wise("exp", rt.binary("/", rt.unary("-", d), sigma2, 1, "float"), width=1)
-                sum = rt.binary("+", sum, rt.binary("*", rt.texel_fetch(_u_inputTex, rt.component_wise("clamp", rt.binary("+", coord, rt.construct(2, dx, dy, base="int"), 2, "int"), rt.construct(2, rt.i(0), base="int"), maxC, width=2), rt.i(0)), w, 4, "float"), 4, "float")
+                sum[:] = rt.binary("+", sum, rt.binary("*", rt.texel_fetch(_u_inputTex, rt.component_wise("clamp", rt.binary("+", coord, rt.construct(2, dx, dy, base="int"), 2, "int"), rt.construct(2, rt.i(0), base="int"), maxC, width=2), rt.i(0)), w, 4, "float"), 4, "float")
                 totalWeight = rt.binary("+", totalWeight, w, 1, "float")
         return rt.binary("/", sum, totalWeight, 4, "float")
     def main__void():
@@ -194,13 +194,13 @@ def run_pixel(ctx, out):
         original = rt.texel_fetch(_u_inputTex, rt.construct(2, rt.swizzle(ctx.frag_coord, "xy"), base="int"), rt.i(0))
         result = rt.construct(4, 0.0)
         if rt.binary("==", _u_smoothType, rt.i(0)):
-            result = msaaBlend__vec2_vec2_ivec2(uv, texelSize, texSize)
+            result[:] = msaaBlend__vec2_vec2_ivec2(uv, texelSize, texSize)
         else:
             if rt.binary("==", _u_smoothType, rt.i(1)):
-                result = smaaBlend__ivec2(texSize)
+                result[:] = smaaBlend__ivec2(texSize)
             else:
-                result = edgeBlur__ivec2(texSize)
-        g.fragColor = rt.component_wise("mix", original, result, _u_strength, width=4)
+                result[:] = edgeBlur__ivec2(texSize)
+        g.fragColor[:] = rt.component_wise("mix", original, result, _u_strength, width=4)
     main__void()
     _c = g.fragColor
     out[0] = rt.f32(_c[0]); out[1] = rt.f32(_c[1]); out[2] = rt.f32(_c[2]); out[3] = rt.f32(_c[3])

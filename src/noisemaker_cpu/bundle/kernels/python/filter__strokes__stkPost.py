@@ -33,7 +33,7 @@ def run_pixel(ctx, out):
                 if not (rt.binary("<=", dx, rt.i(1))):
                     break
                 w = rt.binary("*", (rt.f(2.0) if rt.binary("==", dx, rt.i(0)) else rt.f(1.0)), (rt.f(2.0) if rt.binary("==", dy, rt.i(0)) else rt.f(1.0)), 1, "float")
-                sum = rt.binary("+", sum, rt.binary("*", rt.swizzle(rt.texture(_u_smearTex, rt.binary("+", uv, rt.binary("*", rt.construct(2, rt.construct(1, dx), rt.construct(1, dy)), px, 2, "float"), 2, "float")), "rgb"), w, 3, "float"), 3, "float")
+                sum[:] = rt.binary("+", sum, rt.binary("*", rt.swizzle(rt.texture(_u_smearTex, rt.binary("+", uv, rt.binary("*", rt.construct(2, rt.construct(1, dx), rt.construct(1, dy)), px, 2, "float"), 2, "float")), "rgb"), w, 3, "float"), 3, "float")
                 wsum = rt.binary("+", wsum, w, 1, "float")
         return rt.binary("/", sum, wsum, 3, "float")
     def main__void():
@@ -42,7 +42,7 @@ def run_pixel(ctx, out):
         c = rt.swizzle(rt.texture(_u_smearTex, uv), "rgb")
         tent = tent3x3__vec2(uv)
         sharpened = rt.binary("+", c, rt.binary("*", rt.binary("-", c, tent, 3, "float"), rt.binary("/", _u_sharpness, rt.f(33.0), 1, "float"), 3, "float"), 3, "float")
-        g.fragColor = rt.construct(4, rt.component_wise("clamp", sharpened, rt.f(0.0), rt.f(1.0), width=3), rt.swizzle(src, "a"))
+        g.fragColor[:] = rt.construct(4, rt.component_wise("clamp", sharpened, rt.f(0.0), rt.f(1.0), width=3), rt.swizzle(src, "a"))
     main__void()
     _c = g.fragColor
     out[0] = rt.f32(_c[0]); out[1] = rt.f32(_c[1]); out[2] = rt.f32(_c[2]); out[3] = rt.f32(_c[3])

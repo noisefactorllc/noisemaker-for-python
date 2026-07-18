@@ -20,7 +20,7 @@ def run_pixel(ctx, out):
         mag = rt.component_wise("max", rt.component_wise("max", rt.component_wise("abs", rt.swizzle(diff, "r"), width=1), rt.component_wise("abs", rt.swizzle(diff, "g"), width=1), width=1), rt.component_wise("abs", rt.swizzle(diff, "b"), width=1), width=1)
         gate = rt.component_wise("smoothstep", t, rt.binary("+", t, rt.f(0.02), 1, "float"), mag, width=1)
         outc = rt.binary("+", rt.swizzle(src, "rgb"), rt.binary("*", rt.binary("*", diff, rt.binary("/", _u_amount, rt.f(100.0), 1, "float"), 3, "float"), gate, 3, "float"), 3, "float")
-        g.fragColor = rt.construct(4, rt.component_wise("clamp", outc, rt.f(0.0), rt.f(1.0), width=3), rt.swizzle(src, "a"))
+        g.fragColor[:] = rt.construct(4, rt.component_wise("clamp", outc, rt.f(0.0), rt.f(1.0), width=3), rt.swizzle(src, "a"))
     main__void()
     _c = g.fragColor
     out[0] = rt.f32(_c[0]); out[1] = rt.f32(_c[1]); out[2] = rt.f32(_c[2]); out[3] = rt.f32(_c[3])

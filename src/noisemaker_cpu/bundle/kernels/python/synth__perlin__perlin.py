@@ -25,11 +25,11 @@ def run_pixel(ctx, out):
     g.Z_PERIOD = rt.f(4.0)
     def pcg__uvec3(v):
         v = rt.copy(v, "uint")
-        v = rt.binary("+", rt.binary("*", v, rt.construct(1, rt.i(1664525), base="uint"), 3, "uint"), rt.construct(1, rt.i(1013904223), base="uint"), 3, "uint")
+        v[:] = rt.binary("+", rt.binary("*", v, rt.construct(1, rt.i(1664525), base="uint"), 3, "uint"), rt.construct(1, rt.i(1013904223), base="uint"), 3, "uint")
         v = rt.assign_swizzle(v, "x", rt.binary("+", rt.swizzle(v, "x"), rt.binary("*", rt.swizzle(v, "y"), rt.swizzle(v, "z"), 1, "uint"), 1, "uint"))
         v = rt.assign_swizzle(v, "y", rt.binary("+", rt.swizzle(v, "y"), rt.binary("*", rt.swizzle(v, "z"), rt.swizzle(v, "x"), 1, "uint"), 1, "uint"))
         v = rt.assign_swizzle(v, "z", rt.binary("+", rt.swizzle(v, "z"), rt.binary("*", rt.swizzle(v, "x"), rt.swizzle(v, "y"), 1, "uint"), 1, "uint"))
-        v = rt.binary("^", v, rt.binary(">>", v, rt.construct(1, rt.i(16), base="uint"), 3, "uint"), 3, "uint")
+        v[:] = rt.binary("^", v, rt.binary(">>", v, rt.construct(1, rt.i(16), base="uint"), 3, "uint"), 3, "uint")
         v = rt.assign_swizzle(v, "x", rt.binary("+", rt.swizzle(v, "x"), rt.binary("*", rt.swizzle(v, "y"), rt.swizzle(v, "z"), 1, "uint"), 1, "uint"))
         v = rt.assign_swizzle(v, "y", rt.binary("+", rt.swizzle(v, "y"), rt.binary("*", rt.swizzle(v, "z"), rt.swizzle(v, "x"), 1, "uint"), 1, "uint"))
         v = rt.assign_swizzle(v, "z", rt.binary("+", rt.swizzle(v, "z"), rt.binary("*", rt.swizzle(v, "x"), rt.swizzle(v, "y"), 1, "uint"), 1, "uint"))
@@ -42,13 +42,13 @@ def run_pixel(ctx, out):
         return rt.binary("/", rt.construct(3, pcg__uvec3(rt.construct(3, p, base="uint"))), rt.construct(1, rt.construct(1, rt.i(4294967295), base="uint")), 3, "float")
     def hash3__vec3(p):
         p = rt.copy(p, "float")
-        p = rt.binary("+", p, rt.binary("*", rt.construct(1, _u_seed), rt.f(0.1), 1, "float"), 3, "float")
+        p[:] = rt.binary("+", p, rt.binary("*", rt.construct(1, _u_seed), rt.f(0.1), 1, "float"), 3, "float")
         q = rt.construct(3, rt.binary("+", rt.construct(3, rt.binary("*", p, rt.f(1000.0), 3, "float"), base="int"), rt.i(65536), 3, "int"), base="uint")
-        q = rt.binary("+", rt.binary("*", q, rt.i(1664525), 3, "uint"), rt.i(1013904223), 3, "uint")
+        q[:] = rt.binary("+", rt.binary("*", q, rt.i(1664525), 3, "uint"), rt.i(1013904223), 3, "uint")
         q = rt.assign_swizzle(q, "x", rt.binary("+", rt.swizzle(q, "x"), rt.binary("*", rt.swizzle(q, "y"), rt.swizzle(q, "z"), 1, "uint"), 1, "uint"))
         q = rt.assign_swizzle(q, "y", rt.binary("+", rt.swizzle(q, "y"), rt.binary("*", rt.swizzle(q, "z"), rt.swizzle(q, "x"), 1, "uint"), 1, "uint"))
         q = rt.assign_swizzle(q, "z", rt.binary("+", rt.swizzle(q, "z"), rt.binary("*", rt.swizzle(q, "x"), rt.swizzle(q, "y"), 1, "uint"), 1, "uint"))
-        q = rt.binary("^", q, rt.binary(">>", q, rt.i(16), 3, "uint"), 3, "uint")
+        q[:] = rt.binary("^", q, rt.binary(">>", q, rt.i(16), 3, "uint"), 3, "uint")
         q = rt.assign_swizzle(q, "x", rt.binary("+", rt.swizzle(q, "x"), rt.binary("*", rt.swizzle(q, "y"), rt.swizzle(q, "z"), 1, "uint"), 1, "uint"))
         q = rt.assign_swizzle(q, "y", rt.binary("+", rt.swizzle(q, "y"), rt.binary("*", rt.swizzle(q, "z"), rt.swizzle(q, "x"), 1, "uint"), 1, "uint"))
         q = rt.assign_swizzle(q, "z", rt.binary("+", rt.swizzle(q, "z"), rt.binary("*", rt.swizzle(q, "x"), rt.swizzle(q, "y"), 1, "uint"), 1, "uint"))
@@ -193,7 +193,7 @@ def run_pixel(ctx, out):
             fi = rt.construct(1, i)
             nx = warpNoise2D__vec2_float(rt.binary("+", rt.binary("*", p, wFreq, 2, "float"), rt.construct(2, rt.binary("+", rt.binary("*", fi, rt.f(5.2), 1, "float"), rt.f(1.7), 1, "float"), rt.binary("+", rt.binary("*", fi, rt.f(1.3), 1, "float"), rt.f(13.7), 1, "float")), 2, "float"), timeAngle)
             ny = warpNoise2D__vec2_float(rt.binary("+", rt.binary("*", p, wFreq, 2, "float"), rt.construct(2, rt.binary("+", rt.binary("*", fi, rt.f(2.8), 1, "float"), rt.f(7.3), 1, "float"), rt.binary("+", rt.binary("*", fi, rt.f(4.1), 1, "float"), rt.f(3.9), 1, "float")), 2, "float"), timeAngle)
-            p = rt.binary("+", p, rt.binary("*", rt.construct(2, nx, ny), disp, 2, "float"), 2, "float")
+            p[:] = rt.binary("+", p, rt.binary("*", rt.construct(2, nx, ny), disp, 2, "float"), 2, "float")
         return p
     def warpNoise3D__vec2_float(p, z):
         p = rt.copy(p, "float")
@@ -216,28 +216,28 @@ def run_pixel(ctx, out):
             fi = rt.construct(1, i)
             nx = warpNoise3D__vec2_float(rt.binary("+", rt.binary("*", p, wFreq, 2, "float"), rt.construct(2, rt.binary("+", rt.binary("*", fi, rt.f(5.2), 1, "float"), rt.f(1.7), 1, "float"), rt.binary("+", rt.binary("*", fi, rt.f(1.3), 1, "float"), rt.f(13.7), 1, "float")), 2, "float"), z)
             ny = warpNoise3D__vec2_float(rt.binary("+", rt.binary("*", p, wFreq, 2, "float"), rt.construct(2, rt.binary("+", rt.binary("*", fi, rt.f(2.8), 1, "float"), rt.f(7.3), 1, "float"), rt.binary("+", rt.binary("*", fi, rt.f(4.1), 1, "float"), rt.f(3.9), 1, "float")), 2, "float"), z)
-            p = rt.binary("+", p, rt.binary("*", rt.construct(2, nx, ny), disp, 2, "float"), 2, "float")
+            p[:] = rt.binary("+", p, rt.binary("*", rt.construct(2, nx, ny), disp, 2, "float"), 2, "float")
         return p
     def main__void():
         globalCoord = rt.binary("+", rt.swizzle(ctx.frag_coord, "xy"), _u_tileOffset, 2, "float")
         res = _u_fullResolution
         if rt.binary("<", rt.swizzle(res, "x"), rt.f(1.0)):
-            res = rt.construct(2, rt.f(1024.0), rt.f(1024.0))
+            res[:] = rt.construct(2, rt.f(1024.0), rt.f(1024.0))
         st = rt.binary("/", rt.binary("+", rt.swizzle(ctx.frag_coord, "xy"), _u_tileOffset, 2, "float"), res, 2, "float")
-        st = rt.binary("-", st, rt.f(0.5), 2, "float")
+        st[:] = rt.binary("-", st, rt.f(0.5), 2, "float")
         st = rt.assign_swizzle(st, "x", rt.binary("*", rt.swizzle(st, "x"), _u_aspect, 1, "float"))
         freq = rt.component_wise("max", rt.f(0.1), rt.binary("/", rt.f(100.0), rt.component_wise("max", _u_scale, rt.f(0.01), width=1), 1, "float"), width=1)
-        st = rt.binary("*", st, freq, 2, "float")
-        st = rt.binary("+", st, rt.f(1000.0), 2, "float")
+        st[:] = rt.binary("*", st, freq, 2, "float")
+        st[:] = rt.binary("+", st, rt.f(1000.0), 2, "float")
         timeAngle = rt.binary("*", rt.binary("*", _u_time, _u_speed, 1, "float"), g.TAU, 1, "float")
         zWarp = rt.f(0.0)
         if rt.binary("==", _u_DIMENSIONS, rt.i(2)):
             if rt.binary(">", _u_warpIterations, rt.i(0)):
-                st = domainWarp2D__vec2_float_int_float_float(st, timeAngle, _u_warpIterations, _u_warpScale, _u_warpIntensity)
+                st[:] = domainWarp2D__vec2_float_int_float_float(st, timeAngle, _u_warpIterations, _u_warpScale, _u_warpIntensity)
         else:
             zWarp = rt.binary("*", rt.binary("/", timeAngle, g.TAU, 1, "float"), g.Z_PERIOD, 1, "float")
             if rt.binary(">", _u_warpIterations, rt.i(0)):
-                st = domainWarp3D__vec2_float_int_float_float(st, zWarp, _u_warpIterations, _u_warpScale, _u_warpIntensity)
+                st[:] = domainWarp3D__vec2_float_int_float_float(st, zWarp, _u_warpIterations, _u_warpScale, _u_warpIntensity)
         r = rt.f(0.0)
         _g = rt.f(0.0)
         b = rt.f(0.0)
@@ -251,10 +251,10 @@ def run_pixel(ctx, out):
             b = fbm3D__vec2_float_float_int(st, timeAngle, rt.f(2.67), _u_ridges)
         col = rt.construct(3, 0.0)
         if rt.binary("==", _u_colorMode, rt.i(0)):
-            col = rt.construct(3, r)
+            col[:] = rt.construct(3, r)
         else:
-            col = rt.construct(3, r, _g, b)
-        g.fragColor = rt.construct(4, col, rt.f(1.0))
+            col[:] = rt.construct(3, r, _g, b)
+        g.fragColor[:] = rt.construct(4, col, rt.f(1.0))
     main__void()
     _c = g.fragColor
     out[0] = rt.f32(_c[0]); out[1] = rt.f32(_c[1]); out[2] = rt.f32(_c[2]); out[3] = rt.f32(_c[3])

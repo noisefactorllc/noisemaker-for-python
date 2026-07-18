@@ -21,7 +21,7 @@ import tempfile
 import click
 
 from .png import decode_png, encode_png
-from .renderer import _meta, render_effect
+from .renderer import _meta, render_dsl, render_effect
 
 MAX_SEED_VALUE = 2**32 - 1
 
@@ -86,6 +86,30 @@ def _write_png(surface, filename: str) -> None:
         handle.write(encode_png(surface))
 
 
+def _load_png(path: str):
+    with open(path, "rb") as handle:
+        return decode_png(handle.read())
+
+
+def _load_external_textures(input_filename: str | None, textures: tuple[str, ...]) -> dict:
+    """Build the DSL's external-texture map. --input binds one PNG as both
+    imageTex and textTex (mirroring the JS CLI); --texture NAME=FILE binds a
+    named sampler (repeatable)."""
+    external = {}
+    if input_filename:
+        surface = _load_png(input_filename)
+        external["imageTex"] = surface
+        external["textTex"] = surface
+    for pair in textures:
+        name, sep, path = pair.partition("=")
+        if not sep or not name or not path:
+            raise click.BadParameter(f"Expected NAME=FILE, received {pair!r}", param_hint="--texture")
+        if not os.path.isfile(path):
+            raise click.BadParameter(f"No such texture file: {path}", param_hint="--texture")
+        external[name] = _load_png(path)
+    return external
+
+
 @click.group(
     help="""
         Noisemaker for Python — render the Noisemaker shader catalog on the CPU.
@@ -123,8 +147,7 @@ def generate(width, height, time_value, seed, filename, params, effect):
 @click.argument("input_filename", type=click.Path(exists=True, dir_okay=False))
 def apply(time_value, seed, filename, params, effect, input_filename):
     effect, seed = _prologue(effect, seed, "filter")
-    with open(input_filename, "rb") as handle:
-        source = decode_png(handle.read())
+    source = _load_png(input_filename)
     surface = render_effect(
         effect,
         _parse_params(params),
@@ -200,6 +223,27 @@ def animate(width, height, seed, filename, frame_count, fps, speed, save_frames,
     finally:
         if not save_frames:
             shutil.rmtree(frames_dir, ignore_errors=True)
+
+
+@main.command(help="Render a Polymorphic DSL program read from STDIN")
+@click.option("--width", type=POSITIVE, default=512, help="Output width, in pixels")
+@click.option("--height", type=POSITIVE, default=512, help="Output height, in pixels")
+@click.option("--time", "time_value", type=float, default=0.0, help="Time value for the Z axis / animation phase")
+@click.option("--seed", type=int, default=1, help="Deterministic render seed threaded into effect seed params")
+@click.option("--filename", type=click.Path(dir_okay=False), default="art.png", help="Image output filename (.png)")
+@click.option(
+    "--input",
+    "input_filename",
+    type=click.Path(exists=True, dir_okay=False),
+    help="PNG bound as imageTex and textTex",
+)
+@click.option("--texture", "textures", multiple=True, metavar="NAME=FILE", help="External PNG texture (repeatable)")
+def run(width, height, time_value, seed, filename, input_filename, textures):
+    source = sys.stdin.read()
+    external = _load_external_textures(input_filename, textures)
+    surface = render_dsl(source, width=width, height=height, seed=seed, time=time_value, external_textures=external)
+    _write_png(surface, filename)
+    click.echo(f"Rendered {surface.width}x{surface.height} -> {filename}")
 
 
 if __name__ == "__main__":

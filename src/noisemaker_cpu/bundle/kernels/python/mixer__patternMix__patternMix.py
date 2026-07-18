@@ -50,7 +50,7 @@ def run_pixel(ctx, out):
         return rt.binary("-", rt.f(1.0), rt.component_wise("smoothstep", rt.binary("-", radius, _u_smoothness, 1, "float"), rt.binary("+", radius, _u_smoothness, 1, "float"), d, width=1), 1, "float")
     def hexDist__vec2(p):
         p = rt.copy(p, "float")
-        p = rt.component_wise("abs", p, width=2)
+        p[:] = rt.component_wise("abs", p, width=2)
         return rt.component_wise("max", rt.binary("+", rt.binary("*", rt.swizzle(p, "x"), rt.f(0.5), 1, "float"), rt.binary("*", rt.swizzle(p, "y"), rt.binary("/", rt.f(1.7320508075688772), rt.f(2.0), 1, "float"), 1, "float"), 1, "float"), rt.swizzle(p, "x"), width=1)
     def hexagons__vec2_float(p, t):
         p = rt.copy(p, "float")
@@ -107,8 +107,8 @@ def run_pixel(ctx, out):
         p = rt.binary("*", rt.binary("-", globalUV, rt.f(0.5), 2, "float"), rt.f(2.0), 2, "float")
         p = rt.assign_swizzle(p, "x", rt.binary("*", rt.swizzle(p, "x"), aspect, 1, "float"))
         rad = rt.binary("/", rt.binary("*", _u_rotation, rt.f(3.14159265359), 1, "float"), rt.f(180.0), 1, "float")
-        p = rotate2D__vec2_float(p, rad)
-        p = rt.binary("*", p, rt.binary("-", rt.f(21.0), _u_scale, 1, "float"), 2, "float")
+        p[:] = rotate2D__vec2_float(p, rad)
+        p[:] = rt.binary("*", p, rt.binary("-", rt.f(21.0), _u_scale, 1, "float"), 2, "float")
         m = rt.f(0.0)
         if rt.binary("==", _u_patternType, rt.i(0)):
             m = checkerboard__vec2_float(p, _u_smoothness)
@@ -140,7 +140,7 @@ def run_pixel(ctx, out):
             m = rt.binary("-", rt.f(1.0), m, 1, "float")
         color = rt.component_wise("mix", colorA, colorB, m, width=4)
         color = rt.assign_swizzle(color, "a", rt.component_wise("max", rt.swizzle(colorA, "a"), rt.swizzle(colorB, "a"), width=1))
-        g.fragColor = color
+        g.fragColor[:] = color
     main__void()
     _c = g.fragColor
     out[0] = rt.f32(_c[0]); out[1] = rt.f32(_c[1]); out[2] = rt.f32(_c[2]); out[3] = rt.f32(_c[3])

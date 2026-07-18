@@ -103,7 +103,7 @@ def run_pixel(ctx, out):
         y_value = rt.component_wise("clamp", rt.binary("+", rt.binary("*", dy, rt.f(0.5), 1, "float"), rt.f(0.5), 1, "float"), rt.f(0.0), rt.f(1.0), width=1)
         z_value = rt.component_wise("clamp", rt.binary("-", rt.f(1.0), rt.binary("*", rt.binary("+", rt.component_wise("abs", dx, width=1), rt.component_wise("abs", dy, width=1), 1, "float"), rt.f(0.5), 1, "float"), 1, "float"), rt.f(0.0), rt.f(1.0), width=1)
         texel = rt.texel_fetch(_u_inputTex, rt.construct(2, rt.swizzle(global_id, "xy"), base="int"), rt.i(0))
-        g.fragColor = rt.construct(4, x_value, y_value, z_value, rt.swizzle(texel, "w"))
+        g.fragColor[:] = rt.construct(4, x_value, y_value, z_value, rt.swizzle(texel, "w"))
     main__void()
     _c = g.fragColor
     out[0] = rt.f32(_c[0]); out[1] = rt.f32(_c[1]); out[2] = rt.f32(_c[2]); out[3] = rt.f32(_c[3])

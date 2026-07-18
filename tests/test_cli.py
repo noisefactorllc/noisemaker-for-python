@@ -123,3 +123,24 @@ def test_error_paths():
     assert run("generate", "synth/curl", "--param", "nokey").exit_code != 0
     assert run("apply", "filter/invert", "does-not-exist.png").exit_code != 0
     assert run("generate", "synth/curl", "--width", "0").exit_code != 0  # POSITIVE IntRange
+
+
+def test_run_reads_dsl_from_stdin():
+    program = "search synth\nsolid(color: #336699).write(o0)\nrender(o0)\n"
+    with CliRunner().isolated_filesystem():
+        result = CliRunner().invoke(
+            cli.main, ["run", "--width", "8", "--height", "8", "--filename", "out.png"], input=program
+        )
+        assert result.exit_code == 0, result.output
+        surface = _png("out.png")
+        assert (surface.width, surface.height) == (8, 8)
+        assert list(surface.to_rgba8()[:4]) == [0x33, 0x66, 0x99, 0xFF]
+
+
+def test_run_chain_and_dsl_errors():
+    with CliRunner().isolated_filesystem():
+        chain = "search synth, filter\nnoise(seed: 3).vignette().write(o0)\nrender(o0)\n"
+        assert CliRunner().invoke(cli.main, ["run", "--width", "8", "--height", "8"], input=chain).exit_code == 0
+        # A program with no `search` directive is a DSL error and exits non-zero.
+        bad = CliRunner().invoke(cli.main, ["run"], input="solid().write(o0)\nrender(o0)\n")
+        assert bad.exit_code != 0

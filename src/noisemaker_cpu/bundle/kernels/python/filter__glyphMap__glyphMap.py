@@ -16,11 +16,11 @@ def run_pixel(ctx, out):
     g.GLYPH_COUNT = rt.i(16)
     def pcg__uvec3(v):
         v = rt.copy(v, "uint")
-        v = rt.binary("+", rt.binary("*", v, rt.i(1664525), 3, "uint"), rt.i(1013904223), 3, "uint")
+        v[:] = rt.binary("+", rt.binary("*", v, rt.i(1664525), 3, "uint"), rt.i(1013904223), 3, "uint")
         v = rt.assign_swizzle(v, "x", rt.binary("+", rt.swizzle(v, "x"), rt.binary("*", rt.swizzle(v, "y"), rt.swizzle(v, "z"), 1, "uint"), 1, "uint"))
         v = rt.assign_swizzle(v, "y", rt.binary("+", rt.swizzle(v, "y"), rt.binary("*", rt.swizzle(v, "z"), rt.swizzle(v, "x"), 1, "uint"), 1, "uint"))
         v = rt.assign_swizzle(v, "z", rt.binary("+", rt.swizzle(v, "z"), rt.binary("*", rt.swizzle(v, "x"), rt.swizzle(v, "y"), 1, "uint"), 1, "uint"))
-        v = rt.binary("^", v, rt.binary(">>", v, rt.i(16), 3, "uint"), 3, "uint")
+        v[:] = rt.binary("^", v, rt.binary(">>", v, rt.i(16), 3, "uint"), 3, "uint")
         v = rt.assign_swizzle(v, "x", rt.binary("+", rt.swizzle(v, "x"), rt.binary("*", rt.swizzle(v, "y"), rt.swizzle(v, "z"), 1, "uint"), 1, "uint"))
         v = rt.assign_swizzle(v, "y", rt.binary("+", rt.swizzle(v, "y"), rt.binary("*", rt.swizzle(v, "z"), rt.swizzle(v, "x"), 1, "uint"), 1, "uint"))
         v = rt.assign_swizzle(v, "z", rt.binary("+", rt.swizzle(v, "z"), rt.binary("*", rt.swizzle(v, "x"), rt.swizzle(v, "y"), 1, "uint"), 1, "uint"))
@@ -217,7 +217,7 @@ def run_pixel(ctx, out):
         cellCenter = rt.binary("*", rt.binary("+", cellIndex, rt.f(0.5), 2, "float"), csf, 2, "float")
         sampleUV = rt.binary("/", rt.binary("-", cellCenter, _u_tileOffset, 2, "float"), resolution, 2, "float")
         if isTileRendering:
-            sampleUV = rt.component_wise("clamp", sampleUV, rt.f(0.0), rt.f(1.0), width=2)
+            sampleUV[:] = rt.component_wise("clamp", sampleUV, rt.f(0.0), rt.f(1.0), width=2)
         srcColor = rt.texture(_u_inputTex, sampleUV)
         luma = rt.dot(rt.swizzle(srcColor, "rgb"), rt.construct(3, rt.f(0.299), rt.f(0.587), rt.f(0.114)))
         glyphIdx = rt.construct(1, rt.component_wise("floor", rt.binary("*", luma, rt.construct(1, g.GLYPH_COUNT), 1, "float"), width=1), base="int")
@@ -231,9 +231,9 @@ def run_pixel(ctx, out):
                 glyphIdx = rt.binary("-", glyphIdx, rt.i(1), 1, "int")
         glyphVal = glyphPixel__int_int_int(glyphIdx, gx, gy)
         if rt.binary(">", _u_colorMode, rt.i(0)):
-            g.fragColor = rt.construct(4, rt.binary("*", rt.swizzle(srcColor, "rgb"), glyphVal, 3, "float"), rt.f(1.0))
+            g.fragColor[:] = rt.construct(4, rt.binary("*", rt.swizzle(srcColor, "rgb"), glyphVal, 3, "float"), rt.f(1.0))
         else:
-            g.fragColor = rt.construct(4, rt.construct(3, glyphVal), rt.f(1.0))
+            g.fragColor[:] = rt.construct(4, rt.construct(3, glyphVal), rt.f(1.0))
     main__void()
     _c = g.fragColor
     out[0] = rt.f32(_c[0]); out[1] = rt.f32(_c[1]); out[2] = rt.f32(_c[2]); out[3] = rt.f32(_c[3])

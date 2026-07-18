@@ -36,7 +36,7 @@ def run_pixel(ctx, out):
         brightnessRgb = rt.construct(3, _u_vignetteBrightness)
         edgeBlend = rt.component_wise("mix", rt.swizzle(texel, "rgb"), brightnessRgb, mask, width=3)
         finalRgb = rt.component_wise("mix", rt.swizzle(texel, "rgb"), edgeBlend, _u_alpha, width=3)
-        g.fragColor = rt.construct(4, finalRgb, rt.swizzle(texel, "a"))
+        g.fragColor[:] = rt.construct(4, finalRgb, rt.swizzle(texel, "a"))
     main__void()
     _c = g.fragColor
     out[0] = rt.f32(_c[0]); out[1] = rt.f32(_c[1]); out[2] = rt.f32(_c[2]); out[3] = rt.f32(_c[3])

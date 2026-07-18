@@ -25,7 +25,7 @@ def run_pixel(ctx, out):
         texSize = rt.texture_size(_u_inputTex)
         uv = rt.binary("/", rt.swizzle(ctx.frag_coord, "xy"), rt.construct(2, texSize), 2, "float")
         st = rt.binary("*", uv, _u_repeat, 2, "float")
-        st = rt.component_wise("fract", st, width=2)
+        st[:] = rt.component_wise("fract", st, width=2)
         wx = edgeWeight__float_float(rt.swizzle(st, "x"), _u_blend)
         wy = edgeWeight__float_float(rt.swizzle(st, "y"), _u_blend)
         c00 = rt.texture(_u_inputTex, st)
@@ -35,7 +35,7 @@ def run_pixel(ctx, out):
         mx0 = rt.component_wise("mix", c00, c10, wx, width=4)
         mx1 = rt.component_wise("mix", c01, c11, wx, width=4)
         result = rt.component_wise("mix", mx0, mx1, wy, width=4)
-        g.fragColor = rt.construct(4, rt.swizzle(result, "rgb"), rt.f(1.0))
+        g.fragColor[:] = rt.construct(4, rt.swizzle(result, "rgb"), rt.f(1.0))
     main__void()
     _c = g.fragColor
     out[0] = rt.f32(_c[0]); out[1] = rt.f32(_c[1]); out[2] = rt.f32(_c[2]); out[3] = rt.f32(_c[3])

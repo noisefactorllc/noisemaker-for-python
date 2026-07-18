@@ -24,11 +24,11 @@ def run_pixel(ctx, out):
     g.PHI = rt.f(1.618033988749895)
     def pcg__uvec3(v):
         v = rt.copy(v, "uint")
-        v = rt.binary("+", rt.binary("*", v, rt.i(1664525), 3, "uint"), rt.i(1013904223), 3, "uint")
+        v[:] = rt.binary("+", rt.binary("*", v, rt.i(1664525), 3, "uint"), rt.i(1013904223), 3, "uint")
         v = rt.assign_swizzle(v, "x", rt.binary("+", rt.swizzle(v, "x"), rt.binary("*", rt.swizzle(v, "y"), rt.swizzle(v, "z"), 1, "uint"), 1, "uint"))
         v = rt.assign_swizzle(v, "y", rt.binary("+", rt.swizzle(v, "y"), rt.binary("*", rt.swizzle(v, "z"), rt.swizzle(v, "x"), 1, "uint"), 1, "uint"))
         v = rt.assign_swizzle(v, "z", rt.binary("+", rt.swizzle(v, "z"), rt.binary("*", rt.swizzle(v, "x"), rt.swizzle(v, "y"), 1, "uint"), 1, "uint"))
-        v = rt.binary("^", v, rt.binary(">>", v, rt.i(16), 3, "uint"), 3, "uint")
+        v[:] = rt.binary("^", v, rt.binary(">>", v, rt.i(16), 3, "uint"), 3, "uint")
         v = rt.assign_swizzle(v, "x", rt.binary("+", rt.swizzle(v, "x"), rt.binary("*", rt.swizzle(v, "y"), rt.swizzle(v, "z"), 1, "uint"), 1, "uint"))
         v = rt.assign_swizzle(v, "y", rt.binary("+", rt.swizzle(v, "y"), rt.binary("*", rt.swizzle(v, "z"), rt.swizzle(v, "x"), 1, "uint"), 1, "uint"))
         v = rt.assign_swizzle(v, "z", rt.binary("+", rt.swizzle(v, "z"), rt.binary("*", rt.swizzle(v, "x"), rt.swizzle(v, "y"), 1, "uint"), 1, "uint"))
@@ -55,15 +55,15 @@ def run_pixel(ctx, out):
         corner = rt.construct(1, rt.binary("*", h, rt.f(4.0), 1, "float"), base="int")
         origin = rt.construct(2, 0.0)
         if rt.binary("==", corner, rt.i(0)):
-            origin = rt.construct(2, rt.unary("-", halfW), rt.unary("-", halfH))
+            origin[:] = rt.construct(2, rt.unary("-", halfW), rt.unary("-", halfH))
         else:
             if rt.binary("==", corner, rt.i(1)):
-                origin = rt.construct(2, halfW, rt.unary("-", halfH))
+                origin[:] = rt.construct(2, halfW, rt.unary("-", halfH))
             else:
                 if rt.binary("==", corner, rt.i(2)):
-                    origin = rt.construct(2, rt.unary("-", halfW), halfH)
+                    origin[:] = rt.construct(2, rt.unary("-", halfW), halfH)
                 else:
-                    origin = rt.construct(2, halfW, halfH)
+                    origin[:] = rt.construct(2, halfW, halfH)
         dist = rt.length(rt.binary("-", centered, origin, 2, "float"))
         return rt.binary("*", rt.component_wise("step", dist, rt.f(0.7), width=1), rt.binary("-", rt.f(1.0), rt.component_wise("step", dist, rt.f(0.5), width=1), 1, "float"), 1, "float")
     def drawShape__int_vec2_float_float_float(shapeType, centered, halfW, halfH, h):
@@ -227,22 +227,22 @@ def run_pixel(ctx, out):
                 texUv = rt.assign_swizzle(texUv, "x", rt.binary("+", rt.f(0.5), rt.binary("*", rt.binary("-", rt.swizzle(texUv, "x"), rt.f(0.5), 1, "float"), ratio, 1, "float"), 1, "float"))
             else:
                 texUv = rt.assign_swizzle(texUv, "y", rt.binary("+", rt.f(0.5), rt.binary("/", rt.binary("-", rt.swizzle(texUv, "y"), rt.f(0.5), 1, "float"), ratio, 1, "float"), 1, "float"))
-            texUv = rt.binary("*", texUv, texScale, 2, "float")
+            texUv[:] = rt.binary("*", texUv, texScale, 2, "float")
             texUv = rt.assign_swizzle(texUv, "x", rt.binary("+", rt.swizzle(texUv, "x"), rt.binary("*", rt.component_wise("mix", cellRand__vec2_float_float_float(cellMin, rt.f(0.0), rt.f(6.0), curVisualTime), cellRand__vec2_float_float_float(cellMin, rt.f(0.0), rt.f(6.0), nextVisualTime), visualBlend, width=1), rt.binary("-", rt.f(1.0), texScale, 1, "float"), 1, "float"), 1, "float"))
             texUv = rt.assign_swizzle(texUv, "y", rt.binary("+", rt.swizzle(texUv, "y"), rt.binary("*", rt.component_wise("mix", cellRand__vec2_float_float_float(cellMin, rt.f(0.0), rt.f(7.0), curVisualTime), cellRand__vec2_float_float_float(cellMin, rt.f(0.0), rt.f(7.0), nextVisualTime), visualBlend, width=1), rt.binary("-", rt.f(1.0), texScale, 1, "float"), 1, "float"), 1, "float"))
             wrapMode = rt.construct(1, _u_wrap, base="int")
             if rt.binary("==", wrapMode, rt.i(0)):
-                texUv = rt.component_wise("abs", rt.binary("-", rt.component_wise("mod", rt.binary("+", texUv, rt.f(1.0), 2, "float"), rt.f(2.0), width=2), rt.f(1.0), 2, "float"), width=2)
+                texUv[:] = rt.component_wise("abs", rt.binary("-", rt.component_wise("mod", rt.binary("+", texUv, rt.f(1.0), 2, "float"), rt.f(2.0), width=2), rt.f(1.0), 2, "float"), width=2)
             else:
                 if rt.binary("==", wrapMode, rt.i(1)):
-                    texUv = rt.component_wise("mod", texUv, rt.f(1.0), width=2)
+                    texUv[:] = rt.component_wise("mod", texUv, rt.f(1.0), width=2)
                 else:
-                    texUv = rt.component_wise("clamp", texUv, rt.f(0.0), rt.f(1.0), width=2)
+                    texUv[:] = rt.component_wise("clamp", texUv, rt.f(0.0), rt.f(1.0), width=2)
             inputColor = rt.swizzle(rt.texture(_u_inputTex, texUv), "rgb")
-            result = rt.component_wise("mix", result, inputColor, blend, width=3)
+            result[:] = rt.component_wise("mix", result, inputColor, blend, width=3)
         if (bool(isOutline) and bool(rt.binary(">", _u_outline, rt.f(0.0)))):
-            result = rt.construct(3, rt.f(0.0))
-        g.fragColor = rt.construct(4, result, rt.f(1.0))
+            result[:] = rt.construct(3, rt.f(0.0))
+        g.fragColor[:] = rt.construct(4, result, rt.f(1.0))
     main__void()
     _c = g.fragColor
     out[0] = rt.f32(_c[0]); out[1] = rt.f32(_c[1]); out[2] = rt.f32(_c[2]); out[3] = rt.f32(_c[3])

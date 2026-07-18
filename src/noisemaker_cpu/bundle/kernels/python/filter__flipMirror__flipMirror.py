@@ -65,7 +65,7 @@ def run_pixel(ctx, out):
                                                     if rt.binary("<", rt.swizzle(warpedUV, "y"), rt.f(0.5)):
                                                         warpedUV = rt.assign_swizzle(warpedUV, "y", rt.binary("-", rt.f(1.0), rt.swizzle(warpedUV, "y"), 1, "float"))
         localUV = rt.component_wise("fract", rt.binary("/", rt.binary("-", rt.binary("*", warpedUV, _u_fullResolution, 2, "float"), _u_tileOffset, 2, "float"), rt.construct(2, texSize), 2, "float"), width=2)
-        g.fragColor = rt.texture(_u_inputTex, localUV)
+        g.fragColor[:] = rt.texture(_u_inputTex, localUV)
     main__void()
     _c = g.fragColor
     out[0] = rt.f32(_c[0]); out[1] = rt.f32(_c[1]); out[2] = rt.f32(_c[2]); out[3] = rt.f32(_c[3])

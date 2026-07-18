@@ -27,9 +27,9 @@ def run_pixel(ctx, out):
         angle = rt.binary("*", rt.binary("*", rot, rt.f(6.28318530718), 1, "float"), rt.unary("-", rt.f(1.0)), 1, "float")
         size = _u_imageSize
         aspect = rt.binary("/", rt.swizzle(size, "x"), rt.swizzle(size, "y"), 1, "float")
-        st = rt.binary("-", st, rt.construct(2, rt.binary("*", rt.f(0.5), aspect, 1, "float"), rt.f(0.5)), 2, "float")
-        st = rt.matrix_mult(rt.construct(4, rt.component_wise("cos", angle, width=1), rt.unary("-", rt.component_wise("sin", angle, width=1)), rt.component_wise("sin", angle, width=1), rt.component_wise("cos", angle, width=1)), st, 2)
-        st = rt.binary("+", st, rt.construct(2, rt.binary("*", rt.f(0.5), aspect, 1, "float"), rt.f(0.5)), 2, "float")
+        st[:] = rt.binary("-", st, rt.construct(2, rt.binary("*", rt.f(0.5), aspect, 1, "float"), rt.f(0.5)), 2, "float")
+        st[:] = rt.matrix_mult(rt.construct(4, rt.component_wise("cos", angle, width=1), rt.unary("-", rt.component_wise("sin", angle, width=1)), rt.component_wise("sin", angle, width=1), rt.component_wise("cos", angle, width=1)), st, 2)
+        st[:] = rt.binary("+", st, rt.construct(2, rt.binary("*", rt.f(0.5), aspect, 1, "float"), rt.f(0.5)), 2, "float")
         return st
     def tile__vec2(st):
         st = rt.copy(st, "float")
@@ -48,12 +48,12 @@ def run_pixel(ctx, out):
     def getImage__vec2(st):
         st = rt.copy(st, "float")
         size = _u_imageSize
-        st = rt.binary("/", rt.swizzle(ctx.frag_coord, "xy"), size, 2, "float")
+        st[:] = rt.binary("/", rt.swizzle(ctx.frag_coord, "xy"), size, 2, "float")
         st = rt.assign_swizzle(st, "y", rt.binary("-", rt.f(1.0), rt.swizzle(st, "y"), 1, "float"))
         scale = rt.binary("/", rt.f(100.0), _u_scaleAmt, 1, "float")
         if rt.binary("==", scale, rt.f(0.0)):
             scale = rt.f(1.0)
-        st = rt.binary("*", st, scale, 2, "float")
+        st[:] = rt.binary("*", st, scale, 2, "float")
         if rt.binary("==", _u_position, rt.i(0)):
             st = rt.assign_swizzle(st, "y", rt.binary("+", rt.swizzle(st, "y"), rt.binary("-", rt.binary("*", rt.binary("/", rt.swizzle(_u_resolution, "y"), rt.swizzle(size, "y"), 1, "float"), scale, 1, "float"), rt.binary("-", scale, rt.binary("*", rt.binary("/", rt.f(1.0), rt.swizzle(size, "y"), 1, "float"), scale, 1, "float"), 1, "float"), 1, "float"), 1, "float"))
         else:
@@ -89,10 +89,10 @@ def run_pixel(ctx, out):
         st = rt.assign_swizzle(st, "x", rt.binary("-", rt.swizzle(st, "x"), rt.binary("*", map__float_float_float_float_float(_u_offsetX, rt.unary("-", rt.f(100.0)), rt.f(100.0), rt.binary("*", rt.binary("/", rt.unary("-", rt.swizzle(_u_resolution, "x")), rt.swizzle(size, "x"), 1, "float"), scale, 1, "float"), rt.binary("*", rt.binary("/", rt.swizzle(_u_resolution, "x"), rt.swizzle(size, "x"), 1, "float"), scale, 1, "float")), rt.f(1.5), 1, "float"), 1, "float"))
         st = rt.assign_swizzle(st, "y", rt.binary("-", rt.swizzle(st, "y"), rt.binary("*", map__float_float_float_float_float(_u_offsetY, rt.unary("-", rt.f(100.0)), rt.f(100.0), rt.binary("*", rt.binary("/", rt.unary("-", rt.swizzle(_u_resolution, "y")), rt.swizzle(size, "y"), 1, "float"), scale, 1, "float"), rt.binary("*", rt.binary("/", rt.swizzle(_u_resolution, "y"), rt.swizzle(size, "y"), 1, "float"), scale, 1, "float")), rt.f(1.5), 1, "float"), 1, "float"))
         st = rt.assign_swizzle(st, "x", rt.binary("*", rt.swizzle(st, "x"), rt.binary("/", rt.swizzle(size, "x"), rt.swizzle(size, "y"), 1, "float"), 1, "float"))
-        st = rotate2D__vec2_float(st, _u_rotation)
+        st[:] = rotate2D__vec2_float(st, _u_rotation)
         st = rt.assign_swizzle(st, "x", rt.binary("/", rt.swizzle(st, "x"), rt.binary("/", rt.swizzle(size, "x"), rt.swizzle(size, "y"), 1, "float"), 1, "float"))
-        st = tile__vec2(st)
-        st = rt.binary("+", st, rt.binary("/", rt.f(1.0), size, 2, "float"), 2, "float")
+        st[:] = tile__vec2(st)
+        st[:] = rt.binary("+", st, rt.binary("/", rt.f(1.0), size, 2, "float"), 2, "float")
         if rt.binary("==", _u_flip, rt.i(1)):
             st = rt.assign_swizzle(st, "x", rt.binary("-", rt.f(1.0), rt.swizzle(st, "x"), 1, "float"))
             st = rt.assign_swizzle(st, "y", rt.binary("-", rt.f(1.0), rt.swizzle(st, "y"), 1, "float"))
@@ -151,7 +151,7 @@ def run_pixel(ctx, out):
     def main__void():
         st = rt.binary("/", rt.swizzle(ctx.frag_coord, "xy"), _u_resolution, 2, "float")
         st = rt.assign_swizzle(st, "y", rt.binary("-", rt.f(1.0), rt.swizzle(st, "y"), 1, "float"))
-        g.fragColor = getImage__vec2(st)
+        g.fragColor[:] = getImage__vec2(st)
     main__void()
     _c = g.fragColor
     out[0] = rt.f32(_c[0]); out[1] = rt.f32(_c[1]); out[2] = rt.f32(_c[2]); out[3] = rt.f32(_c[3])

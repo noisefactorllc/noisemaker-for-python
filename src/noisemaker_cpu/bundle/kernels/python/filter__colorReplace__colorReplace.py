@@ -27,7 +27,7 @@ def run_pixel(ctx, out):
         match = rt.binary("-", rt.f(1.0), rt.component_wise("smoothstep", edge0, edge1, dist, width=1), 1, "float")
         outRgb = rt.component_wise("mix", rt.swizzle(src, "rgb"), _u_replaceColor, rt.binary("*", match, _u_colorMix, 1, "float"), width=3)
         outA = rt.binary("*", rt.swizzle(src, "a"), rt.component_wise("mix", _u_keepAlpha, _u_replaceAlpha, match, width=1), 1, "float")
-        g.fragColor = rt.construct(4, outRgb, outA)
+        g.fragColor[:] = rt.construct(4, outRgb, outA)
     main__void()
     _c = g.fragColor
     out[0] = rt.f32(_c[0]); out[1] = rt.f32(_c[1]); out[2] = rt.f32(_c[2]); out[3] = rt.f32(_c[3])

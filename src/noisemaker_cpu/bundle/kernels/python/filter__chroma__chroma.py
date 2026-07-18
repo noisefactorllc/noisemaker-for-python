@@ -36,7 +36,7 @@ def run_pixel(ctx, out):
         outer = rt.binary("+", _u_range, _u_feather, 1, "float")
         mask = rt.binary("-", rt.f(1.0), rt.component_wise("smoothstep", inner, outer, dist, width=1), 1, "float")
         mask = rt.binary("*", mask, sat, 1, "float")
-        g.fragColor = rt.construct(4, rt.construct(3, mask), rt.swizzle(color, "a"))
+        g.fragColor[:] = rt.construct(4, rt.construct(3, mask), rt.swizzle(color, "a"))
     main__void()
     _c = g.fragColor
     out[0] = rt.f32(_c[0]); out[1] = rt.f32(_c[1]); out[2] = rt.f32(_c[2]); out[3] = rt.f32(_c[3])

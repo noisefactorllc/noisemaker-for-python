@@ -26,7 +26,7 @@ def run_pixel(ctx, out):
         size = rt.texture_size(_u_inputTex)
         texel = rt.texel_fetch(_u_inputTex, coord, rt.i(0))
         lum = oklab_l__vec3(rt.swizzle(texel, "rgb"))
-        g.fragColor = rt.construct(4, lum, rt.binary("/", rt.construct(1, rt.swizzle(coord, "x")), rt.construct(1, rt.binary("-", rt.swizzle(size, "x"), rt.i(1), 1, "int")), 1, "float"), rt.f(0.0), rt.f(1.0))
+        g.fragColor[:] = rt.construct(4, lum, rt.binary("/", rt.construct(1, rt.swizzle(coord, "x")), rt.construct(1, rt.binary("-", rt.swizzle(size, "x"), rt.i(1), 1, "int")), 1, "float"), rt.f(0.0), rt.f(1.0))
     main__void()
     _c = g.fragColor
     out[0] = rt.f32(_c[0]); out[1] = rt.f32(_c[1]); out[2] = rt.f32(_c[2]); out[3] = rt.f32(_c[3])

@@ -85,8 +85,8 @@ def run_pixel(ctx, out):
             src = (sampleLayer__int_vec2(k, uv) if rt.binary("==", layerActive__int(k), rt.i(1)) else controlColor)
             boundary = rt.binary("/", rt.construct(1, k), rt.construct(1, n), 1, "float")
             w = bandWeight__float_float(lum, boundary)
-            result = rt.component_wise("mix", result, src, w, width=4)
-        g.fragColor = result
+            result[:] = rt.component_wise("mix", result, src, w, width=4)
+        g.fragColor[:] = result
     main__void()
     _c = g.fragColor
     out[0] = rt.f32(_c[0]); out[1] = rt.f32(_c[1]); out[2] = rt.f32(_c[2]); out[3] = rt.f32(_c[3])

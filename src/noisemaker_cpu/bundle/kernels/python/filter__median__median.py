@@ -65,7 +65,7 @@ def run_pixel(ctx, out):
                 majorRecords[int(index)] = packRecordMajor__vec4(sampleColor)
                 blueRecords[int(index)] = packRecordBlue__vec4(sampleColor)
                 if (bool(rt.binary("==", x, rt.i(0))) and bool(rt.binary("==", y, rt.i(0)))):
-                    originalRgb = rt.swizzle(sampleColor, "rgb")
+                    originalRgb[:] = rt.swizzle(sampleColor, "rgb")
                     centerAlpha = rt.swizzle(sampleColor, "a")
                 index = rt.binary("+", index, rt.i(1), 1, "int")
         medianIndex = rt.binary("/", rt.i(49), rt.i(2), 1, "int")
@@ -108,7 +108,7 @@ def run_pixel(ctx, out):
         difference = rt.component_wise("abs", rt.binary("-", originalRgb, medianRgb, 3, "float"), width=3)
         maxDifference = rt.component_wise("max", rt.component_wise("max", rt.swizzle(difference, "r"), rt.swizzle(difference, "g"), width=1), rt.swizzle(difference, "b"), width=1)
         replaceCenter = (bool(rt.binary("<=", _u_threshold, rt.f(0.0))) or bool(rt.binary(">=", maxDifference, rt.binary("/", _u_threshold, rt.f(100.0), 1, "float"))))
-        g.fragColor = rt.construct(4, (medianRgb if replaceCenter else originalRgb), centerAlpha)
+        g.fragColor[:] = rt.construct(4, (medianRgb if replaceCenter else originalRgb), centerAlpha)
     main__void()
     _c = g.fragColor
     out[0] = rt.f32(_c[0]); out[1] = rt.f32(_c[1]); out[2] = rt.f32(_c[2]); out[3] = rt.f32(_c[3])

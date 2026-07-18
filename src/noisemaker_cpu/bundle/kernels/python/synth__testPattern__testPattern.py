@@ -124,24 +124,24 @@ def run_pixel(ctx, out):
         globalCoord = rt.binary("+", rt.swizzle(ctx.frag_coord, "xy"), _u_tileOffset, 2, "float")
         uv = rt.binary("/", globalCoord, _u_fullResolution, 2, "float")
         if rt.binary("==", _u_pattern, rt.i(1)):
-            g.fragColor = colorBars__vec2(uv)
+            g.fragColor[:] = colorBars__vec2(uv)
         else:
             if rt.binary("==", _u_pattern, rt.i(2)):
-                g.fragColor = gradient__vec2(uv)
+                g.fragColor[:] = gradient__vec2(uv)
             else:
                 if rt.binary("==", _u_pattern, rt.i(3)):
-                    g.fragColor = uvMap__vec2(uv)
+                    g.fragColor[:] = uvMap__vec2(uv)
                 else:
                     if rt.binary("==", _u_pattern, rt.i(4)):
-                        g.fragColor = gridLines__vec2(uv)
+                        g.fragColor[:] = gridLines__vec2(uv)
                     else:
                         if rt.binary("==", _u_pattern, rt.i(5)):
-                            g.fragColor = colorGrid__vec2(uv)
+                            g.fragColor[:] = colorGrid__vec2(uv)
                         else:
                             if rt.binary("==", _u_pattern, rt.i(6)):
-                                g.fragColor = dotGrid__vec2(uv)
+                                g.fragColor[:] = dotGrid__vec2(uv)
                             else:
-                                g.fragColor = checkerboard__vec2(uv)
+                                g.fragColor[:] = checkerboard__vec2(uv)
     main__void()
     _c = g.fragColor
     out[0] = rt.f32(_c[0]); out[1] = rt.f32(_c[1]); out[2] = rt.f32(_c[2]); out[3] = rt.f32(_c[3])

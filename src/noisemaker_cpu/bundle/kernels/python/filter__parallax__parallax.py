@@ -39,7 +39,7 @@ def run_pixel(ctx, out):
             maxDispPixels = rt.f(256.0)
             dispPixels = rt.length(rt.binary("*", shift, _u_fullResolution, 2, "float"))
             if rt.binary(">", dispPixels, maxDispPixels):
-                shift = rt.binary("*", shift, rt.binary("/", maxDispPixels, dispPixels, 1, "float"), 2, "float")
+                shift[:] = rt.binary("*", shift, rt.binary("/", maxDispPixels, dispPixels, 1, "float"), 2, "float")
         t = rt.f(1.0)
         rayUV = rt.binary("+", uv, rt.binary("*", shift, rt.binary("-", rt.f(1.0), _u_pivot, 1, "float"), 2, "float"), 2, "float")
         f = rt.binary("-", t, getHeight__vec2(rayUV), 1, "float")
@@ -57,14 +57,14 @@ def run_pixel(ctx, out):
                 prevF = f
                 prevUV = rayUV
                 t = rt.binary("-", rt.f(1.0), rt.binary("*", rt.construct(1, i), stepSize, 1, "float"), 1, "float")
-                rayUV = rt.binary("+", uv, rt.binary("*", shift, rt.binary("-", t, _u_pivot, 1, "float"), 2, "float"), 2, "float")
+                rayUV[:] = rt.binary("+", uv, rt.binary("*", shift, rt.binary("-", t, _u_pivot, 1, "float"), 2, "float"), 2, "float")
                 f = rt.binary("-", t, getHeight__vec2(rayUV), 1, "float")
                 w = rt.f(0.0)
                 if rt.binary("<=", f, rt.f(0.0)):
                     w = rt.binary("/", f, rt.binary("-", f, prevF, 1, "float"), 1, "float")
-                    rayUV = rt.component_wise("mix", rayUV, prevUV, w, width=2)
+                    rayUV[:] = rt.component_wise("mix", rayUV, prevUV, w, width=2)
                     break
-        g.fragColor = getInput__vec2(rayUV)
+        g.fragColor[:] = getInput__vec2(rayUV)
     main__void()
     _c = g.fragColor
     out[0] = rt.f32(_c[0]); out[1] = rt.f32(_c[1]); out[2] = rt.f32(_c[2]); out[3] = rt.f32(_c[3])

@@ -29,7 +29,7 @@ def run_pixel(ctx, out):
             lum = rt.binary("+", rt.binary("+", rt.binary("*", rt.f(0.299), rt.swizzle(color, "r"), 1, "float"), rt.binary("*", rt.f(0.587), rt.swizzle(color, "g"), 1, "float"), 1, "float"), rt.binary("*", rt.f(0.114), rt.swizzle(color, "b"), 1, "float"), 1, "float")
             result = normalized_sine__float(rt.binary("*", lum, _u_amount, 1, "float"))
             color = rt.assign_swizzle(color, "rgb", rt.construct(3, result))
-        g.fragColor = color
+        g.fragColor[:] = color
     main__void()
     _c = g.fragColor
     out[0] = rt.f32(_c[0]); out[1] = rt.f32(_c[1]); out[2] = rt.f32(_c[2]); out[3] = rt.f32(_c[3])

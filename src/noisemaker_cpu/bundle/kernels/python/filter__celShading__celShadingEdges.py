@@ -26,7 +26,7 @@ def run_pixel(ctx, out):
         globalCoord = rt.binary("+", rt.swizzle(ctx.frag_coord, "xy"), _u_tileOffset, 2, "float")
         texSize = rt.texture_size(_u_colorTex)
         if (bool(rt.binary("==", rt.swizzle(texSize, "x"), rt.i(0))) or bool(rt.binary("==", rt.swizzle(texSize, "y"), rt.i(0)))):
-            g.fragColor = rt.construct(4, rt.f(0.0))
+            g.fragColor[:] = rt.construct(4, rt.f(0.0))
             return
         coord = rt.construct(2, rt.swizzle(ctx.frag_coord, "xy"), base="int")
         offset = rt.component_wise("max", rt.i(1), rt.construct(1, rt.binary("*", _u_edgeWidth, _u_renderScale, 1, "float"), base="int"), width=1)
@@ -57,7 +57,7 @@ def run_pixel(ctx, out):
         gy = rt.binary("+", rt.binary("+", rt.binary("+", rt.binary("-", rt.binary("-", rt.unary("-", samples[int(rt.i(0))]), rt.binary("*", rt.f(2.0), samples[int(rt.i(1))], 1, "float"), 1, "float"), samples[int(rt.i(2))], 1, "float"), samples[int(rt.i(6))], 1, "float"), rt.binary("*", rt.f(2.0), samples[int(rt.i(7))], 1, "float"), 1, "float"), samples[int(rt.i(8))], 1, "float")
         magnitude = rt.component_wise("sqrt", rt.binary("+", rt.binary("*", gx, gx, 1, "float"), rt.binary("*", gy, gy, 1, "float"), 1, "float"), width=1)
         edge = rt.component_wise("smoothstep", rt.binary("*", _u_edgeThreshold, rt.f(0.5), 1, "float"), rt.binary("*", _u_edgeThreshold, rt.f(1.5), 1, "float"), magnitude, width=1)
-        g.fragColor = rt.construct(4, edge, edge, edge, rt.f(1.0))
+        g.fragColor[:] = rt.construct(4, edge, edge, edge, rt.f(1.0))
     main__void()
     _c = g.fragColor
     out[0] = rt.f32(_c[0]); out[1] = rt.f32(_c[1]); out[2] = rt.f32(_c[2]); out[3] = rt.f32(_c[3])

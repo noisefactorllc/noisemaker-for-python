@@ -16,11 +16,11 @@ def run_pixel(ctx, out):
     g.Y_NOISE_SEED = rt.construct(3, rt.f(41.0), rt.f(23.0), rt.f(7.0))
     def pcg__uvec3(v):
         v = rt.copy(v, "uint")
-        v = rt.binary("+", rt.binary("*", v, rt.i(1664525), 3, "uint"), rt.i(1013904223), 3, "uint")
+        v[:] = rt.binary("+", rt.binary("*", v, rt.i(1664525), 3, "uint"), rt.i(1013904223), 3, "uint")
         v = rt.assign_swizzle(v, "x", rt.binary("+", rt.swizzle(v, "x"), rt.binary("*", rt.swizzle(v, "y"), rt.swizzle(v, "z"), 1, "uint"), 1, "uint"))
         v = rt.assign_swizzle(v, "y", rt.binary("+", rt.swizzle(v, "y"), rt.binary("*", rt.swizzle(v, "z"), rt.swizzle(v, "x"), 1, "uint"), 1, "uint"))
         v = rt.assign_swizzle(v, "z", rt.binary("+", rt.swizzle(v, "z"), rt.binary("*", rt.swizzle(v, "x"), rt.swizzle(v, "y"), 1, "uint"), 1, "uint"))
-        v = rt.binary("^", v, rt.binary(">>", v, rt.i(16), 3, "uint"), 3, "uint")
+        v[:] = rt.binary("^", v, rt.binary(">>", v, rt.i(16), 3, "uint"), 3, "uint")
         v = rt.assign_swizzle(v, "x", rt.binary("+", rt.swizzle(v, "x"), rt.binary("*", rt.swizzle(v, "y"), rt.swizzle(v, "z"), 1, "uint"), 1, "uint"))
         v = rt.assign_swizzle(v, "y", rt.binary("+", rt.swizzle(v, "y"), rt.binary("*", rt.swizzle(v, "z"), rt.swizzle(v, "x"), 1, "uint"), 1, "uint"))
         v = rt.assign_swizzle(v, "z", rt.binary("+", rt.swizzle(v, "z"), rt.binary("*", rt.swizzle(v, "x"), rt.swizzle(v, "y"), 1, "uint"), 1, "uint"))
@@ -33,7 +33,7 @@ def run_pixel(ctx, out):
         p = rt.copy(p, "float")
         i = rt.component_wise("floor", p, width=3)
         f = rt.component_wise("fract", p, width=3)
-        f = rt.binary("*", rt.binary("*", f, f, 3, "float"), rt.binary("-", rt.f(3.0), rt.binary("*", rt.f(2.0), f, 3, "float"), 3, "float"), 3, "float")
+        f[:] = rt.binary("*", rt.binary("*", f, f, 3, "float"), rt.binary("-", rt.f(3.0), rt.binary("*", rt.f(2.0), f, 3, "float"), 3, "float"), 3, "float")
         n000 = hash31__vec3(i)
         n100 = hash31__vec3(rt.binary("+", i, rt.construct(3, rt.f(1.0), rt.f(0.0), rt.f(0.0)), 3, "float"))
         n010 = hash31__vec3(rt.binary("+", i, rt.construct(3, rt.f(0.0), rt.f(1.0), rt.f(0.0)), 3, "float"))
@@ -73,9 +73,9 @@ def run_pixel(ctx, out):
         offsetScale = rt.binary("*", r, rt.binary("+", rt.f(0.01), rt.binary("*", _u_speed, rt.f(0.02), 1, "float"), 1, "float"), 1, "float")
         offset = rt.binary("*", rt.binary("-", rt.construct(2, xRandom, yRandom), rt.f(0.5), 2, "float"), offsetScale, 2, "float")
         sampleCoord = rt.binary("+", ctx.uv, offset, 2, "float")
-        sampleCoord = applyWrap__vec2(sampleCoord)
+        sampleCoord[:] = applyWrap__vec2(sampleCoord)
         sampled = rt.texture(_u_inputTex, sampleCoord)
-        g.fragColor = sampled
+        g.fragColor[:] = sampled
     main__void()
     _c = g.fragColor
     out[0] = rt.f32(_c[0]); out[1] = rt.f32(_c[1]); out[2] = rt.f32(_c[2]); out[3] = rt.f32(_c[3])

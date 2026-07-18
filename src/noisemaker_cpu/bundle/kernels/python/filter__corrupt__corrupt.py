@@ -23,11 +23,11 @@ def run_pixel(ctx, out):
     g.fragColor = rt.construct(4, 0.0)
     def pcg__uvec3(v):
         v = rt.copy(v, "uint")
-        v = rt.binary("+", rt.binary("*", v, rt.i(1664525), 3, "uint"), rt.i(1013904223), 3, "uint")
+        v[:] = rt.binary("+", rt.binary("*", v, rt.i(1664525), 3, "uint"), rt.i(1013904223), 3, "uint")
         v = rt.assign_swizzle(v, "x", rt.binary("+", rt.swizzle(v, "x"), rt.binary("*", rt.swizzle(v, "y"), rt.swizzle(v, "z"), 1, "uint"), 1, "uint"))
         v = rt.assign_swizzle(v, "y", rt.binary("+", rt.swizzle(v, "y"), rt.binary("*", rt.swizzle(v, "z"), rt.swizzle(v, "x"), 1, "uint"), 1, "uint"))
         v = rt.assign_swizzle(v, "z", rt.binary("+", rt.swizzle(v, "z"), rt.binary("*", rt.swizzle(v, "x"), rt.swizzle(v, "y"), 1, "uint"), 1, "uint"))
-        v = rt.binary("^", v, rt.binary(">>", v, rt.i(16), 3, "uint"), 3, "uint")
+        v[:] = rt.binary("^", v, rt.binary(">>", v, rt.i(16), 3, "uint"), 3, "uint")
         v = rt.assign_swizzle(v, "x", rt.binary("+", rt.swizzle(v, "x"), rt.binary("*", rt.swizzle(v, "y"), rt.swizzle(v, "z"), 1, "uint"), 1, "uint"))
         v = rt.assign_swizzle(v, "y", rt.binary("+", rt.swizzle(v, "y"), rt.binary("*", rt.swizzle(v, "z"), rt.swizzle(v, "x"), 1, "uint"), 1, "uint"))
         v = rt.assign_swizzle(v, "z", rt.binary("+", rt.swizzle(v, "z"), rt.binary("*", rt.swizzle(v, "x"), rt.swizzle(v, "y"), 1, "uint"), 1, "uint"))
@@ -71,7 +71,7 @@ def run_pixel(ctx, out):
         uv = rt.copy(uv, "float")
         bh = lineHash__float_float(rt.binary("+", row, rt.f(400.0), 1, "float"), _rt)
         levels = rt.component_wise("mix", rt.f(256.0), rt.f(2.0), rt.binary("*", bitAmt, bitAmt, 1, "float"), width=1)
-        color = rt.binary("/", rt.component_wise("floor", rt.binary("+", rt.binary("*", color, levels, 3, "float"), rt.f(0.5), 3, "float"), width=3), levels, 3, "float")
+        color[:] = rt.binary("/", rt.component_wise("floor", rt.binary("+", rt.binary("*", color, levels, 3, "float"), rt.f(0.5), 3, "float"), width=3), levels, 3, "float")
         xorStrength = rt.f(0.0)
         px = rt.f(0.0)
         xorHash = rt.construct(3, 0.0)
@@ -81,7 +81,7 @@ def run_pixel(ctx, out):
             px = rt.component_wise("floor", rt.binary("*", rt.swizzle(uv, "x"), resX, 1, "float"), width=1)
             xorHash = prng__vec3(rt.construct(3, px, row, rt.binary("+", rt.binary("+", _u_seed, _rt, 1, "float"), rt.f(500.0), 1, "float")))
             mask = rt.component_wise("step", rt.construct(3, rt.binary("-", rt.f(1.0), rt.binary("*", xorStrength, rt.f(0.5), 1, "float"), 1, "float")), xorHash, width=3)
-            color = rt.component_wise("mix", color, rt.binary("-", rt.f(1.0), color, 3, "float"), mask, width=3)
+            color[:] = rt.component_wise("mix", color, rt.binary("-", rt.f(1.0), color, 3, "float"), mask, width=3)
         shiftStr = rt.f(0.0)
         bitShift = rt.f(0.0)
         scale = rt.f(0.0)
@@ -89,7 +89,7 @@ def run_pixel(ctx, out):
             shiftStr = rt.binary("/", rt.binary("-", bitAmt, rt.f(0.6), 1, "float"), rt.f(0.4), 1, "float")
             bitShift = rt.binary("+", rt.component_wise("floor", rt.binary("*", rt.swizzle(bh, "x"), rt.f(4.0), 1, "float"), width=1), rt.f(1.0), 1, "float")
             scale = rt.component_wise("pow", rt.f(2.0), bitShift, width=1)
-            color = rt.component_wise("fract", rt.binary("*", color, rt.component_wise("mix", rt.f(1.0), scale, shiftStr, width=1), 3, "float"), width=3)
+            color[:] = rt.component_wise("fract", rt.binary("*", color, rt.component_wise("mix", rt.f(1.0), scale, shiftStr, width=1), 3, "float"), width=3)
         return color
     def meltDisplace__vec2_float_float_float_float(uv, meltAmt, t, resX, rs):
         uv = rt.copy(uv, "float")
@@ -140,19 +140,19 @@ def run_pixel(ctx, out):
         sampleUv = uv
         meltAmt = rt.binary("/", _u_melt, rt.f(100.0), 1, "float")
         if rt.binary(">", meltAmt, rt.f(0.0)):
-            sampleUv = meltDisplace__vec2_float_float_float_float(sampleUv, meltAmt, t, resX, rs)
+            sampleUv[:] = meltDisplace__vec2_float_float_float_float(sampleUv, meltAmt, t, resX, rs)
         scatterAmt = rt.binary("/", _u_scatter, rt.f(100.0), 1, "float")
         if rt.binary(">", scatterAmt, rt.f(0.0)):
-            sampleUv = scatterDisplace__vec2_float_float_float_vec2(sampleUv, scatterAmt, t, rs, _u_tileOffset)
+            sampleUv[:] = scatterDisplace__vec2_float_float_float_vec2(sampleUv, scatterAmt, t, rs, _u_tileOffset)
         sortAmt = rt.f(0.0)
         shiftAmt = rt.f(0.0)
         if isCorrupt:
             sortAmt = rt.binary("/", _u_sort, rt.f(100.0), 1, "float")
             shiftAmt = rt.binary("/", _u_shift, rt.f(100.0), 1, "float")
             if rt.binary(">", sortAmt, rt.f(0.0)):
-                sampleUv = pixelSort__vec2_float_float_float_float(sampleUv, row, sortAmt, _rt, resX)
+                sampleUv[:] = pixelSort__vec2_float_float_float_float(sampleUv, row, sortAmt, _rt, resX)
             if rt.binary(">", shiftAmt, rt.f(0.0)):
-                sampleUv = byteShift__vec2_float_float_float_float(sampleUv, row, shiftAmt, _rt, resX)
+                sampleUv[:] = byteShift__vec2_float_float_float_float(sampleUv, row, shiftAmt, _rt, resX)
         color = rt.swizzle(rt.texture(_u_inputTex, sampleUv), "rgb")
         chAmt = rt.f(0.0)
         chHash = rt.construct(3, 0.0)
@@ -170,8 +170,8 @@ def run_pixel(ctx, out):
             color = rt.assign_swizzle(color, "r", rt.swizzle(rt.texture(_u_inputTex, rUv), "r"))
             color = rt.assign_swizzle(color, "b", rt.swizzle(rt.texture(_u_inputTex, bUv), "b"))
         if (bool(rt.binary(">", _u_bits, rt.f(0.0))) and bool(isCorrupt)):
-            color = bitCorrupt__vec3_vec2_float_float_float_float(color, uv, row, rt.binary("/", _u_bits, rt.f(100.0), 1, "float"), _rt, resX)
-        g.fragColor = rt.construct(4, color, rt.f(1.0))
+            color[:] = bitCorrupt__vec3_vec2_float_float_float_float(color, uv, row, rt.binary("/", _u_bits, rt.f(100.0), 1, "float"), _rt, resX)
+        g.fragColor[:] = rt.construct(4, color, rt.f(1.0))
     main__void()
     _c = g.fragColor
     out[0] = rt.f32(_c[0]); out[1] = rt.f32(_c[1]); out[2] = rt.f32(_c[2]); out[3] = rt.f32(_c[3])

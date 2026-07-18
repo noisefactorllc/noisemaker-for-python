@@ -21,8 +21,8 @@ def run_pixel(ctx, out):
         celColor = rt.texture(_u_colorTex, uv)
         edgeStrength = rt.swizzle(rt.texture(_u_edgeTex, uv), "r")
         finalColor = rt.component_wise("mix", rt.swizzle(celColor, "rgb"), _u_edgeColor, edgeStrength, width=3)
-        finalColor = rt.component_wise("mix", rt.swizzle(origColor, "rgb"), finalColor, _u_mixAmount, width=3)
-        g.fragColor = rt.construct(4, finalColor, rt.swizzle(origColor, "a"))
+        finalColor[:] = rt.component_wise("mix", rt.swizzle(origColor, "rgb"), finalColor, _u_mixAmount, width=3)
+        g.fragColor[:] = rt.construct(4, finalColor, rt.swizzle(origColor, "a"))
     main__void()
     _c = g.fragColor
     out[0] = rt.f32(_c[0]); out[1] = rt.f32(_c[1]); out[2] = rt.f32(_c[2]); out[3] = rt.f32(_c[3])

@@ -13,7 +13,7 @@ def run_pixel(ctx, out):
     g.fragColor = rt.construct(4, 0.0)
     def main__void():
         if (bool(rt.binary("!=", rt.construct(1, rt.swizzle(ctx.frag_coord, "x"), base="int"), rt.i(0))) or bool(rt.binary("!=", rt.construct(1, rt.swizzle(ctx.frag_coord, "y"), base="int"), rt.i(0)))):
-            g.fragColor = rt.construct(4, rt.f(0.0))
+            g.fragColor[:] = rt.construct(4, rt.f(0.0))
             return
         statsTexSize = rt.texture_size(_u_statsTex)
         tileCount = rt.construct(2, rt.binary("/", rt.binary("-", rt.binary("+", rt.swizzle(statsTexSize, "x"), g.TILE_SIZE, 1, "int"), rt.i(1), 1, "int"), g.TILE_SIZE, 1, "int"), rt.binary("/", rt.binary("-", rt.binary("+", rt.swizzle(statsTexSize, "y"), g.TILE_SIZE, 1, "int"), rt.i(1), 1, "int"), g.TILE_SIZE, 1, "int"), base="int")
@@ -43,7 +43,7 @@ def run_pixel(ctx, out):
                 tileStats = rt.swizzle(rt.texel_fetch(_u_statsTex, sampleCoord, rt.i(0)), "xy")
                 globalMin = rt.component_wise("min", globalMin, rt.swizzle(tileStats, "x"), width=1)
                 globalMax = rt.component_wise("max", globalMax, rt.swizzle(tileStats, "y"), width=1)
-        g.fragColor = rt.construct(4, globalMin, globalMax, rt.f(0.0), rt.f(1.0))
+        g.fragColor[:] = rt.construct(4, globalMin, globalMax, rt.f(0.0), rt.f(1.0))
     main__void()
     _c = g.fragColor
     out[0] = rt.f32(_c[0]); out[1] = rt.f32(_c[1]); out[2] = rt.f32(_c[2]); out[3] = rt.f32(_c[3])

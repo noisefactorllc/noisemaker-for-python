@@ -125,12 +125,12 @@ def run_pixel(ctx, out):
         refractedColor = rt.construct(4, 0.0)
         if rt.binary(">", _u_refraction, rt.f(0.0)):
             refractedColor = applyRefraction__vec2_vec3(uv, normal)
-            workingColor = rt.component_wise("mix", workingColor, refractedColor, rt.binary("/", _u_refraction, rt.f(100.0), 1, "float"), width=4)
+            workingColor[:] = rt.component_wise("mix", workingColor, refractedColor, rt.binary("/", _u_refraction, rt.f(100.0), 1, "float"), width=4)
         reflectedColor = rt.construct(4, 0.0)
         if (bool(rt.binary(">", _u_reflection, rt.f(0.0))) or bool(rt.binary(">", _u_aberration, rt.f(0.0)))):
             reflectedColor = applyReflection__vec2_vec2_vec3(uv, globalUV, normal)
-            workingColor = rt.component_wise("mix", workingColor, reflectedColor, rt.binary("/", _u_reflection, rt.f(100.0), 1, "float"), width=4)
-        g.fragColor = workingColor
+            workingColor[:] = rt.component_wise("mix", workingColor, reflectedColor, rt.binary("/", _u_reflection, rt.f(100.0), 1, "float"), width=4)
+        g.fragColor[:] = workingColor
     main__void()
     _c = g.fragColor
     out[0] = rt.f32(_c[0]); out[1] = rt.f32(_c[1]); out[2] = rt.f32(_c[2]); out[3] = rt.f32(_c[3])

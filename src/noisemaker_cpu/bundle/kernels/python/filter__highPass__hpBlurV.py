@@ -29,9 +29,9 @@ def run_pixel(ctx, out):
                 break
             w = rt.component_wise("exp", rt.binary("/", rt.unary("-", rt.construct(1, rt.binary("*", i, i, 1, "int"))), rt.binary("*", rt.binary("*", rt.f(2.0), sigma, 1, "float"), sigma, 1, "float"), 1, "float"), width=1)
             o = rt.binary("/", rt.binary("*", rt.binary("*", dirPx, rt.construct(1, i), 2, "float"), stride, 2, "float"), _u_resolution, 2, "float")
-            sum = rt.binary("+", sum, rt.binary("*", rt.binary("+", rt.texture(_u_inputTex, rt.binary("+", uv, o, 2, "float")), rt.texture(_u_inputTex, rt.binary("-", uv, o, 2, "float")), 4, "float"), w, 4, "float"), 4, "float")
+            sum[:] = rt.binary("+", sum, rt.binary("*", rt.binary("+", rt.texture(_u_inputTex, rt.binary("+", uv, o, 2, "float")), rt.texture(_u_inputTex, rt.binary("-", uv, o, 2, "float")), 4, "float"), w, 4, "float"), 4, "float")
             wsum = rt.binary("+", wsum, rt.binary("*", rt.f(2.0), w, 1, "float"), 1, "float")
-        g.fragColor = rt.binary("/", sum, wsum, 4, "float")
+        g.fragColor[:] = rt.binary("/", sum, wsum, 4, "float")
     main__void()
     _c = g.fragColor
     out[0] = rt.f32(_c[0]); out[1] = rt.f32(_c[1]); out[2] = rt.f32(_c[2]); out[3] = rt.f32(_c[3])

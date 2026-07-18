@@ -69,12 +69,12 @@ def run_pixel(ctx, out):
                 else:
                     wrappedUV = localUV
                     if rt.binary("==", _u_wrap, rt.i(1)):
-                        wrappedUV = rt.component_wise("abs", rt.binary("-", rt.component_wise("mod", rt.binary("+", localUV, rt.f(1.0), 2, "float"), rt.f(2.0), width=2), rt.f(1.0), 2, "float"), width=2)
+                        wrappedUV[:] = rt.component_wise("abs", rt.binary("-", rt.component_wise("mod", rt.binary("+", localUV, rt.f(1.0), 2, "float"), rt.f(2.0), width=2), rt.f(1.0), 2, "float"), width=2)
                     else:
                         if rt.binary("==", _u_wrap, rt.i(2)):
-                            wrappedUV = rt.component_wise("fract", localUV, width=2)
+                            wrappedUV[:] = rt.component_wise("fract", localUV, width=2)
                         else:
-                            wrappedUV = rt.component_wise("clamp", localUV, rt.f(0.0), rt.f(1.0), width=2)
+                            wrappedUV[:] = rt.component_wise("clamp", localUV, rt.f(0.0), rt.f(1.0), width=2)
                     maskSample = (rt.texture(_u_inputTex, wrappedUV) if rt.binary("==", _u_maskSource, rt.i(0)) else rt.texture(_u_tex, wrappedUV))
                     thresholded = rt.component_wise("step", _u_threshold, getChannel__vec4_int(maskSample, _u_sourceChannel), width=1)
                 dist2 = rt.construct(1, rt.binary("+", rt.binary("*", x, x, 1, "int"), rt.binary("*", y, y, 1, "int"), 1, "int"))
@@ -87,7 +87,7 @@ def run_pixel(ctx, out):
         fgSample = (rt.texture(_u_inputTex, rt.binary("/", rt.swizzle(ctx.frag_coord, "xy"), rt.construct(2, rt.texture_size(_u_inputTex)), 2, "float")) if rt.binary("==", _u_maskSource, rt.i(0)) else rt.texture(_u_tex, rt.binary("/", rt.swizzle(ctx.frag_coord, "xy"), rt.construct(2, rt.texture_size(_u_tex)), 2, "float")))
         fgMask = rt.component_wise("step", _u_threshold, getChannel__vec4_int(fgSample, _u_sourceChannel), width=1)
         result = rt.component_wise("mix", withShadow, rt.swizzle(fgSample, "rgb"), fgMask, width=3)
-        g.fragColor = rt.construct(4, result, rt.swizzle(baseColor, "a"))
+        g.fragColor[:] = rt.construct(4, result, rt.swizzle(baseColor, "a"))
     main__void()
     _c = g.fragColor
     out[0] = rt.f32(_c[0]); out[1] = rt.f32(_c[1]); out[2] = rt.f32(_c[2]); out[3] = rt.f32(_c[3])

@@ -48,7 +48,7 @@ def run_pixel(ctx, out):
             mask = rt.binary("-", rt.f(1.0), mask, 1, "float")
         color = rt.component_wise("mix", colorA, colorB, mask, width=4)
         color = rt.assign_swizzle(color, "a", rt.component_wise("max", rt.swizzle(colorA, "a"), rt.swizzle(colorB, "a"), width=1))
-        g.fragColor = color
+        g.fragColor[:] = color
     main__void()
     _c = g.fragColor
     out[0] = rt.f32(_c[0]); out[1] = rt.f32(_c[1]); out[2] = rt.f32(_c[2]); out[3] = rt.f32(_c[3])

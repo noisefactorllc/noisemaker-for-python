@@ -40,7 +40,7 @@ def run_pixel(ctx, out):
         levels_raw = rt.component_wise("max", _u_levels, rt.f(0.0), width=1)
         levels_quantized = rt.component_wise("max", rt.component_wise("round", levels_raw, width=1), g.MIN_LEVELS, width=1)
         if rt.binary("<=", levels_quantized, rt.f(1.0)):
-            g.fragColor = texel
+            g.fragColor[:] = texel
             return
         level_factor = levels_quantized
         inv_factor = rt.binary("/", rt.f(1.0), level_factor, 1, "float")
@@ -48,7 +48,7 @@ def run_pixel(ctx, out):
         gamma_value = rt.component_wise("max", _u_gamma, g.MIN_GAMMA, width=1)
         inv_gamma = rt.binary("/", rt.f(1.0), gamma_value, 1, "float")
         working_rgb = srgb_to_linear_rgb__vec3(rt.swizzle(texel, "xyz"))
-        working_rgb = pow_vec3__vec3_float(rt.component_wise("clamp", working_rgb, rt.construct(3, rt.f(0.0)), rt.construct(3, rt.f(1.0)), width=3), gamma_value)
+        working_rgb[:] = pow_vec3__vec3_float(rt.component_wise("clamp", working_rgb, rt.construct(3, rt.f(0.0)), rt.construct(3, rt.f(1.0)), width=3), gamma_value)
         scaled = rt.binary("+", rt.binary("*", working_rgb, level_factor, 3, "float"), rt.construct(3, half_step), 3, "float")
         quantized_rgb = rt.construct(3, 0.0)
         f = rt.construct(3, 0.0)
@@ -58,12 +58,12 @@ def run_pixel(ctx, out):
             f = rt.component_wise("fract", scaled, width=3)
             fw = rt.fwidth(scaled)
             blend = rt.component_wise("smoothstep", rt.binary("-", rt.f(0.5), rt.binary("*", fw, rt.f(0.5), 3, "float"), 3, "float"), rt.binary("+", rt.f(0.5), rt.binary("*", fw, rt.f(0.5), 3, "float"), 3, "float"), f, width=3)
-            quantized_rgb = rt.binary("*", rt.binary("+", rt.component_wise("floor", scaled, width=3), blend, 3, "float"), inv_factor, 3, "float")
+            quantized_rgb[:] = rt.binary("*", rt.binary("+", rt.component_wise("floor", scaled, width=3), blend, 3, "float"), inv_factor, 3, "float")
         else:
-            quantized_rgb = rt.binary("*", rt.component_wise("floor", scaled, width=3), inv_factor, 3, "float")
-        quantized_rgb = pow_vec3__vec3_float(rt.component_wise("clamp", quantized_rgb, rt.construct(3, rt.f(0.0)), rt.construct(3, rt.f(1.0)), width=3), inv_gamma)
-        quantized_rgb = linear_to_srgb_rgb__vec3(quantized_rgb)
-        g.fragColor = rt.construct(4, clamp_01__float(rt.swizzle(quantized_rgb, "x")), clamp_01__float(rt.swizzle(quantized_rgb, "y")), clamp_01__float(rt.swizzle(quantized_rgb, "z")), rt.swizzle(texel, "w"))
+            quantized_rgb[:] = rt.binary("*", rt.component_wise("floor", scaled, width=3), inv_factor, 3, "float")
+        quantized_rgb[:] = pow_vec3__vec3_float(rt.component_wise("clamp", quantized_rgb, rt.construct(3, rt.f(0.0)), rt.construct(3, rt.f(1.0)), width=3), inv_gamma)
+        quantized_rgb[:] = linear_to_srgb_rgb__vec3(quantized_rgb)
+        g.fragColor[:] = rt.construct(4, clamp_01__float(rt.swizzle(quantized_rgb, "x")), clamp_01__float(rt.swizzle(quantized_rgb, "y")), clamp_01__float(rt.swizzle(quantized_rgb, "z")), rt.swizzle(texel, "w"))
     main__void()
     _c = g.fragColor
     out[0] = rt.f32(_c[0]); out[1] = rt.f32(_c[1]); out[2] = rt.f32(_c[2]); out[3] = rt.f32(_c[3])

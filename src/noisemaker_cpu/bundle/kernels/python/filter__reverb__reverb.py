@@ -33,7 +33,7 @@ def run_pixel(ctx, out):
         original = rt.texture(_u_inputTex, localUV)
         current = original
         if _u_ridges:
-            current = ridge_transform__vec4(current)
+            current[:] = ridge_transform__vec4(current)
         accum = current
         totalWeight = rt.f(1.0)
         weight = rt.f(0.5)
@@ -52,13 +52,13 @@ def run_pixel(ctx, out):
             sampledLocalUV = rt.component_wise("fract", rt.binary("/", rt.binary("-", rt.binary("*", wrappedGlobalUV, _u_fullResolution, 2, "float"), _u_tileOffset, 2, "float"), rt.construct(2, dims), 2, "float"), width=2)
             scaled = rt.texture(_u_inputTex, sampledLocalUV)
             if _u_ridges:
-                scaled = ridge_transform__vec4(scaled)
-            accum = rt.binary("+", accum, rt.binary("*", scaled, weight, 4, "float"), 4, "float")
+                scaled[:] = ridge_transform__vec4(scaled)
+            accum[:] = rt.binary("+", accum, rt.binary("*", scaled, weight, 4, "float"), 4, "float")
             totalWeight = rt.binary("+", totalWeight, weight, 1, "float")
             scale = rt.binary("*", scale, rt.f(2.0), 1, "float")
             weight = rt.binary("*", weight, rt.f(0.5), 1, "float")
         result = rt.binary("/", accum, totalWeight, 4, "float")
-        g.fragColor = rt.construct(4, rt.component_wise("mix", rt.swizzle(original, "rgb"), rt.swizzle(result, "rgb"), _u_alpha, width=3), rt.f(1.0))
+        g.fragColor[:] = rt.construct(4, rt.component_wise("mix", rt.swizzle(original, "rgb"), rt.swizzle(result, "rgb"), _u_alpha, width=3), rt.f(1.0))
     main__void()
     _c = g.fragColor
     out[0] = rt.f32(_c[0]); out[1] = rt.f32(_c[1]); out[2] = rt.f32(_c[2]); out[3] = rt.f32(_c[3])

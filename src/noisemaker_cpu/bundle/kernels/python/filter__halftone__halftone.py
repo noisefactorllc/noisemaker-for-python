@@ -65,7 +65,7 @@ def run_pixel(ctx, out):
                 if not (rt.binary("<=", x, rt.i(1))):
                     break
                 o = rt.binary("*", rt.construct(2, rt.construct(1, x), rt.construct(1, y)), texel, 2, "float")
-                sum = rt.binary("+", sum, rt.swizzle(rt.texture(_u_inputTex, rt.component_wise("clamp", rt.binary("+", uv, o, 2, "float"), rt.f(0.0), rt.f(1.0), width=2)), "rgb"), 3, "float")
+                sum[:] = rt.binary("+", sum, rt.swizzle(rt.texture(_u_inputTex, rt.component_wise("clamp", rt.binary("+", uv, o, 2, "float"), rt.f(0.0), rt.f(1.0), width=2)), "rgb"), 3, "float")
         return rt.binary("/", sum, rt.f(9.0), 3, "float")
     def cellSampleFromRuv__vec2_float_vec2(ruv, angleDeg, texel):
         ruv = rt.copy(ruv, "float")
@@ -125,7 +125,7 @@ def run_pixel(ctx, out):
             inkY = roundDotCoverage__vec2_float_float(rt.binary("-", rt.component_wise("fract", ruvY, width=2), rt.f(0.5), 2, "float"), valY, _u_sharpness)
             inkK = roundDotCoverage__vec2_float_float(rt.binary("-", rt.component_wise("fract", ruvK, width=2), rt.f(0.5), 2, "float"), valK, _u_sharpness)
             screened = rt.binary("*", rt.binary("-", rt.construct(3, rt.f(1.0)), rt.construct(3, inkC, inkM, inkY), 3, "float"), rt.binary("-", rt.f(1.0), inkK, 1, "float"), 3, "float")
-            g.fragColor = rt.construct(4, screened, alpha)
+            g.fragColor[:] = rt.construct(4, screened, alpha)
             return
         else:
             value = rt.f(0.0)
@@ -144,7 +144,7 @@ def run_pixel(ctx, out):
                 ruv = rt.binary("/", rotate2D__vec2_float(globalCoord, _u_monoAngle), _u_frequency, 2, "float")
                 value = rt.binary("-", rt.f(1.0), lum__vec3(cellSampleFromRuv__vec2_float_vec2(ruv, _u_monoAngle, texel)), 1, "float")
                 off = rt.binary("-", rt.component_wise("fract", ruv, width=2), rt.f(0.5), 2, "float")
-                dotOffset = off
+                dotOffset[:] = off
                 if rt.binary("==", _u_PATTERN, rt.i(1)):
                     d = rt.component_wise("abs", rt.swizzle(off, "y"), width=1)
                 else:
@@ -154,7 +154,7 @@ def run_pixel(ctx, out):
                 ink = roundDotCoverage__vec2_float_float(dotOffset, value, _u_sharpness)
             else:
                 ink = halftoneCoverage__float_float_float(d, value, _u_sharpness)
-            g.fragColor = rt.construct(4, tonemap2__float_vec3_vec3(rt.binary("-", rt.f(1.0), ink, 1, "float"), _u_inkColor, _u_paperColor), alpha)
+            g.fragColor[:] = rt.construct(4, tonemap2__float_vec3_vec3(rt.binary("-", rt.f(1.0), ink, 1, "float"), _u_inkColor, _u_paperColor), alpha)
     main__void()
     _c = g.fragColor
     out[0] = rt.f32(_c[0]); out[1] = rt.f32(_c[1]); out[2] = rt.f32(_c[2]); out[3] = rt.f32(_c[3])

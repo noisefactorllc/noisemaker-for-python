@@ -23,21 +23,21 @@ def run_pixel(ctx, out):
         m = rt.binary("-", v, c, 1, "float")
         rgb = rt.construct(3, 0.0)
         if rt.binary("<", h, rt.binary("/", rt.f(1.0), rt.f(6.0), 1, "float")):
-            rgb = rt.construct(3, c, x, rt.f(0.0))
+            rgb[:] = rt.construct(3, c, x, rt.f(0.0))
         else:
             if rt.binary("<", h, rt.binary("/", rt.f(2.0), rt.f(6.0), 1, "float")):
-                rgb = rt.construct(3, x, c, rt.f(0.0))
+                rgb[:] = rt.construct(3, x, c, rt.f(0.0))
             else:
                 if rt.binary("<", h, rt.binary("/", rt.f(3.0), rt.f(6.0), 1, "float")):
-                    rgb = rt.construct(3, rt.f(0.0), c, x)
+                    rgb[:] = rt.construct(3, rt.f(0.0), c, x)
                 else:
                     if rt.binary("<", h, rt.binary("/", rt.f(4.0), rt.f(6.0), 1, "float")):
-                        rgb = rt.construct(3, rt.f(0.0), x, c)
+                        rgb[:] = rt.construct(3, rt.f(0.0), x, c)
                     else:
                         if rt.binary("<", h, rt.binary("/", rt.f(5.0), rt.f(6.0), 1, "float")):
-                            rgb = rt.construct(3, x, rt.f(0.0), c)
+                            rgb[:] = rt.construct(3, x, rt.f(0.0), c)
                         else:
-                            rgb = rt.construct(3, c, rt.f(0.0), x)
+                            rgb[:] = rt.construct(3, c, rt.f(0.0), x)
         return rt.binary("+", rgb, m, 3, "float")
     def linear_srgb_from_oklab__vec3(c):
         c = rt.copy(c, "float")
@@ -85,7 +85,7 @@ def run_pixel(ctx, out):
                 b = rt.binary("*", C, rt.component_wise("sin", H, width=1), 1, "float")
                 color = rt.assign_swizzle(color, "rgb", linear_srgb_from_oklab__vec3(rt.construct(3, L, a, b)))
                 color = rt.assign_swizzle(color, "rgb", linearToSrgb__vec3(rt.swizzle(color, "rgb")))
-        g.fragColor = color
+        g.fragColor[:] = color
     main__void()
     _c = g.fragColor
     out[0] = rt.f32(_c[0]); out[1] = rt.f32(_c[1]); out[2] = rt.f32(_c[2]); out[3] = rt.f32(_c[3])

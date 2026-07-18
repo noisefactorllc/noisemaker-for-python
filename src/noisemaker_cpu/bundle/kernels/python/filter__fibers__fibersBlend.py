@@ -15,7 +15,7 @@ def run_pixel(ctx, out):
         overlay = rt.texel_fetch(_u_overlayTex, coord, rt.i(0))
         a = rt.binary("*", rt.swizzle(overlay, "a"), _u_alpha, 1, "float")
         result = rt.binary("+", rt.binary("*", rt.swizzle(base, "rgb"), rt.binary("-", rt.f(1.0), a, 1, "float"), 3, "float"), rt.binary("*", rt.swizzle(overlay, "rgb"), a, 3, "float"), 3, "float")
-        g.fragColor = rt.construct(4, result, rt.swizzle(base, "a"))
+        g.fragColor[:] = rt.construct(4, result, rt.swizzle(base, "a"))
     main__void()
     _c = g.fragColor
     out[0] = rt.f32(_c[0]); out[1] = rt.f32(_c[1]); out[2] = rt.f32(_c[2]); out[3] = rt.f32(_c[3])

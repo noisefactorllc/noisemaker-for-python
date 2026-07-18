@@ -64,13 +64,13 @@ def run_pixel(ctx, out):
         factor = rt.f(0.0)
         if rt.binary("<", amt, rt.f(0.5)):
             factor = rt.binary("*", amt, rt.f(2.0), 1, "float")
-            color = rt.component_wise("mix", color1, middle, factor, width=4)
+            color[:] = rt.component_wise("mix", color1, middle, factor, width=4)
         else:
             factor = rt.binary("*", rt.binary("-", amt, rt.f(0.5), 1, "float"), rt.f(2.0), 1, "float")
-            color = rt.component_wise("mix", middle, color2, factor, width=4)
+            color[:] = rt.component_wise("mix", middle, color2, factor, width=4)
         color = rt.assign_swizzle(color, "rgb", rt.component_wise("mix", rt.swizzle(color1, "rgb"), rt.swizzle(color, "rgb"), rt.swizzle(color2, "a"), width=3))
         color = rt.assign_swizzle(color, "a", rt.binary("+", rt.binary("*", rt.swizzle(color2, "a"), amt, 1, "float"), rt.binary("*", rt.swizzle(color1, "a"), rt.binary("-", rt.f(1.0), rt.binary("*", rt.swizzle(color2, "a"), amt, 1, "float"), 1, "float"), 1, "float"), 1, "float"))
-        g.fragColor = color
+        g.fragColor[:] = color
     main__void()
     _c = g.fragColor
     out[0] = rt.f32(_c[0]); out[1] = rt.f32(_c[1]); out[2] = rt.f32(_c[2]); out[3] = rt.f32(_c[3])
