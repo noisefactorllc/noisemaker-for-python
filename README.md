@@ -1,5 +1,8 @@
 # noisemaker-for-python
 
+This is not the classic Python Noisemaker (Composer) library. This is a new
+effort centered around software shader execution.
+
 A pure-Python CPU implementation of the [Noisemaker](https://noisemaker.app)
 shader engine — the Python port of [`noisemaker-cpu`](https://github.com/noisefactorllc/noisemaker-cpu).
 
