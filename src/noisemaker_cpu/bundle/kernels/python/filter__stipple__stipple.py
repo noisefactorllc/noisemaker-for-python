@@ -133,7 +133,7 @@ def run_pixel(ctx, out):
                 n = vnoise__vec2(rt.binary("+", noiseP, rt.binary("*", rt.construct(1, _u_seed), rt.f(101.7), 1, "float"), 2, "float"))
                 n = rt.binary("+", n, rt.binary("/", rt.binary("-", _u_density, rt.f(50.0), 1, "float"), rt.f(100.0), 1, "float"), 1, "float")
                 src = rt.swizzle(rt.texture(_u_inputTex, uv), "rgb")
-                result[:] = rt.construct(3, rt.component_wise("step", n, rt.swizzle(src, "r"), width=1), rt.component_wise("step", n, rt.swizzle(src, "g"), width=1), rt.component_wise("step", n, rt.swizzle(src, "b"), width=1))
+                (result.__setitem__(0, rt.component_wise("step", n, rt.swizzle(src, "r"), width=1)), result.__setitem__(1, rt.component_wise("step", n, rt.swizzle(src, "g"), width=1)), result.__setitem__(2, rt.component_wise("step", n, rt.swizzle(src, "b"), width=1)), result)[-1]
             else:
                 src = rt.swizzle(rt.texture(_u_inputTex, uv), "rgb")
                 l = lum__vec3(src)
@@ -144,4 +144,5 @@ def run_pixel(ctx, out):
     main__void()
     _c = g.fragColor
     out[0] = rt.f32(_c[0]); out[1] = rt.f32(_c[1]); out[2] = rt.f32(_c[2]); out[3] = rt.f32(_c[3])
+run_pixel.output_names = ('fragColor',)
 run_pixel.uses_derivatives = True

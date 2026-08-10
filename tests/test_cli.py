@@ -45,6 +45,24 @@ def test_resolve_random_is_partitioned_by_kind():
         assert effects[cli._resolve_effect("random", "filter")]["kind"] == "filter"
 
 
+def test_resolve_random_excludes_iterated_and_external_texture_effects(monkeypatch):
+    effects = _meta()["effects"]
+    captured = []
+
+    def choose(pool):
+        captured.extend(pool)
+        return pool[0]
+
+    monkeypatch.setattr(cli.random, "choice", choose)
+
+    cli._resolve_effect("random", "generator")
+    cli._resolve_effect("random", "filter")
+
+    assert captured
+    assert all(not effects[effect_id].get("iterated") for effect_id in captured)
+    assert all(not effects[effect_id].get("externalTexture") for effect_id in captured)
+
+
 def test_generate_writes_a_png():
     with CliRunner().isolated_filesystem():
         result = run("generate", "synth/curl", "--width", "8", "--height", "8", "--seed", "1", "--filename", "out.png")

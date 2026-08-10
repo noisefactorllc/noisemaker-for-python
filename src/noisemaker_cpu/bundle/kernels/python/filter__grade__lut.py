@@ -267,18 +267,18 @@ def run_pixel(ctx, out):
         quantized = rt.binary("/", rt.component_wise("floor", rt.binary("+", rt.binary("*", l, levels, 1, "float"), rt.f(0.5), 1, "float"), width=1), levels, 1, "float")
         ramp = rt.construct(3, 0.0)
         if rt.binary("<", quantized, rt.f(0.2)):
-            ramp[:] = rt.construct(3, rt.f(0.1), rt.f(0.05), rt.f(0.15))
+            (ramp.__setitem__(0, rt.f(0.1)), ramp.__setitem__(1, rt.f(0.05)), ramp.__setitem__(2, rt.f(0.15)), ramp)[-1]
         else:
             if rt.binary("<", quantized, rt.f(0.4)):
-                ramp[:] = rt.construct(3, rt.f(0.3), rt.f(0.2), rt.f(0.4))
+                (ramp.__setitem__(0, rt.f(0.3)), ramp.__setitem__(1, rt.f(0.2)), ramp.__setitem__(2, rt.f(0.4)), ramp)[-1]
             else:
                 if rt.binary("<", quantized, rt.f(0.6)):
-                    ramp[:] = rt.construct(3, rt.f(0.5), rt.f(0.4), rt.f(0.6))
+                    (ramp.__setitem__(0, rt.f(0.5)), ramp.__setitem__(1, rt.f(0.4)), ramp.__setitem__(2, rt.f(0.6)), ramp)[-1]
                 else:
                     if rt.binary("<", quantized, rt.f(0.8)):
-                        ramp[:] = rt.construct(3, rt.f(0.8), rt.f(0.6), rt.f(0.5))
+                        (ramp.__setitem__(0, rt.f(0.8)), ramp.__setitem__(1, rt.f(0.6)), ramp.__setitem__(2, rt.f(0.5)), ramp)[-1]
                     else:
-                        ramp[:] = rt.construct(3, rt.f(1.0), rt.f(0.9), rt.f(0.8))
+                        (ramp.__setitem__(0, rt.f(1.0)), ramp.__setitem__(1, rt.f(0.9)), ramp.__setitem__(2, rt.f(0.8)), ramp)[-1]
         hsl = rgbToHsl__vec3(rgb)
         rampHsl = rgbToHsl__vec3(ramp)
         rampHsl = rt.assign_swizzle(rampHsl, "x", rt.component_wise("mix", rt.swizzle(rampHsl, "x"), rt.swizzle(hsl, "x"), rt.f(0.3), width=1))
@@ -382,3 +382,4 @@ def run_pixel(ctx, out):
     main__void()
     _c = g.fragColor
     out[0] = rt.f32(_c[0]); out[1] = rt.f32(_c[1]); out[2] = rt.f32(_c[2]); out[3] = rt.f32(_c[3])
+run_pixel.output_names = ('fragColor',)

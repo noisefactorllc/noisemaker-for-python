@@ -42,8 +42,35 @@ def runtime_defines(params: dict) -> dict:
     return out
 
 
-def infer_kind(passes) -> str:
-    return "filter" if any(p.get("inputs") for p in passes) else "generator"
+def infer_kind(namespace: str, passes: list[dict], textures: dict) -> str:
+    if namespace == "synth":
+        return "generator"
+    if namespace == "mixer":
+        return "mixer"
+    if namespace in {"points", "render"}:
+        return "filter"
+    has_inputs = False
+    external = False
+    for render_pass in passes:
+        for value in (render_pass.get("inputs") or {}).values():
+            has_inputs = True
+            if not isinstance(value, str):
+                continue
+            if value in {"inputTex", "outputTex", "selfTex", "feedback"}:
+                continue
+            if value.startswith(("_", "global_")):
+                continue
+            texture = textures.get(value)
+            if (
+                texture
+                and isinstance(texture.get("width"), (int, float))
+                and isinstance(texture.get("height"), (int, float))
+            ):
+                continue
+            external = True
+    if not has_inputs:
+        return "generator"
+    return "mixer" if external else "filter"
 
 
 def _key(eid, program):
@@ -52,6 +79,35 @@ def _key(eid, program):
 
 def _file(key):
     return key.replace("/", "__").replace(":", "__") + ".py"
+
+
+_PASS_EXECUTION_KEYS = (
+    "uniforms",
+    "repeat",
+    "blend",
+    "clear",
+    "drawMode",
+    "count",
+    "countUniform",
+    "type",
+    "entryPoint",
+    "drawBuffers",
+    "conditions",
+)
+
+
+def _pass_metadata(render_pass: dict, key: str | None) -> dict:
+    metadata = {
+        "name": render_pass["name"],
+        "program": render_pass["program"],
+        "key": key,
+        "inputs": render_pass.get("inputs") or {},
+        "outputs": render_pass.get("outputs") or {},
+    }
+    for field in _PASS_EXECUTION_KEYS:
+        if field in render_pass:
+            metadata[field] = render_pass[field]
+    return metadata
 
 
 def build(ids, out_dir=BUNDLE, update_lock=False):
@@ -87,17 +143,7 @@ def build(ids, out_dir=BUNDLE, update_lock=False):
                 # point-scatter deposit). Keep it so the renderer can run its
                 # native adapter; it has no transpiled kernel key.
                 if p.get("drawMode"):
-                    passes.append(
-                        {
-                            "name": p["name"],
-                            "program": p["program"],
-                            "key": None,
-                            "drawMode": p["drawMode"],
-                            "inputs": p.get("inputs", {}),
-                            "outputs": p.get("outputs", {}),
-                            "uniforms": p.get("uniforms", {}),
-                        }
-                    )
+                    passes.append(_pass_metadata(p, None))
                 continue
             key = _key(eid, p["program"])
             h = hashlib.sha256(glsl.strip().encode("utf-8")).hexdigest()
@@ -115,26 +161,19 @@ def build(ids, out_dir=BUNDLE, update_lock=False):
                 drift.append(key)
             hashes[key] = h
             n_ok += 1
-            passes.append(
-                {
-                    "name": p["name"],
-                    "program": p["program"],
-                    "key": key,
-                    "inputs": p.get("inputs") or {},
-                    "outputs": p.get("outputs") or {},
-                    "uniforms": p.get("uniforms") or {},
-                }
-            )
+            passes.append(_pass_metadata(p, key))
         if not passes:
             continue
         bundle["effects"][eid] = {
             "namespace": eff["namespace"],
             "func": eff["func"],
-            "kind": infer_kind(eff["passes"]),
+            "kind": infer_kind(eff["namespace"], eff["passes"], eff.get("textures", {})),
             "params": eff["params"],
             "textures": eff.get("textures", {}),
             "passes": passes,
         }
+        if eff["params"].get("iterationCount", {}).get("cpuOnly"):
+            bundle["effects"][eid]["iterated"] = True
         if eff.get("externalTexture"):
             bundle["effects"][eid]["externalTexture"] = eff["externalTexture"]
     if drift and not update_lock:

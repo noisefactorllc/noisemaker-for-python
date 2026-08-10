@@ -55,15 +55,15 @@ def run_pixel(ctx, out):
         corner = rt.construct(1, rt.binary("*", h, rt.f(4.0), 1, "float"), base="int")
         origin = rt.construct(2, 0.0)
         if rt.binary("==", corner, rt.i(0)):
-            origin[:] = rt.construct(2, rt.unary("-", halfW), rt.unary("-", halfH))
+            (origin.__setitem__(0, rt.unary("-", halfW)), origin.__setitem__(1, rt.unary("-", halfH)), origin)[-1]
         else:
             if rt.binary("==", corner, rt.i(1)):
-                origin[:] = rt.construct(2, halfW, rt.unary("-", halfH))
+                (origin.__setitem__(0, halfW), origin.__setitem__(1, rt.unary("-", halfH)), origin)[-1]
             else:
                 if rt.binary("==", corner, rt.i(2)):
-                    origin[:] = rt.construct(2, rt.unary("-", halfW), halfH)
+                    (origin.__setitem__(0, rt.unary("-", halfW)), origin.__setitem__(1, halfH), origin)[-1]
                 else:
-                    origin[:] = rt.construct(2, halfW, halfH)
+                    (origin.__setitem__(0, halfW), origin.__setitem__(1, halfH), origin)[-1]
         dist = rt.length(rt.binary("-", centered, origin, 2, "float"))
         return rt.binary("*", rt.component_wise("step", dist, rt.f(0.7), width=1), rt.binary("-", rt.f(1.0), rt.component_wise("step", dist, rt.f(0.5), width=1), 1, "float"), 1, "float")
     def drawShape__int_vec2_float_float_float(shapeType, centered, halfW, halfH, h):
@@ -246,3 +246,4 @@ def run_pixel(ctx, out):
     main__void()
     _c = g.fragColor
     out[0] = rt.f32(_c[0]); out[1] = rt.f32(_c[1]); out[2] = rt.f32(_c[2]); out[3] = rt.f32(_c[3])
+run_pixel.output_names = ('fragColor',)

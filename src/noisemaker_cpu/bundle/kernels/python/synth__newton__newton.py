@@ -142,8 +142,8 @@ def run_pixel(ctx, out):
             effDegree = p[1]
             effZoomDepth = rt.component_wise("min", _u_zoomDepth, p[2], width=1)
         else:
-            cHi[:] = rt.construct(2, _u_centerHiX, _u_centerHiY)
-            cLo[:] = rt.construct(2, _u_centerLoX, _u_centerLoY)
+            (cHi.__setitem__(0, _u_centerHiX), cHi.__setitem__(1, _u_centerHiY), cHi)[-1]
+            (cLo.__setitem__(0, _u_centerLoX), cLo.__setitem__(1, _u_centerLoY), cLo)[-1]
         zoom = rt.f(0.0)
         zoomPhase = rt.f(0.0)
         if rt.binary(">", _u_zoomSpeed, rt.f(0.0)):
@@ -153,7 +153,7 @@ def run_pixel(ctx, out):
             zoom = rt.component_wise("pow", rt.f(10.0), effZoomDepth, width=1)
         re_df = rt.construct(2, 0.0)
         im_df = rt.construct(2, 0.0)
-        _retc, re_df, im_df = transformCoords_df64__vec2_vec2_vec2_float_float_vec2_vec2(globalCoord, rt.construct(2, rt.swizzle(cHi, "x"), rt.swizzle(cLo, "x")), rt.construct(2, rt.swizzle(cHi, "y"), rt.swizzle(cLo, "y")), zoom, _u_rotation, re_df, im_df)
+        (((_retc0 := transformCoords_df64__vec2_vec2_vec2_float_float_vec2_vec2(globalCoord, rt.construct(2, rt.swizzle(cHi, "x"), rt.swizzle(cLo, "x")), rt.construct(2, rt.swizzle(cHi, "y"), rt.swizzle(cLo, "y")), zoom, _u_rotation, re_df, im_df)), re_df.__setitem__(slice(None), _retc0[1]), im_df.__setitem__(slice(None), _retc0[2]), _retc0[0])[-1])
         intDeg = rt.construct(1, rt.component_wise("floor", effDegree, width=1), base="int")
         numRoots = intDeg
         roots = rt.new_array(rt.i(8), 2)
@@ -199,12 +199,12 @@ def run_pixel(ctx, out):
                     break
                 tr = rt.construct(2, 0.0)
                 ti = rt.construct(2, 0.0)
-                _retc, tr, ti = df64_cmul__vec2_vec2_vec2_vec2_vec2_vec2(pwr, pwi, zr_df, zi_df, tr, ti)
+                (((_retc1 := df64_cmul__vec2_vec2_vec2_vec2_vec2_vec2(pwr, pwi, zr_df, zi_df, tr, ti)), tr.__setitem__(slice(None), _retc1[1]), ti.__setitem__(slice(None), _retc1[2]), _retc1[0])[-1])
                 pwr[:] = tr
                 pwi[:] = ti
             znr = rt.construct(2, 0.0)
             zni = rt.construct(2, 0.0)
-            _retc, znr, zni = df64_cmul__vec2_vec2_vec2_vec2_vec2_vec2(pwr, pwi, zr_df, zi_df, znr, zni)
+            (((_retc2 := df64_cmul__vec2_vec2_vec2_vec2_vec2_vec2(pwr, pwi, zr_df, zi_df, znr, zni)), znr.__setitem__(slice(None), _retc2[1]), zni.__setitem__(slice(None), _retc2[2]), _retc2[0])[-1])
             fzr = df64_sub__vec2_vec2(znr, df64_from__float(rt.f(1.0)))
             fzi = zni
             fpzr = df64_mul_f__vec2_float(pwr, rt.construct(1, intDeg))
@@ -266,3 +266,4 @@ def run_pixel(ctx, out):
     main__void()
     _c = g.fragColor
     out[0] = rt.f32(_c[0]); out[1] = rt.f32(_c[1]); out[2] = rt.f32(_c[2]); out[3] = rt.f32(_c[3])
+run_pixel.output_names = ('fragColor',)

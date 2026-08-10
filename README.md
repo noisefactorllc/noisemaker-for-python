@@ -13,8 +13,11 @@ NumPy-backed kernel per shader pass; a small runtime reproduces the reference
 engine's float model (float32 vectors, float64 scalar arithmetic, half-float
 texture quantization, screen-space derivatives, bit-exact uint32/PCG hashing).
 
-**All 167 catalog effects** are bundled and render at **byte-parity** with the
-JavaScript engine's `effect` CLI (8×8, seed 1) — 0 diff across the whole catalog.
+**All 188 catalog effects** are bundled. The 167 single-frame effects retain
+byte parity with the JavaScript engine's `effect` CLI, while the 21 stateful and
+particle effects have exact JS CPU DSL parity at controlled iteration counts.
+Iterated effects default to `iterationCount: 60`; particle pipelines share state
+from `pointsEmit()` through their point and render steps.
 
 ## Install
 

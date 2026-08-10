@@ -295,6 +295,9 @@ class Runtime:
             return bool(np.all(np.asarray(args[0])))
         if name == "not":
             return np.logical_not(np.asarray(args[0]))
+        if name == "isnan":
+            result = np.isnan(np.asarray(args[0]))
+            return bool(result) if _is_scalar(args[0]) else result
         # Compute in float64 (like JS Math.*), then round to float32 (fround) —
         # matches the reference engine's transcendentals; a float32 sin/pow path
         # diverges enough to blow the +/-2 tolerance in noise chains.

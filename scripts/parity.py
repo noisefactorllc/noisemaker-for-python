@@ -112,7 +112,9 @@ def main():
     if "--only" in sys.argv:
         only = set(sys.argv[sys.argv.index("--only") + 1].split(","))
     effects = _meta()["effects"]
-    ids = [i for i in effects if not only or i in only]
+    candidates = [i for i in effects if not only or i in only]
+    skipped = [i for i in candidates if effects[i].get("iterated")]
+    ids = [i for i in candidates if not effects[i].get("iterated")]
 
     ok, diffs, errors, oracle_err = [], [], {}, []
     for eid in ids:
@@ -140,7 +142,8 @@ def main():
 
     print(
         f"\n=== PARITY: {len(ok)}/{len(ids)} pass (<=2)  |  {len(diffs)} diff  |  "
-        f"{sum(len(v) for v in errors.values())} runtime-error  |  {len(oracle_err)} oracle-error ===\n"
+        f"{sum(len(v) for v in errors.values())} runtime-error  |  {len(oracle_err)} oracle-error  |  "
+        f"{len(skipped)} skipped ===\n"
     )
     if errors:
         print("RUNTIME ERRORS (grouped — these drive runtime-stdlib work):")
@@ -152,6 +155,8 @@ def main():
             print(f"  {d:4}  {eid}")
     if oracle_err:
         print(f"\nORACLE ERRORS (JS effect CLI failed): {len(oracle_err)}  e.g. {oracle_err[:5]}")
+    if skipped:
+        print(f"\nSKIPPED (iterated; covered by DSL parity tests): {len(skipped)}  e.g. {skipped[:5]}")
     print(f"\nPASS: {len(ok)}")
 
 

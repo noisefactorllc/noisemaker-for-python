@@ -37,6 +37,12 @@ def test_parse_program_shape():
     assert ast["render"]["name"] == "o0"
 
 
+def test_parse_render_namespace_in_search_directive():
+    ast = parse_dsl("search synth, render\nsolid().write(o0)\nrender(o0)")
+
+    assert ast["search"] == ["synth", "render"]
+
+
 def test_compile_resolves_effect_and_splits_surface_params():
     plan = compile_dsl("search synth, mixer\nnoise().cellSplit(tex: o1).write(o0)\nrender(o0)", _effects())
     effect_step = plan["chains"][0]["steps"][1]

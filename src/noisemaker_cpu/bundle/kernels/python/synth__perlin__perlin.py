@@ -222,7 +222,7 @@ def run_pixel(ctx, out):
         globalCoord = rt.binary("+", rt.swizzle(ctx.frag_coord, "xy"), _u_tileOffset, 2, "float")
         res = _u_fullResolution
         if rt.binary("<", rt.swizzle(res, "x"), rt.f(1.0)):
-            res[:] = rt.construct(2, rt.f(1024.0), rt.f(1024.0))
+            (res.__setitem__(0, rt.f(1024.0)), res.__setitem__(1, rt.f(1024.0)), res)[-1]
         st = rt.binary("/", rt.binary("+", rt.swizzle(ctx.frag_coord, "xy"), _u_tileOffset, 2, "float"), res, 2, "float")
         st[:] = rt.binary("-", st, rt.f(0.5), 2, "float")
         st = rt.assign_swizzle(st, "x", rt.binary("*", rt.swizzle(st, "x"), _u_aspect, 1, "float"))
@@ -253,8 +253,9 @@ def run_pixel(ctx, out):
         if rt.binary("==", _u_colorMode, rt.i(0)):
             col[:] = rt.construct(3, r)
         else:
-            col[:] = rt.construct(3, r, _g, b)
+            (col.__setitem__(0, r), col.__setitem__(1, _g), col.__setitem__(2, b), col)[-1]
         g.fragColor[:] = rt.construct(4, col, rt.f(1.0))
     main__void()
     _c = g.fragColor
     out[0] = rt.f32(_c[0]); out[1] = rt.f32(_c[1]); out[2] = rt.f32(_c[2]); out[3] = rt.f32(_c[3])
+run_pixel.output_names = ('fragColor',)

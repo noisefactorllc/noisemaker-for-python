@@ -39,9 +39,9 @@ def run_pixel(ctx, out):
             rawUV[:] = rt.swizzle(mapColor, "rg")
         else:
             if rt.binary("==", _u_channel, rt.i(1)):
-                rawUV[:] = rt.construct(2, rt.swizzle(mapColor, "r"), rt.swizzle(mapColor, "b"))
+                (rawUV.__setitem__(0, rt.swizzle(mapColor, "r")), rawUV.__setitem__(1, rt.swizzle(mapColor, "b")), rawUV)[-1]
             else:
-                rawUV[:] = rt.construct(2, rt.swizzle(mapColor, "g"), rt.swizzle(mapColor, "b"))
+                (rawUV.__setitem__(0, rt.swizzle(mapColor, "g")), rawUV.__setitem__(1, rt.swizzle(mapColor, "b")), rawUV)[-1]
         s = rt.binary("/", _u_scale, rt.f(100.0), 1, "float")
         remappedUV = rt.binary("+", rt.binary("*", rawUV, s, 2, "float"), _u_offset, 2, "float")
         remappedUV[:] = applyWrap__vec2_int(remappedUV, _u_wrap)
@@ -56,3 +56,4 @@ def run_pixel(ctx, out):
     main__void()
     _c = g.fragColor
     out[0] = rt.f32(_c[0]); out[1] = rt.f32(_c[1]); out[2] = rt.f32(_c[2]); out[3] = rt.f32(_c[3])
+run_pixel.output_names = ('fragColor',)

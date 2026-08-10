@@ -37,12 +37,12 @@ def run_pixel(ctx, out):
         b = rgb2hsv__vec3(rt.swizzle(color2, "rgb"))
         resultHSV = rt.construct(3, 0.0)
         if rt.binary("==", _u_mode, rt.i(0)):
-            resultHSV[:] = rt.construct(3, rt.swizzle(a, "x"), rt.swizzle(a, "y"), rt.swizzle(b, "z"))
+            (resultHSV.__setitem__(0, rt.swizzle(a, "x")), resultHSV.__setitem__(1, rt.swizzle(a, "y")), resultHSV.__setitem__(2, rt.swizzle(b, "z")), resultHSV)[-1]
         else:
             if rt.binary("==", _u_mode, rt.i(1)):
-                resultHSV[:] = rt.construct(3, rt.swizzle(b, "x"), rt.swizzle(a, "y"), rt.swizzle(a, "z"))
+                (resultHSV.__setitem__(0, rt.swizzle(b, "x")), resultHSV.__setitem__(1, rt.swizzle(a, "y")), resultHSV.__setitem__(2, rt.swizzle(a, "z")), resultHSV)[-1]
             else:
-                resultHSV[:] = rt.construct(3, rt.swizzle(a, "x"), rt.swizzle(b, "y"), rt.swizzle(a, "z"))
+                (resultHSV.__setitem__(0, rt.swizzle(a, "x")), resultHSV.__setitem__(1, rt.swizzle(b, "y")), resultHSV.__setitem__(2, rt.swizzle(a, "z")), resultHSV)[-1]
         middle = rt.construct(4, hsv2rgb__vec3(resultHSV), rt.f(1.0))
         amt = map__float_float_float_float_float(_u_mixAmt, rt.unary("-", rt.f(100.0)), rt.f(100.0), rt.f(0.0), rt.f(1.0))
         color = rt.construct(4, 0.0)
@@ -58,3 +58,4 @@ def run_pixel(ctx, out):
     main__void()
     _c = g.fragColor
     out[0] = rt.f32(_c[0]); out[1] = rt.f32(_c[1]); out[2] = rt.f32(_c[2]); out[3] = rt.f32(_c[3])
+run_pixel.output_names = ('fragColor',)

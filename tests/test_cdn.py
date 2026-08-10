@@ -7,6 +7,7 @@ test that needs the network skips gracefully if the CDN is unreachable.
 
 from __future__ import annotations
 
+import json5
 import pytest
 
 from transpiler import cdn
@@ -92,25 +93,95 @@ def test_fetch_effect_filter_blur():
 def test_eligible_ids():
     ids = _eligible_ids_or_skip()
 
-    # Spec says "the 167 eligible effects" -- tolerate a little manifest
+    # The CPU-iterated stateful/particle catalog expands eligibility to 188.
     # drift over time rather than pinning an exact count.
-    assert abs(len(ids) - 167) <= 10, len(ids)
+    assert abs(len(ids) - 188) <= 10, len(ids)
     assert len(ids) == len(set(ids))  # no duplicates
 
     for effect_id in ids:
         assert "3d" not in effect_id, effect_id
-        assert not effect_id.startswith("points/"), effect_id
-        assert not effect_id.startswith("render/"), effect_id
 
     assert "synth/solid" in ids
     assert "filter/blur" in ids
+    assert "synth/cellularAutomata" in ids
+    assert "points/attractor" in ids
+    assert "render/pointsEmit" in ids
 
-    # Named exclusions (stateful/reactive effects) must be filtered out even
-    # though they don't match the "3d"/points//render/ substring rules.
+    # Reactive/3D effects stay excluded.
     for excluded in (
-        "filter/feedback",
-        "synth/cellularAutomata",
         "synth/scope",
         "classicNoisedeck/shapes3d",
     ):
         assert excluded not in ids
+
+
+def test_eligible_ids_includes_cpu_iterated_catalog(monkeypatch):
+    iterated = {
+        "filter/convolutionFeedback",
+        "filter/feedback",
+        "filter/motionBlur",
+        "filter/temporalAberration",
+        "points/attractor",
+        "points/buddhabrot",
+        "points/dla",
+        "points/flock",
+        "points/flow",
+        "points/hydraulic",
+        "points/lenia",
+        "points/life",
+        "points/physarum",
+        "points/physical",
+        "render/pointsBillboardRender",
+        "render/pointsEmit",
+        "render/pointsRender",
+        "synth/cellularAutomata",
+        "synth/mnca",
+        "synth/navierStokes",
+        "synth/reactionDiffusion",
+    }
+    excluded = {
+        "render/loopBegin",
+        "render/loopEnd",
+        "render/meshRender",
+        "render/environmentCubemap",
+        "synth/scope",
+        "synth/volume3d",
+    }
+    manifest = {effect_id: {} for effect_id in iterated | excluded | {"synth/solid"}}
+    monkeypatch.setattr(cdn, "fetch_manifest", lambda _version: manifest)
+
+    ids = set(cdn.eligible_ids("test-version"))
+
+    assert iterated <= ids
+    assert excluded.isdisjoint(ids)
+
+
+def test_globals_sanitizer_preserves_scientific_notation():
+    source = "{small:5e-4, large:1E+3, computed:moduleConstant}"
+
+    parsed = json5.loads(cdn._sanitize_bare_identifiers(source))
+
+    assert parsed == {"small": 0.0005, "large": 1000.0, "computed": 0}
+
+
+def test_cpu_iteration_metadata_is_injected_for_iterated_effects():
+    effect = {"params": {"seed": {"type": "int", "default": 1}}}
+
+    cdn._inject_cpu_iteration("render/pointsEmit", effect)
+
+    assert effect["params"]["iterationCount"] == {
+        "type": "int",
+        "default": 60,
+        "min": 0,
+        "max": 10000,
+        "cpuOnly": True,
+    }
+
+
+def test_effect_identity_falls_back_to_manifest_id_when_cdn_fields_are_missing():
+    effect = {"namespace": None, "func": None, "params": {}}
+
+    normalized = cdn._normalize_effect("synth/cellularAutomata", effect)
+
+    assert normalized["namespace"] == "synth"
+    assert normalized["func"] == "cellularAutomata"

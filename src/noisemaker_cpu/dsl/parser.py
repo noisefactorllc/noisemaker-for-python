@@ -82,7 +82,11 @@ class _Parser:
         }
         if self.match("search"):
             while True:
-                ast["search"].append(self.identifier("Expected namespace after search")["lexeme"])
+                namespace = self.peek()
+                if namespace["type"] != "identifier" and namespace["lexeme"] != "render":
+                    raise DslError("Expected namespace after search", _location(namespace))
+                self.current += 1
+                ast["search"].append(namespace["lexeme"])
                 if not self.match(","):
                     break
             self.match(";")

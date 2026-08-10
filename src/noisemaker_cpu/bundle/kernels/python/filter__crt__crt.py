@@ -388,7 +388,7 @@ def run_pixel(ctx, out):
             blue_offsets = compute_lens_offsets__vec2_float_float_vec2_float_float_float(rt.construct(2, blue_sample_x, y), width_f, height_f, freq, time, speed, displacement)
             blue_scan_val = sample_scanline_bilinear__float_float_float_float_vec2_float(rt.binary("+", blue_sample_x, rt.swizzle(blue_offsets, "x"), 1, "float"), rt.binary("+", y, rt.swizzle(blue_offsets, "y"), 1, "float"), width_f, height_f, scanline_base, ppb)
             blue_blended = rt.component_wise("mix", blue_base_col, rt.binary("*", rt.binary("+", blue_base_col, blue_scan_val, 3, "float"), blue_scan_val, 3, "float"), rt.f(0.5), width=3)
-            color[:] = rt.construct(3, rt.swizzle(adjust_hue__vec3_float(red_blended, hue_shift), "r"), rt.swizzle(adjust_hue__vec3_float(green_blended, hue_shift), "g"), rt.swizzle(adjust_hue__vec3_float(blue_blended, hue_shift), "b"))
+            (color.__setitem__(0, rt.swizzle(adjust_hue__vec3_float(red_blended, hue_shift), "r")), color.__setitem__(1, rt.swizzle(adjust_hue__vec3_float(green_blended, hue_shift), "g")), color.__setitem__(2, rt.swizzle(adjust_hue__vec3_float(blue_blended, hue_shift), "b")), color)[-1]
             color[:] = adjust_hue__vec3_float(color, rt.unary("-", hue_shift))
             color[:] = adjust_saturation__vec3_float(color, rt.f(1.125))
             vignette_alpha = rt.binary("*", random_scalar__float(rt.binary("+", seed_base, rt.f(3.17), 1, "float")), rt.f(0.175), 1, "float")
@@ -403,3 +403,4 @@ def run_pixel(ctx, out):
     main__void()
     _c = g.fragColor
     out[0] = rt.f32(_c[0]); out[1] = rt.f32(_c[1]); out[2] = rt.f32(_c[2]); out[3] = rt.f32(_c[3])
+run_pixel.output_names = ('fragColor',)

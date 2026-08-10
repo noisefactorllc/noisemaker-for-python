@@ -6,7 +6,8 @@ a named preset, this renders a catalog effect by id (e.g. `synth/curl`,
 `filter/chrome`); `random` picks one at random. As in noisemaker, `generate`
 takes no input and `apply` takes the input image as a positional argument, and
 `random` is partitioned by kind (generators for generate/animate, filters for
-apply) so it never picks an effect that would render degenerately.
+apply) and excludes iterated or external-texture effects, which would be
+unexpectedly expensive or lack a required input.
 """
 
 from __future__ import annotations
@@ -36,11 +37,20 @@ POSITIVE = click.IntRange(min=1)
 
 def _resolve_effect(effect: str, kind: str | None = None) -> str:
     """Resolve an EFFECT argument to a catalog id. `random` picks from effects of
-    the given `kind` ("generator"/"filter"); an explicit id is used as-is."""
+    the given `kind` ("generator"/"filter") that are safe without extra inputs;
+    an explicit id is used as-is."""
     effects = _meta()["effects"]
     if effect == "random":
-        pool = [e for e in effects if kind is None or effects[e].get("kind") == kind]
-        return random.choice(pool or list(effects))
+        pool = [
+            effect_id
+            for effect_id, definition in effects.items()
+            if (kind is None or definition.get("kind") == kind)
+            and not definition.get("iterated")
+            and not definition.get("externalTexture")
+        ]
+        if not pool:
+            raise click.ClickException(f"No {kind or 'catalog'} effects are available for random selection")
+        return random.choice(pool)
     if effect not in effects:
         raise click.BadParameter(
             f"Unknown effect: {effect}. Pass 'random' or a catalog id like 'synth/curl'.",

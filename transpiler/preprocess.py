@@ -41,7 +41,7 @@ def normalize(source: str, runtime_defines: dict | None = None) -> dict:
     outputs = []
     varyings = []
     for line in body.split("\n"):
-        m = re.match(r"\s*out\s+(\w+)\s+(\w+)\s*;\s*$", line)
+        m = re.match(r"\s*(?:layout\s*\([^)]*\)\s*)?out\s+(\w+)\s+(\w+)\s*;\s*$", line)
         if m:
             outputs.append(m.group(2))
             out_lines.append(f"{m.group(1)} {m.group(2)};")

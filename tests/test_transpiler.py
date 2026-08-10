@@ -51,3 +51,102 @@ def test_pipeline_invert_compiles():
     from noisemaker_cpu.kernel_loader import load_kernel
 
     load_kernel(_transpile("filter/invert", "inv"))
+
+
+def test_nested_inout_call_is_an_expression_and_updates_caller():
+    from noisemaker_cpu.kernel_loader import load_kernel
+    from noisemaker_cpu.pass_runner import Ctx, run_pass
+    from noisemaker_cpu.runtime import Runtime
+    from transpiler.codegen import emit_python
+    from transpiler.parser import parse
+    from transpiler.preprocess import normalize
+
+    source = """
+        out vec4 fragColor;
+        float bump(inout float seed) { seed += 1.0; return seed; }
+        void main() {
+            float seed = 1.0;
+            float doubled = bump(seed) * 2.0;
+            fragColor = vec4(doubled, seed, 0.0, 1.0);
+        }
+    """
+    normalized = normalize(source, {})
+    kernel = load_kernel(emit_python(parse(normalized["source"]), normalized["outputs"], normalized["varyings"]))
+
+    surface = run_pass(kernel, Ctx(Runtime()), 1, 1)
+
+    assert np.array_equal(surface.data, np.array([4.0, 2.0, 0.0, 1.0], dtype=np.float32))
+
+
+def test_local_vector_constructor_assignment_matches_sequential_js_aliasing():
+    from noisemaker_cpu.kernel_loader import load_kernel
+    from noisemaker_cpu.pass_runner import Ctx, run_pass
+    from noisemaker_cpu.runtime import Runtime
+    from transpiler.codegen import emit_python
+    from transpiler.parser import parse
+    from transpiler.preprocess import normalize
+
+    source = """
+        out vec4 fragColor;
+        void main() {
+            vec2 p = vec2(1.0, 2.0);
+            p = vec2(dot(p, vec2(2.0, 0.0)), dot(p, vec2(3.0, 0.0)));
+            fragColor = vec4(p, 0.0, 1.0);
+        }
+    """
+    normalized = normalize(source, {})
+    kernel = load_kernel(emit_python(parse(normalized["source"]), normalized["outputs"], normalized["varyings"]))
+
+    surface = run_pass(kernel, Ctx(Runtime()), 1, 1)
+
+    assert np.array_equal(surface.data, np.array([2.0, 6.0, 0.0, 1.0], dtype=np.float32))
+
+
+def test_local_vector_constructor_member_reads_are_evaluated_atomically():
+    from noisemaker_cpu.kernel_loader import load_kernel
+    from noisemaker_cpu.pass_runner import Ctx, run_pass
+    from noisemaker_cpu.runtime import Runtime
+    from transpiler.codegen import emit_python
+    from transpiler.parser import parse
+    from transpiler.preprocess import normalize
+
+    source = """
+        out vec4 fragColor;
+        void main() {
+            vec2 p = vec2(1.0, 2.0);
+            p = vec2(p.y, -p.x);
+            fragColor = vec4(p, 0.0, 1.0);
+        }
+    """
+    normalized = normalize(source, {})
+    kernel = load_kernel(emit_python(parse(normalized["source"]), normalized["outputs"], normalized["varyings"]))
+
+    surface = run_pass(kernel, Ctx(Runtime()), 1, 1)
+
+    assert np.array_equal(surface.data, np.array([2.0, -1.0, 0.0, 1.0], dtype=np.float32))
+
+
+def test_indexed_vector_conditional_assignment_matches_js_true_branch_noop():
+    from noisemaker_cpu.kernel_loader import load_kernel
+    from noisemaker_cpu.pass_runner import Ctx, run_pass
+    from noisemaker_cpu.runtime import Runtime
+    from transpiler.codegen import emit_python
+    from transpiler.parser import parse
+    from transpiler.preprocess import normalize
+
+    source = """
+        out vec4 fragColor;
+        void main() {
+            vec4 slots[2];
+            vec4 current = vec4(1.0, 0.5, 0.25, 1.0);
+            vec4 history = vec4(0.0);
+            slots[1] = history.a < 0.5 ? current : history;
+            fragColor = slots[1];
+        }
+    """
+    normalized = normalize(source, {})
+    kernel = load_kernel(emit_python(parse(normalized["source"]), normalized["outputs"], normalized["varyings"]))
+
+    surface = run_pass(kernel, Ctx(Runtime()), 1, 1)
+
+    assert np.array_equal(surface.data, np.zeros(4, dtype=np.float32))

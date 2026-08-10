@@ -93,8 +93,8 @@ def run_pixel(ctx, out):
         alo = rt.f(0.0)
         bhi = rt.f(0.0)
         blo = rt.f(0.0)
-        _retc, ahi, alo = df64_split__float_float_float(rt.swizzle(a, "x"), ahi, alo)
-        _retc, bhi, blo = df64_split__float_float_float(rt.swizzle(b, "x"), bhi, blo)
+        (((_retc0 := df64_split__float_float_float(rt.swizzle(a, "x"), ahi, alo)), (ahi := _retc0[1]), (alo := _retc0[2]), _retc0[0])[-1])
+        (((_retc1 := df64_split__float_float_float(rt.swizzle(b, "x"), bhi, blo)), (bhi := _retc1[1]), (blo := _retc1[2]), _retc1[0])[-1])
         e = rt.binary("+", rt.binary("+", rt.binary("+", rt.binary("-", rt.binary("*", ahi, bhi, 1, "float"), p, 1, "float"), rt.binary("*", ahi, blo, 1, "float"), 1, "float"), rt.binary("*", alo, bhi, 1, "float"), 1, "float"), rt.binary("*", alo, blo, 1, "float"), 1, "float")
         e = rt.binary("+", e, rt.binary("+", rt.binary("*", rt.swizzle(a, "x"), rt.swizzle(b, "y"), 1, "float"), rt.binary("*", rt.swizzle(a, "y"), rt.swizzle(b, "x"), 1, "float"), 1, "float"), 1, "float")
         return rt.construct(2, p, e)
@@ -105,8 +105,8 @@ def run_pixel(ctx, out):
         alo = rt.f(0.0)
         bhi = rt.f(0.0)
         blo = rt.f(0.0)
-        _retc, ahi, alo = df64_split__float_float_float(rt.swizzle(a, "x"), ahi, alo)
-        _retc, bhi, blo = df64_split__float_float_float(b, bhi, blo)
+        (((_retc2 := df64_split__float_float_float(rt.swizzle(a, "x"), ahi, alo)), (ahi := _retc2[1]), (alo := _retc2[2]), _retc2[0])[-1])
+        (((_retc3 := df64_split__float_float_float(b, bhi, blo)), (bhi := _retc3[1]), (blo := _retc3[2]), _retc3[0])[-1])
         e = rt.binary("+", rt.binary("+", rt.binary("+", rt.binary("-", rt.binary("*", ahi, bhi, 1, "float"), p, 1, "float"), rt.binary("*", ahi, blo, 1, "float"), 1, "float"), rt.binary("*", alo, bhi, 1, "float"), 1, "float"), rt.binary("*", alo, blo, 1, "float"), 1, "float")
         e = rt.binary("+", e, rt.binary("*", rt.swizzle(a, "y"), b, 1, "float"), 1, "float")
         return rt.construct(2, p, e)
@@ -231,7 +231,7 @@ def run_pixel(ctx, out):
         c = rt.copy(c, "float")
         reDF = rt.construct(2, 0.0)
         imDF = rt.construct(2, 0.0)
-        _retc, reDF, imDF = transformCoords__vec2_float_vec2_vec2(fragCoord, zm, reDF, imDF)
+        (((_retc4 := transformCoords__vec2_float_vec2_vec2(fragCoord, zm, reDF, imDF)), reDF.__setitem__(slice(None), _retc4[1]), imDF.__setitem__(slice(None), _retc4[2]), _retc4[0])[-1])
         zRe = reDF
         zIm = imDF
         i = rt.f(0.0)
@@ -290,7 +290,7 @@ def run_pixel(ctx, out):
         else:
             reDF = rt.construct(2, 0.0)
             imDF = rt.construct(2, 0.0)
-            _retc, reDF, imDF = transformCoords__vec2_float_vec2_vec2(globalCoord, effectiveZoom, reDF, imDF)
+            (((_retc5 := transformCoords__vec2_float_vec2_vec2(globalCoord, effectiveZoom, reDF, imDF)), reDF.__setitem__(slice(None), _retc5[1]), imDF.__setitem__(slice(None), _retc5[2]), _retc5[0])[-1])
             r = juliaIterate__vec2_vec2_vec2_int_float_int(reDF, imDF, c, _u_iterations, _u_stripeFreq, _u_trapShape)
             if rt.binary("==", _u_outputMode, rt.i(0)):
                 value = outputSmoothIteration__struct1_float(r, rt.construct(1, _u_iterations))
@@ -311,3 +311,4 @@ def run_pixel(ctx, out):
     main__void()
     _c = g.fragColor
     out[0] = rt.f32(_c[0]); out[1] = rt.f32(_c[1]); out[2] = rt.f32(_c[2]); out[3] = rt.f32(_c[3])
+run_pixel.output_names = ('fragColor',)

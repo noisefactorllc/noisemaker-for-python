@@ -13,6 +13,8 @@ def run_pixel(ctx, out):
     _u_fullResolution = U.get("fullResolution", rt.construct(2, 0.0))
     _u_amount = U.get("amount", rt.f(0.0))
     _u_ridges = U.get("ridges", 0)
+    _u_speed = U.get("speed", 0)
+    _u_time = U.get("time", rt.f(0.0))
     _u_antialias = U.get("antialias", False)
     g.fragColor = rt.construct(4, 0.0)
     def main__void():
@@ -22,7 +24,7 @@ def run_pixel(ctx, out):
         uv[:] = rt.binary("-", uv, rt.f(0.5), 2, "float")
         uv = rt.assign_swizzle(uv, "x", rt.binary("*", rt.swizzle(uv, "x"), aspectRatio, 1, "float"))
         r = rt.length(uv)
-        phase = rt.binary("*", rt.binary("*", rt.binary("*", r, rt.construct(1, _u_ridges), 1, "float"), rt.f(2.0), 1, "float"), rt.f(3.14159265359), 1, "float")
+        phase = rt.binary("-", rt.binary("*", rt.binary("*", rt.binary("*", r, rt.construct(1, _u_ridges), 1, "float"), rt.f(2.0), 1, "float"), rt.f(3.14159265359), 1, "float"), rt.binary("*", rt.binary("*", rt.binary("*", _u_time, rt.f(2.0), 1, "float"), rt.f(3.14159265359), 1, "float"), rt.construct(1, _u_speed), 1, "float"), 1, "float")
         damping = rt.component_wise("max", rt.f(0.0), rt.binary("-", rt.f(1.0), r, 1, "float"), width=1)
         w = rt.f(0.0)
         x = rt.f(0.0)
@@ -76,4 +78,5 @@ def run_pixel(ctx, out):
     main__void()
     _c = g.fragColor
     out[0] = rt.f32(_c[0]); out[1] = rt.f32(_c[1]); out[2] = rt.f32(_c[2]); out[3] = rt.f32(_c[3])
+run_pixel.output_names = ('fragColor',)
 run_pixel.uses_derivatives = True

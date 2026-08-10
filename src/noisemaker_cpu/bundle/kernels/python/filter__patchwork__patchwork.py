@@ -74,18 +74,18 @@ def run_pixel(ctx, out):
             edgeNormal = rt.construct(2, 0.0)
             if rt.binary("==", dMin, dLeft):
                 neighborIdx = rt.assign_swizzle(neighborIdx, "x", rt.binary("-", rt.swizzle(neighborIdx, "x"), rt.f(1.0), 1, "float"))
-                edgeNormal[:] = rt.construct(2, rt.unary("-", rt.f(1.0)), rt.f(0.0))
+                (edgeNormal.__setitem__(0, rt.unary("-", rt.f(1.0))), edgeNormal.__setitem__(1, rt.f(0.0)), edgeNormal)[-1]
             else:
                 if rt.binary("==", dMin, dRight):
                     neighborIdx = rt.assign_swizzle(neighborIdx, "x", rt.binary("+", rt.swizzle(neighborIdx, "x"), rt.f(1.0), 1, "float"))
-                    edgeNormal[:] = rt.construct(2, rt.f(1.0), rt.f(0.0))
+                    (edgeNormal.__setitem__(0, rt.f(1.0)), edgeNormal.__setitem__(1, rt.f(0.0)), edgeNormal)[-1]
                 else:
                     if rt.binary("==", dMin, dBottom):
                         neighborIdx = rt.assign_swizzle(neighborIdx, "y", rt.binary("-", rt.swizzle(neighborIdx, "y"), rt.f(1.0), 1, "float"))
-                        edgeNormal[:] = rt.construct(2, rt.f(0.0), rt.unary("-", rt.f(1.0)))
+                        (edgeNormal.__setitem__(0, rt.f(0.0)), edgeNormal.__setitem__(1, rt.unary("-", rt.f(1.0))), edgeNormal)[-1]
                     else:
                         neighborIdx = rt.assign_swizzle(neighborIdx, "y", rt.binary("+", rt.swizzle(neighborIdx, "y"), rt.f(1.0), 1, "float"))
-                        edgeNormal[:] = rt.construct(2, rt.f(0.0), rt.f(1.0))
+                        (edgeNormal.__setitem__(0, rt.f(0.0)), edgeNormal.__setitem__(1, rt.f(1.0)), edgeNormal)[-1]
             neighborCenter = rt.binary("+", imgCenter, rt.binary("*", rt.binary("+", neighborIdx, rt.f(0.5), 2, "float"), _u_squareSize, 2, "float"), 2, "float")
             hNeighbor = lum__vec3(rt.swizzle(cellAvgColor3x3__vec2(neighborCenter), "rgb"))
             dh = rt.binary("-", h, hNeighbor, 1, "float")
@@ -98,3 +98,4 @@ def run_pixel(ctx, out):
     main__void()
     _c = g.fragColor
     out[0] = rt.f32(_c[0]); out[1] = rt.f32(_c[1]); out[2] = rt.f32(_c[2]); out[3] = rt.f32(_c[3])
+run_pixel.output_names = ('fragColor',)

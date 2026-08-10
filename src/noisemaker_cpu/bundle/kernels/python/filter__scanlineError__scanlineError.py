@@ -247,9 +247,9 @@ def run_pixel(ctx, out):
             scanBase = rt.binary("+", rt.component_wise("floor", rt.binary("*", height_f, rt.f(0.5), 1, "float"), width=1), rt.f(1.0), 1, "float")
             scanFreq = rt.construct(2, 0.0)
             if rt.binary("<", height_f, width_f):
-                scanFreq[:] = rt.construct(2, rt.binary("*", scanBase, rt.binary("/", height_f, width_f, 1, "float"), 1, "float"), scanBase)
+                (scanFreq.__setitem__(0, rt.binary("*", scanBase, rt.binary("/", height_f, width_f, 1, "float"), 1, "float")), scanFreq.__setitem__(1, scanBase), scanFreq)[-1]
             else:
-                scanFreq[:] = rt.construct(2, scanBase, rt.binary("*", scanBase, rt.binary("/", width_f, height_f, 1, "float"), 1, "float"))
+                (scanFreq.__setitem__(0, scanBase), scanFreq.__setitem__(1, rt.binary("*", scanBase, rt.binary("/", width_f, height_f, 1, "float"), 1, "float")), scanFreq)[-1]
             scanDest = vhs_scanNoise__vec2_vec2_float_float(destCoord, scanFreq, time_value, rt.binary("*", speed_value, rt.f(100.0), 1, "float"))
             fullWidth = (rt.swizzle(_u_fullResolution, "x") if rt.binary(">", rt.swizzle(_u_fullResolution, "x"), rt.f(0.0)) else width_f)
             shiftAmount = rt.component_wise("floor", rt.binary("*", rt.binary("*", rt.binary("*", rt.binary("*", scanDest, fullWidth, 1, "float"), gradDest, 1, "float"), gradDest, 1, "float"), _u_distortion, 1, "float"), width=1)
@@ -299,3 +299,4 @@ def run_pixel(ctx, out):
     main__void()
     _c = g.fragColor
     out[0] = rt.f32(_c[0]); out[1] = rt.f32(_c[1]); out[2] = rt.f32(_c[2]); out[3] = rt.f32(_c[3])
+run_pixel.output_names = ('fragColor',)

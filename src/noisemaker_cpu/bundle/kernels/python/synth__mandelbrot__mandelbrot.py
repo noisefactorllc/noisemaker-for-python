@@ -84,39 +84,39 @@ def run_pixel(ctx, out):
         cX_df = rt.copy(cX_df, "float")
         cY_df = rt.copy(cY_df, "float")
         if rt.binary("==", index, rt.i(1)):
-            cX_df[:] = rt.construct(2, rt.unary("-", rt.f(0.7445398569107056)), rt.unary("-", rt.f(3.4452027897e-09)))
-            cY_df[:] = rt.construct(2, rt.f(0.12172377109527588), rt.f(2.7991489404e-09))
+            (cX_df.__setitem__(0, rt.unary("-", rt.f(0.7445398569107056))), cX_df.__setitem__(1, rt.unary("-", rt.f(3.4452027897e-09))), cX_df)[-1]
+            (cY_df.__setitem__(0, rt.f(0.12172377109527588)), cY_df.__setitem__(1, rt.f(2.7991489404e-09)), cY_df)[-1]
         else:
             if rt.binary("==", index, rt.i(2)):
-                cX_df[:] = rt.construct(2, rt.f(0.29833000898361206), rt.unary("-", rt.f(8.9836120765e-09)))
-                cY_df[:] = rt.construct(2, rt.f(0.0011099999537691474), rt.f(4.6230852696e-11))
+                (cX_df.__setitem__(0, rt.f(0.29833000898361206)), cX_df.__setitem__(1, rt.unary("-", rt.f(8.9836120765e-09))), cX_df)[-1]
+                (cY_df.__setitem__(0, rt.f(0.0011099999537691474)), cY_df.__setitem__(1, rt.f(4.6230852696e-11)), cY_df)[-1]
             else:
                 if rt.binary("==", index, rt.i(3)):
-                    cX_df[:] = rt.construct(2, rt.unary("-", rt.f(1.7548776865005493)), rt.f(2.0253856592e-08))
-                    cY_df[:] = rt.construct(2, rt.f(0.0), rt.f(0.0))
+                    (cX_df.__setitem__(0, rt.unary("-", rt.f(1.7548776865005493))), cX_df.__setitem__(1, rt.f(2.0253856592e-08)), cX_df)[-1]
+                    (cY_df.__setitem__(0, rt.f(0.0)), cY_df.__setitem__(1, rt.f(0.0)), cY_df)[-1]
                 else:
                     if rt.binary("==", index, rt.i(4)):
-                        cX_df[:] = rt.construct(2, rt.unary("-", rt.f(1.7400623559951782)), rt.unary("-", rt.f(2.6584161761e-08)))
-                        cY_df[:] = rt.construct(2, rt.f(0.028175339102745056), rt.f(6.7646594229e-10))
+                        (cX_df.__setitem__(0, rt.unary("-", rt.f(1.7400623559951782))), cX_df.__setitem__(1, rt.unary("-", rt.f(2.6584161761e-08))), cX_df)[-1]
+                        (cY_df.__setitem__(0, rt.f(0.028175339102745056)), cY_df.__setitem__(1, rt.f(6.7646594229e-10)), cY_df)[-1]
                     else:
                         if rt.binary("==", index, rt.i(5)):
-                            cX_df[:] = rt.construct(2, rt.unary("-", rt.f(1.4011552333831787)), rt.f(4.4291128098e-08))
-                            cY_df[:] = rt.construct(2, rt.f(0.0), rt.f(0.0))
+                            (cX_df.__setitem__(0, rt.unary("-", rt.f(1.4011552333831787))), cX_df.__setitem__(1, rt.f(4.4291128098e-08)), cX_df)[-1]
+                            (cY_df.__setitem__(0, rt.f(0.0)), cY_df.__setitem__(1, rt.f(0.0)), cY_df)[-1]
                         else:
                             if rt.binary("==", index, rt.i(6)):
-                                cX_df[:] = rt.construct(2, rt.f(0.37500011920928955), rt.f(8.5257595428e-10))
-                                cY_df[:] = rt.construct(2, rt.unary("-", rt.f(0.21663938462734222)), rt.unary("-", rt.f(3.8103704636e-09)))
+                                (cX_df.__setitem__(0, rt.f(0.37500011920928955)), cX_df.__setitem__(1, rt.f(8.5257595428e-10)), cX_df)[-1]
+                                (cY_df.__setitem__(0, rt.unary("-", rt.f(0.21663938462734222))), cY_df.__setitem__(1, rt.unary("-", rt.f(3.8103704636e-09))), cY_df)[-1]
                             else:
                                 if rt.binary("==", index, rt.i(7)):
-                                    cX_df[:] = rt.construct(2, rt.unary("-", rt.f(0.7445389032363892)), rt.unary("-", rt.f(1.6763610833e-08)))
-                                    cY_df[:] = rt.construct(2, rt.f(0.12172418087720871), rt.unary("-", rt.f(8.7720870845e-10)))
+                                    (cX_df.__setitem__(0, rt.unary("-", rt.f(0.7445389032363892))), cX_df.__setitem__(1, rt.unary("-", rt.f(1.6763610833e-08))), cX_df)[-1]
+                                    (cY_df.__setitem__(0, rt.f(0.12172418087720871)), cY_df.__setitem__(1, rt.unary("-", rt.f(8.7720870845e-10))), cY_df)[-1]
                                 else:
                                     if rt.binary("==", index, rt.i(8)):
-                                        cX_df[:] = rt.construct(2, rt.unary("-", rt.f(1.2553445100784302)), rt.unary("-", rt.f(1.4721569741e-08)))
-                                        cY_df[:] = rt.construct(2, rt.unary("-", rt.f(0.3822004497051239)), rt.unary("-", rt.f(1.3294876089e-08)))
+                                        (cX_df.__setitem__(0, rt.unary("-", rt.f(1.2553445100784302))), cX_df.__setitem__(1, rt.unary("-", rt.f(1.4721569741e-08))), cX_df)[-1]
+                                        (cY_df.__setitem__(0, rt.unary("-", rt.f(0.3822004497051239))), cY_df.__setitem__(1, rt.unary("-", rt.f(1.3294876089e-08))), cY_df)[-1]
                                     else:
-                                        cX_df[:] = rt.construct(2, _u_centerHiX, _u_centerLoX)
-                                        cY_df[:] = rt.construct(2, _u_centerHiY, _u_centerLoY)
+                                        (cX_df.__setitem__(0, _u_centerHiX), cX_df.__setitem__(1, _u_centerLoX), cX_df)[-1]
+                                        (cY_df.__setitem__(0, _u_centerHiY), cY_df.__setitem__(1, _u_centerLoY), cY_df)[-1]
         return (None, cX_df, cY_df)
     def transformCoords_df64__vec2_vec2_vec2_float_float_vec2_vec2(fragCoord, cX_df, cY_df, z, rot, re_df, im_df):
         fragCoord = rt.copy(fragCoord, "float")
@@ -202,7 +202,7 @@ def run_pixel(ctx, out):
         rawIter = i
         fx = df64_to_float__vec2(zr)
         fy = df64_to_float__vec2(zi)
-        z_final[:] = rt.construct(2, fx, fy)
+        (z_final.__setitem__(0, fx), z_final.__setitem__(1, fy), z_final)[-1]
         dz_final[:] = dz
         stripeAcc = stripe
         trapMin = trap
@@ -248,14 +248,14 @@ def run_pixel(ctx, out):
         cY_df = rt.copy(cY_df, "float")
         re_df = rt.construct(2, 0.0)
         im_df = rt.construct(2, 0.0)
-        _retc, re_df, im_df = transformCoords_df64__vec2_vec2_vec2_float_float_vec2_vec2(fragCoord, cX_df, cY_df, z_zoom, rot, re_df, im_df)
+        (((_retc0 := transformCoords_df64__vec2_vec2_vec2_float_float_vec2_vec2(fragCoord, cX_df, cY_df, z_zoom, rot, re_df, im_df)), re_df.__setitem__(slice(None), _retc0[1]), im_df.__setitem__(slice(None), _retc0[2]), _retc0[0])[-1])
         sI = rt.f(0.0)
         rI = rt.f(0.0)
         zf = rt.construct(2, 0.0)
         dzf = rt.construct(2, 0.0)
         sa = rt.f(0.0)
         tm = rt.f(0.0)
-        _retc, sI, rI, zf, dzf, sa, tm = mandelbrot_df64__vec2_vec2_int_float_float_vec2_vec2_float_float(re_df, im_df, maxIter, sI, rI, zf, dzf, sa, tm)
+        (((_retc1 := mandelbrot_df64__vec2_vec2_int_float_float_vec2_vec2_float_float(re_df, im_df, maxIter, sI, rI, zf, dzf, sa, tm)), (sI := _retc1[1]), (rI := _retc1[2]), zf.__setitem__(slice(None), _retc1[3]), dzf.__setitem__(slice(None), _retc1[4]), (sa := _retc1[5]), (tm := _retc1[6]), _retc1[0])[-1])
         return outputDistance__vec2_vec2_float_int(zf, dzf, rI, maxIter)
     def outputNormalMap__vec2_vec2_vec2_float_float_int_float(fragCoord, cX_df, cY_df, z_zoom, rot, maxIter, angle):
         fragCoord = rt.copy(fragCoord, "float")
@@ -285,7 +285,7 @@ def run_pixel(ctx, out):
         rot = (rt.f(0.0) if rt.binary(">", _u_poi, rt.i(0)) else _u_rotation)
         cX_df = rt.construct(2, 0.0)
         cY_df = rt.construct(2, 0.0)
-        _retc, cX_df, cY_df = getPOI__int_vec2_vec2(_u_poi, cX_df, cY_df)
+        (((_retc2 := getPOI__int_vec2_vec2(_u_poi, cX_df, cY_df)), cX_df.__setitem__(slice(None), _retc2[1]), cY_df.__setitem__(slice(None), _retc2[2]), _retc2[0])[-1])
         value = rt.f(0.0)
         smoothI = rt.f(0.0)
         rawI = rt.f(0.0)
@@ -306,8 +306,8 @@ def run_pixel(ctx, out):
             trapMin = rt.f(0.0)
             re_df = rt.construct(2, 0.0)
             im_df = rt.construct(2, 0.0)
-            _retc, re_df, im_df = transformCoords_df64__vec2_vec2_vec2_float_float_vec2_vec2(globalCoord, cX_df, cY_df, effZoom, rot, re_df, im_df)
-            _retc, smoothI, rawI, z_final, dz_final, stripeAcc, trapMin = mandelbrot_df64__vec2_vec2_int_float_float_vec2_vec2_float_float(re_df, im_df, maxIter, smoothI, rawI, z_final, dz_final, stripeAcc, trapMin)
+            (((_retc3 := transformCoords_df64__vec2_vec2_vec2_float_float_vec2_vec2(globalCoord, cX_df, cY_df, effZoom, rot, re_df, im_df)), re_df.__setitem__(slice(None), _retc3[1]), im_df.__setitem__(slice(None), _retc3[2]), _retc3[0])[-1])
+            (((_retc4 := mandelbrot_df64__vec2_vec2_int_float_float_vec2_vec2_float_float(re_df, im_df, maxIter, smoothI, rawI, z_final, dz_final, stripeAcc, trapMin)), (smoothI := _retc4[1]), (rawI := _retc4[2]), z_final.__setitem__(slice(None), _retc4[3]), dz_final.__setitem__(slice(None), _retc4[4]), (stripeAcc := _retc4[5]), (trapMin := _retc4[6]), _retc4[0])[-1])
             if rt.binary("==", _u_outputMode, rt.i(0)):
                 value = outputSmoothIteration__float_float_int(smoothI, rawI, maxIter)
             else:
@@ -327,3 +327,4 @@ def run_pixel(ctx, out):
     main__void()
     _c = g.fragColor
     out[0] = rt.f32(_c[0]); out[1] = rt.f32(_c[1]); out[2] = rt.f32(_c[2]); out[3] = rt.f32(_c[3])
+run_pixel.output_names = ('fragColor',)

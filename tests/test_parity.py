@@ -45,9 +45,14 @@ def test_solid_parity(tmp_path):
     assert _max_diff(js, py) <= 2
 
 
-def _js_render_dsl(program, out, width=16, height=16) -> Surface:
+def _js_render_dsl(program, out, width=16, height=16, seed=None, time=None) -> Surface:
+    args = ["node", CLI, "render", "-", "--width", str(width), "--height", str(height), "--output", out]
+    if seed is not None:
+        args += ["--seed", str(seed)]
+    if time is not None:
+        args += ["--time", str(time)]
     subprocess.run(
-        ["node", CLI, "render", "-", "--width", str(width), "--height", str(height), "--output", out],
+        args,
         cwd=CPU_DIR,
         input=program.encode(),
         check=True,
@@ -55,6 +60,79 @@ def _js_render_dsl(program, out, width=16, height=16) -> Surface:
     )
     with open(out, "rb") as f:
         return decode_png(f.read())
+
+
+ITERATED_PROGRAMS = {
+    **{
+        f"filter/{func}": (
+            f"search synth, filter\nnoise(seed: 1, ridges: true).{func}(iterationCount: 2).write(o0)\nrender(o0)\n"
+        )
+        for func in ("convolutionFeedback", "feedback", "motionBlur", "temporalAberration")
+    },
+    **{
+        f"points/{func}": (
+            "search synth, points, render\n"
+            "perlin(seed: 0).pointsEmit(seed: 0, stateSize: 64, iterationCount: 2)"
+            f".{func}().pointsRender().write(o0)\n"
+            "render(o0)\n"
+        )
+        for func in (
+            "attractor",
+            "buddhabrot",
+            "dla",
+            "flock",
+            "flow",
+            "hydraulic",
+            "lenia",
+            "life",
+            "physarum",
+            "physical",
+        )
+    },
+    "render/pointsBillboardRender": (
+        "search synth, points, render\n"
+        "polygon(radius: 0.7, fgAlpha: 0.1, bgAlpha: 0).write(o0)\n"
+        "perlin(seed: 0).pointsEmit(seed: 0, stateSize: 64, iterationCount: 2).physical()"
+        ".pointsBillboardRender(seed: 42, tex: read(o0), pointSize: 40).write(o1)\n"
+        "render(o1)\n"
+    ),
+    "render/pointsEmit": (
+        "search synth, points, render\n"
+        "perlin(seed: 0).pointsEmit(seed: 0, stateSize: 64, iterationCount: 2)"
+        ".physical().pointsRender().write(o0)\n"
+        "render(o0)\n"
+    ),
+    "render/pointsRender": (
+        "search synth, points, render\n"
+        "perlin(seed: 0).pointsEmit(seed: 0, stateSize: 64, iterationCount: 2)"
+        ".physical().pointsRender().write(o0)\n"
+        "render(o0)\n"
+    ),
+    **{
+        f"synth/{func}": (
+            "search synth\n"
+            "noise(seed: 1, ridges: true).write(o0)\n"
+            f"{func}(seed: 1, tex: read(o0), iterationCount: 2, zoom: 2).write(o1)\n"
+            "render(o1)\n"
+        )
+        for func in ("cellularAutomata", "mnca", "navierStokes", "reactionDiffusion")
+    },
+}
+
+
+@pytest.mark.parametrize(("effect_id", "program"), ITERATED_PROGRAMS.items(), ids=ITERATED_PROGRAMS)
+def test_iterated_effect_byte_parity(tmp_path, effect_id, program):
+    js = _js_render_dsl(
+        program,
+        str(tmp_path / f"{effect_id.replace('/', '__')}.png"),
+        width=8,
+        height=8,
+        seed=1,
+        time=0.25,
+    )
+    py = render_dsl(program, width=8, height=8, seed=1, time=0.25)
+
+    assert _max_diff(js, py) == 0
 
 
 @pytest.mark.parametrize("mode", [0, 1])

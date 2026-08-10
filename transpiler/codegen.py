@@ -54,6 +54,16 @@ def q(s):
     return json.dumps(str(s))
 
 
+def _contains_member_read(node, name):
+    if isinstance(node, dict):
+        if node.get("k") == "member" and node.get("obj", {}).get("k") == "id" and node["obj"].get("name") == name:
+            return True
+        return any(_contains_member_read(value, name) for value in node.values())
+    if isinstance(node, list):
+        return any(_contains_member_read(value, name) for value in node)
+    return False
+
+
 _RESERVED = {
     "and",
     "or",
@@ -132,6 +142,7 @@ class CodeGen:
         self.globals = []  # {name, type, init}
         self.structs = {}  # name -> [ (fieldtype, fieldname) ]
         self.loop_id = 0
+        self.call_id = 0
         self.uses_deriv = False
         self.cur_out = []  # out/inout param pynames of the function being emitted
 
@@ -240,9 +251,15 @@ class CodeGen:
             raise SyntaxError("shader has no main()")
         self._emit_func(L, main)
         L.append(f"    {main['mangled']}()")
-        out_name = "ctx.uv" if self.outputs[0] in self.varyings else f"g.{py_ident(self.outputs[0])}"
-        L.append(f"    _c = {out_name}")
-        L.append("    out[0] = rt.f32(_c[0]); out[1] = rt.f32(_c[1]); out[2] = rt.f32(_c[2]); out[3] = rt.f32(_c[3])")
+        for index, output in enumerate(self.outputs):
+            out_name = "ctx.uv" if output in self.varyings else f"g.{py_ident(output)}"
+            target = "out" if len(self.outputs) == 1 else f"out[{index}]"
+            L.append(f"    _c = {out_name}")
+            L.append(
+                f"    {target}[0] = rt.f32(_c[0]); {target}[1] = rt.f32(_c[1]); "
+                f"{target}[2] = rt.f32(_c[2]); {target}[3] = rt.f32(_c[3])"
+            )
+        L.append(f"run_pixel.output_names = {tuple(self.outputs)!r}")
         if self.uses_deriv:
             L.append("run_pixel.uses_derivatives = True")
         return "\n".join(L) + "\n"
@@ -522,9 +539,38 @@ class CodeGen:
     def _e_assign(self, node, scope):
         op = node["op"]
         target = node["target"]
-        v_code, _v_t = self.expr(node["value"], scope)
         base_op = None if op == "=" else op[:-1]
         tcode, tt = self.expr(target, scope)
+        value = node["value"]
+        # Match glsl-transpiler's indexed-vector ternary emission: the true arm
+        # evaluates but does not copy, while the false arm reduces into the slot.
+        # temporalAberration's empty delay history observes this CPU quirk.
+        if op == "=" and target["k"] == "index" and width_of(tt) > 1 and value["k"] == "cond":
+            condition, _condition_type = self.expr(value["c"], scope)
+            true_value, _true_type = self.expr(value["a"], scope)
+            false_value, _false_type = self.expr(value["b"], scope)
+            false_assignment = f"({tcode}.__setitem__(slice(None), {false_value}), {tcode})[-1]"
+            return (f"({true_value} if {condition} else {false_assignment})", tt)
+        # Local vec constructors are assigned component-by-component by the JS
+        # oracle unless its alias guard sees direct target swizzles and inserts a
+        # temporary. Preserve that boundary: nsSplat relies on the sequential
+        # form, while polygon rotation relies on the guarded atomic form.
+        if (
+            op == "="
+            and target["k"] == "id"
+            and "." not in tcode
+            and width_of(tt) > 1
+            and value["k"] == "construct"
+            and not _contains_member_read(value, target["name"])
+        ):
+            components = [self.expr(arg, scope) for arg in value["args"]]
+            if len(components) == width_of(tt) and all(width_of(arg_type) == 1 for _, arg_type in components):
+                assignments = [
+                    f"{tcode}.__setitem__({index}, {component})"
+                    for index, (component, _arg_type) in enumerate(components)
+                ]
+                return (f"({', '.join([*assignments, tcode])})[-1]", tt)
+        v_code, _v_t = self.expr(value, scope)
         if target["k"] == "id" or target["k"] == "index":
             if base_op:
                 b = "uint" if base_of(tt) == "uint" else ("int" if base_of(tt) == "int" else "float")
@@ -586,8 +632,17 @@ class CodeGen:
         if name in self.overloads:
             fn = self._resolve_overload(name, [a[1] for a in args])
             if fn.get("out_idxs"):  # out/inout: unpack outputs back to caller lvalues
-                targets = [self.expr(node["args"][i], scope)[0] for i in fn["out_idxs"]]
-                return (f"_retc, {', '.join(targets)} = {fn['mangled']}({', '.join(codes)})", fn["ret"])
+                temp = f"_retc{self.call_id}"
+                self.call_id += 1
+                updates = []
+                for result_index, arg_index in enumerate(fn["out_idxs"], start=1):
+                    target, target_type = self.expr(node["args"][arg_index], scope)
+                    if width_of(target_type) > 1:
+                        updates.append(f"{target}.__setitem__(slice(None), {temp}[{result_index}])")
+                    else:
+                        updates.append(f"({target} := {temp}[{result_index}])")
+                call = f"{fn['mangled']}({', '.join(codes)})"
+                return (f"((({temp} := {call}), {', '.join(updates)}, {temp}[0])[-1])", fn["ret"])
             return (f"{fn['mangled']}({', '.join(codes)})", fn["ret"])
         if name in TYPE:  # scalar cast: int(x), float(x), uint(x)
             t = TYPE[name]

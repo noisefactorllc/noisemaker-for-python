@@ -295,8 +295,7 @@
           "inputs": {},
           "outputs": {
             "fragColor": "outputTex"
-          },
-          "uniforms": {}
+          }
         }
       ]
     },
@@ -421,15 +420,14 @@
           "inputs": {},
           "outputs": {
             "fragColor": "outputTex"
-          },
-          "uniforms": {}
+          }
         }
       ]
     },
     "classicNoisedeck/cellNoise": {
       "namespace": "classicNoisedeck",
       "func": "cellNoise",
-      "kind": "filter",
+      "kind": "mixer",
       "params": {
         "shape": {
           "type": "int",
@@ -720,8 +718,7 @@
           },
           "outputs": {
             "fragColor": "outputTex"
-          },
-          "uniforms": {}
+          }
         }
       ]
     },
@@ -908,15 +905,14 @@
           },
           "outputs": {
             "fragColor": "outputTex"
-          },
-          "uniforms": {}
+          }
         }
       ]
     },
     "classicNoisedeck/coalesce": {
       "namespace": "classicNoisedeck",
       "func": "coalesce",
-      "kind": "filter",
+      "kind": "mixer",
       "params": {
         "tex": {
           "type": "surface",
@@ -942,7 +938,7 @@
             "exclusion": 6,
             "glow": 7,
             "hardLight": 8,
-            "hueAB": 1000.0,
+            "hueAB": 10,
             "hueBA": 1001,
             "lighten": 9,
             "mix": 10,
@@ -1304,15 +1300,14 @@
           },
           "outputs": {
             "fragColor": "outputTex"
-          },
-          "uniforms": {}
+          }
         }
       ]
     },
     "classicNoisedeck/composite": {
       "namespace": "classicNoisedeck",
       "func": "composite",
-      "kind": "filter",
+      "kind": "mixer",
       "params": {
         "tex": {
           "type": "surface",
@@ -1560,8 +1555,7 @@
           },
           "outputs": {
             "fragColor": "outputTex"
-          },
-          "uniforms": {}
+          }
         }
       ]
     },
@@ -1925,8 +1919,7 @@
           "inputs": {},
           "outputs": {
             "fragColor": "outputTex"
-          },
-          "uniforms": {}
+          }
         }
       ]
     },
@@ -2060,8 +2053,7 @@
           },
           "outputs": {
             "fragColor": "outputTex"
-          },
-          "uniforms": {}
+          }
         }
       ]
     },
@@ -2281,8 +2273,7 @@
           },
           "outputs": {
             "fragColor": "outputTex"
-          },
-          "uniforms": {}
+          }
         }
       ]
     },
@@ -2501,8 +2492,7 @@
           },
           "outputs": {
             "fragColor": "outputTex"
-          },
-          "uniforms": {}
+          }
         }
       ]
     },
@@ -2668,8 +2658,7 @@
           "inputs": {},
           "outputs": {
             "fragColor": "outputTex"
-          },
-          "uniforms": {}
+          }
         }
       ]
     },
@@ -3079,8 +3068,7 @@
           "inputs": {},
           "outputs": {
             "fragColor": "outputTex"
-          },
-          "uniforms": {}
+          }
         }
       ]
     },
@@ -3200,7 +3188,7 @@
     "classicNoisedeck/shapeMixer": {
       "namespace": "classicNoisedeck",
       "func": "shapeMixer",
-      "kind": "filter",
+      "kind": "mixer",
       "params": {
         "tex": {
           "type": "surface",
@@ -3469,8 +3457,7 @@
           },
           "outputs": {
             "fragColor": "outputTex"
-          },
-          "uniforms": {}
+          }
         }
       ]
     },
@@ -3810,8 +3797,7 @@
           "inputs": {},
           "outputs": {
             "fragColor": "outputTex"
-          },
-          "uniforms": {}
+          }
         }
       ]
     },
@@ -4167,8 +4153,7 @@
           },
           "outputs": {
             "fragColor": "outputTex"
-          },
-          "uniforms": {}
+          }
         }
       ]
     },
@@ -4211,8 +4196,7 @@
           },
           "outputs": {
             "fragColor": "outputTex"
-          },
-          "uniforms": {}
+          }
         }
       ]
     },
@@ -4318,8 +4302,7 @@
           },
           "outputs": {
             "fragColor": "_brightTex"
-          },
-          "uniforms": {}
+          }
         },
         {
           "name": "ntapGather",
@@ -4330,8 +4313,7 @@
           },
           "outputs": {
             "fragColor": "_bloomTex"
-          },
-          "uniforms": {}
+          }
         },
         {
           "name": "composite",
@@ -4343,8 +4325,7 @@
           },
           "outputs": {
             "fragColor": "outputTex"
-          },
-          "uniforms": {}
+          }
         }
       ]
     },
@@ -4397,8 +4378,7 @@
           },
           "outputs": {
             "fragColor": "_blurTemp"
-          },
-          "uniforms": {}
+          }
         },
         {
           "name": "blurV",
@@ -4409,8 +4389,7 @@
           },
           "outputs": {
             "fragColor": "outputTex"
-          },
-          "uniforms": {}
+          }
         }
       ]
     },
@@ -4486,15 +4465,14 @@
           },
           "outputs": {
             "fragColor": "outputTex"
-          },
-          "uniforms": {}
+          }
         }
       ]
     },
     "filter/celShading": {
       "namespace": "filter",
       "func": "celShading",
-      "kind": "filter",
+      "kind": "mixer",
       "params": {
         "mix": {
           "type": "float",
@@ -4637,8 +4615,7 @@
           },
           "outputs": {
             "fragColor": "celShadingColorTex"
-          },
-          "uniforms": {}
+          }
         },
         {
           "name": "edges",
@@ -4649,8 +4626,7 @@
           },
           "outputs": {
             "fragColor": "celShadingEdgeTex"
-          },
-          "uniforms": {}
+          }
         },
         {
           "name": "blend",
@@ -4663,8 +4639,7 @@
           },
           "outputs": {
             "fragColor": "outputTex"
-          },
-          "uniforms": {}
+          }
         }
       ]
     },
@@ -4714,8 +4689,7 @@
           },
           "outputs": {
             "fragColor": "outputTex"
-          },
-          "uniforms": {}
+          }
         }
       ]
     },
@@ -4772,8 +4746,7 @@
           },
           "outputs": {
             "fragColor": "outputTex"
-          },
-          "uniforms": {}
+          }
         }
       ]
     },
@@ -4816,8 +4789,7 @@
           },
           "outputs": {
             "fragColor": "outputTex"
-          },
-          "uniforms": {}
+          }
         }
       ]
     },
@@ -4882,8 +4854,7 @@
           },
           "outputs": {
             "fragColor": "_chBlurH"
-          },
-          "uniforms": {}
+          }
         },
         {
           "name": "blurV",
@@ -4894,8 +4865,7 @@
           },
           "outputs": {
             "fragColor": "_chBlur"
-          },
-          "uniforms": {}
+          }
         },
         {
           "name": "map",
@@ -4907,8 +4877,7 @@
           },
           "outputs": {
             "fragColor": "outputTex"
-          },
-          "uniforms": {}
+          }
         }
       ]
     },
@@ -5078,8 +5047,7 @@
           },
           "outputs": {
             "color": "outputTex"
-          },
-          "uniforms": {}
+          }
         }
       ]
     },
@@ -5114,10 +5082,152 @@
           },
           "outputs": {
             "fragColor": "outputTex"
-          },
-          "uniforms": {}
+          }
         }
       ]
+    },
+    "filter/convolutionFeedback": {
+      "namespace": "filter",
+      "func": "convolutionFeedback",
+      "kind": "filter",
+      "params": {
+        "sharpenRadius": {
+          "type": "int",
+          "default": 5,
+          "uniform": "sharpenRadius",
+          "min": 1,
+          "max": 10,
+          "step": 1,
+          "randMin": 4,
+          "ui": {
+            "label": "radius",
+            "control": "slider",
+            "category": "sharpen"
+          }
+        },
+        "sharpenAmount": {
+          "type": "float",
+          "default": 2.5,
+          "uniform": "sharpenAmount",
+          "min": 0,
+          "max": 3,
+          "step": 0.1,
+          "randMin": 1,
+          "ui": {
+            "label": "amount",
+            "control": "slider",
+            "category": "sharpen"
+          }
+        },
+        "blurRadius": {
+          "type": "int",
+          "default": 4,
+          "uniform": "blurRadius",
+          "min": 1,
+          "max": 10,
+          "step": 1,
+          "randMax": 4,
+          "ui": {
+            "label": "radius",
+            "control": "slider",
+            "category": "blur"
+          }
+        },
+        "blurAmount": {
+          "type": "float",
+          "default": 0.5,
+          "uniform": "blurAmount",
+          "min": 0,
+          "max": 1,
+          "step": 0.01,
+          "randMax": 0.3,
+          "ui": {
+            "label": "amount",
+            "control": "slider",
+            "category": "blur"
+          }
+        },
+        "intensity": {
+          "type": "float",
+          "default": 0.75,
+          "uniform": "intensity",
+          "min": 0,
+          "max": 1,
+          "step": 0.01,
+          "zero": 0,
+          "randMin": 0.65,
+          "ui": {
+            "label": "feedback",
+            "control": "slider"
+          }
+        },
+        "resetState": {
+          "type": "boolean",
+          "default": false,
+          "uniform": "resetState",
+          "ui": {
+            "control": "button",
+            "buttonLabel": "reset",
+            "label": "state"
+          }
+        },
+        "iterationCount": {
+          "type": "int",
+          "default": 60,
+          "min": 0,
+          "max": 10000,
+          "cpuOnly": true
+        }
+      },
+      "textures": {
+        "_cfSharpened": {
+          "width": "input",
+          "height": "input",
+          "format": "rgba8unorm"
+        },
+        "_cfBlurred": {
+          "width": "input",
+          "height": "input",
+          "format": "rgba8unorm"
+        }
+      },
+      "passes": [
+        {
+          "name": "sharpen",
+          "program": "cfSharpen",
+          "key": "filter/convolutionFeedback:cfSharpen",
+          "inputs": {
+            "inputTex": "selfTex"
+          },
+          "outputs": {
+            "fragColor": "_cfSharpened"
+          }
+        },
+        {
+          "name": "blur",
+          "program": "cfBlur",
+          "key": "filter/convolutionFeedback:cfBlur",
+          "inputs": {
+            "inputTex": "_cfSharpened"
+          },
+          "outputs": {
+            "fragColor": "_cfBlurred"
+          }
+        },
+        {
+          "name": "blend",
+          "program": "cfBlend",
+          "key": "filter/convolutionFeedback:cfBlend",
+          "inputs": {
+            "inputTex": "inputTex",
+            "feedbackTex": "_cfBlurred"
+          },
+          "outputs": {
+            "fragColor": "outputTex"
+          }
+        }
+      ],
+      "iterated": true
     },
     "filter/corrupt": {
       "namespace": "filter",
@@ -5247,8 +5357,7 @@
           },
           "outputs": {
             "fragColor": "outputTex"
-          },
-          "uniforms": {}
+          }
         }
       ]
     },
@@ -5313,8 +5422,7 @@
           },
           "outputs": {
             "fragColor": "outputTex"
-          },
-          "uniforms": {}
+          }
         }
       ]
     },
@@ -5484,8 +5592,7 @@
           },
           "outputs": {
             "fragColor": "outputTex"
-          },
-          "uniforms": {}
+          }
         }
       ]
     },
@@ -5528,8 +5635,7 @@
           },
           "outputs": {
             "fragColor": "outputTex"
-          },
-          "uniforms": {}
+          }
         }
       ]
     },
@@ -5642,8 +5748,7 @@
           },
           "outputs": {
             "fragColor": "outputTex"
-          },
-          "uniforms": {}
+          }
         }
       ]
     },
@@ -5809,8 +5914,7 @@
           },
           "outputs": {
             "fragColor": "outputTex"
-          },
-          "uniforms": {}
+          }
         }
       ]
     },
@@ -5896,8 +6000,7 @@
           },
           "outputs": {
             "fragColor": "outputTex"
-          },
-          "uniforms": {}
+          }
         }
       ]
     },
@@ -5976,15 +6079,233 @@
           },
           "outputs": {
             "fragColor": "outputTex"
-          },
-          "uniforms": {}
+          }
         }
       ]
+    },
+    "filter/feedback": {
+      "namespace": "filter",
+      "func": "feedback",
+      "kind": "filter",
+      "params": {
+        "blendMode": {
+          "type": "int",
+          "default": 10,
+          "uniform": "blendMode",
+          "choices": {
+            "add": 0,
+            "cloak": 100,
+            "colorBurn": 2,
+            "colorDodge": 3,
+            "darken": 4,
+            "difference": 5,
+            "exclusion": 6,
+            "glow": 7,
+            "hardLight": 8,
+            "lighten": 9,
+            "mix": 10,
+            "multiply": 11,
+            "negation": 12,
+            "overlay": 13,
+            "phoenix": 14,
+            "reflect": 15,
+            "screen": 16,
+            "softLight": 17,
+            "subtract": 18
+          },
+          "ui": {
+            "label": "mode",
+            "control": "dropdown"
+          }
+        },
+        "mix": {
+          "type": "float",
+          "default": 0,
+          "min": 0,
+          "max": 100,
+          "randMax": 25,
+          "uniform": "mixAmt",
+          "ui": {
+            "label": "feedback",
+            "control": "slider"
+          }
+        },
+        "scaleAmt": {
+          "type": "float",
+          "default": 100,
+          "min": 75,
+          "max": 200,
+          "uniform": "scaleAmt",
+          "ui": {
+            "label": "scale %",
+            "control": "slider",
+            "category": "transform"
+          }
+        },
+        "rotation": {
+          "type": "float",
+          "default": 0,
+          "min": -180,
+          "max": 180,
+          "uniform": "rotation",
+          "ui": {
+            "label": "rotate",
+            "control": "slider",
+            "category": "transform"
+          }
+        },
+        "refractAAmt": {
+          "type": "float",
+          "default": 0,
+          "min": 0,
+          "max": 100,
+          "uniform": "refractAAmt",
+          "ui": {
+            "label": "refract a\u2192b",
+            "control": "slider",
+            "category": "refract"
+          }
+        },
+        "refractBAmt": {
+          "type": "float",
+          "default": 0,
+          "min": 0,
+          "max": 100,
+          "uniform": "refractBAmt",
+          "ui": {
+            "label": "refract b\u2192a",
+            "control": "slider",
+            "category": "refract"
+          }
+        },
+        "refractADir": {
+          "type": "float",
+          "default": 0,
+          "min": 0,
+          "max": 360,
+          "uniform": "refractADir",
+          "ui": {
+            "label": "refract dir a",
+            "control": "slider",
+            "category": "refract"
+          }
+        },
+        "refractBDir": {
+          "type": "float",
+          "default": 0,
+          "min": 0,
+          "max": 360,
+          "uniform": "refractBDir",
+          "ui": {
+            "label": "refract dir b",
+            "control": "slider",
+            "category": "refract"
+          }
+        },
+        "hueRotation": {
+          "type": "float",
+          "default": 0,
+          "min": -180,
+          "max": 180,
+          "uniform": "hueRotation",
+          "ui": {
+            "label": "hue shift",
+            "control": "slider",
+            "category": "color"
+          }
+        },
+        "intensity": {
+          "type": "float",
+          "default": 0,
+          "min": -100,
+          "max": 100,
+          "uniform": "intensity",
+          "ui": {
+            "label": "intensity",
+            "control": "slider",
+            "category": "color"
+          }
+        },
+        "aberration": {
+          "type": "float",
+          "default": 0,
+          "min": 0,
+          "max": 100,
+          "uniform": "aberration",
+          "ui": {
+            "label": "aberration",
+            "control": "slider",
+            "category": "lens"
+          }
+        },
+        "distortion": {
+          "type": "float",
+          "default": 0,
+          "min": -100,
+          "max": 100,
+          "uniform": "distortion",
+          "ui": {
+            "label": "distortion",
+            "control": "slider",
+            "category": "lens"
+          }
+        },
+        "resetState": {
+          "type": "boolean",
+          "default": false,
+          "uniform": "resetState",
+          "ui": {
+            "control": "button",
+            "buttonLabel": "reset",
+            "label": "state"
+          }
+        },
+        "iterationCount": {
+          "type": "int",
+          "default": 60,
+          "min": 0,
+          "max": 10000,
+          "cpuOnly": true
+        }
+      },
+      "textures": {
+        "_selfTex": {
+          "width": "input",
+          "height": "input",
+          "format": "rgba8unorm"
+        }
+      },
+      "passes": [
+        {
+          "name": "main",
+          "program": "feedback",
+          "key": "filter/feedback:feedback",
+          "inputs": {
+            "inputTex": "inputTex",
+            "selfTex": "_selfTex"
+          },
+          "outputs": {
+            "fragColor": "outputTex"
+          }
+        },
+        {
+          "name": "feedback",
+          "program": "copy",
+          "key": "filter/feedback:copy",
+          "inputs": {
+            "inputTex": "outputTex"
+          },
+          "outputs": {
+            "fragColor": "_selfTex"
+          }
+        }
+      ],
+      "iterated": true
     },
     "filter/fibers": {
       "namespace": "filter",
       "func": "fibers",
-      "kind": "filter",
+      "kind": "mixer",
       "params": {
         "density": {
           "type": "float",
@@ -6088,8 +6409,7 @@
           },
           "outputs": {
             "fragColor": "outputTex"
-          },
-          "uniforms": {}
+          }
         }
       ]
     },
@@ -6144,8 +6464,7 @@
           },
           "outputs": {
             "fragColor": "outputTex"
-          },
-          "uniforms": {}
+          }
         }
       ]
     },
@@ -6268,8 +6587,7 @@
           },
           "outputs": {
             "fragColor": "outputTex"
-          },
-          "uniforms": {}
+          }
         }
       ]
     },
@@ -6865,8 +7183,7 @@
           },
           "outputs": {
             "fragColor": "_primaryTex"
-          },
-          "uniforms": {}
+          }
         },
         {
           "name": "creative",
@@ -6877,8 +7194,7 @@
           },
           "outputs": {
             "fragColor": "_creativeTex"
-          },
-          "uniforms": {}
+          }
         },
         {
           "name": "wheels",
@@ -6889,8 +7205,7 @@
           },
           "outputs": {
             "fragColor": "_wheelsTex"
-          },
-          "uniforms": {}
+          }
         },
         {
           "name": "hslSecondary",
@@ -6901,8 +7216,7 @@
           },
           "outputs": {
             "fragColor": "_hslTex"
-          },
-          "uniforms": {}
+          }
         },
         {
           "name": "lut",
@@ -6913,8 +7227,7 @@
           },
           "outputs": {
             "fragColor": "_lutTex"
-          },
-          "uniforms": {}
+          }
         },
         {
           "name": "vignette",
@@ -6925,8 +7238,7 @@
           },
           "outputs": {
             "fragColor": "outputTex"
-          },
-          "uniforms": {}
+          }
         }
       ]
     },
@@ -7216,8 +7528,7 @@
           },
           "outputs": {
             "fragColor": "outputTex"
-          },
-          "uniforms": {}
+          }
         }
       ]
     },
@@ -7403,8 +7714,7 @@
           },
           "outputs": {
             "fragColor": "_hpBlurH"
-          },
-          "uniforms": {}
+          }
         },
         {
           "name": "blurV",
@@ -7415,8 +7725,7 @@
           },
           "outputs": {
             "fragColor": "_hpBlur"
-          },
-          "uniforms": {}
+          }
         },
         {
           "name": "combine",
@@ -7428,8 +7737,7 @@
           },
           "outputs": {
             "fragColor": "outputTex"
-          },
-          "uniforms": {}
+          }
         }
       ]
     },
@@ -7544,8 +7852,7 @@
           },
           "outputs": {
             "fragColor": "outputTex"
-          },
-          "uniforms": {}
+          }
         }
       ]
     },
@@ -7599,8 +7906,7 @@
           },
           "outputs": {
             "fragColor": "outputTex"
-          },
-          "uniforms": {}
+          }
         }
       ]
     },
@@ -7634,8 +7940,7 @@
           },
           "outputs": {
             "fragColor": "outputTex"
-          },
-          "uniforms": {}
+          }
         }
       ]
     },
@@ -7686,8 +7991,7 @@
           },
           "outputs": {
             "fragColor": "outputTex"
-          },
-          "uniforms": {}
+          }
         }
       ]
     },
@@ -7769,8 +8073,7 @@
           },
           "outputs": {
             "fragColor": "outputTex"
-          },
-          "uniforms": {}
+          }
         }
       ]
     },
@@ -7899,7 +8202,7 @@
     "filter/lighting": {
       "namespace": "filter",
       "func": "lighting",
-      "kind": "filter",
+      "kind": "mixer",
       "params": {
         "normalStrength": {
           "type": "float",
@@ -8075,8 +8378,7 @@
           },
           "outputs": {
             "fragColor": "outputTex"
-          },
-          "uniforms": {}
+          }
         }
       ]
     },
@@ -8224,8 +8526,7 @@
           },
           "outputs": {
             "fragColor": "outputTex"
-          },
-          "uniforms": {}
+          }
         }
       ]
     },
@@ -8269,8 +8570,7 @@
           },
           "outputs": {
             "fragColor": "outputTex"
-          },
-          "uniforms": {}
+          }
         }
       ]
     },
@@ -8334,8 +8634,7 @@
           },
           "outputs": {
             "fragColor": "_morphTmp"
-          },
-          "uniforms": {}
+          }
         },
         {
           "name": "morphB",
@@ -8346,8 +8645,7 @@
           },
           "outputs": {
             "fragColor": "outputTex"
-          },
-          "uniforms": {}
+          }
         }
       ]
     },
@@ -8491,10 +8789,77 @@
           },
           "outputs": {
             "fragColor": "outputTex"
-          },
-          "uniforms": {}
+          }
         }
       ]
+    },
+    "filter/motionBlur": {
+      "namespace": "filter",
+      "func": "motionBlur",
+      "kind": "filter",
+      "params": {
+        "amount": {
+          "type": "float",
+          "default": 50,
+          "min": 0,
+          "max": 100,
+          "uniform": "amount",
+          "ui": {
+            "label": "amount",
+            "control": "slider"
+          }
+        },
+        "resetState": {
+          "type": "boolean",
+          "default": false,
+          "uniform": "resetState",
+          "ui": {
+            "control": "button",
+            "buttonLabel": "reset",
+            "label": "state"
+          }
+        },
+        "iterationCount": {
+          "type": "int",
+          "default": 60,
+          "min": 0,
+          "max": 10000,
+          "cpuOnly": true
+        }
+      },
+      "textures": {
+        "_selfTex": {
+          "width": "input",
+          "height": "input",
+          "format": "rgba8unorm"
+        }
+      },
+      "passes": [
+        {
+          "name": "main",
+          "program": "motionBlur",
+          "key": "filter/motionBlur:motionBlur",
+          "inputs": {
+            "inputTex": "inputTex",
+            "selfTex": "_selfTex"
+          },
+          "outputs": {
+            "fragColor": "outputTex"
+          }
+        },
+        {
+          "name": "feedback",
+          "program": "copy",
+          "key": "filter/motionBlur:copy",
+          "inputs": {
+            "inputTex": "outputTex"
+          },
+          "outputs": {
+            "fragColor": "_selfTex"
+          }
+        }
+      ],
+      "iterated": true
     },
     "filter/normalMap": {
       "namespace": "filter",
@@ -8512,15 +8877,14 @@
           },
           "outputs": {
             "fragColor": "outputTex"
-          },
-          "uniforms": {}
+          }
         }
       ]
     },
     "filter/normalize": {
       "namespace": "filter",
       "func": "normalize",
-      "kind": "filter",
+      "kind": "mixer",
       "params": {},
       "textures": {
         "reduce1": {
@@ -8549,8 +8913,7 @@
           },
           "outputs": {
             "fragColor": "reduce1"
-          },
-          "uniforms": {}
+          }
         },
         {
           "name": "reduceMinmax",
@@ -8561,8 +8924,7 @@
           },
           "outputs": {
             "fragColor": "reduce2"
-          },
-          "uniforms": {}
+          }
         },
         {
           "name": "statsFinal",
@@ -8573,8 +8935,7 @@
           },
           "outputs": {
             "fragColor": "stats"
-          },
-          "uniforms": {}
+          }
         },
         {
           "name": "apply",
@@ -8586,8 +8947,7 @@
           },
           "outputs": {
             "fragColor": "outputTex"
-          },
-          "uniforms": {}
+          }
         }
       ]
     },
@@ -8904,7 +9264,7 @@
     "filter/outline": {
       "namespace": "filter",
       "func": "outline",
-      "kind": "filter",
+      "kind": "mixer",
       "params": {
         "shape": {
           "type": "int",
@@ -8965,8 +9325,7 @@
           },
           "outputs": {
             "color": "outlineValueMap"
-          },
-          "uniforms": {}
+          }
         },
         {
           "name": "sobel",
@@ -8977,8 +9336,7 @@
           },
           "outputs": {
             "color": "outlineEdges"
-          },
-          "uniforms": {}
+          }
         },
         {
           "name": "blend",
@@ -8990,8 +9348,7 @@
           },
           "outputs": {
             "color": "outputTex"
-          },
-          "uniforms": {}
+          }
         }
       ]
     },
@@ -9131,15 +9488,14 @@
           },
           "outputs": {
             "fragColor": "outputTex"
-          },
-          "uniforms": {}
+          }
         }
       ]
     },
     "filter/parallax": {
       "namespace": "filter",
       "func": "parallax",
-      "kind": "filter",
+      "kind": "mixer",
       "params": {
         "heightMap": {
           "type": "surface",
@@ -9189,8 +9545,7 @@
           },
           "outputs": {
             "fragColor": "outputTex"
-          },
-          "uniforms": {}
+          }
         }
       ]
     },
@@ -9244,8 +9599,7 @@
           },
           "outputs": {
             "fragColor": "outputTex"
-          },
-          "uniforms": {}
+          }
         }
       ]
     },
@@ -9325,8 +9679,7 @@
           },
           "outputs": {
             "fragColor": "_pcBlurH"
-          },
-          "uniforms": {}
+          }
         },
         {
           "name": "blurV",
@@ -9337,8 +9690,7 @@
           },
           "outputs": {
             "fragColor": "_pcBlur"
-          },
-          "uniforms": {}
+          }
         },
         {
           "name": "combine",
@@ -9350,8 +9702,7 @@
           },
           "outputs": {
             "fragColor": "outputTex"
-          },
-          "uniforms": {}
+          }
         }
       ]
     },
@@ -9427,15 +9778,14 @@
           },
           "outputs": {
             "fragColor": "outputTex"
-          },
-          "uniforms": {}
+          }
         }
       ]
     },
     "filter/pixelSort": {
       "namespace": "filter",
       "func": "pixelSort",
-      "kind": "filter",
+      "kind": "mixer",
       "params": {
         "angled": {
           "type": "float",
@@ -9539,8 +9889,7 @@
           },
           "outputs": {
             "fragColor": "luminance"
-          },
-          "uniforms": {}
+          }
         },
         {
           "name": "findBrightest",
@@ -9551,8 +9900,7 @@
           },
           "outputs": {
             "fragColor": "brightest"
-          },
-          "uniforms": {}
+          }
         },
         {
           "name": "computeRank",
@@ -9563,8 +9911,7 @@
           },
           "outputs": {
             "fragColor": "rank"
-          },
-          "uniforms": {}
+          }
         },
         {
           "name": "gatherSorted",
@@ -9577,8 +9924,7 @@
           },
           "outputs": {
             "fragColor": "sorted"
-          },
-          "uniforms": {}
+          }
         },
         {
           "name": "finalize",
@@ -9631,8 +9977,7 @@
           },
           "outputs": {
             "fragColor": "outputTex"
-          },
-          "uniforms": {}
+          }
         }
       ]
     },
@@ -9711,8 +10056,7 @@
           },
           "outputs": {
             "fragColor": "_pwBlurH"
-          },
-          "uniforms": {}
+          }
         },
         {
           "name": "blurV",
@@ -9723,8 +10067,7 @@
           },
           "outputs": {
             "fragColor": "_pwBlur"
-          },
-          "uniforms": {}
+          }
         },
         {
           "name": "spec",
@@ -9736,8 +10079,7 @@
           },
           "outputs": {
             "fragColor": "outputTex"
-          },
-          "uniforms": {}
+          }
         }
       ]
     },
@@ -9823,8 +10165,7 @@
           },
           "outputs": {
             "fragColor": "outputTex"
-          },
-          "uniforms": {}
+          }
         }
       ]
     },
@@ -9853,6 +10194,18 @@
           "max": 20,
           "ui": {
             "label": "ridges",
+            "control": "slider"
+          }
+        },
+        "speed": {
+          "type": "int",
+          "default": 0,
+          "uniform": "speed",
+          "min": -5,
+          "max": 5,
+          "zero": 0,
+          "ui": {
+            "label": "speed",
             "control": "slider"
           }
         },
@@ -9905,8 +10258,7 @@
           },
           "outputs": {
             "fragColor": "outputTex"
-          },
-          "uniforms": {}
+          }
         }
       ]
     },
@@ -9960,8 +10312,7 @@
           },
           "outputs": {
             "fragColor": "outputTex"
-          },
-          "uniforms": {}
+          }
         }
       ]
     },
@@ -10046,15 +10397,14 @@
           },
           "outputs": {
             "fragColor": "outputTex"
-          },
-          "uniforms": {}
+          }
         }
       ]
     },
     "filter/reindex": {
       "namespace": "filter",
       "func": "reindex",
-      "kind": "filter",
+      "kind": "mixer",
       "params": {
         "displacement": {
           "type": "float",
@@ -10089,8 +10439,7 @@
           },
           "outputs": {
             "fragColor": "statsTiles"
-          },
-          "uniforms": {}
+          }
         },
         {
           "name": "reduce",
@@ -10101,8 +10450,7 @@
           },
           "outputs": {
             "fragColor": "global_stats"
-          },
-          "uniforms": {}
+          }
         },
         {
           "name": "apply",
@@ -10252,8 +10600,7 @@
           },
           "outputs": {
             "fragColor": "_rlBlurH"
-          },
-          "uniforms": {}
+          }
         },
         {
           "name": "blurV",
@@ -10264,8 +10611,7 @@
           },
           "outputs": {
             "fragColor": "_rlBlur"
-          },
-          "uniforms": {}
+          }
         },
         {
           "name": "shade",
@@ -10277,8 +10623,7 @@
           },
           "outputs": {
             "fragColor": "outputTex"
-          },
-          "uniforms": {}
+          }
         }
       ]
     },
@@ -10359,8 +10704,7 @@
           },
           "outputs": {
             "color": "outputTex"
-          },
-          "uniforms": {}
+          }
         }
       ]
     },
@@ -10536,8 +10880,7 @@
           },
           "outputs": {
             "fragColor": "outputTex"
-          },
-          "uniforms": {}
+          }
         }
       ]
     },
@@ -10618,8 +10961,7 @@
           },
           "outputs": {
             "color": "outputTex"
-          },
-          "uniforms": {}
+          }
         }
       ]
     },
@@ -10785,8 +11127,7 @@
           },
           "outputs": {
             "fragColor": "_scatterTmp"
-          },
-          "uniforms": {}
+          }
         },
         {
           "name": "scatterSmooth",
@@ -10797,15 +11138,14 @@
           },
           "outputs": {
             "fragColor": "outputTex"
-          },
-          "uniforms": {}
+          }
         }
       ]
     },
     "filter/scratches": {
       "namespace": "filter",
       "func": "scratches",
-      "kind": "filter",
+      "kind": "mixer",
       "params": {
         "density": {
           "type": "float",
@@ -10946,8 +11286,7 @@
           },
           "outputs": {
             "color": "outputTex"
-          },
-          "uniforms": {}
+          }
         }
       ]
     },
@@ -11009,8 +11348,7 @@
           },
           "outputs": {
             "fragColor": "outputTex"
-          },
-          "uniforms": {}
+          }
         }
       ]
     },
@@ -11043,8 +11381,7 @@
           },
           "outputs": {
             "fragColor": "outputTex"
-          },
-          "uniforms": {}
+          }
         }
       ]
     },
@@ -11189,8 +11526,7 @@
           },
           "outputs": {
             "fragColor": "outputTex"
-          },
-          "uniforms": {}
+          }
         }
       ]
     },
@@ -11300,8 +11636,7 @@
           },
           "outputs": {
             "fragColor": "_smoothEdges"
-          },
-          "uniforms": {}
+          }
         },
         {
           "name": "smoothBlend",
@@ -11313,8 +11648,7 @@
           },
           "outputs": {
             "fragColor": "outputTex"
-          },
-          "uniforms": {}
+          }
         }
       ]
     },
@@ -11361,8 +11695,7 @@
           },
           "outputs": {
             "fragColor": "outputTex"
-          },
-          "uniforms": {}
+          }
         }
       ]
     },
@@ -11467,8 +11800,7 @@
           },
           "outputs": {
             "fragColor": "outputTex"
-          },
-          "uniforms": {}
+          }
         }
       ]
     },
@@ -11598,8 +11930,7 @@
           },
           "outputs": {
             "fragColor": "outputTex"
-          },
-          "uniforms": {}
+          }
         }
       ]
     },
@@ -11688,8 +12019,7 @@
           },
           "outputs": {
             "fragColor": "outputTex"
-          },
-          "uniforms": {}
+          }
         }
       ]
     },
@@ -11855,8 +12185,7 @@
           },
           "outputs": {
             "fragColor": "_stBlurH"
-          },
-          "uniforms": {}
+          }
         },
         {
           "name": "blurV",
@@ -11867,8 +12196,7 @@
           },
           "outputs": {
             "fragColor": "_stBlur"
-          },
-          "uniforms": {}
+          }
         },
         {
           "name": "threshold",
@@ -11880,8 +12208,7 @@
           },
           "outputs": {
             "fragColor": "outputTex"
-          },
-          "uniforms": {}
+          }
         }
       ]
     },
@@ -11925,8 +12252,7 @@
           },
           "outputs": {
             "fragColor": "outputTex"
-          },
-          "uniforms": {}
+          }
         }
       ]
     },
@@ -12036,15 +12362,14 @@
           },
           "outputs": {
             "fragColor": "outputTex"
-          },
-          "uniforms": {}
+          }
         }
       ]
     },
     "filter/strayHair": {
       "namespace": "filter",
       "func": "strayHair",
-      "kind": "filter",
+      "kind": "mixer",
       "params": {
         "density": {
           "type": "float",
@@ -12229,6 +12554,208 @@
           }
         }
       ]
+    },
+    "filter/temporalAberration": {
+      "namespace": "filter",
+      "func": "temporalAberration",
+      "kind": "filter",
+      "params": {
+        "redDelay": {
+          "type": "float",
+          "default": 0,
+          "uniform": "redDelay",
+          "min": 0,
+          "max": 8,
+          "step": 0.1,
+          "ui": {
+            "label": "red delay",
+            "control": "slider"
+          }
+        },
+        "greenDelay": {
+          "type": "float",
+          "default": 4,
+          "uniform": "greenDelay",
+          "min": 0,
+          "max": 8,
+          "step": 0.1,
+          "ui": {
+            "label": "green delay",
+            "control": "slider"
+          }
+        },
+        "blueDelay": {
+          "type": "float",
+          "default": 8,
+          "uniform": "blueDelay",
+          "min": 0,
+          "max": 8,
+          "step": 0.1,
+          "ui": {
+            "label": "blue delay",
+            "control": "slider"
+          }
+        },
+        "iterationCount": {
+          "type": "int",
+          "default": 60,
+          "min": 0,
+          "max": 10000,
+          "cpuOnly": true
+        }
+      },
+      "textures": {
+        "_h1": {
+          "width": "input",
+          "height": "input",
+          "format": "rgba8unorm"
+        },
+        "_h2": {
+          "width": "input",
+          "height": "input",
+          "format": "rgba8unorm"
+        },
+        "_h3": {
+          "width": "input",
+          "height": "input",
+          "format": "rgba8unorm"
+        },
+        "_h4": {
+          "width": "input",
+          "height": "input",
+          "format": "rgba8unorm"
+        },
+        "_h5": {
+          "width": "input",
+          "height": "input",
+          "format": "rgba8unorm"
+        },
+        "_h6": {
+          "width": "input",
+          "height": "input",
+          "format": "rgba8unorm"
+        },
+        "_h7": {
+          "width": "input",
+          "height": "input",
+          "format": "rgba8unorm"
+        },
+        "_h8": {
+          "width": "input",
+          "height": "input",
+          "format": "rgba8unorm"
+        }
+      },
+      "passes": [
+        {
+          "name": "main",
+          "program": "temporalAberration",
+          "key": "filter/temporalAberration:temporalAberration",
+          "inputs": {
+            "inputTex": "inputTex",
+            "h1": "_h1",
+            "h2": "_h2",
+            "h3": "_h3",
+            "h4": "_h4",
+            "h5": "_h5",
+            "h6": "_h6",
+            "h7": "_h7",
+            "h8": "_h8"
+          },
+          "outputs": {
+            "fragColor": "outputTex"
+          }
+        },
+        {
+          "name": "shift8",
+          "program": "delayShift",
+          "key": "filter/temporalAberration:delayShift",
+          "inputs": {
+            "srcTex": "_h7"
+          },
+          "outputs": {
+            "fragColor": "_h8"
+          }
+        },
+        {
+          "name": "shift7",
+          "program": "delayShift",
+          "key": "filter/temporalAberration:delayShift",
+          "inputs": {
+            "srcTex": "_h6"
+          },
+          "outputs": {
+            "fragColor": "_h7"
+          }
+        },
+        {
+          "name": "shift6",
+          "program": "delayShift",
+          "key": "filter/temporalAberration:delayShift",
+          "inputs": {
+            "srcTex": "_h5"
+          },
+          "outputs": {
+            "fragColor": "_h6"
+          }
+        },
+        {
+          "name": "shift5",
+          "program": "delayShift",
+          "key": "filter/temporalAberration:delayShift",
+          "inputs": {
+            "srcTex": "_h4"
+          },
+          "outputs": {
+            "fragColor": "_h5"
+          }
+        },
+        {
+          "name": "shift4",
+          "program": "delayShift",
+          "key": "filter/temporalAberration:delayShift",
+          "inputs": {
+            "srcTex": "_h3"
+          },
+          "outputs": {
+            "fragColor": "_h4"
+          }
+        },
+        {
+          "name": "shift3",
+          "program": "delayShift",
+          "key": "filter/temporalAberration:delayShift",
+          "inputs": {
+            "srcTex": "_h2"
+          },
+          "outputs": {
+            "fragColor": "_h3"
+          }
+        },
+        {
+          "name": "shift2",
+          "program": "delayShift",
+          "key": "filter/temporalAberration:delayShift",
+          "inputs": {
+            "srcTex": "_h1"
+          },
+          "outputs": {
+            "fragColor": "_h2"
+          }
+        },
+        {
+          "name": "shift1",
+          "program": "delayShift",
+          "key": "filter/temporalAberration:delayShift",
+          "inputs": {
+            "srcTex": "inputTex"
+          },
+          "outputs": {
+            "fragColor": "_h1"
+          }
+        }
+      ],
+      "iterated": true
     },
     "filter/tetraColorArray": {
       "namespace": "filter",
@@ -12687,8 +13214,7 @@
           },
           "outputs": {
             "fragColor": "outputTex"
-          },
-          "uniforms": {}
+          }
         }
       ]
     },
@@ -12937,15 +13463,14 @@
           },
           "outputs": {
             "fragColor": "outputTex"
-          },
-          "uniforms": {}
+          }
         }
       ]
     },
     "filter/text": {
       "namespace": "filter",
       "func": "text",
-      "kind": "filter",
+      "kind": "mixer",
       "params": {
         "text": {
           "type": "string",
@@ -13064,6 +13589,15 @@
           "ui": {
             "label": "justify",
             "control": "dropdown",
+            "category": "general"
+          }
+        },
+        "style": {
+          "type": "string",
+          "default": "",
+          "ui": {
+            "label": "style",
+            "hidden": true,
             "category": "general"
           }
         }
@@ -13250,8 +13784,7 @@
           },
           "outputs": {
             "color": "outputTex"
-          },
-          "uniforms": {}
+          }
         }
       ]
     },
@@ -13362,8 +13895,7 @@
           },
           "outputs": {
             "fragColor": "outputTex"
-          },
-          "uniforms": {}
+          }
         }
       ]
     },
@@ -13423,8 +13955,7 @@
           },
           "outputs": {
             "color": "outputTex"
-          },
-          "uniforms": {}
+          }
         }
       ]
     },
@@ -13487,8 +14018,7 @@
           },
           "outputs": {
             "fragColor": "outputTex"
-          },
-          "uniforms": {}
+          }
         }
       ]
     },
@@ -13591,8 +14121,7 @@
           },
           "outputs": {
             "fragColor": "outputTex"
-          },
-          "uniforms": {}
+          }
         }
       ]
     },
@@ -13659,8 +14188,7 @@
           },
           "outputs": {
             "fragColor": "_usmBlurH"
-          },
-          "uniforms": {}
+          }
         },
         {
           "name": "blurV",
@@ -13671,8 +14199,7 @@
           },
           "outputs": {
             "fragColor": "_usmBlur"
-          },
-          "uniforms": {}
+          }
         },
         {
           "name": "combine",
@@ -13684,8 +14211,7 @@
           },
           "outputs": {
             "fragColor": "outputTex"
-          },
-          "uniforms": {}
+          }
         }
       ]
     },
@@ -13766,8 +14292,7 @@
           },
           "outputs": {
             "fragColor": "outputTex"
-          },
-          "uniforms": {}
+          }
         }
       ]
     },
@@ -13856,8 +14381,7 @@
           },
           "outputs": {
             "fragColor": "outputTex"
-          },
-          "uniforms": {}
+          }
         }
       ]
     },
@@ -13917,8 +14441,7 @@
           },
           "outputs": {
             "fragColor": "global_wc_state"
-          },
-          "uniforms": {}
+          }
         },
         {
           "name": "wcSimplify",
@@ -13930,7 +14453,7 @@
           "outputs": {
             "fragColor": "global_wc_state"
           },
-          "uniforms": {}
+          "repeat": 2
         },
         {
           "name": "wcComposite",
@@ -13942,8 +14465,7 @@
           },
           "outputs": {
             "fragColor": "outputTex"
-          },
-          "uniforms": {}
+          }
         }
       ]
     },
@@ -14032,8 +14554,7 @@
           },
           "outputs": {
             "fragColor": "outputTex"
-          },
-          "uniforms": {}
+          }
         }
       ]
     },
@@ -14103,8 +14624,7 @@
           },
           "outputs": {
             "fragColor": "outputTex"
-          },
-          "uniforms": {}
+          }
         }
       ]
     },
@@ -14181,7 +14701,7 @@
     "filter/wormhole": {
       "namespace": "filter",
       "func": "wormhole",
-      "kind": "filter",
+      "kind": "mixer",
       "params": {
         "kink": {
           "type": "float",
@@ -14265,14 +14785,12 @@
           "inputs": {},
           "outputs": {
             "fragColor": "wormhole_accum"
-          },
-          "uniforms": {}
+          }
         },
         {
           "name": "deposit",
           "program": "deposit",
           "key": null,
-          "drawMode": "points",
           "inputs": {
             "inputTex": "inputTex"
           },
@@ -14284,7 +14802,10 @@
             "stride": "stride",
             "rotation": "rotation",
             "wrap": "wrap"
-          }
+          },
+          "blend": true,
+          "drawMode": "points",
+          "count": "input"
         },
         {
           "name": "blend",
@@ -14332,15 +14853,14 @@
           },
           "outputs": {
             "fragColor": "outputTex"
-          },
-          "uniforms": {}
+          }
         }
       ]
     },
     "mixer/alphaMask": {
       "namespace": "mixer",
       "func": "alphaMask",
-      "kind": "filter",
+      "kind": "mixer",
       "params": {
         "tex": {
           "type": "surface",
@@ -14397,7 +14917,7 @@
     "mixer/applyMode": {
       "namespace": "mixer",
       "func": "applyMode",
-      "kind": "filter",
+      "kind": "mixer",
       "params": {
         "tex": {
           "type": "surface",
@@ -14454,7 +14974,7 @@
     "mixer/blendMode": {
       "namespace": "mixer",
       "func": "blendMode",
-      "kind": "filter",
+      "kind": "mixer",
       "params": {
         "tex": {
           "type": "surface",
@@ -14524,7 +15044,7 @@
     "mixer/cellSplit": {
       "namespace": "mixer",
       "func": "cellSplit",
-      "kind": "filter",
+      "kind": "mixer",
       "params": {
         "tex": {
           "type": "surface",
@@ -14617,15 +15137,14 @@
           },
           "outputs": {
             "fragColor": "outputTex"
-          },
-          "uniforms": {}
+          }
         }
       ]
     },
     "mixer/centerMask": {
       "namespace": "mixer",
       "func": "centerMask",
-      "kind": "filter",
+      "kind": "mixer",
       "params": {
         "tex": {
           "type": "surface",
@@ -14722,7 +15241,7 @@
     "mixer/channelCombine": {
       "namespace": "mixer",
       "func": "channelCombine",
-      "kind": "filter",
+      "kind": "mixer",
       "params": {
         "rTex": {
           "type": "surface",
@@ -14792,15 +15311,14 @@
           },
           "outputs": {
             "fragColor": "outputTex"
-          },
-          "uniforms": {}
+          }
         }
       ]
     },
     "mixer/distortion": {
       "namespace": "mixer",
       "func": "distortion",
-      "kind": "filter",
+      "kind": "mixer",
       "params": {
         "tex": {
           "type": "surface",
@@ -14917,15 +15435,14 @@
           },
           "outputs": {
             "fragColor": "outputTex"
-          },
-          "uniforms": {}
+          }
         }
       ]
     },
     "mixer/focusBlur": {
       "namespace": "mixer",
       "func": "focusBlur",
-      "kind": "filter",
+      "kind": "mixer",
       "params": {
         "tex": {
           "type": "surface",
@@ -14996,15 +15513,14 @@
           },
           "outputs": {
             "fragColor": "outputTex"
-          },
-          "uniforms": {}
+          }
         }
       ]
     },
     "mixer/mashup": {
       "namespace": "mixer",
       "func": "mashup",
-      "kind": "filter",
+      "kind": "mixer",
       "params": {
         "source": {
           "type": "surface",
@@ -15080,15 +15596,14 @@
           },
           "outputs": {
             "fragColor": "outputTex"
-          },
-          "uniforms": {}
+          }
         }
       ]
     },
     "mixer/patternMix": {
       "namespace": "mixer",
       "func": "patternMix",
-      "kind": "filter",
+      "kind": "mixer",
       "params": {
         "tex": {
           "type": "surface",
@@ -15188,15 +15703,14 @@
           },
           "outputs": {
             "fragColor": "outputTex"
-          },
-          "uniforms": {}
+          }
         }
       ]
     },
     "mixer/shadow": {
       "namespace": "mixer",
       "func": "shadow",
-      "kind": "filter",
+      "kind": "mixer",
       "params": {
         "tex": {
           "type": "surface",
@@ -15345,15 +15859,14 @@
           },
           "outputs": {
             "fragColor": "outputTex"
-          },
-          "uniforms": {}
+          }
         }
       ]
     },
     "mixer/shapeMask": {
       "namespace": "mixer",
       "func": "shapeMask",
-      "kind": "filter",
+      "kind": "mixer",
       "params": {
         "tex": {
           "type": "surface",
@@ -15482,15 +15995,14 @@
           },
           "outputs": {
             "fragColor": "outputTex"
-          },
-          "uniforms": {}
+          }
         }
       ]
     },
     "mixer/split": {
       "namespace": "mixer",
       "func": "split",
-      "kind": "filter",
+      "kind": "mixer",
       "params": {
         "tex": {
           "type": "surface",
@@ -15576,15 +16088,14 @@
           },
           "outputs": {
             "fragColor": "outputTex"
-          },
-          "uniforms": {}
+          }
         }
       ]
     },
     "mixer/thresholdMix": {
       "namespace": "mixer",
       "func": "thresholdMix",
-      "kind": "filter",
+      "kind": "mixer",
       "params": {
         "tex": {
           "type": "surface",
@@ -15769,15 +16280,14 @@
           },
           "outputs": {
             "fragColor": "outputTex"
-          },
-          "uniforms": {}
+          }
         }
       ]
     },
     "mixer/uvRemap": {
       "namespace": "mixer",
       "func": "uvRemap",
-      "kind": "filter",
+      "kind": "mixer",
       "params": {
         "tex": {
           "type": "surface",
@@ -15864,10 +16374,2488 @@
           },
           "outputs": {
             "fragColor": "outputTex"
-          },
-          "uniforms": {}
+          }
         }
       ]
+    },
+    "points/attractor": {
+      "namespace": "points",
+      "func": "attractor",
+      "kind": "filter",
+      "params": {
+        "stateSize": {
+          "type": "int",
+          "default": 256,
+          "uniform": "stateSize",
+          "ui": {
+            "control": false
+          }
+        },
+        "attractor": {
+          "type": "int",
+          "default": 0,
+          "uniform": "attractor",
+          "choices": {
+            "lorenz": 0,
+            "rossler": 1,
+            "aizawa": 2,
+            "thomas": 3,
+            "halvorsen": 4,
+            "chen": 5,
+            "dadras": 6
+          },
+          "ui": {
+            "label": "attractor",
+            "control": "dropdown"
+          }
+        },
+        "speed": {
+          "type": "float",
+          "default": 1,
+          "uniform": "speed",
+          "min": 0.01,
+          "max": 2,
+          "step": 0.01,
+          "ui": {
+            "label": "speed",
+            "control": "slider"
+          }
+        },
+        "viewMode": {
+          "type": "int",
+          "default": 1,
+          "uniform": "viewMode",
+          "ui": {
+            "control": false
+          }
+        },
+        "iterationCount": {
+          "type": "int",
+          "default": 60,
+          "min": 0,
+          "max": 10000,
+          "cpuOnly": true
+        }
+      },
+      "textures": {},
+      "passes": [
+        {
+          "name": "agent",
+          "program": "agent",
+          "key": "points/attractor:agent",
+          "inputs": {
+            "xyzTex": "global_xyz",
+            "velTex": "global_vel",
+            "rgbaTex": "global_rgba"
+          },
+          "outputs": {
+            "outXYZ": "global_xyz",
+            "outVel": "global_vel",
+            "outRGBA": "global_rgba"
+          },
+          "uniforms": {
+            "attractor": "attractor",
+            "speed": "speed"
+          },
+          "drawBuffers": 3
+        },
+        {
+          "name": "passthrough",
+          "program": "passthrough",
+          "key": "points/attractor:passthrough",
+          "inputs": {
+            "inputTex": "inputTex"
+          },
+          "outputs": {
+            "fragColor": "outputTex"
+          }
+        }
+      ],
+      "iterated": true
+    },
+    "points/buddhabrot": {
+      "namespace": "points",
+      "func": "buddhabrot",
+      "kind": "filter",
+      "params": {
+        "stateSize": {
+          "type": "int",
+          "default": 512,
+          "uniform": "stateSize",
+          "ui": {
+            "control": false
+          }
+        },
+        "mode": {
+          "type": "int",
+          "default": 0,
+          "uniform": "mode",
+          "choices": {
+            "anti": 1,
+            "standard": 0
+          },
+          "ui": {
+            "label": "mode",
+            "control": "dropdown",
+            "category": "fractal"
+          }
+        },
+        "maxIter": {
+          "type": "int",
+          "default": 200,
+          "uniform": "maxIter",
+          "min": 20,
+          "max": 20,
+          "step": 10,
+          "ui": {
+            "label": "max iterations",
+            "control": "slider",
+            "category": "fractal"
+          }
+        },
+        "minIter": {
+          "type": "int",
+          "default": 1,
+          "uniform": "minIter",
+          "min": 1,
+          "max": 10,
+          "step": 1,
+          "ui": {
+            "label": "min iterations",
+            "control": "slider",
+            "category": "fractal"
+          }
+        },
+        "centerX": {
+          "type": "float",
+          "default": -0.5,
+          "uniform": "centerX",
+          "min": -3,
+          "max": 3,
+          "randChance": 0,
+          "step": 0.01,
+          "ui": {
+            "label": "center x",
+            "control": "slider",
+            "category": "navigation"
+          }
+        },
+        "centerY": {
+          "type": "float",
+          "default": 0,
+          "uniform": "centerY",
+          "min": -3,
+          "max": 3,
+          "randChance": 0,
+          "step": 0.01,
+          "ui": {
+            "label": "center y",
+            "control": "slider",
+            "category": "navigation"
+          }
+        },
+        "zoom": {
+          "type": "float",
+          "default": 1,
+          "uniform": "zoom",
+          "min": 0.1,
+          "max": 5,
+          "step": 0.1,
+          "randMin": 0.5,
+          "randMax": 2,
+          "ui": {
+            "label": "zoom",
+            "control": "slider",
+            "category": "navigation"
+          }
+        },
+        "iterationCount": {
+          "type": "int",
+          "default": 60,
+          "min": 0,
+          "max": 10000,
+          "cpuOnly": true
+        }
+      },
+      "textures": {
+        "global_zState": {
+          "width": {
+            "param": "stateSize",
+            "paramDefault": 512
+          },
+          "height": {
+            "param": "stateSize",
+            "paramDefault": 512
+          },
+          "format": "rgba32float"
+        }
+      },
+      "passes": [
+        {
+          "name": "agent",
+          "program": "agent",
+          "key": "points/buddhabrot:agent",
+          "inputs": {
+            "xyzTex": "global_xyz",
+            "velTex": "global_vel",
+            "rgbaTex": "global_rgba"
+          },
+          "outputs": {
+            "outXYZ": "global_xyz",
+            "outVel": "global_vel",
+            "outRGBA": "global_rgba"
+          },
+          "uniforms": {
+            "maxIter": "maxIter",
+            "minIter": "minIter",
+            "mode": "mode",
+            "centerX": "centerX",
+            "centerY": "centerY",
+            "zoom": "zoom"
+          },
+          "drawBuffers": 3
+        },
+        {
+          "name": "zWrite",
+          "program": "zWrite",
+          "key": "points/buddhabrot:zWrite",
+          "inputs": {
+            "xyzTex": "global_xyz",
+            "velTex": "global_vel"
+          },
+          "outputs": {
+            "fragColor": "global_zState"
+          }
+        },
+        {
+          "name": "passthrough",
+          "program": "passthrough",
+          "key": "points/buddhabrot:passthrough",
+          "inputs": {
+            "inputTex": "inputTex"
+          },
+          "outputs": {
+            "fragColor": "outputTex"
+          }
+        }
+      ],
+      "iterated": true
+    },
+    "points/dla": {
+      "namespace": "points",
+      "func": "dla",
+      "kind": "filter",
+      "params": {
+        "stateSize": {
+          "type": "int",
+          "default": 256,
+          "uniform": "stateSize",
+          "ui": {
+            "control": false
+          }
+        },
+        "anchorDensity": {
+          "type": "float",
+          "default": 0.5,
+          "uniform": "anchorDensity",
+          "min": 0.01,
+          "max": 5,
+          "step": 0.01,
+          "ui": {
+            "label": "anchors",
+            "control": "slider",
+            "category": "chemistry"
+          }
+        },
+        "stride": {
+          "type": "float",
+          "default": 15,
+          "uniform": "stride",
+          "min": 1,
+          "max": 50,
+          "step": 1,
+          "ui": {
+            "label": "stride",
+            "control": "slider",
+            "category": "agents"
+          }
+        },
+        "inputWeight": {
+          "type": "float",
+          "default": 15,
+          "uniform": "inputWeight",
+          "min": 0,
+          "max": 100,
+          "step": 1,
+          "ui": {
+            "label": "input weight",
+            "control": "slider",
+            "category": "agents"
+          }
+        },
+        "decay": {
+          "type": "float",
+          "default": 0.25,
+          "uniform": "decay",
+          "min": 0,
+          "max": 0.5,
+          "step": 0.01,
+          "ui": {
+            "label": "decay",
+            "control": "slider",
+            "category": "chemistry"
+          }
+        },
+        "deposit": {
+          "type": "float",
+          "default": 17.5,
+          "uniform": "deposit",
+          "min": 0.5,
+          "max": 20,
+          "step": 0.5,
+          "ui": {
+            "label": "deposit",
+            "control": "slider",
+            "category": "chemistry"
+          }
+        },
+        "attrition": {
+          "type": "float",
+          "default": 7.5,
+          "uniform": "attrition",
+          "min": 0,
+          "max": 10,
+          "step": 0.1,
+          "ui": {
+            "label": "attrition",
+            "control": "slider",
+            "category": "agents"
+          }
+        },
+        "matteOpacity": {
+          "type": "float",
+          "default": 1,
+          "uniform": "matteOpacity",
+          "min": 0,
+          "max": 1,
+          "ui": {
+            "label": "bg opacity",
+            "control": "slider",
+            "category": "output"
+          }
+        },
+        "iterationCount": {
+          "type": "int",
+          "default": 60,
+          "min": 0,
+          "max": 10000,
+          "cpuOnly": true
+        }
+      },
+      "textures": {
+        "global_dla_grid": {
+          "width": "100%",
+          "height": "100%",
+          "format": "rgba16f"
+        }
+      },
+      "passes": [
+        {
+          "name": "initGrid",
+          "program": "initGrid",
+          "key": "points/dla:initGrid",
+          "inputs": {
+            "gridTex": "global_dla_grid"
+          },
+          "outputs": {
+            "fragColor": "global_dla_grid"
+          },
+          "uniforms": {
+            "decay": "decay",
+            "anchorDensity": "anchorDensity"
+          }
+        },
+        {
+          "name": "copyGrid",
+          "program": "copyGrid",
+          "key": "points/dla:copyGrid",
+          "inputs": {
+            "gridTex": "global_dla_grid"
+          },
+          "outputs": {
+            "fragColor": "global_dla_grid"
+          }
+        },
+        {
+          "name": "agent",
+          "program": "agent",
+          "key": "points/dla:agent",
+          "inputs": {
+            "xyzTex": "global_xyz",
+            "velTex": "global_vel",
+            "rgbaTex": "global_rgba",
+            "gridTex": "global_dla_grid",
+            "inputTex": "inputTex"
+          },
+          "outputs": {
+            "outXYZ": "global_xyz",
+            "outVel": "global_vel",
+            "outRGBA": "global_rgba"
+          },
+          "uniforms": {
+            "stride": "stride",
+            "inputWeight": "inputWeight",
+            "attrition": "attrition",
+            "stateSize": "stateSize"
+          },
+          "drawBuffers": 3
+        },
+        {
+          "name": "depositGrid",
+          "program": "depositGrid",
+          "key": null,
+          "inputs": {
+            "xyzTex": "global_xyz",
+            "velTex": "global_vel",
+            "rgbaTex": "global_rgba"
+          },
+          "outputs": {
+            "fragColor": "global_dla_grid"
+          },
+          "uniforms": {
+            "deposit": "deposit"
+          },
+          "blend": [
+            "one",
+            "one"
+          ],
+          "drawMode": "points",
+          "count": "input"
+        },
+        {
+          "name": "passthrough",
+          "program": "passthrough",
+          "key": "points/dla:passthrough",
+          "inputs": {
+            "inputTex": "inputTex",
+            "gridTex": "global_dla_grid"
+          },
+          "outputs": {
+            "fragColor": "outputTex"
+          },
+          "uniforms": {
+            "matteOpacity": "matteOpacity"
+          }
+        }
+      ],
+      "iterated": true
+    },
+    "points/flock": {
+      "namespace": "points",
+      "func": "flock",
+      "kind": "filter",
+      "params": {
+        "separation": {
+          "type": "float",
+          "default": 2,
+          "uniform": "separation",
+          "min": 0,
+          "max": 5,
+          "step": 0.1,
+          "ui": {
+            "label": "separation",
+            "control": "slider",
+            "category": "boids"
+          }
+        },
+        "alignment": {
+          "type": "float",
+          "default": 1,
+          "uniform": "alignment",
+          "min": 0,
+          "max": 5,
+          "step": 0.1,
+          "ui": {
+            "label": "alignment",
+            "control": "slider",
+            "category": "boids"
+          }
+        },
+        "cohesion": {
+          "type": "float",
+          "default": 1,
+          "uniform": "cohesion",
+          "min": 0,
+          "max": 5,
+          "step": 0.1,
+          "ui": {
+            "label": "cohesion",
+            "control": "slider",
+            "category": "boids"
+          }
+        },
+        "perceptionRadius": {
+          "type": "float",
+          "default": 50,
+          "uniform": "perceptionRadius",
+          "min": 10,
+          "max": 200,
+          "step": 1,
+          "ui": {
+            "label": "perception",
+            "control": "slider",
+            "category": "boids"
+          }
+        },
+        "separationRadius": {
+          "type": "float",
+          "default": 25,
+          "uniform": "separationRadius",
+          "min": 5,
+          "max": 100,
+          "step": 1,
+          "ui": {
+            "label": "sep radius",
+            "control": "slider",
+            "category": "boids"
+          }
+        },
+        "maxSpeed": {
+          "type": "float",
+          "default": 4,
+          "uniform": "maxSpeed",
+          "min": 0.5,
+          "max": 10,
+          "step": 0.1,
+          "ui": {
+            "label": "max speed",
+            "control": "slider",
+            "category": "motion"
+          }
+        },
+        "maxForce": {
+          "type": "float",
+          "default": 0.3,
+          "uniform": "maxForce",
+          "min": 0.01,
+          "max": 1,
+          "step": 0.01,
+          "ui": {
+            "label": "max force",
+            "control": "slider",
+            "category": "motion"
+          }
+        },
+        "boundaryMode": {
+          "type": "int",
+          "default": 0,
+          "uniform": "boundaryMode",
+          "choices": {
+            "wrap": 0,
+            "softWall": 1
+          },
+          "ui": {
+            "label": "boundary",
+            "control": "dropdown",
+            "category": "motion"
+          }
+        },
+        "wallMargin": {
+          "type": "float",
+          "default": 50,
+          "uniform": "wallMargin",
+          "min": 10,
+          "max": 200,
+          "step": 1,
+          "ui": {
+            "label": "wall margin",
+            "control": "slider",
+            "category": "motion"
+          }
+        },
+        "noiseWeight": {
+          "type": "float",
+          "default": 0.1,
+          "uniform": "noiseWeight",
+          "min": 0,
+          "max": 1,
+          "step": 0.01,
+          "ui": {
+            "label": "noise",
+            "control": "slider",
+            "category": "motion"
+          }
+        },
+        "iterationCount": {
+          "type": "int",
+          "default": 60,
+          "min": 0,
+          "max": 10000,
+          "cpuOnly": true
+        }
+      },
+      "textures": {},
+      "passes": [
+        {
+          "name": "agent",
+          "program": "agent",
+          "key": "points/flock:agent",
+          "inputs": {
+            "xyzTex": "global_xyz",
+            "velTex": "global_vel",
+            "rgbaTex": "global_rgba"
+          },
+          "outputs": {
+            "outXYZ": "global_xyz",
+            "outVel": "global_vel",
+            "outRGBA": "global_rgba"
+          },
+          "uniforms": {
+            "separation": "separation",
+            "alignment": "alignment",
+            "cohesion": "cohesion",
+            "perceptionRadius": "perceptionRadius",
+            "separationRadius": "separationRadius",
+            "maxSpeed": "maxSpeed",
+            "maxForce": "maxForce",
+            "boundaryMode": "boundaryMode",
+            "wallMargin": "wallMargin",
+            "noiseWeight": "noiseWeight"
+          },
+          "drawBuffers": 3
+        },
+        {
+          "name": "passthrough",
+          "program": "passthrough",
+          "key": "points/flock:passthrough",
+          "inputs": {
+            "inputTex": "inputTex"
+          },
+          "outputs": {
+            "fragColor": "outputTex"
+          }
+        }
+      ],
+      "iterated": true
+    },
+    "points/flow": {
+      "namespace": "points",
+      "func": "flow",
+      "kind": "filter",
+      "params": {
+        "stateSize": {
+          "type": "int",
+          "default": 256,
+          "uniform": "stateSize",
+          "ui": {
+            "control": false
+          }
+        },
+        "behavior": {
+          "type": "int",
+          "default": 1,
+          "uniform": "behavior",
+          "choices": {
+            "none": 0,
+            "obedient": 1,
+            "crosshatch": 2,
+            "unruly": 3,
+            "chaotic": 4,
+            "randomMix": 5,
+            "meandering": 10
+          },
+          "ui": {
+            "label": "behavior",
+            "control": "dropdown",
+            "category": "agents"
+          }
+        },
+        "stride": {
+          "type": "float",
+          "default": 10,
+          "uniform": "stride",
+          "min": 1,
+          "max": 10,
+          "step": 1,
+          "ui": {
+            "label": "stride",
+            "control": "slider",
+            "category": "agents"
+          }
+        },
+        "strideDeviation": {
+          "type": "float",
+          "default": 0.05,
+          "uniform": "strideDeviation",
+          "min": 0,
+          "max": 0.5,
+          "step": 0.01,
+          "ui": {
+            "label": "deviation",
+            "control": "slider",
+            "category": "agents"
+          }
+        },
+        "kink": {
+          "type": "float",
+          "default": 1,
+          "uniform": "kink",
+          "min": 0,
+          "max": 10,
+          "step": 0.1,
+          "ui": {
+            "label": "kink",
+            "control": "slider",
+            "category": "agents"
+          }
+        },
+        "quantize": {
+          "type": "boolean",
+          "default": false,
+          "uniform": "quantize",
+          "ui": {
+            "label": "quantize",
+            "control": "checkbox",
+            "category": "agents"
+          }
+        },
+        "inputWeight": {
+          "type": "float",
+          "default": 100,
+          "uniform": "inputWeight",
+          "min": 0,
+          "max": 100,
+          "step": 1,
+          "ui": {
+            "label": "input weight",
+            "control": "slider",
+            "category": "agents"
+          }
+        },
+        "iterationCount": {
+          "type": "int",
+          "default": 60,
+          "min": 0,
+          "max": 10000,
+          "cpuOnly": true
+        }
+      },
+      "textures": {},
+      "passes": [
+        {
+          "name": "agent",
+          "program": "agent",
+          "key": "points/flow:agent",
+          "inputs": {
+            "xyzTex": "global_xyz",
+            "velTex": "global_vel",
+            "rgbaTex": "global_rgba",
+            "inputTex": "inputTex"
+          },
+          "outputs": {
+            "outXYZ": "global_xyz",
+            "outVel": "global_vel",
+            "outRGBA": "global_rgba"
+          },
+          "uniforms": {
+            "behavior": "behavior",
+            "stride": "stride",
+            "strideDeviation": "strideDeviation",
+            "kink": "kink",
+            "quantize": "quantize",
+            "inputWeight": "inputWeight"
+          },
+          "drawBuffers": 3
+        },
+        {
+          "name": "passthrough",
+          "program": "passthrough",
+          "key": "points/flow:passthrough",
+          "inputs": {
+            "inputTex": "inputTex"
+          },
+          "outputs": {
+            "fragColor": "outputTex"
+          }
+        }
+      ],
+      "iterated": true
+    },
+    "points/hydraulic": {
+      "namespace": "points",
+      "func": "hydraulic",
+      "kind": "filter",
+      "params": {
+        "stride": {
+          "type": "float",
+          "default": 10,
+          "uniform": "stride",
+          "min": 1,
+          "max": 10,
+          "step": 1,
+          "ui": {
+            "label": "stride",
+            "control": "slider",
+            "category": "agents"
+          }
+        },
+        "quantize": {
+          "type": "boolean",
+          "default": false,
+          "uniform": "quantize",
+          "ui": {
+            "label": "quantize",
+            "control": "checkbox",
+            "category": "agents"
+          }
+        },
+        "inverse": {
+          "type": "boolean",
+          "default": false,
+          "uniform": "inverse",
+          "ui": {
+            "label": "inverse",
+            "control": "checkbox",
+            "category": "agents"
+          }
+        },
+        "inputWeight": {
+          "type": "float",
+          "default": 100,
+          "uniform": "inputWeight",
+          "min": 0,
+          "max": 100,
+          "step": 1,
+          "ui": {
+            "label": "input weight",
+            "control": "slider",
+            "category": "agents"
+          }
+        },
+        "iterationCount": {
+          "type": "int",
+          "default": 60,
+          "min": 0,
+          "max": 10000,
+          "cpuOnly": true
+        }
+      },
+      "textures": {},
+      "passes": [
+        {
+          "name": "agent",
+          "program": "agent",
+          "key": "points/hydraulic:agent",
+          "inputs": {
+            "xyzTex": "global_xyz",
+            "velTex": "global_vel",
+            "rgbaTex": "global_rgba",
+            "inputTex": "inputTex"
+          },
+          "outputs": {
+            "outXYZ": "global_xyz",
+            "outVel": "global_vel",
+            "outRGBA": "global_rgba"
+          },
+          "uniforms": {
+            "stride": "stride",
+            "quantize": "quantize",
+            "inverse": "inverse",
+            "inputWeight": "inputWeight"
+          },
+          "drawBuffers": 3
+        },
+        {
+          "name": "passthrough",
+          "program": "passthrough",
+          "key": "points/hydraulic:passthrough",
+          "inputs": {
+            "inputTex": "inputTex"
+          },
+          "outputs": {
+            "fragColor": "outputTex"
+          }
+        }
+      ],
+      "iterated": true
+    },
+    "points/lenia": {
+      "namespace": "points",
+      "func": "lenia",
+      "kind": "filter",
+      "params": {
+        "muK": {
+          "type": "float",
+          "default": 25,
+          "uniform": "muK",
+          "min": 1,
+          "max": 30,
+          "step": 0.5,
+          "ui": {
+            "label": "kernel \u03bc",
+            "control": "slider",
+            "category": "kernel"
+          }
+        },
+        "sigmaK": {
+          "type": "float",
+          "default": 5,
+          "uniform": "sigmaK",
+          "min": 0.1,
+          "max": 10,
+          "step": 0.1,
+          "ui": {
+            "label": "kernel \u03c3",
+            "control": "slider",
+            "category": "kernel"
+          }
+        },
+        "muG": {
+          "type": "float",
+          "default": 0.25,
+          "uniform": "muG",
+          "min": 0.1,
+          "max": 2,
+          "step": 0.01,
+          "ui": {
+            "label": "growth \u03bc",
+            "control": "slider",
+            "category": "growth"
+          }
+        },
+        "sigmaG": {
+          "type": "float",
+          "default": 0.15,
+          "uniform": "sigmaG",
+          "min": 0.01,
+          "max": 0.5,
+          "step": 0.01,
+          "ui": {
+            "label": "growth \u03c3",
+            "control": "slider",
+            "category": "growth"
+          }
+        },
+        "repulsion": {
+          "type": "float",
+          "default": 0.5,
+          "uniform": "repulsion",
+          "min": 0,
+          "max": 5,
+          "step": 0.1,
+          "ui": {
+            "label": "repulsion",
+            "control": "slider",
+            "category": "motion"
+          }
+        },
+        "dt": {
+          "type": "float",
+          "default": 0.25,
+          "uniform": "dt",
+          "min": 0.01,
+          "max": 0.5,
+          "step": 0.01,
+          "ui": {
+            "label": "time step",
+            "control": "slider",
+            "category": "motion"
+          }
+        },
+        "searchRadius": {
+          "type": "float",
+          "default": 25,
+          "uniform": "searchRadius",
+          "min": 5,
+          "max": 40,
+          "step": 1,
+          "ui": {
+            "label": "search radius",
+            "control": "slider",
+            "category": "kernel"
+          }
+        },
+        "depositAmount": {
+          "type": "float",
+          "default": 3.6,
+          "uniform": "depositAmount",
+          "min": 0.1,
+          "max": 5,
+          "step": 0.1,
+          "ui": {
+            "label": "deposit",
+            "control": "slider",
+            "category": "kernel"
+          }
+        },
+        "iterationCount": {
+          "type": "int",
+          "default": 60,
+          "min": 0,
+          "max": 10000,
+          "cpuOnly": true
+        }
+      },
+      "textures": {
+        "global_lenia_density": {
+          "width": "50%",
+          "height": "50%",
+          "format": "rgba16f"
+        },
+        "global_lenia_field": {
+          "width": "50%",
+          "height": "50%",
+          "format": "rgba16f"
+        }
+      },
+      "passes": [
+        {
+          "name": "clear",
+          "program": "clear",
+          "key": "points/lenia:clear",
+          "inputs": {},
+          "outputs": {
+            "fragColor": "global_lenia_density"
+          }
+        },
+        {
+          "name": "deposit",
+          "program": "deposit",
+          "key": null,
+          "inputs": {
+            "xyzTex": "global_xyz"
+          },
+          "outputs": {
+            "fragColor": "global_lenia_density"
+          },
+          "uniforms": {
+            "depositAmount": "depositAmount"
+          },
+          "blend": true,
+          "drawMode": "points",
+          "count": "input"
+        },
+        {
+          "name": "convolve",
+          "program": "convolve",
+          "key": "points/lenia:convolve",
+          "inputs": {
+            "densityTex": "global_lenia_density"
+          },
+          "outputs": {
+            "fragColor": "global_lenia_field"
+          },
+          "uniforms": {
+            "muK": "muK",
+            "sigmaK": "sigmaK",
+            "searchRadius": "searchRadius"
+          }
+        },
+        {
+          "name": "agent",
+          "program": "agentField",
+          "key": "points/lenia:agentField",
+          "inputs": {
+            "xyzTex": "global_xyz",
+            "velTex": "global_vel",
+            "rgbaTex": "global_rgba",
+            "fieldTex": "global_lenia_field"
+          },
+          "outputs": {
+            "outXYZ": "global_xyz",
+            "outVel": "global_vel",
+            "outRGBA": "global_rgba"
+          },
+          "uniforms": {
+            "muG": "muG",
+            "sigmaG": "sigmaG",
+            "repulsion": "repulsion",
+            "dt": "dt"
+          },
+          "drawBuffers": 3
+        },
+        {
+          "name": "passthrough",
+          "program": "passthrough",
+          "key": "points/lenia:passthrough",
+          "inputs": {
+            "inputTex": "inputTex"
+          },
+          "outputs": {
+            "fragColor": "outputTex"
+          }
+        }
+      ],
+      "iterated": true
+    },
+    "points/life": {
+      "namespace": "points",
+      "func": "life",
+      "kind": "filter",
+      "params": {
+        "stateSize": {
+          "type": "int",
+          "default": 256,
+          "uniform": "stateSize",
+          "ui": {
+            "control": false
+          }
+        },
+        "typeCount": {
+          "type": "int",
+          "default": 6,
+          "uniform": "typeCount",
+          "min": 2,
+          "max": 8,
+          "step": 1,
+          "ui": {
+            "label": "types",
+            "control": "slider",
+            "category": "types"
+          }
+        },
+        "attractionScale": {
+          "type": "float",
+          "default": 1,
+          "uniform": "attractionScale",
+          "min": 0,
+          "max": 5,
+          "step": 0.1,
+          "ui": {
+            "label": "attraction",
+            "control": "slider",
+            "category": "forces"
+          }
+        },
+        "repulsionScale": {
+          "type": "float",
+          "default": 1,
+          "uniform": "repulsionScale",
+          "min": 0,
+          "max": 5,
+          "step": 0.1,
+          "ui": {
+            "label": "repulsion",
+            "control": "slider",
+            "category": "forces"
+          }
+        },
+        "minRadius": {
+          "type": "float",
+          "default": 0.01,
+          "uniform": "minRadius",
+          "min": 0.001,
+          "max": 0.05,
+          "step": 0.001,
+          "ui": {
+            "label": "min radius",
+            "control": "slider",
+            "category": "forces"
+          }
+        },
+        "maxRadius": {
+          "type": "float",
+          "default": 0.08,
+          "uniform": "maxRadius",
+          "min": 0.02,
+          "max": 0.2,
+          "step": 0.01,
+          "ui": {
+            "label": "max radius",
+            "control": "slider",
+            "category": "forces"
+          }
+        },
+        "maxSpeed": {
+          "type": "float",
+          "default": 0.003,
+          "uniform": "maxSpeed",
+          "min": 0.0005,
+          "max": 0.01,
+          "step": 0.0001,
+          "ui": {
+            "label": "max speed",
+            "control": "slider",
+            "category": "motion"
+          }
+        },
+        "friction": {
+          "type": "float",
+          "default": 0.1,
+          "uniform": "friction",
+          "min": 0,
+          "max": 1,
+          "step": 0.01,
+          "ui": {
+            "label": "friction",
+            "control": "slider",
+            "category": "motion"
+          }
+        },
+        "boundaryMode": {
+          "type": "int",
+          "default": 0,
+          "uniform": "boundaryMode",
+          "choices": {
+            "wrap": 0,
+            "bounce": 1
+          },
+          "ui": {
+            "label": "boundary",
+            "control": "dropdown",
+            "category": "motion"
+          }
+        },
+        "matrixSeed": {
+          "type": "float",
+          "default": 42,
+          "uniform": "matrixSeed",
+          "min": 0,
+          "max": 1000.0,
+          "step": 1,
+          "ui": {
+            "label": "matrix seed",
+            "control": "slider",
+            "category": "types"
+          }
+        },
+        "symmetricForces": {
+          "type": "boolean",
+          "default": false,
+          "uniform": "symmetricForces",
+          "ui": {
+            "label": "symmetric",
+            "control": "checkbox",
+            "category": "types"
+          }
+        },
+        "useTypeColor": {
+          "type": "boolean",
+          "default": false,
+          "uniform": "useTypeColor",
+          "ui": {
+            "label": "show types",
+            "control": "checkbox",
+            "category": "types"
+          }
+        },
+        "iterationCount": {
+          "type": "int",
+          "default": 60,
+          "min": 0,
+          "max": 10000,
+          "cpuOnly": true
+        }
+      },
+      "textures": {
+        "global_life_data": {
+          "width": {
+            "param": "stateSize",
+            "default": 256
+          },
+          "height": {
+            "param": "stateSize",
+            "default": 256
+          },
+          "format": "rgba16f"
+        },
+        "forceMatrix": {
+          "width": 8,
+          "height": 8,
+          "format": "rgba16f"
+        }
+      },
+      "passes": [
+        {
+          "name": "matrix",
+          "program": "matrix",
+          "key": "points/life:matrix",
+          "inputs": {},
+          "outputs": {
+            "fragColor": "forceMatrix"
+          },
+          "uniforms": {
+            "typeCount": "typeCount",
+            "matrixSeed": "matrixSeed",
+            "symmetricForces": "symmetricForces"
+          }
+        },
+        {
+          "name": "agent",
+          "program": "agent",
+          "key": "points/life:agent",
+          "inputs": {
+            "xyzTex": "global_xyz",
+            "velTex": "global_vel",
+            "rgbaTex": "global_rgba",
+            "dataTex": "global_life_data",
+            "forceMatrix": "forceMatrix",
+            "inputTex": "inputTex"
+          },
+          "outputs": {
+            "outXYZ": "global_xyz",
+            "outVel": "global_vel",
+            "outRGBA": "global_rgba",
+            "outData": "global_life_data"
+          },
+          "uniforms": {
+            "typeCount": "typeCount",
+            "attractionScale": "attractionScale",
+            "repulsionScale": "repulsionScale",
+            "minRadius": "minRadius",
+            "maxRadius": "maxRadius",
+            "maxSpeed": "maxSpeed",
+            "friction": "friction",
+            "boundaryMode": "boundaryMode",
+            "matrixSeed": "matrixSeed",
+            "symmetricForces": "symmetricForces",
+            "useTypeColor": "useTypeColor"
+          },
+          "drawBuffers": 4
+        },
+        {
+          "name": "passthrough",
+          "program": "passthrough",
+          "key": "points/life:passthrough",
+          "inputs": {
+            "inputTex": "inputTex"
+          },
+          "outputs": {
+            "fragColor": "outputTex"
+          }
+        }
+      ],
+      "iterated": true
+    },
+    "points/physarum": {
+      "namespace": "points",
+      "func": "physarum",
+      "kind": "filter",
+      "params": {
+        "moveSpeed": {
+          "type": "float",
+          "default": 1.78,
+          "uniform": "moveSpeed",
+          "min": 0.05,
+          "max": 3,
+          "step": 0.01,
+          "ui": {
+            "label": "move speed",
+            "control": "slider",
+            "category": "agents"
+          }
+        },
+        "turnSpeed": {
+          "type": "float",
+          "default": 1,
+          "uniform": "turnSpeed",
+          "min": 0,
+          "max": 3.14159,
+          "step": 0.01,
+          "ui": {
+            "label": "turn speed",
+            "control": "slider",
+            "category": "agents"
+          }
+        },
+        "sensorAngle": {
+          "type": "float",
+          "default": 1.26,
+          "uniform": "sensorAngle",
+          "min": 0.1,
+          "max": 1.5,
+          "step": 0.01,
+          "ui": {
+            "label": "sensor angle",
+            "control": "slider",
+            "category": "agents"
+          }
+        },
+        "sensorDistance": {
+          "type": "float",
+          "default": 0.03,
+          "uniform": "sensorDistance",
+          "min": 0.002,
+          "max": 0.1,
+          "step": 0.001,
+          "ui": {
+            "label": "sensor dist",
+            "control": "slider",
+            "category": "agents"
+          }
+        },
+        "inputWeight": {
+          "type": "float",
+          "default": 0,
+          "uniform": "inputWeight",
+          "min": 0,
+          "max": 100,
+          "step": 1,
+          "ui": {
+            "label": "input weight",
+            "control": "slider",
+            "category": "agents"
+          }
+        },
+        "deposit": {
+          "type": "float",
+          "default": 0.5,
+          "uniform": "deposit",
+          "min": 0,
+          "max": 1,
+          "step": 0.01,
+          "ui": {
+            "label": "deposit",
+            "control": "slider",
+            "category": "chemistry"
+          }
+        },
+        "decay": {
+          "type": "float",
+          "default": 0.1,
+          "uniform": "decay",
+          "min": 0,
+          "max": 1,
+          "step": 0.01,
+          "ui": {
+            "label": "decay",
+            "control": "slider",
+            "category": "chemistry"
+          }
+        },
+        "resetState": {
+          "type": "boolean",
+          "default": false,
+          "uniform": "resetState",
+          "ui": {
+            "control": "button",
+            "buttonLabel": "reset",
+            "label": "reset"
+          }
+        },
+        "iterationCount": {
+          "type": "int",
+          "default": 60,
+          "min": 0,
+          "max": 10000,
+          "cpuOnly": true
+        }
+      },
+      "textures": {
+        "global_physarum_pheromone": {
+          "width": "100%",
+          "height": "100%",
+          "format": "rgba16f"
+        }
+      },
+      "passes": [
+        {
+          "name": "decayTrail",
+          "program": "diffuse",
+          "key": "points/physarum:diffuse",
+          "inputs": {
+            "trailTex": "global_physarum_pheromone"
+          },
+          "outputs": {
+            "fragColor": "global_physarum_pheromone"
+          },
+          "uniforms": {
+            "decay": "decay",
+            "resetState": "resetState"
+          }
+        },
+        {
+          "name": "agent",
+          "program": "agent",
+          "key": "points/physarum:agent",
+          "inputs": {
+            "xyzTex": "global_xyz",
+            "velTex": "global_vel",
+            "rgbaTex": "global_rgba",
+            "trailTex": "global_physarum_pheromone",
+            "inputTex": "inputTex"
+          },
+          "outputs": {
+            "outXYZ": "global_xyz",
+            "outVel": "global_vel",
+            "outRGBA": "global_rgba"
+          },
+          "uniforms": {
+            "moveSpeed": "moveSpeed",
+            "turnSpeed": "turnSpeed",
+            "sensorAngle": "sensorAngle",
+            "sensorDistance": "sensorDistance",
+            "inputWeight": "inputWeight"
+          },
+          "drawBuffers": 3
+        },
+        {
+          "name": "copy",
+          "program": "passthrough",
+          "key": "points/physarum:passthrough",
+          "inputs": {
+            "inputTex": "global_physarum_pheromone"
+          },
+          "outputs": {
+            "fragColor": "global_physarum_pheromone"
+          }
+        },
+        {
+          "name": "deposit",
+          "program": "deposit",
+          "key": null,
+          "inputs": {
+            "xyzTex": "global_xyz",
+            "rgbaTex": "global_rgba"
+          },
+          "outputs": {
+            "fragColor": "global_physarum_pheromone"
+          },
+          "uniforms": {
+            "deposit": "deposit"
+          },
+          "blend": true,
+          "drawMode": "points",
+          "count": "input"
+        },
+        {
+          "name": "passthrough",
+          "program": "passthrough",
+          "key": "points/physarum:passthrough",
+          "inputs": {
+            "inputTex": "inputTex"
+          },
+          "outputs": {
+            "fragColor": "outputTex"
+          }
+        }
+      ],
+      "iterated": true
+    },
+    "points/physical": {
+      "namespace": "points",
+      "func": "physical",
+      "kind": "filter",
+      "params": {
+        "stateSize": {
+          "type": "int",
+          "default": 256,
+          "uniform": "stateSize",
+          "ui": {
+            "control": false
+          }
+        },
+        "gravity": {
+          "type": "float",
+          "default": 0.05,
+          "uniform": "gravity",
+          "min": -2,
+          "max": 2,
+          "step": 0.01,
+          "ui": {
+            "label": "gravity",
+            "control": "slider",
+            "category": "physics"
+          }
+        },
+        "wind": {
+          "type": "float",
+          "default": 0,
+          "uniform": "wind",
+          "min": -2,
+          "max": 2,
+          "step": 0.01,
+          "ui": {
+            "label": "wind",
+            "control": "slider",
+            "category": "physics"
+          }
+        },
+        "energy": {
+          "type": "float",
+          "default": 0.5,
+          "uniform": "energy",
+          "min": 0,
+          "max": 2,
+          "step": 0.01,
+          "ui": {
+            "label": "energy",
+            "control": "slider",
+            "category": "physics"
+          }
+        },
+        "drag": {
+          "type": "float",
+          "default": 0.15,
+          "uniform": "drag",
+          "min": 0,
+          "max": 0.2,
+          "step": 0.005,
+          "ui": {
+            "label": "drag",
+            "control": "slider",
+            "category": "physics"
+          }
+        },
+        "deviation": {
+          "type": "float",
+          "default": 0.75,
+          "uniform": "deviation",
+          "min": 0,
+          "max": 1,
+          "step": 0.01,
+          "ui": {
+            "label": "deviation",
+            "control": "slider",
+            "category": "physics"
+          }
+        },
+        "wander": {
+          "type": "float",
+          "default": 0.25,
+          "uniform": "wander",
+          "min": 0,
+          "max": 1,
+          "step": 0.01,
+          "ui": {
+            "label": "wander",
+            "control": "slider",
+            "category": "physics"
+          }
+        },
+        "iterationCount": {
+          "type": "int",
+          "default": 60,
+          "min": 0,
+          "max": 10000,
+          "cpuOnly": true
+        }
+      },
+      "textures": {},
+      "passes": [
+        {
+          "name": "agent",
+          "program": "agent",
+          "key": "points/physical:agent",
+          "inputs": {
+            "xyzTex": "global_xyz",
+            "velTex": "global_vel",
+            "rgbaTex": "global_rgba"
+          },
+          "outputs": {
+            "outXYZ": "global_xyz",
+            "outVel": "global_vel",
+            "outRGBA": "global_rgba"
+          },
+          "uniforms": {
+            "gravity": "gravity",
+            "wind": "wind",
+            "energy": "energy",
+            "drag": "drag",
+            "deviation": "deviation",
+            "wander": "wander"
+          },
+          "drawBuffers": 3
+        },
+        {
+          "name": "passthrough",
+          "program": "passthrough",
+          "key": "points/physical:passthrough",
+          "inputs": {
+            "inputTex": "inputTex"
+          },
+          "outputs": {
+            "fragColor": "outputTex"
+          }
+        }
+      ],
+      "iterated": true
+    },
+    "render/pointsBillboardRender": {
+      "namespace": "render",
+      "func": "pointsBillboardRender",
+      "kind": "filter",
+      "params": {
+        "shapeMode": {
+          "type": "int",
+          "default": 1,
+          "uniform": "shapeMode",
+          "choices": {
+            "texture": 0,
+            "circle": 1,
+            "ring": 2,
+            "square": 3,
+            "diamond": 4,
+            "triangle": 5,
+            "star": 6,
+            "soft": 7
+          },
+          "randMin": 1,
+          "ui": {
+            "label": "shape",
+            "control": "dropdown",
+            "category": "source"
+          }
+        },
+        "tex": {
+          "type": "surface",
+          "default": "none",
+          "ui": {
+            "label": "sprite",
+            "category": "source",
+            "enabledBy": {
+              "param": "shapeMode",
+              "eq": 0
+            }
+          }
+        },
+        "blendMode": {
+          "type": "int",
+          "default": 0,
+          "uniform": "blendMode",
+          "choices": {
+            "additive": 0,
+            "alpha": 1
+          },
+          "ui": {
+            "label": "blend",
+            "control": "dropdown",
+            "category": "visual"
+          }
+        },
+        "depositOpacity": {
+          "type": "float",
+          "default": 20,
+          "min": 1,
+          "max": 100,
+          "uniform": "depositOpacity",
+          "ui": {
+            "label": "opacity",
+            "control": "slider",
+            "category": "visual"
+          }
+        },
+        "pointSize": {
+          "type": "float",
+          "default": 8,
+          "min": 1,
+          "max": 64,
+          "uniform": "pointSize",
+          "ui": {
+            "label": "point size",
+            "control": "slider",
+            "category": "visual"
+          }
+        },
+        "sizeVariation": {
+          "type": "float",
+          "default": 0,
+          "min": 0,
+          "max": 100,
+          "uniform": "sizeVariation",
+          "ui": {
+            "label": "size variation",
+            "control": "slider",
+            "category": "visual"
+          }
+        },
+        "rotationVar": {
+          "type": "float",
+          "default": 0,
+          "min": 0,
+          "max": 100,
+          "uniform": "rotationVar",
+          "ui": {
+            "label": "rot variation",
+            "control": "slider",
+            "category": "visual"
+          }
+        },
+        "seed": {
+          "type": "int",
+          "default": 42,
+          "min": 0,
+          "max": 10,
+          "uniform": "seed",
+          "ui": {
+            "label": "seed",
+            "control": "slider",
+            "category": "visual"
+          }
+        },
+        "density": {
+          "type": "float",
+          "default": 50,
+          "min": 0,
+          "max": 100,
+          "uniform": "density",
+          "ui": {
+            "label": "density",
+            "control": "slider",
+            "category": "visual"
+          }
+        },
+        "intensity": {
+          "type": "float",
+          "default": 75,
+          "min": 0,
+          "max": 100,
+          "uniform": "intensity",
+          "ui": {
+            "label": "trail intensity",
+            "control": "slider",
+            "category": "visual"
+          }
+        },
+        "inputIntensity": {
+          "type": "float",
+          "default": 10.15,
+          "min": 0,
+          "max": 100,
+          "randMin": 50,
+          "uniform": "inputIntensity",
+          "ui": {
+            "label": "input mix",
+            "control": "slider",
+            "category": "visual"
+          }
+        },
+        "viewMode": {
+          "type": "int",
+          "default": 0,
+          "uniform": "viewMode",
+          "choices": {
+            "flat": 0,
+            "ortho": 1
+          },
+          "ui": {
+            "label": "view",
+            "control": "dropdown",
+            "category": "view"
+          }
+        },
+        "rotateX": {
+          "type": "float",
+          "default": 0.3,
+          "uniform": "rotateX",
+          "min": 0,
+          "max": 6.283185,
+          "step": 0.01,
+          "ui": {
+            "label": "rotate x",
+            "control": "slider",
+            "category": "view",
+            "enabledBy": "viewMode"
+          }
+        },
+        "rotateY": {
+          "type": "float",
+          "default": 0,
+          "uniform": "rotateY",
+          "min": 0,
+          "max": 6.283185,
+          "step": 0.01,
+          "ui": {
+            "label": "rotate y",
+            "control": "slider",
+            "category": "view",
+            "enabledBy": "viewMode"
+          }
+        },
+        "rotateZ": {
+          "type": "float",
+          "default": 0,
+          "uniform": "rotateZ",
+          "min": 0,
+          "max": 6.283185,
+          "step": 0.01,
+          "ui": {
+            "label": "rotate z",
+            "control": "slider",
+            "category": "view",
+            "enabledBy": "viewMode"
+          }
+        },
+        "viewScale": {
+          "type": "float",
+          "default": 0.8,
+          "uniform": "viewScale",
+          "min": 0.1,
+          "max": 10,
+          "step": 0.01,
+          "ui": {
+            "label": "zoom",
+            "control": "slider",
+            "category": "view",
+            "enabledBy": "viewMode"
+          }
+        },
+        "posX": {
+          "type": "float",
+          "default": 0,
+          "uniform": "posX",
+          "min": -50,
+          "max": 50,
+          "step": 0.1,
+          "ui": {
+            "label": "pos x",
+            "control": "slider",
+            "category": "view",
+            "enabledBy": "viewMode"
+          }
+        },
+        "posY": {
+          "type": "float",
+          "default": 0,
+          "uniform": "posY",
+          "min": -50,
+          "max": 50,
+          "step": 0.1,
+          "ui": {
+            "label": "pos y",
+            "control": "slider",
+            "category": "view",
+            "enabledBy": "viewMode"
+          }
+        },
+        "iterationCount": {
+          "type": "int",
+          "default": 60,
+          "min": 0,
+          "max": 10000,
+          "cpuOnly": true
+        }
+      },
+      "textures": {
+        "global_billboard_trail": {
+          "width": "100%",
+          "height": "100%",
+          "format": "rgba16f"
+        }
+      },
+      "passes": [
+        {
+          "name": "diffuse",
+          "program": "diffuse",
+          "key": "render/pointsBillboardRender:diffuse",
+          "inputs": {
+            "trailTex": "global_billboard_trail"
+          },
+          "outputs": {
+            "fragColor": "global_billboard_trail"
+          },
+          "uniforms": {
+            "intensity": "intensity"
+          }
+        },
+        {
+          "name": "copy",
+          "program": "copy",
+          "key": "render/pointsBillboardRender:copy",
+          "inputs": {
+            "sourceTex": "global_billboard_trail"
+          },
+          "outputs": {
+            "fragColor": "global_billboard_trail"
+          }
+        },
+        {
+          "name": "deposit",
+          "program": "deposit",
+          "key": null,
+          "inputs": {
+            "xyzTex": "global_xyz",
+            "rgbaTex": "global_rgba",
+            "spriteTex": "tex"
+          },
+          "outputs": {
+            "fragColor": "global_billboard_trail"
+          },
+          "uniforms": {
+            "shapeMode": "shapeMode",
+            "depositOpacity": "depositOpacity",
+            "density": "density",
+            "pointSize": "pointSize",
+            "sizeVariation": "sizeVariation",
+            "rotationVar": "rotationVar",
+            "seed": "seed",
+            "viewMode": "viewMode",
+            "rotateX": "rotateX",
+            "rotateY": "rotateY",
+            "rotateZ": "rotateZ",
+            "viewScale": "viewScale",
+            "posX": "posX",
+            "posY": "posY"
+          },
+          "blend": true,
+          "drawMode": "billboards",
+          "count": "input",
+          "conditions": {
+            "runIf": [
+              {
+                "uniform": "blendMode",
+                "equals": 0
+              }
+            ]
+          }
+        },
+        {
+          "name": "deposit_alpha",
+          "program": "deposit",
+          "key": null,
+          "inputs": {
+            "xyzTex": "global_xyz",
+            "rgbaTex": "global_rgba",
+            "spriteTex": "tex"
+          },
+          "outputs": {
+            "fragColor": "global_billboard_trail"
+          },
+          "uniforms": {
+            "shapeMode": "shapeMode",
+            "depositOpacity": "depositOpacity",
+            "density": "density",
+            "pointSize": "pointSize",
+            "sizeVariation": "sizeVariation",
+            "rotationVar": "rotationVar",
+            "seed": "seed",
+            "viewMode": "viewMode",
+            "rotateX": "rotateX",
+            "rotateY": "rotateY",
+            "rotateZ": "rotateZ",
+            "viewScale": "viewScale",
+            "posX": "posX",
+            "posY": "posY"
+          },
+          "blend": [
+            "ONE",
+            "ONE_MINUS_SRC_ALPHA"
+          ],
+          "drawMode": "billboards",
+          "count": "input",
+          "conditions": {
+            "runIf": [
+              {
+                "uniform": "blendMode",
+                "equals": 1
+              }
+            ]
+          }
+        },
+        {
+          "name": "blend",
+          "program": "blend",
+          "key": "render/pointsBillboardRender:blend",
+          "inputs": {
+            "inputTex": "inputTex",
+            "trailTex": "global_billboard_trail"
+          },
+          "outputs": {
+            "fragColor": "outputTex"
+          },
+          "uniforms": {
+            "inputIntensity": "inputIntensity",
+            "blendMode": "blendMode"
+          }
+        }
+      ],
+      "iterated": true
+    },
+    "render/pointsEmit": {
+      "namespace": "render",
+      "func": "pointsEmit",
+      "kind": "filter",
+      "params": {
+        "stateSize": {
+          "type": "int",
+          "default": 256,
+          "min": 64,
+          "max": 2048,
+          "uniform": "stateSize",
+          "ui": {
+            "label": "state size",
+            "control": "dropdown"
+          },
+          "choices": {
+            "x64": 64,
+            "x128": 128,
+            "x256": 256,
+            "x512": 512,
+            "x1024": 1024,
+            "x2048": 2048
+          },
+          "randChoices": [
+            64,
+            128,
+            256,
+            512
+          ]
+        },
+        "layout": {
+          "type": "int",
+          "default": 0,
+          "uniform": "layout",
+          "ui": {
+            "label": "layout",
+            "control": "dropdown"
+          },
+          "choices": {
+            "random": 0,
+            "grid": 1,
+            "center": 2,
+            "ring": 3,
+            "clusters": 4,
+            "spiral": 5
+          }
+        },
+        "seed": {
+          "type": "int",
+          "default": 0,
+          "min": 0,
+          "max": 100,
+          "uniform": "seed",
+          "ui": {
+            "label": "seed",
+            "control": "slider"
+          }
+        },
+        "attrition": {
+          "type": "float",
+          "default": 0,
+          "min": 0,
+          "max": 10,
+          "uniform": "attrition",
+          "ui": {
+            "label": "attrition",
+            "control": "slider"
+          }
+        },
+        "resetState": {
+          "type": "boolean",
+          "default": false,
+          "uniform": "resetState",
+          "ui": {
+            "control": "button",
+            "buttonLabel": "reset",
+            "label": "reset"
+          }
+        },
+        "iterationCount": {
+          "type": "int",
+          "default": 60,
+          "min": 0,
+          "max": 10000,
+          "cpuOnly": true
+        }
+      },
+      "textures": {
+        "global_xyz": {
+          "width": {
+            "param": "stateSize",
+            "default": 256
+          },
+          "height": {
+            "param": "stateSize",
+            "default": 256
+          },
+          "format": "rgba32f"
+        },
+        "global_vel": {
+          "width": {
+            "param": "stateSize",
+            "default": 256
+          },
+          "height": {
+            "param": "stateSize",
+            "default": 256
+          },
+          "format": "rgba32f"
+        },
+        "global_rgba": {
+          "width": {
+            "param": "stateSize",
+            "default": 256
+          },
+          "height": {
+            "param": "stateSize",
+            "default": 256
+          },
+          "format": "rgba8"
+        }
+      },
+      "passes": [
+        {
+          "name": "init",
+          "program": "init",
+          "key": "render/pointsEmit:init",
+          "inputs": {
+            "xyzTex": "global_xyz",
+            "velTex": "global_vel",
+            "rgbaTex": "global_rgba",
+            "inputTex": "inputTex"
+          },
+          "outputs": {
+            "outXYZ": "global_xyz",
+            "outVel": "global_vel",
+            "outRGBA": "global_rgba"
+          },
+          "uniforms": {
+            "layoutMode": "layout",
+            "attrition": "attrition",
+            "resetState": "resetState"
+          },
+          "drawBuffers": 3
+        },
+        {
+          "name": "passthrough",
+          "program": "passthrough",
+          "key": "render/pointsEmit:passthrough",
+          "inputs": {
+            "inputTex": "inputTex"
+          },
+          "outputs": {
+            "fragColor": "outputTex"
+          }
+        }
+      ],
+      "iterated": true
+    },
+    "render/pointsRender": {
+      "namespace": "render",
+      "func": "pointsRender",
+      "kind": "filter",
+      "params": {
+        "density": {
+          "type": "float",
+          "default": 50,
+          "min": 0,
+          "max": 100,
+          "uniform": "density",
+          "ui": {
+            "label": "density",
+            "control": "slider",
+            "category": "visual"
+          }
+        },
+        "intensity": {
+          "type": "float",
+          "default": 75,
+          "min": 0,
+          "max": 100,
+          "uniform": "intensity",
+          "ui": {
+            "label": "trail intensity",
+            "control": "slider",
+            "category": "visual"
+          }
+        },
+        "inputIntensity": {
+          "type": "float",
+          "default": 10.15,
+          "min": 0,
+          "max": 100,
+          "uniform": "inputIntensity",
+          "ui": {
+            "label": "input mix",
+            "control": "slider",
+            "category": "visual"
+          }
+        },
+        "viewMode": {
+          "type": "int",
+          "default": 0,
+          "uniform": "viewMode",
+          "choices": {
+            "flat": 0,
+            "ortho": 1
+          },
+          "ui": {
+            "label": "view",
+            "control": "dropdown",
+            "category": "view"
+          }
+        },
+        "rotateX": {
+          "type": "float",
+          "default": 0.3,
+          "uniform": "rotateX",
+          "min": 0,
+          "max": 6.283185,
+          "step": 0.01,
+          "ui": {
+            "label": "rotate x",
+            "control": "slider",
+            "category": "view",
+            "enabledBy": "viewMode"
+          }
+        },
+        "rotateY": {
+          "type": "float",
+          "default": 0,
+          "uniform": "rotateY",
+          "min": 0,
+          "max": 6.283185,
+          "step": 0.01,
+          "ui": {
+            "label": "rotate y",
+            "control": "slider",
+            "category": "view",
+            "enabledBy": "viewMode"
+          }
+        },
+        "rotateZ": {
+          "type": "float",
+          "default": 0,
+          "uniform": "rotateZ",
+          "min": 0,
+          "max": 6.283185,
+          "step": 0.01,
+          "ui": {
+            "label": "rotate z",
+            "control": "slider",
+            "category": "view",
+            "enabledBy": "viewMode"
+          }
+        },
+        "viewScale": {
+          "type": "float",
+          "default": 0.8,
+          "uniform": "viewScale",
+          "min": 0.1,
+          "max": 10,
+          "step": 0.01,
+          "ui": {
+            "label": "zoom",
+            "control": "slider",
+            "category": "view",
+            "enabledBy": "viewMode"
+          }
+        },
+        "posX": {
+          "type": "float",
+          "default": 0,
+          "uniform": "posX",
+          "min": -50,
+          "max": 50,
+          "step": 0.1,
+          "ui": {
+            "label": "pos x",
+            "control": "slider",
+            "category": "view",
+            "enabledBy": "viewMode"
+          }
+        },
+        "posY": {
+          "type": "float",
+          "default": 0,
+          "uniform": "posY",
+          "min": -50,
+          "max": 50,
+          "step": 0.1,
+          "ui": {
+            "label": "pos y",
+            "control": "slider",
+            "category": "view",
+            "enabledBy": "viewMode"
+          }
+        },
+        "matteOpacity": {
+          "type": "float",
+          "default": 1,
+          "min": 0,
+          "max": 1,
+          "randMin": 0.75,
+          "uniform": "matteOpacity",
+          "ui": {
+            "label": "bg opacity",
+            "control": "slider",
+            "category": "visual"
+          }
+        },
+        "iterationCount": {
+          "type": "int",
+          "default": 60,
+          "min": 0,
+          "max": 10000,
+          "cpuOnly": true
+        }
+      },
+      "textures": {
+        "global_points_trail": {
+          "width": "100%",
+          "height": "100%",
+          "format": "rgba16f"
+        }
+      },
+      "passes": [
+        {
+          "name": "diffuse",
+          "program": "diffuse",
+          "key": "render/pointsRender:diffuse",
+          "inputs": {
+            "trailTex": "global_points_trail"
+          },
+          "outputs": {
+            "fragColor": "global_points_trail"
+          },
+          "uniforms": {
+            "intensity": "intensity"
+          }
+        },
+        {
+          "name": "copy",
+          "program": "copy",
+          "key": "render/pointsRender:copy",
+          "inputs": {
+            "sourceTex": "global_points_trail"
+          },
+          "outputs": {
+            "fragColor": "global_points_trail"
+          }
+        },
+        {
+          "name": "deposit",
+          "program": "deposit",
+          "key": null,
+          "inputs": {
+            "xyzTex": "global_xyz",
+            "rgbaTex": "global_rgba"
+          },
+          "outputs": {
+            "fragColor": "global_points_trail"
+          },
+          "uniforms": {
+            "density": "density",
+            "viewMode": "viewMode",
+            "rotateX": "rotateX",
+            "rotateY": "rotateY",
+            "rotateZ": "rotateZ",
+            "viewScale": "viewScale",
+            "posX": "posX",
+            "posY": "posY"
+          },
+          "blend": true,
+          "drawMode": "points",
+          "count": "input"
+        },
+        {
+          "name": "blend",
+          "program": "blend",
+          "key": "render/pointsRender:blend",
+          "inputs": {
+            "inputTex": "inputTex",
+            "trailTex": "global_points_trail"
+          },
+          "outputs": {
+            "fragColor": "outputTex"
+          },
+          "uniforms": {
+            "inputIntensity": "inputIntensity",
+            "matteOpacity": "matteOpacity"
+          }
+        }
+      ],
+      "iterated": true
     },
     "synth/bitwise": {
       "namespace": "synth",
@@ -16035,8 +19023,7 @@
           "inputs": {},
           "outputs": {
             "color": "outputTex"
-          },
-          "uniforms": {}
+          }
         }
       ]
     },
@@ -16147,6 +19134,199 @@
         }
       ]
     },
+    "synth/cellularAutomata": {
+      "namespace": "synth",
+      "func": "cellularAutomata",
+      "kind": "generator",
+      "params": {
+        "tex": {
+          "type": "surface",
+          "default": "none",
+          "ui": {
+            "label": "texture",
+            "category": "input"
+          }
+        },
+        "zoom": {
+          "type": "int",
+          "default": 32,
+          "choices": {
+            "x1": 1,
+            "x2": 2,
+            "x4": 4,
+            "x8": 8,
+            "x16": 16,
+            "x32": 32,
+            "x64": 64
+          },
+          "randChoices": [
+            4,
+            8,
+            16,
+            32,
+            64
+          ],
+          "ui": {
+            "label": "zoom",
+            "control": "dropdown"
+          }
+        },
+        "ruleIndex": {
+          "type": "int",
+          "default": 0,
+          "choices": {
+            "classicLife": 0,
+            "highlife": 1,
+            "seeds": 2,
+            "coral": 3,
+            "dayNight": 4,
+            "lifeWithoutDeath": 5,
+            "replicator": 6,
+            "amoeba": 7,
+            "maze": 8,
+            "gliderWalk": 9,
+            "diamoeba": 10,
+            "size2x2": 11,
+            "morley": 12,
+            "anneal": 13,
+            "size34Life": 14,
+            "simpleReplicator": 15,
+            "waffles": 16,
+            "pondLife": 17
+          },
+          "ui": {
+            "label": "rules",
+            "control": "dropdown"
+          },
+          "uniform": "ruleIndex"
+        },
+        "smoothing": {
+          "type": "int",
+          "default": 0,
+          "choices": {
+            "constant": 0,
+            "linear": 1,
+            "hermite": 2,
+            "catmullRom3x3": 3,
+            "catmullRom4x4": 4,
+            "bSpline3x3": 5,
+            "bSpline4x4": 6
+          },
+          "ui": {
+            "label": "smoothing",
+            "control": "dropdown"
+          },
+          "uniform": "smoothing"
+        },
+        "seed": {
+          "type": "int",
+          "default": 1,
+          "min": 1,
+          "max": 100,
+          "ui": {
+            "label": "seed",
+            "control": false
+          },
+          "uniform": "seed"
+        },
+        "speed": {
+          "type": "float",
+          "default": 10,
+          "min": 1,
+          "max": 100,
+          "ui": {
+            "label": "speed",
+            "control": "slider"
+          },
+          "uniform": "speed"
+        },
+        "resetState": {
+          "type": "boolean",
+          "default": false,
+          "uniform": "resetState",
+          "ui": {
+            "control": "button",
+            "buttonLabel": "reset",
+            "label": "state"
+          }
+        },
+        "weight": {
+          "type": "float",
+          "default": 0,
+          "min": 0,
+          "max": 100,
+          "randChance": 0,
+          "ui": {
+            "label": "input weight",
+            "control": "slider",
+            "category": "input",
+            "enabledBy": {
+              "param": "tex",
+              "neq": "none"
+            }
+          },
+          "uniform": "weight"
+        },
+        "source": {
+          "type": "int",
+          "default": 0,
+          "min": 0,
+          "max": 7,
+          "ui": {
+            "control": false
+          },
+          "uniform": "source"
+        },
+        "iterationCount": {
+          "type": "int",
+          "default": 60,
+          "min": 0,
+          "max": 10000,
+          "cpuOnly": true
+        }
+      },
+      "textures": {
+        "global_ca_state": {
+          "width": {
+            "screenDivide": "zoom",
+            "default": 32
+          },
+          "height": {
+            "screenDivide": "zoom",
+            "default": 32
+          }
+        }
+      },
+      "passes": [
+        {
+          "name": "update",
+          "program": "caFb",
+          "key": "synth/cellularAutomata:caFb",
+          "inputs": {
+            "bufTex": "global_ca_state",
+            "tex": "tex"
+          },
+          "outputs": {
+            "fragColor": "global_ca_state"
+          }
+        },
+        {
+          "name": "render",
+          "program": "ca",
+          "key": "synth/cellularAutomata:ca",
+          "inputs": {
+            "fbTex": "global_ca_state",
+            "prevFrameTex": "global_ca_state",
+            "bufTex": "global_ca_state",
+            "tex": "tex"
+          },
+          "outputs": {
+            "fragColor": "outputTex"
+          }
+        }
+      ],
+      "iterated": true
+    },
     "synth/curl": {
       "namespace": "synth",
       "func": "curl",
@@ -16179,7 +19359,7 @@
           "default": 0,
           "uniform": "seed",
           "min": 0,
-          "max": 1000.0,
+          "max": 10,
           "ui": {
             "label": "seed",
             "control": "slider"
@@ -16243,8 +19423,7 @@
           "inputs": {},
           "outputs": {
             "fragColor": "outputTex"
-          },
-          "uniforms": {}
+          }
         }
       ]
     },
@@ -16353,8 +19532,7 @@
           "inputs": {},
           "outputs": {
             "fragColor": "outputTex"
-          },
-          "uniforms": {}
+          }
         }
       ]
     },
@@ -16536,8 +19714,7 @@
           "inputs": {},
           "outputs": {
             "color": "outputTex"
-          },
-          "uniforms": {}
+          }
         }
       ]
     },
@@ -16591,7 +19768,7 @@
           "default": 300,
           "uniform": "iterations",
           "min": 50,
-          "max": 1000.0,
+          "max": 10,
           "ui": {
             "label": "iterations",
             "control": "slider",
@@ -16860,8 +20037,7 @@
           "inputs": {},
           "outputs": {
             "fragColor": "outputTex"
-          },
-          "uniforms": {}
+          }
         }
       ]
     },
@@ -17090,8 +20266,7 @@
           "inputs": {},
           "outputs": {
             "color": "outputTex"
-          },
-          "uniforms": {}
+          }
         }
       ]
     },
@@ -17143,7 +20318,7 @@
           "default": 500,
           "uniform": "iterations",
           "min": 50,
-          "max": 2000.0,
+          "max": 20,
           "ui": {
             "label": "iterations",
             "control": "slider",
@@ -17302,15 +20477,14 @@
           "inputs": {},
           "outputs": {
             "fragColor": "outputTex"
-          },
-          "uniforms": {}
+          }
         }
       ]
     },
     "synth/media": {
       "namespace": "synth",
       "func": "media",
-      "kind": "filter",
+      "kind": "generator",
       "params": {
         "position": {
           "type": "int",
@@ -17470,11 +20644,325 @@
           },
           "outputs": {
             "fragColor": "outputTex"
-          },
-          "uniforms": {}
+          }
         }
       ],
       "externalTexture": "imageTex"
+    },
+    "synth/mnca": {
+      "namespace": "synth",
+      "func": "mnca",
+      "kind": "generator",
+      "params": {
+        "tex": {
+          "type": "surface",
+          "default": "none",
+          "ui": {
+            "label": "texture",
+            "category": "input"
+          }
+        },
+        "zoom": {
+          "type": "int",
+          "default": 8,
+          "choices": {
+            "x1": 1,
+            "x2": 2,
+            "x4": 4,
+            "x8": 8,
+            "x16": 16,
+            "x32": 32,
+            "x64": 64
+          },
+          "randChoices": [
+            4,
+            8,
+            16,
+            32,
+            64
+          ],
+          "ui": {
+            "label": "zoom",
+            "control": "dropdown"
+          }
+        },
+        "seed": {
+          "type": "int",
+          "default": 1,
+          "min": 1,
+          "max": 100,
+          "ui": {
+            "label": "seed",
+            "control": false
+          },
+          "uniform": "seed"
+        },
+        "smoothing": {
+          "type": "int",
+          "default": 0,
+          "choices": {
+            "constant": 0,
+            "linear": 1,
+            "hermite": 2,
+            "catmullRom3x3": 3,
+            "catmullRom4x4": 4,
+            "bSpline3x3": 5,
+            "bSpline4x4": 6
+          },
+          "ui": {
+            "label": "smoothing",
+            "control": "dropdown"
+          },
+          "uniform": "smoothing"
+        },
+        "speed": {
+          "type": "float",
+          "default": 10,
+          "min": 1,
+          "max": 100,
+          "ui": {
+            "label": "speed",
+            "control": "slider"
+          },
+          "uniform": "speed"
+        },
+        "resetState": {
+          "type": "boolean",
+          "default": false,
+          "uniform": "resetState",
+          "ui": {
+            "control": "button",
+            "buttonLabel": "reset",
+            "label": "state"
+          }
+        },
+        "weight": {
+          "type": "float",
+          "default": 0,
+          "min": 0,
+          "max": 100,
+          "randChance": 0,
+          "ui": {
+            "label": "input weight",
+            "control": "slider",
+            "category": "input",
+            "enabledBy": {
+              "param": "tex",
+              "neq": "none"
+            }
+          },
+          "uniform": "weight"
+        },
+        "n1v1": {
+          "type": "float",
+          "default": 21,
+          "min": 0,
+          "max": 100,
+          "randMin": 20,
+          "ui": {
+            "label": "n1 thresh 1",
+            "control": "slider",
+            "category": "rules"
+          },
+          "uniform": "n1v1"
+        },
+        "n1r1": {
+          "type": "float",
+          "default": 1,
+          "min": 0,
+          "max": 100,
+          "ui": {
+            "label": "n1 range 1",
+            "control": "slider",
+            "category": "rules"
+          },
+          "uniform": "n1r1"
+        },
+        "n1v2": {
+          "type": "float",
+          "default": 35,
+          "min": 0,
+          "max": 100,
+          "randMin": 20,
+          "ui": {
+            "label": "n1 thresh 2",
+            "control": "slider",
+            "category": "rules"
+          },
+          "uniform": "n1v2"
+        },
+        "n1r2": {
+          "type": "float",
+          "default": 15,
+          "min": 0,
+          "max": 100,
+          "ui": {
+            "label": "n1 range 2",
+            "control": "slider",
+            "category": "rules"
+          },
+          "uniform": "n1r2"
+        },
+        "n1v3": {
+          "type": "float",
+          "default": 75,
+          "min": 0,
+          "max": 100,
+          "randMin": 20,
+          "ui": {
+            "label": "n1 thresh 3",
+            "control": "slider",
+            "category": "rules"
+          },
+          "uniform": "n1v3"
+        },
+        "n1r3": {
+          "type": "float",
+          "default": 10,
+          "min": 0,
+          "max": 100,
+          "ui": {
+            "label": "n1 range 3",
+            "control": "slider",
+            "category": "rules"
+          },
+          "uniform": "n1r3"
+        },
+        "n1v4": {
+          "type": "float",
+          "default": 12,
+          "min": 0,
+          "max": 100,
+          "randMin": 20,
+          "ui": {
+            "label": "n1 thresh 4",
+            "control": "slider",
+            "category": "rules"
+          },
+          "uniform": "n1v4"
+        },
+        "n1r4": {
+          "type": "float",
+          "default": 3,
+          "min": 0,
+          "max": 100,
+          "ui": {
+            "label": "n1 range 4",
+            "control": "slider",
+            "category": "rules"
+          },
+          "uniform": "n1r4"
+        },
+        "n2v1": {
+          "type": "float",
+          "default": 10,
+          "min": 0,
+          "max": 100,
+          "randMin": 20,
+          "ui": {
+            "label": "n2 thresh 1",
+            "control": "slider",
+            "category": "rules"
+          },
+          "uniform": "n2v1"
+        },
+        "n2r1": {
+          "type": "float",
+          "default": 18,
+          "min": 0,
+          "max": 100,
+          "ui": {
+            "label": "n2 range 1",
+            "control": "slider",
+            "category": "rules"
+          },
+          "uniform": "n2r1"
+        },
+        "n2v2": {
+          "type": "float",
+          "default": 43,
+          "min": 0,
+          "max": 100,
+          "randMin": 20,
+          "ui": {
+            "label": "n2 thresh 2",
+            "control": "slider",
+            "category": "rules"
+          },
+          "uniform": "n2v2"
+        },
+        "n2r2": {
+          "type": "float",
+          "default": 12,
+          "min": 0,
+          "max": 100,
+          "ui": {
+            "label": "n2 range 2",
+            "control": "slider",
+            "category": "rules"
+          },
+          "uniform": "n2r2"
+        },
+        "source": {
+          "type": "int",
+          "default": 0,
+          "min": 0,
+          "max": 7,
+          "ui": {
+            "control": false,
+            "category": "misc"
+          },
+          "uniform": "source"
+        },
+        "iterationCount": {
+          "type": "int",
+          "default": 60,
+          "min": 0,
+          "max": 10000,
+          "cpuOnly": true
+        }
+      },
+      "textures": {
+        "global_mnca_state": {
+          "width": {
+            "screenDivide": "zoom",
+            "default": 8
+          },
+          "height": {
+            "screenDivide": "zoom",
+            "default": 8
+          }
+        }
+      },
+      "passes": [
+        {
+          "name": "update",
+          "program": "mncaFb",
+          "key": "synth/mnca:mncaFb",
+          "inputs": {
+            "bufTex": "global_mnca_state",
+            "seedTex": "tex"
+          },
+          "outputs": {
+            "fragColor": "global_mnca_state"
+          }
+        },
+        {
+          "name": "render",
+          "program": "mnca",
+          "key": "synth/mnca:mnca",
+          "inputs": {
+            "fbTex": "global_mnca_state",
+            "prevFrameTex": "global_mnca_state",
+            "bufTex": "global_mnca_state",
+            "seedTex": "tex"
+          },
+          "outputs": {
+            "fragColor": "outputTex"
+          }
+        }
+      ],
+      "iterated": true
     },
     "synth/modPattern": {
       "namespace": "synth",
@@ -17667,10 +21155,303 @@
           "inputs": {},
           "outputs": {
             "fragColor": "outputTex"
-          },
-          "uniforms": {}
+          }
         }
       ]
+    },
+    "synth/navierStokes": {
+      "namespace": "synth",
+      "func": "navierStokes",
+      "kind": "generator",
+      "params": {
+        "tex": {
+          "type": "surface",
+          "default": "none",
+          "ui": {
+            "label": "texture",
+            "category": "input"
+          }
+        },
+        "zoom": {
+          "type": "int",
+          "default": 1,
+          "choices": {
+            "x1": 1,
+            "x2": 2,
+            "x4": 4,
+            "x8": 8,
+            "x16": 16,
+            "x32": 32
+          },
+          "randChoices": [
+            2,
+            4,
+            8
+          ],
+          "ui": {
+            "label": "zoom",
+            "control": "dropdown"
+          }
+        },
+        "iterations": {
+          "type": "int",
+          "default": 30,
+          "uniform": "iterations",
+          "min": 4,
+          "max": 40,
+          "ui": {
+            "label": "pressure iter",
+            "control": "slider",
+            "category": "solver"
+          }
+        },
+        "smoothing": {
+          "type": "int",
+          "default": 1,
+          "uniform": "smoothing",
+          "choices": {
+            "constant": 0,
+            "linear": 1,
+            "hermite": 2,
+            "catmullRom3x3": 3,
+            "catmullRom4x4": 4,
+            "bSpline3x3": 5,
+            "bSpline4x4": 6
+          },
+          "ui": {
+            "label": "smoothing",
+            "control": "dropdown"
+          }
+        },
+        "speed": {
+          "type": "float",
+          "default": 100,
+          "uniform": "speed",
+          "min": 5,
+          "max": 145,
+          "ui": {
+            "label": "speed",
+            "control": "slider"
+          }
+        },
+        "dyeDecay": {
+          "type": "float",
+          "default": 98,
+          "uniform": "dyeDecay",
+          "min": 80,
+          "max": 100,
+          "ui": {
+            "label": "dye decay",
+            "control": "slider",
+            "category": "decay"
+          }
+        },
+        "velocityDecay": {
+          "type": "float",
+          "default": 99,
+          "uniform": "velocityDecay",
+          "min": 80,
+          "max": 100,
+          "ui": {
+            "label": "vel decay",
+            "control": "slider",
+            "category": "decay"
+          }
+        },
+        "inputForce": {
+          "type": "float",
+          "default": 0.5,
+          "uniform": "inputForce",
+          "min": 0,
+          "max": 1,
+          "step": 0.01,
+          "randChance": 0,
+          "ui": {
+            "label": "input force",
+            "control": "slider",
+            "category": "input",
+            "enabledBy": {
+              "param": "tex",
+              "neq": "none"
+            }
+          }
+        },
+        "inputDye": {
+          "type": "float",
+          "default": 0.9,
+          "uniform": "inputDye",
+          "min": 0,
+          "max": 1,
+          "step": 0.01,
+          "randChance": 0,
+          "ui": {
+            "label": "input dye",
+            "control": "slider",
+            "category": "input",
+            "enabledBy": {
+              "param": "tex",
+              "neq": "none"
+            }
+          }
+        },
+        "inputIntensity": {
+          "type": "float",
+          "default": 10,
+          "uniform": "inputIntensity",
+          "min": 0,
+          "max": 100,
+          "randChance": 0,
+          "ui": {
+            "label": "input mix",
+            "control": "slider",
+            "category": "input",
+            "enabledBy": {
+              "param": "tex",
+              "neq": "none"
+            }
+          }
+        },
+        "resetState": {
+          "type": "boolean",
+          "default": false,
+          "uniform": "resetState",
+          "ui": {
+            "control": "button",
+            "buttonLabel": "stir",
+            "label": "state"
+          }
+        },
+        "seed": {
+          "type": "int",
+          "default": 1,
+          "uniform": "seed",
+          "min": 1,
+          "max": 100,
+          "ui": {
+            "label": "seed",
+            "control": false
+          }
+        },
+        "iterationCount": {
+          "type": "int",
+          "default": 60,
+          "min": 0,
+          "max": 10000,
+          "cpuOnly": true
+        }
+      },
+      "textures": {
+        "global_ns_velocity": {
+          "width": {
+            "screenDivide": "zoom",
+            "default": 4
+          },
+          "height": {
+            "screenDivide": "zoom",
+            "default": 4
+          },
+          "format": "rgba16f"
+        },
+        "global_ns_pressure": {
+          "width": {
+            "screenDivide": "zoom",
+            "default": 4
+          },
+          "height": {
+            "screenDivide": "zoom",
+            "default": 4
+          },
+          "format": "rgba16f"
+        },
+        "global_ns_smoothed": {
+          "width": "100%",
+          "height": "100%"
+        }
+      },
+      "passes": [
+        {
+          "name": "splat",
+          "program": "nsSplat",
+          "key": "synth/navierStokes:nsSplat",
+          "inputs": {
+            "bufTex": "global_ns_velocity",
+            "inputTex": "tex"
+          },
+          "outputs": {
+            "fragColor": "global_ns_velocity"
+          }
+        },
+        {
+          "name": "advect",
+          "program": "nsAdvect",
+          "key": "synth/navierStokes:nsAdvect",
+          "inputs": {
+            "bufTex": "global_ns_velocity"
+          },
+          "outputs": {
+            "fragColor": "global_ns_velocity"
+          }
+        },
+        {
+          "name": "divergence",
+          "program": "nsDivergence",
+          "key": "synth/navierStokes:nsDivergence",
+          "inputs": {
+            "velTex": "global_ns_velocity"
+          },
+          "outputs": {
+            "fragColor": "global_ns_pressure"
+          }
+        },
+        {
+          "name": "pressure",
+          "program": "nsPressure",
+          "key": "synth/navierStokes:nsPressure",
+          "inputs": {
+            "bufTex": "global_ns_pressure"
+          },
+          "outputs": {
+            "fragColor": "global_ns_pressure"
+          },
+          "repeat": "iterations"
+        },
+        {
+          "name": "gradient",
+          "program": "nsGradient",
+          "key": "synth/navierStokes:nsGradient",
+          "inputs": {
+            "velTex": "global_ns_velocity",
+            "pressureTex": "global_ns_pressure"
+          },
+          "outputs": {
+            "fragColor": "global_ns_velocity"
+          }
+        },
+        {
+          "name": "smooth",
+          "program": "nsSmooth",
+          "key": "synth/navierStokes:nsSmooth",
+          "inputs": {
+            "canvasTex": "global_ns_velocity"
+          },
+          "outputs": {
+            "fragColor": "global_ns_smoothed"
+          }
+        },
+        {
+          "name": "render",
+          "program": "ns",
+          "key": "synth/navierStokes:ns",
+          "inputs": {
+            "fbTex": "global_ns_smoothed",
+            "inputTex": "tex"
+          },
+          "outputs": {
+            "fragColor": "outputTex"
+          }
+        }
+      ],
+      "iterated": true
     },
     "synth/newton": {
       "namespace": "synth",
@@ -17909,8 +21690,7 @@
           "inputs": {},
           "outputs": {
             "fragColor": "outputTex"
-          },
-          "uniforms": {}
+          }
         }
       ]
     },
@@ -18090,8 +21870,7 @@
           "inputs": {},
           "outputs": {
             "fragColor": "outputTex"
-          },
-          "uniforms": {}
+          }
         }
       ]
     },
@@ -18147,7 +21926,7 @@
           "type": "int",
           "default": 0,
           "min": 0,
-          "max": 1000.0,
+          "max": 10,
           "uniform": "seed",
           "ui": {
             "label": "seed",
@@ -18171,8 +21950,7 @@
           "inputs": {},
           "outputs": {
             "color": "outputTex"
-          },
-          "uniforms": {}
+          }
         }
       ]
     },
@@ -18361,8 +22139,7 @@
           "inputs": {},
           "outputs": {
             "color": "outputTex"
-          },
-          "uniforms": {}
+          }
         }
       ]
     },
@@ -18497,8 +22274,7 @@
           "inputs": {},
           "outputs": {
             "color": "outputTex"
-          },
-          "uniforms": {}
+          }
         }
       ]
     },
@@ -18617,15 +22393,332 @@
           "inputs": {},
           "outputs": {
             "color": "outputTex"
-          },
-          "uniforms": {}
+          }
         }
       ]
+    },
+    "synth/reactionDiffusion": {
+      "namespace": "synth",
+      "func": "reactionDiffusion",
+      "kind": "generator",
+      "params": {
+        "tex": {
+          "type": "surface",
+          "default": "none",
+          "ui": {
+            "label": "texture",
+            "category": "input"
+          }
+        },
+        "zoom": {
+          "type": "int",
+          "default": 8,
+          "uniform": "zoom",
+          "choices": {
+            "x1": 1,
+            "x2": 2,
+            "x4": 4,
+            "x8": 8,
+            "x16": 16,
+            "x32": 32,
+            "x64": 64
+          },
+          "randChoices": [
+            4,
+            8,
+            16,
+            32,
+            64
+          ],
+          "ui": {
+            "label": "zoom",
+            "control": "dropdown"
+          }
+        },
+        "smoothing": {
+          "type": "int",
+          "default": 1,
+          "uniform": "smoothing",
+          "choices": {
+            "constant": 0,
+            "linear": 1,
+            "hermite": 2,
+            "catmullRom3x3": 3,
+            "catmullRom4x4": 4,
+            "bSpline3x3": 5,
+            "bSpline4x4": 6
+          },
+          "ui": {
+            "label": "smoothing",
+            "control": "dropdown"
+          }
+        },
+        "speed": {
+          "type": "float",
+          "default": 100,
+          "uniform": "speed",
+          "min": 10,
+          "max": 145,
+          "randMax": 50,
+          "ui": {
+            "label": "speed",
+            "control": "slider"
+          }
+        },
+        "resetState": {
+          "type": "boolean",
+          "default": false,
+          "uniform": "resetState",
+          "ui": {
+            "control": "button",
+            "buttonLabel": "reset",
+            "label": "state"
+          }
+        },
+        "seed": {
+          "type": "int",
+          "default": 1,
+          "uniform": "seed",
+          "min": 1,
+          "max": 100,
+          "ui": {
+            "label": "seed",
+            "control": false
+          }
+        },
+        "sourceF": {
+          "type": "int",
+          "default": 0,
+          "uniform": "sourceF",
+          "choices": {
+            "slider": 0,
+            "sliderInput": 6,
+            "brightness": 1,
+            "darkness": 2,
+            "red": 3,
+            "green": 4,
+            "blue": 5
+          },
+          "randChance": 0,
+          "ui": {
+            "label": "feed source",
+            "control": "dropdown",
+            "category": "rules"
+          }
+        },
+        "feed": {
+          "type": "float",
+          "default": 70,
+          "uniform": "feed",
+          "min": 10,
+          "max": 110,
+          "randMin": 35,
+          "randMax": 50,
+          "ui": {
+            "label": "feed value",
+            "control": "slider",
+            "category": "rules"
+          }
+        },
+        "sourceK": {
+          "type": "int",
+          "default": 0,
+          "uniform": "sourceK",
+          "choices": {
+            "slider": 0,
+            "sliderInput": 6,
+            "brightness": 1,
+            "darkness": 2,
+            "red": 3,
+            "green": 4,
+            "blue": 5
+          },
+          "randChance": 0,
+          "ui": {
+            "label": "kill source",
+            "control": "dropdown",
+            "category": "rules"
+          }
+        },
+        "kill": {
+          "type": "float",
+          "default": 67,
+          "uniform": "kill",
+          "min": 45,
+          "max": 70,
+          "randMin": 50,
+          "randMax": 65,
+          "ui": {
+            "label": "kill value",
+            "control": "slider",
+            "category": "rules"
+          }
+        },
+        "sourceR1": {
+          "type": "int",
+          "default": 0,
+          "uniform": "sourceR1",
+          "choices": {
+            "slider": 0,
+            "sliderInput": 6,
+            "brightness": 1,
+            "darkness": 2,
+            "red": 3,
+            "green": 4,
+            "blue": 5
+          },
+          "randChance": 0,
+          "ui": {
+            "label": "rate 1 source",
+            "control": "dropdown",
+            "category": "rules"
+          }
+        },
+        "rate1": {
+          "type": "float",
+          "default": 92,
+          "uniform": "rate1",
+          "min": 50,
+          "max": 120,
+          "ui": {
+            "label": "rate 1 value",
+            "control": "slider",
+            "category": "rules"
+          }
+        },
+        "sourceR2": {
+          "type": "int",
+          "default": 0,
+          "uniform": "sourceR2",
+          "choices": {
+            "slider": 0,
+            "sliderInput": 6,
+            "brightness": 1,
+            "darkness": 2,
+            "red": 3,
+            "green": 4,
+            "blue": 5
+          },
+          "randChance": 0,
+          "ui": {
+            "label": "rate 2 source",
+            "control": "dropdown",
+            "category": "rules"
+          }
+        },
+        "rate2": {
+          "type": "float",
+          "default": 22,
+          "uniform": "rate2",
+          "min": 20,
+          "max": 50,
+          "randMax": 35,
+          "ui": {
+            "label": "rate 2 value",
+            "control": "slider",
+            "category": "rules"
+          }
+        },
+        "iterations": {
+          "type": "int",
+          "default": 8,
+          "uniform": "iterations",
+          "min": 1,
+          "max": 32,
+          "randMin": 6,
+          "ui": {
+            "label": "iterations",
+            "control": "slider",
+            "category": "rules"
+          }
+        },
+        "weight": {
+          "type": "float",
+          "default": 0,
+          "uniform": "weight",
+          "min": 0,
+          "max": 100,
+          "randChance": 0,
+          "ui": {
+            "label": "input weight",
+            "control": "slider",
+            "category": "input",
+            "enabledBy": {
+              "param": "tex",
+              "neq": "none"
+            }
+          }
+        },
+        "inputIntensity": {
+          "type": "float",
+          "default": 0,
+          "uniform": "inputIntensity",
+          "min": 0,
+          "max": 100,
+          "randChance": 0,
+          "ui": {
+            "label": "input mix",
+            "control": "slider",
+            "category": "input",
+            "enabledBy": {
+              "param": "tex",
+              "neq": "none"
+            }
+          }
+        },
+        "iterationCount": {
+          "type": "int",
+          "default": 60,
+          "min": 0,
+          "max": 10000,
+          "cpuOnly": true
+        }
+      },
+      "textures": {
+        "global_rd_state": {
+          "width": {
+            "screenDivide": "zoom",
+            "default": 8
+          },
+          "height": {
+            "screenDivide": "zoom",
+            "default": 8
+          }
+        }
+      },
+      "passes": [
+        {
+          "name": "simulate",
+          "program": "rdFb",
+          "key": "synth/reactionDiffusion:rdFb",
+          "inputs": {
+            "bufTex": "global_rd_state",
+            "inputTex": "tex"
+          },
+          "outputs": {
+            "fragColor": "global_rd_state"
+          },
+          "repeat": "iterations"
+        },
+        {
+          "name": "render",
+          "program": "rd",
+          "key": "synth/reactionDiffusion:rd",
+          "inputs": {
+            "fbTex": "global_rd_state",
+            "inputTex": "tex"
+          },
+          "outputs": {
+            "fragColor": "outputTex"
+          }
+        }
+      ],
+      "iterated": true
     },
     "synth/remap": {
       "namespace": "synth",
       "func": "remap",
-      "kind": "filter",
+      "kind": "generator",
       "params": {
         "zoneCount": {
           "type": "int",
@@ -18710,8 +22803,7 @@
           },
           "outputs": {
             "fragColor": "outputTex"
-          },
-          "uniforms": {}
+          }
         }
       ]
     },
@@ -18904,8 +22996,7 @@
           "inputs": {},
           "outputs": {
             "color": "outputTex"
-          },
-          "uniforms": {}
+          }
         }
       ]
     },
@@ -19100,8 +23191,7 @@
           "inputs": {},
           "outputs": {
             "fragColor": "outputTex"
-          },
-          "uniforms": {}
+          }
         }
       ]
     },
@@ -19145,15 +23235,14 @@
           "inputs": {},
           "outputs": {
             "color": "outputTex"
-          },
-          "uniforms": {}
+          }
         }
       ]
     },
     "synth/subdivide": {
       "namespace": "synth",
       "func": "subdivide",
-      "kind": "filter",
+      "kind": "generator",
       "params": {
         "tex": {
           "type": "surface",
@@ -19306,8 +23395,7 @@
           },
           "outputs": {
             "fragColor": "outputTex"
-          },
-          "uniforms": {}
+          }
         }
       ]
     },
@@ -19364,8 +23452,7 @@
           "inputs": {},
           "outputs": {
             "color": "outputTex"
-          },
-          "uniforms": {}
+          }
         }
       ]
     }

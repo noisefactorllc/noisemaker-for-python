@@ -120,3 +120,29 @@ def run_pass(kernel, ctx: Ctx, width: int, height: int) -> Surface:
             data[i + 2] = out[2]
             data[i + 3] = out[3]
     return surf
+
+
+def run_pass_mrt(kernel, ctx: Ctx, width: int, height: int) -> list[Surface]:
+    """Run a kernel with multiple ``out vec4`` declarations into one surface
+    per declared output, preserving declaration/location order."""
+    output_names = getattr(kernel, "output_names", ())
+    if len(output_names) < 2:
+        raise ValueError("run_pass_mrt requires a kernel with at least two outputs")
+    surfaces = [Surface(width, height) for _ in output_names]
+    outputs = [[0.0, 0.0, 0.0, 0.0] for _ in output_names]
+    fw = float(width)
+    fh = float(height)
+    if ctx.resolution is None:
+        ctx.resolution = np.array([fw, fh], dtype=F32)
+    for y in range(height):
+        fy = height - y - 0.5
+        base = y * width * 4
+        for x in range(width):
+            fx = x + 0.5
+            ctx.frag_coord = np.array([fx, fy, 0.0, 1.0], dtype=F32)
+            ctx.uv = np.array([fx / fw, fy / fh], dtype=F32)
+            kernel(ctx, outputs)
+            offset = base + x * 4
+            for surface, output in zip(surfaces, outputs, strict=True):
+                surface.data[offset : offset + 4] = output
+    return surfaces

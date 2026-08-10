@@ -30,21 +30,21 @@ def run_pixel(ctx, out):
         m = rt.binary("-", v, c, 1, "float")
         rgb = rt.construct(3, 0.0)
         if rt.binary("<", h, rt.binary("/", rt.f(1.0), rt.f(6.0), 1, "float")):
-            rgb[:] = rt.construct(3, c, x, rt.f(0.0))
+            (rgb.__setitem__(0, c), rgb.__setitem__(1, x), rgb.__setitem__(2, rt.f(0.0)), rgb)[-1]
         else:
             if rt.binary("<", h, rt.binary("/", rt.f(2.0), rt.f(6.0), 1, "float")):
-                rgb[:] = rt.construct(3, x, c, rt.f(0.0))
+                (rgb.__setitem__(0, x), rgb.__setitem__(1, c), rgb.__setitem__(2, rt.f(0.0)), rgb)[-1]
             else:
                 if rt.binary("<", h, rt.binary("/", rt.f(3.0), rt.f(6.0), 1, "float")):
-                    rgb[:] = rt.construct(3, rt.f(0.0), c, x)
+                    (rgb.__setitem__(0, rt.f(0.0)), rgb.__setitem__(1, c), rgb.__setitem__(2, x), rgb)[-1]
                 else:
                     if rt.binary("<", h, rt.binary("/", rt.f(4.0), rt.f(6.0), 1, "float")):
-                        rgb[:] = rt.construct(3, rt.f(0.0), x, c)
+                        (rgb.__setitem__(0, rt.f(0.0)), rgb.__setitem__(1, x), rgb.__setitem__(2, c), rgb)[-1]
                     else:
                         if rt.binary("<", h, rt.binary("/", rt.f(5.0), rt.f(6.0), 1, "float")):
-                            rgb[:] = rt.construct(3, x, rt.f(0.0), c)
+                            (rgb.__setitem__(0, x), rgb.__setitem__(1, rt.f(0.0)), rgb.__setitem__(2, c), rgb)[-1]
                         else:
-                            rgb[:] = rt.construct(3, c, rt.f(0.0), x)
+                            (rgb.__setitem__(0, c), rgb.__setitem__(1, rt.f(0.0)), rgb.__setitem__(2, x), rgb)[-1]
         return rt.binary("+", rgb, m, 3, "float")
     def rgb2hsv__vec3(rgb):
         rgb = rt.copy(rgb, "float")
@@ -123,3 +123,4 @@ def run_pixel(ctx, out):
     main__void()
     _c = g.fragColor
     out[0] = rt.f32(_c[0]); out[1] = rt.f32(_c[1]); out[2] = rt.f32(_c[2]); out[3] = rt.f32(_c[3])
+run_pixel.output_names = ('fragColor',)

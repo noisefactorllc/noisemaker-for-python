@@ -75,21 +75,19 @@ _HERE = Path(__file__).resolve().parent
 _CACHE_ROOT = _HERE / ".cdn-cache"
 _USER_AGENT = "noisemaker-python-transpiler (+https://noisedeck.app)"
 
-# Effects the transpiler does not target: full 3D volumetric effects, point
-# / agent simulations, mesh & cubemap rendering, and stateful/reactive
-# effects (persistent sim state, live audio/MIDI input) that don't fit a
-# stateless single-frame GLSL -> Python pixel kernel.
-_NAMESPACE_EXCLUSIONS = frozenset({"filter3d", "synth3d", "points", "render"})
+# Effects the transpiler does not target: full 3D volumetric effects, mesh &
+# cubemap rendering, render-loop control nodes, and live audio/MIDI effects.
+# Stateful and particle effects are supported by CPU-only per-frame iteration.
+_NAMESPACE_EXCLUSIONS = frozenset({"filter3d", "synth3d"})
+_RENDER_ALLOWLIST = frozenset(
+    {
+        "render/pointsBillboardRender",
+        "render/pointsEmit",
+        "render/pointsRender",
+    }
+)
 _ID_EXCLUSIONS = frozenset(
     {
-        "filter/convolutionFeedback",
-        "filter/feedback",
-        "filter/motionBlur",
-        "filter/temporalAberration",
-        "synth/cellularAutomata",
-        "synth/mnca",
-        "synth/navierStokes",
-        "synth/reactionDiffusion",
         "synth/roll",
         "synth/scope",
         "synth/spectrum",
@@ -97,6 +95,50 @@ _ID_EXCLUSIONS = frozenset(
         "classicNoisedeck/shapes3d",
     }
 )
+_ITERATED_IDS = frozenset(
+    {
+        "filter/convolutionFeedback",
+        "filter/feedback",
+        "filter/motionBlur",
+        "filter/temporalAberration",
+        "points/attractor",
+        "points/buddhabrot",
+        "points/dla",
+        "points/flock",
+        "points/flow",
+        "points/hydraulic",
+        "points/lenia",
+        "points/life",
+        "points/physarum",
+        "points/physical",
+        "render/pointsBillboardRender",
+        "render/pointsEmit",
+        "render/pointsRender",
+        "synth/cellularAutomata",
+        "synth/mnca",
+        "synth/navierStokes",
+        "synth/reactionDiffusion",
+    }
+)
+
+
+def _inject_cpu_iteration(effect_id: str, effect: dict) -> dict:
+    if effect_id in _ITERATED_IDS:
+        effect.setdefault("params", {})["iterationCount"] = {
+            "type": "int",
+            "default": 60,
+            "min": 0,
+            "max": 10000,
+            "cpuOnly": True,
+        }
+    return effect
+
+
+def _normalize_effect(effect_id: str, effect: dict) -> dict:
+    namespace, func = effect_id.split("/", 1)
+    effect["namespace"] = effect.get("namespace") or namespace
+    effect["func"] = effect.get("func") or func
+    return _inject_cpu_iteration(effect_id, effect)
 
 
 class CDNError(RuntimeError):
@@ -237,6 +279,14 @@ def _sanitize_bare_identifiers(text: str) -> str:
             i = _skip_string(text, i)
             out.append(text[start:i])
             continue
+        if c in "eE" and i > 0 and (text[i - 1].isdigit() or text[i - 1] == "."):
+            exponent_digit = i + 1
+            if exponent_digit < n and text[exponent_digit] in "+-":
+                exponent_digit += 1
+            if exponent_digit < n and text[exponent_digit].isdigit():
+                out.append(c)
+                i += 1
+                continue
         if c.isalpha() or c in "_$":
             j = i
             while j < n and (text[j].isalnum() or text[j] in "_$"):
@@ -348,7 +398,7 @@ def fetch_effect(effect_id: str, version: str = CDN_VERSION) -> dict:
     # no JavaScript files ever live in this Python project).
     cache_file = _cache_dir(version) / "effects" / f"{effect_id}.json"
     if cache_file.exists():
-        return json.loads(cache_file.read_text(encoding="utf-8"))
+        return _normalize_effect(effect_id, json.loads(cache_file.read_text(encoding="utf-8")))
 
     bundle = _fetch_text(f"{CDN_BASE}/{version}/effects/{effect_id}.js")
     region = _definition_region(bundle)
@@ -377,22 +427,25 @@ def fetch_effect(effect_id: str, version: str = CDN_VERSION) -> dict:
             "externalTexture": _parse_field(region, effect_id, "externalTexture", None),
             "programs": _extract_programs(bundle),
         }
+    _normalize_effect(effect_id, result)
     cache_file.parent.mkdir(parents=True, exist_ok=True)
     cache_file.write_text(json.dumps(result), encoding="utf-8")
     return result
 
 
 def eligible_ids(version: str = CDN_VERSION) -> list[str]:
-    """Manifest effect ids the transpiler targets: everything except 3D /
-    points / render / stateful / reactive effects (see the module-level
-    exclusion sets)."""
+    """Manifest effect ids the transpiler targets, including CPU-iterated
+    stateful/particle effects but excluding 3D, reactive, and control nodes."""
     manifest = fetch_manifest(version)
     result = []
     for effect_id in manifest:
         namespace = effect_id.split("/", 1)[0]
         if namespace in _NAMESPACE_EXCLUSIONS:
             continue
-        if "3d" in effect_id or "cubemap" in effect_id or "mesh" in effect_id:
+        if namespace == "render" and effect_id not in _RENDER_ALLOWLIST:
+            continue
+        lowered = effect_id.lower()
+        if "3d" in lowered or "cubemap" in lowered or "mesh" in lowered:
             continue
         if effect_id in _ID_EXCLUSIONS:
             continue
