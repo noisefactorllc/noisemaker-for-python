@@ -37,4 +37,13 @@ def test_texture_dimensions_support_catalog_size_specs():
     assert _texture_dimensions({"width": "50%", "height": "25%"}, params, 80, 40) == (40, 10)
     assert _texture_dimensions({"width": {"param": "stateSize", "default": 256}}, params, 80, 40) == (64, 40)
     assert _texture_dimensions({"height": {"screenDivide": "zoom", "default": 8}}, params, 80, 40) == (80, 10)
+    assert _texture_dimensions(
+        {
+            "width": {"screenDivide": "zoom", "default": 8},
+            "height": {"screenDivide": "zoom", "default": 8},
+        },
+        params,
+        65,
+        63,
+    ) == (17, 16)
     assert _texture_dimensions({"width": 8, "height": 4}, params, 80, 40) == (8, 4)

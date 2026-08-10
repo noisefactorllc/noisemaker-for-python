@@ -938,7 +938,7 @@
             "exclusion": 6,
             "glow": 7,
             "hardLight": 8,
-            "hueAB": 10,
+            "hueAB": 1000.0,
             "hueBA": 1001,
             "lighten": 9,
             "mix": 10,

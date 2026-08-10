@@ -1,6 +1,15 @@
 import json
+from pathlib import Path
 
 from transpiler import build as build_module
+
+
+def test_bundled_catalog_preserves_scientific_notation_enum_value():
+    metadata = json.loads((Path(build_module.BUNDLE) / "metadata.json").read_text())
+
+    choices = metadata["effects"]["classicNoisedeck/coalesce"]["params"]["blendMode"]["choices"]
+
+    assert choices["hueAB"] == 1000
 
 
 def test_build_preserves_iterated_effect_and_pass_execution_metadata(tmp_path, monkeypatch):

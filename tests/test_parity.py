@@ -135,6 +135,28 @@ def test_iterated_effect_byte_parity(tmp_path, effect_id, program):
     assert _max_diff(js, py) == 0
 
 
+@pytest.mark.parametrize("func", ("cellularAutomata", "mnca", "navierStokes", "reactionDiffusion"))
+def test_simulation_effect_non_divisible_byte_parity(tmp_path, func):
+    program = (
+        "search synth\n"
+        "noise(seed: 1, ridges: true).write(o0)\n"
+        f"{func}(seed: 1, tex: read(o0), iterationCount: 2, zoom: 32).write(o1)\n"
+        "render(o1)\n"
+    )
+
+    js = _js_render_dsl(
+        program,
+        str(tmp_path / f"{func}-non-divisible.png"),
+        width=65,
+        height=63,
+        seed=1,
+        time=0.25,
+    )
+    py = render_dsl(program, width=65, height=63, seed=1, time=0.25)
+
+    assert _max_diff(js, py) == 0
+
+
 @pytest.mark.parametrize("mode", [0, 1])
 def test_invert_parity(tmp_path, mode):
     # Oracle is the DSL `solid(#4080c0).invert(mode:N)` — the `effect` CLI would
@@ -144,6 +166,20 @@ def test_invert_parity(tmp_path, mode):
     src = render_effect("synth/solid", {"color": "#4080c0"}, width=16, height=16)
     py = render_effect("filter/invert", {"mode": mode}, {"inputTex": src}, width=16, height=16)
     assert _max_diff(js, py) <= 2
+
+
+def test_coalesce_hue_ab_byte_parity(tmp_path):
+    program = (
+        "search synth, classicNoisedeck\n"
+        "solid(color: #ff2200).write(o0)\n"
+        "solid(color: #00ccff).coalesce(tex: read(o0), blendMode: hueAB).write(o1)\n"
+        "render(o1)\n"
+    )
+
+    js = _js_render_dsl(program, str(tmp_path / "coalesce-hue-ab.png"))
+    py = render_dsl(program, width=16, height=16)
+
+    assert _max_diff(js, py) == 0
 
 
 # DSL `run` path: Python render_dsl must match the JS engine (node `render -`)

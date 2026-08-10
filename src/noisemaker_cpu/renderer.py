@@ -8,6 +8,7 @@ drawMode) is P1.
 from __future__ import annotations
 
 import json
+import math
 import os
 
 import numpy as np
@@ -150,7 +151,7 @@ def _size_component(spec, params, full_size):
             return max(1, int(params.get(spec["param"], spec.get("default", spec.get("paramDefault", full_size)))))
         if "screenDivide" in spec:
             divisor = max(1, float(params.get(spec["screenDivide"], spec.get("default", 1))))
-            return max(1, round(full_size / divisor))
+            return max(1, math.ceil(full_size / divisor))
     return full_size
 
 
