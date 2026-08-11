@@ -11,19 +11,27 @@ from __future__ import annotations
 
 import numpy as np
 
+MAX_SURFACE_PIXELS = 16_777_216
+
 
 def _assert_dim(value: int, name: str) -> None:
     if not isinstance(value, int) or isinstance(value, bool) or value <= 0:
         raise ValueError(f"{name} must be a positive integer")
 
 
+def _surface_length(width: int, height: int) -> int:
+    _assert_dim(width, "width")
+    _assert_dim(height, "height")
+    if height > MAX_SURFACE_PIXELS // width:
+        raise ValueError(f"Surface exceeds the {MAX_SURFACE_PIXELS:,} pixel limit")
+    return width * height * 4
+
+
 class Surface:
     __slots__ = ("data", "filter", "height", "width")
 
     def __init__(self, width: int, height: int, data: np.ndarray | None = None):
-        _assert_dim(width, "width")
-        _assert_dim(height, "height")
-        length = width * height * 4
+        length = _surface_length(width, height)
         if data is None:
             data = np.zeros(length, dtype=np.float32)
         else:
@@ -38,9 +46,7 @@ class Surface:
 
     @staticmethod
     def from_rgba8(width: int, height: int, byts) -> Surface:
-        _assert_dim(width, "width")
-        _assert_dim(height, "height")
-        length = width * height * 4
+        length = _surface_length(width, height)
         arr = np.frombuffer(bytes(byts), dtype=np.uint8)
         if arr.shape[0] != length:
             raise TypeError(f"bytes must have length {length}")

@@ -113,8 +113,8 @@ def main():
         only = set(sys.argv[sys.argv.index("--only") + 1].split(","))
     effects = _meta()["effects"]
     candidates = [i for i in effects if not only or i in only]
-    skipped = [i for i in candidates if effects[i].get("iterated")]
-    ids = [i for i in candidates if not effects[i].get("iterated")]
+    skipped = [i for i in candidates if effects[i].get("iterated") or effects[i].get("domain", "image") != "image"]
+    ids = [i for i in candidates if i not in skipped]
 
     ok, diffs, errors, oracle_err = [], [], {}, []
     for eid in ids:
@@ -156,7 +156,7 @@ def main():
     if oracle_err:
         print(f"\nORACLE ERRORS (JS effect CLI failed): {len(oracle_err)}  e.g. {oracle_err[:5]}")
     if skipped:
-        print(f"\nSKIPPED (iterated; covered by DSL parity tests): {len(skipped)}  e.g. {skipped[:5]}")
+        print(f"\nSKIPPED (iterated/typed-chain; covered by DSL parity tests): {len(skipped)}  e.g. {skipped[:5]}")
     print(f"\nPASS: {len(ok)}")
 
 

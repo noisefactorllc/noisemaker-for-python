@@ -81,3 +81,33 @@ def test_iteration_schedule_anchors_last_tick_to_requested_time():
 def test_iteration_schedule_wraps_time_and_allows_zero_iterations():
     assert iteration_schedule(0.0, 0) == []
     assert iteration_schedule(0.0, 2)[0]["time"] == pytest.approx(1.0 - ITERATION_DELTA_TIME)
+
+
+def test_balanced_loop_region_forms_one_iteration_group():
+    effects = {
+        "synth/solid": {"passes": [], "textures": {}},
+        "render/loopBegin": {
+            "iterated": True,
+            "loopRole": "begin",
+            "passes": [],
+            "textures": {},
+        },
+        "filter/blur": {"passes": [], "textures": {}},
+        "render/loopEnd": {"loopRole": "end", "passes": [], "textures": {}},
+        "filter/invert": {"passes": [], "textures": {}},
+    }
+    steps = [
+        _effect("synth/solid"),
+        _effect("render/loopBegin"),
+        _effect("filter/blur"),
+        _effect("render/loopEnd"),
+        _effect("filter/invert"),
+    ]
+
+    groups = compute_iteration_groups(steps, effects)
+
+    assert groups == [
+        {"steps": [steps[0]], "iterated": False},
+        {"steps": steps[1:4], "iterated": True, "loop": True},
+        {"steps": [steps[4]], "iterated": False},
+    ]

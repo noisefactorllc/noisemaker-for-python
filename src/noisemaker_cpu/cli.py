@@ -45,6 +45,7 @@ def _resolve_effect(effect: str, kind: str | None = None) -> str:
             effect_id
             for effect_id, definition in effects.items()
             if (kind is None or definition.get("kind") == kind)
+            and definition.get("domain", "image") == "image"
             and not definition.get("iterated")
             and not definition.get("externalTexture")
         ]
@@ -54,6 +55,11 @@ def _resolve_effect(effect: str, kind: str | None = None) -> str:
     if effect not in effects:
         raise click.BadParameter(
             f"Unknown effect: {effect}. Pass 'random' or a catalog id like 'synth/curl'.",
+            param_hint="EFFECT",
+        )
+    if kind is not None and effects[effect].get("domain", "image") != "image":
+        raise click.BadParameter(
+            f"{effect} requires a typed volume chain; use the DSL run command.",
             param_hint="EFFECT",
         )
     return effect

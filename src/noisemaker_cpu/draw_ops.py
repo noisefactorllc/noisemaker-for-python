@@ -246,6 +246,35 @@ def points_render_deposit(inputs, destination, uniforms, _render_pass):
         destination.data[offset : offset + 4] += np.asarray(texel_fetch_agent(rgba_tex, sx, sy), dtype=F32)
 
 
+def flow3d_deposit(inputs, destination, uniforms, render_pass):
+    state1 = inputs["stateTex1"]
+    state2 = inputs["stateTex2"]
+    capacity = state1.width * state1.height
+    max_agents = math.trunc(max(state1.width, state1.height) * uniforms["density"] * 0.2)
+    draw_count = render_pass.get("count", capacity)
+    count = max(0, min(int(draw_count), capacity, max_agents))
+    volume_size = int(uniforms["volumeSize"])
+    atlas_height = volume_size * volume_size
+    for agent_index in range(count):
+        state_x = agent_index % state1.width
+        state_y = agent_index // state1.width
+        position = texel_fetch_agent(state1, state_x, state_y)
+        color = texel_fetch_agent(state2, state_x, state_y)
+        atlas_x = position[0]
+        atlas_y = position[1] + math.floor(position[2]) * volume_size
+        offset = scatter_point_pixel(
+            atlas_x / volume_size * 2 - 1,
+            atlas_y / atlas_height * 2 - 1,
+            1,
+            destination.width,
+            destination.height,
+        )
+        if offset is None:
+            continue
+        destination.data[offset : offset + 3] += np.asarray(color[:3], dtype=F32)
+        destination.data[offset + 3] += 1
+
+
 def _hash_uint32(seed):
     state = ((seed & 0xFFFFFFFF) * 747796405 + 2891336453) & 0xFFFFFFFF
     word = ((((state >> ((state >> 28) + 4)) ^ state) & 0xFFFFFFFF) * 277803737) & 0xFFFFFFFF
@@ -395,6 +424,7 @@ def _wormhole_draw(inputs, destination, uniforms, _render_pass):
 
 POINT_DRAW_OPS = {
     "filter/wormhole:deposit": _wormhole_draw,
+    "filter3d/flow3d:deposit": flow3d_deposit,
     "points/dla:depositGrid": dla_deposit_grid,
     "points/lenia:deposit": lenia_deposit,
     "points/physarum:deposit": physarum_deposit,

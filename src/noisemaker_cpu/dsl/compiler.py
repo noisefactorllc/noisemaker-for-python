@@ -150,8 +150,10 @@ def _normalize_effect(effect_id, spec, args):
 
 def _compile_chain(chain, bindings, search, effects):
     steps = []
-    has_input = False
+    has_image = False
+    has_volume = False
     starts_with_generator = False
+    open_loop = None
     for index, raw_call in enumerate(chain["calls"]):
         call = raw_call
         binding = bindings.get(call["name"])
@@ -164,10 +166,12 @@ def _compile_chain(chain, bindings, search, effects):
             if index != 0 or len(args) != 1 or not _is_surface(args[0]["value"]):
                 raise DslError("read(surface) must begin a chain", call["loc"])
             steps.append({"kind": "read", "surface": args[0]["value"]["name"], "loc": call["loc"]})
-            has_input = True
+            has_image = True
             continue
         if call["name"] == "write":
-            if not has_input or len(args) != 1 or not _is_surface(args[0]["value"]):
+            if open_loop is not None:
+                raise DslError("loopBegin must be closed by loopEnd before write", call["loc"])
+            if not has_image or len(args) != 1 or not _is_surface(args[0]["value"]):
                 raise DslError("write(surface) requires a current image", call["loc"])
             steps.append({"kind": "write", "surface": args[0]["value"]["name"], "loc": call["loc"]})
             continue
@@ -175,23 +179,51 @@ def _compile_chain(chain, bindings, search, effects):
         if effect_id is None:
             raise DslError(f'Unknown effect "{call["name"]}" in search namespaces {", ".join(search)}', call["loc"])
         spec = effects[effect_id]
-        if spec["kind"] == "generator":
+        domain = spec.get("domain", "image")
+        if domain == "volume-generator":
+            if index != 0 and not (spec.get("iterated") and has_volume):
+                raise DslError(f"Generator {effect_id} must begin a chain", call["loc"])
+            if index == 0:
+                starts_with_generator = True
+            has_volume = True
+        elif domain == "volume-filter":
+            if not has_volume:
+                raise DslError(f"volume filter {effect_id} requires a volume input", call["loc"])
+        elif domain == "volume-renderer":
+            if not has_volume:
+                raise DslError(f"volume renderer {effect_id} requires a volume input", call["loc"])
+            has_image = True
+        elif domain == "loop-begin":
+            if not has_image:
+                raise DslError(f"{effect_id} requires a current image", call["loc"])
+            if open_loop is not None:
+                raise DslError("nested loopBegin regions are not supported", call["loc"])
+            open_loop = call["loc"]
+        elif domain == "loop-end":
+            if open_loop is None:
+                raise DslError("loopEnd has no matching loopBegin", call["loc"])
+            if not has_image:
+                raise DslError(f"{effect_id} requires a current image", call["loc"])
+            open_loop = None
+        elif spec["kind"] == "generator":
             if index != 0:
                 raise DslError(f"Generator {effect_id} must begin a chain", call["loc"])
             starts_with_generator = True
-            has_input = True
-        elif not has_input:
+            has_image = True
+        elif not has_image:
             requires_input_tex = any("inputTex" in (p.get("inputs") or {}).values() for p in spec["passes"])
             if requires_input_tex:
                 raise DslError(
                     f"{spec['kind']} {effect_id} requires an input; begin with a generator or read(oN)",
                     call["loc"],
                 )
-            has_input = True
+            has_image = True
         params, surfaces = _normalize_effect(effect_id, spec, args)
         steps.append(
             {"kind": "effect", "effect_id": effect_id, "params": params, "surfaces": surfaces, "loc": call["loc"]}
         )
+    if open_loop is not None:
+        raise DslError("loopBegin must be closed by loopEnd before the chain ends", open_loop)
     if starts_with_generator and (not steps or steps[-1]["kind"] != "write"):
         raise DslError("Generator chain must end with write(oN)", chain["loc"])
     return {"steps": steps, "loc": chain["loc"]}

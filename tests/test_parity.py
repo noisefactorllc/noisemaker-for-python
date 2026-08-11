@@ -45,6 +45,17 @@ def test_solid_parity(tmp_path):
     assert _max_diff(js, py) <= 2
 
 
+@pytest.mark.parametrize("effect_id", ["classicNoisedeck/noise3d", "classicNoisedeck/shapes3d"])
+def test_new_classic_image_effect_parity(tmp_path, effect_id):
+    js = _js_render(
+        ["effect", effect_id, "--width", "8", "--height", "8", "--seed", "1", "--time", "0.25"],
+        str(tmp_path / f"{effect_id.replace('/', '__')}.png"),
+    )
+    py = render_effect(effect_id, width=8, height=8, seed=1, time=0.25)
+
+    assert _max_diff(js, py) <= 2
+
+
 def _js_render_dsl(program, out, width=16, height=16, seed=None, time=None) -> Surface:
     args = ["node", CLI, "render", "-", "--width", str(width), "--height", str(height), "--output", out]
     if seed is not None:
@@ -131,6 +142,128 @@ def test_iterated_effect_byte_parity(tmp_path, effect_id, program):
         time=0.25,
     )
     py = render_dsl(program, width=8, height=8, seed=1, time=0.25)
+
+    assert _max_diff(js, py) == 0
+
+
+def test_loop_region_byte_parity(tmp_path):
+    program = (
+        "search synth, filter, render\n"
+        "solid(color: #336699).loopBegin(iterationCount: 3).invert().loopEnd().write(o0)\n"
+        "render(o0)\n"
+    )
+
+    js = _js_render_dsl(program, str(tmp_path / "loop.png"), width=2, height=2, seed=1, time=0.25)
+    py = render_dsl(program, width=2, height=2, seed=1, time=0.25)
+
+    assert _max_diff(js, py) == 0
+
+
+def test_loop_region_keeps_step_resources_isolated_byte_parity(tmp_path):
+    program = (
+        "search synth, filter, render\n"
+        "solid(color: #336699).loopBegin(iterationCount: 2).feedback(mix: 50)"
+        ".motionBlur(amount: 50).loopEnd().write(o0)\n"
+        "render(o0)\n"
+    )
+
+    js = _js_render_dsl(program, str(tmp_path / "stateful-loop.png"), width=2, height=2, seed=1, time=0.25)
+    py = render_dsl(program, width=2, height=2, seed=1, time=0.25)
+
+    assert _max_diff(js, py) == 0
+
+
+@pytest.mark.parametrize(
+    ("generator", "generator_params"),
+    [
+        ("cell3d", "volumeSize: 4, seed: 0"),
+        ("flythrough3d", "volumeSize: 4"),
+        ("fractal3d", "volumeSize: 4"),
+        ("noise3d", "volumeSize: 4, seed: 0"),
+        ("shape3d", "volumeSize: 4"),
+    ],
+)
+def test_volume_generator_render3d_byte_parity(tmp_path, generator, generator_params):
+    program = f"search synth3d, render\n{generator}({generator_params}).render3d(volumeSize: 4).write(o0)\nrender(o0)\n"
+
+    js = _js_render_dsl(program, str(tmp_path / f"{generator}.png"), width=2, height=2, seed=1, time=0.25)
+    py = render_dsl(program, width=2, height=2, seed=1, time=0.25)
+
+    assert _max_diff(js, py) == 0
+
+
+@pytest.mark.parametrize(
+    "renderer_name",
+    ["render3d", "renderCubemap3d", "renderCubemapSurface", "renderLit3d"],
+)
+def test_volume_renderer_byte_parity(tmp_path, renderer_name):
+    program = (
+        "search synth3d, render\n"
+        f"noise3d(volumeSize: 4, seed: 0).{renderer_name}(volumeSize: 4).write(o0)\n"
+        "render(o0)\n"
+    )
+
+    js = _js_render_dsl(program, str(tmp_path / f"{renderer_name}.png"), width=2, height=2, seed=1, time=0.25)
+    py = render_dsl(program, width=2, height=2, seed=1, time=0.25)
+
+    assert _max_diff(js, py) == 0
+
+
+def test_palette3d_filter_byte_parity(tmp_path):
+    program = (
+        "search synth3d, filter3d, render\n"
+        "noise3d(volumeSize: 4, seed: 0).palette3d(volumeSize: 4).render3d(volumeSize: 4).write(o0)\n"
+        "render(o0)\n"
+    )
+
+    js = _js_render_dsl(program, str(tmp_path / "palette3d.png"), width=2, height=2, seed=1, time=0.25)
+    py = render_dsl(program, width=2, height=2, seed=1, time=0.25)
+
+    assert _max_diff(js, py) == 0
+
+
+@pytest.mark.parametrize("iteration_count", [0, 2])
+def test_flow3d_filter_byte_parity(tmp_path, iteration_count):
+    program = (
+        "search synth3d, filter3d, render\n"
+        "noise3d(volumeSize: 4, seed: 0)"
+        f".flow3d(volumeSize: 4, density: 20, iterationCount: {iteration_count})"
+        ".render3d(volumeSize: 4).write(o0)\n"
+        "render(o0)\n"
+    )
+
+    js = _js_render_dsl(
+        program,
+        str(tmp_path / f"flow3d-{iteration_count}.png"),
+        width=2,
+        height=2,
+        seed=1,
+        time=0.25,
+    )
+    py = render_dsl(program, width=2, height=2, seed=1, time=0.25)
+
+    assert _max_diff(js, py) == 0
+
+
+@pytest.mark.parametrize("iteration_count", [0, 2])
+@pytest.mark.parametrize("effect", ["cellularAutomata3d", "reactionDiffusion3d"])
+def test_stateful_volume_generator_byte_parity(tmp_path, effect, iteration_count):
+    program = (
+        "search synth3d, render\n"
+        f"noise3d(volumeSize: 4, seed: 0).{effect}(volumeSize: 4, iterationCount: {iteration_count})"
+        ".render3d(volumeSize: 4).write(o0)\n"
+        "render(o0)\n"
+    )
+
+    js = _js_render_dsl(
+        program,
+        str(tmp_path / f"{effect}-{iteration_count}.png"),
+        width=2,
+        height=2,
+        seed=1,
+        time=0.25,
+    )
+    py = render_dsl(program, width=2, height=2, seed=1, time=0.25)
 
     assert _max_diff(js, py) == 0
 

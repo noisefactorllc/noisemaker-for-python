@@ -36,6 +36,38 @@ _PARTICLE_STATE_FORMATS = {
 }
 
 
+def _is_chain_bundle(value):
+    return isinstance(value, dict) and "image" in value
+
+
+def _chain_bundle(value):
+    if _is_chain_bundle(value):
+        return value
+    return {"image": value, "volume": None, "geometry": None, "volumeSize": None}
+
+
+def _bundle_output(name, input_surface, resources):
+    if not name or name in {"inputTex", "inputTex3d", "inputGeo"}:
+        return input_surface
+    return resources.get(name)
+
+
+def _inherit_volume_size(effect, params, bundle):
+    volume = bundle["volume"]
+    if volume is None or "volumeSize" not in effect.get("params", {}):
+        return params
+    if effect.get("domain") not in {"volume-generator", "volume-filter", "volume-renderer"}:
+        return params
+    expected_height = volume.width**2
+    if volume.height != expected_height:
+        raise ValueError(
+            f"input volume atlas expected {volume.width}x{expected_height}, received {volume.width}x{volume.height}"
+        )
+    inherited = dict(params)
+    inherited["volumeSize"] = volume.width
+    return inherited
+
+
 def bundle_dir() -> str:
     return os.environ.get("NOISEMAKER_BUNDLE") or os.path.join(os.path.dirname(__file__), "bundle")
 
@@ -78,7 +110,7 @@ def _coerce(spec: dict, value):
         if isinstance(value, str):
             value = _parse_hex(value)
         return np.array(value, dtype=F32)
-    if t in ("vec2", "vec3", "vec4"):
+    if t in ("vec2", "vec3", "vec4", "mat3"):
         if isinstance(value, str):  # CLI --param: "0.1,0.2,0.3"
             value = [float(x) for x in value.split(",")]
         return np.array(value, dtype=F32)
@@ -139,27 +171,34 @@ def _remap_uniform_data(u, width, height):
     return data
 
 
-def _size_component(spec, params, full_size):
-    if spec is None or spec == "input":
+def _size_component(spec, params, full_size, resources=None, axis="width"):
+    if spec is None or (isinstance(spec, str) and spec in {"input", "screen", "resolution", "100%"}):
         return full_size
     if isinstance(spec, (int, float)):
         return max(1, int(spec))
     if isinstance(spec, str) and spec.endswith("%"):
         return max(1, round(full_size * float(spec[:-1]) / 100))
     if isinstance(spec, dict):
+        input_override = spec.get("inputOverride")
+        if input_override and resources and resources.get(input_override) is not None:
+            surface = resources[input_override]
+            return surface.width if axis == "width" else surface.height
         if "param" in spec:
-            return max(1, int(params.get(spec["param"], spec.get("default", spec.get("paramDefault", full_size)))))
+            value = params.get(spec["param"], spec.get("paramDefault", spec.get("default", full_size)))
+            if "power" in spec:
+                value **= spec["power"]
+            return max(1, round(value))
         if "screenDivide" in spec:
             divisor = max(1, float(params.get(spec["screenDivide"], spec.get("default", 1))))
             return max(1, math.ceil(full_size / divisor))
     return full_size
 
 
-def _texture_dimensions(texture_spec, params, width, height):
+def _texture_dimensions(texture_spec, params, width, height, resources=None):
     texture_spec = texture_spec or {}
     return (
-        _size_component(texture_spec.get("width"), params, width),
-        _size_component(texture_spec.get("height"), params, height),
+        _size_component(texture_spec.get("width"), params, width, resources, "width"),
+        _size_component(texture_spec.get("height"), params, height, resources, "height"),
     )
 
 
@@ -242,6 +281,14 @@ def _render_effect_once(
     params = params or {}
     inputs = inputs or {}
     eff = _meta()["effects"][effect_id]
+    domain = eff.get("domain", "image")
+    input_bundle = {
+        "image": inputs.get("inputTex"),
+        "volume": inputs.get("inputTex3d"),
+        "geometry": inputs.get("inputGeo"),
+        "volumeSize": inputs.get("inputTex3d").width if inputs.get("inputTex3d") is not None else None,
+    }
+    input_was_bundle = input_bundle["volume"] is not None or input_bundle["geometry"] is not None
 
     effect_uniforms = {}
     param_values = {}
@@ -301,6 +348,27 @@ def _render_effect_once(
     if attachments is None:
         attachments = {}
 
+    for pname, spec in eff["params"].items():
+        param_type = spec.get("type")
+        if param_type not in {"volume", "geometry"}:
+            continue
+        typed_input = input_bundle["volume" if param_type == "volume" else "geometry"]
+        if typed_input is not None:
+            attachments[pname] = typed_input
+            continue
+        output_name = eff.get("outputTex3d" if param_type == "volume" else "outputGeo")
+        output_spec = (eff.get("textures") or {}).get(output_name)
+        if output_spec is None:
+            raise ValueError(f'{effect_id} parameter "{pname}" requires a {param_type} input')
+        typed_width, typed_height = _texture_dimensions(
+            output_spec,
+            param_values,
+            width,
+            height,
+            {**inputs, **attachments},
+        )
+        attachments[pname] = Surface(typed_width, typed_height)
+
     # One-shot CPU-generated textures declared but not produced by any pass
     # (fibers/scratches/strayHair overlayTex): generate and bind before the loop.
     if effect_id in OVERLAY_EFFECTS:
@@ -318,7 +386,13 @@ def _render_effect_once(
 
     for texture_name, texture_spec in (eff.get("textures") or {}).items():
         if texture_name not in attachments:
-            texture_width, texture_height = _texture_dimensions(texture_spec, param_values, width, height)
+            texture_width, texture_height = _texture_dimensions(
+                texture_spec,
+                param_values,
+                width,
+                height,
+                {**inputs, **attachments},
+            )
             attachments[texture_name] = Surface(texture_width, texture_height)
 
     # Texture filtering must match the JS oracle: it sets filter='linear' ONLY on
@@ -364,13 +438,20 @@ def _render_effect_once(
             outputs = p.get("outputs") or {}
             out_names = list(outputs.values())
             texture_spec = (eff.get("textures") or {}).get(out_names[0], {}) if out_names else {}
+            dimension_spec = p.get("viewport") or texture_spec
             prior_output = attachments.get(out_names[0]) if out_names else None
             if prior_output is not None and out_names[0] not in (eff.get("textures") or {}):
                 pass_width, pass_height = prior_output.width, prior_output.height
             elif out_names and is_particle_state_name(out_names[0]) and out_names[0] not in (eff.get("textures") or {}):
                 pass_width, pass_height = _particle_state_dimensions(param_values)
             else:
-                pass_width, pass_height = _texture_dimensions(texture_spec, param_values, width, height)
+                pass_width, pass_height = _texture_dimensions(
+                    dimension_spec,
+                    param_values,
+                    width,
+                    height,
+                    {**inputs, **attachments},
+                )
             pass_resolution = np.array([float(pass_width), float(pass_height)], dtype=F32)
             pass_aspect = f32(pass_width / pass_height)
             pass_uniforms.update(
@@ -414,25 +495,90 @@ def _render_effect_once(
                     output_result = surface
             if produced:
                 result = produced[0]
-    return output_result if output_result is not None else result
+    is_volume_domain = domain in {"volume-generator", "volume-filter", "volume-renderer"}
+    image = (
+        _bundle_output(eff.get("outputTex"), input_bundle["image"], attachments)
+        if eff.get("outputTex")
+        else (attachments.get("outputTex") or (input_bundle["image"] if is_volume_domain else result))
+    )
+    volume = _bundle_output(eff.get("outputTex3d"), input_bundle["volume"], attachments)
+    geometry = _bundle_output(eff.get("outputGeo"), input_bundle["geometry"], attachments)
+    volume_size = (
+        param_values.get("volumeSize", volume.width if volume is not None else None)
+        if domain == "volume-generator"
+        else (
+            input_bundle["volumeSize"]
+            or param_values.get("volumeSize")
+            or (volume.width if volume is not None else None)
+        )
+    )
+    if is_volume_domain and volume is None and domain != "volume-renderer":
+        raise ValueError(f"{effect_id} did not produce outputTex3d")
+    if volume is not None and domain in {"volume-generator", "volume-filter"}:
+        expected_width = volume_size
+        expected_height = volume_size**2
+        if volume.width != expected_width or volume.height != expected_height:
+            raise ValueError(
+                f"{effect_id} volume atlas expected {expected_width}x{expected_height}, "
+                f"received {volume.width}x{volume.height}"
+            )
+    if image is None and domain not in {"volume-generator", "volume-filter"}:
+        raise ValueError(f"{effect_id} did not produce outputTex")
+    if input_was_bundle or is_volume_domain:
+        return {"image": image, "volume": volume, "geometry": geometry, "volumeSize": volume_size}
+    return output_result if output_result is not None else image
 
 
-def render_effect(effect_id, params=None, inputs=None, width=256, height=256, seed=1, time=0.0) -> Surface:
+def render_effect(effect_id, params=None, inputs=None, width=256, height=256, seed=1, time=0.0):
     params = params or {}
     inputs = inputs or {}
     effect = _meta()["effects"][effect_id]
+    input_bundle = {
+        "image": inputs.get("inputTex"),
+        "volume": inputs.get("inputTex3d"),
+        "geometry": inputs.get("inputGeo"),
+        "volumeSize": inputs.get("inputTex3d").width if inputs.get("inputTex3d") is not None else None,
+    }
+    params = _inherit_volume_size(effect, params, input_bundle)
     if not effect.get("iterated"):
         return _render_effect_once(effect_id, params, inputs, width, height, seed, time)
 
     iteration_spec = effect["params"]["iterationCount"]
     iteration_count = _coerce(iteration_spec, params.get("iterationCount"))
     if iteration_count <= 0:
-        source = inputs.get("inputTex")
-        return source.clone() if source is not None else Surface(width, height)
+        if input_bundle["volume"] is not None or input_bundle["geometry"] is not None:
+            return {
+                "image": input_bundle["image"].clone() if input_bundle["image"] is not None else None,
+                "volume": input_bundle["volume"].clone() if input_bundle["volume"] is not None else None,
+                "geometry": input_bundle["geometry"].clone() if input_bundle["geometry"] is not None else None,
+                "volumeSize": input_bundle["volumeSize"],
+            }
+        source = input_bundle["image"]
+        if source is not None:
+            return source.clone()
+        if effect.get("domain") == "volume-generator":
+            param_values = {name: _coerce(spec, params.get(name)) for name, spec in effect["params"].items()}
+            output_name = effect.get("outputTex3d")
+            output_spec = (effect.get("textures") or {}).get(output_name, {})
+            volume_width, volume_height = _texture_dimensions(output_spec, param_values, width, height)
+            geometry = None
+            geometry_name = effect.get("outputGeo")
+            if geometry_name and geometry_name != "inputGeo":
+                geometry_spec = (effect.get("textures") or {}).get(geometry_name, {})
+                geometry_width, geometry_height = _texture_dimensions(geometry_spec, param_values, width, height)
+                geometry = Surface(geometry_width, geometry_height)
+            return {
+                "image": None,
+                "volume": Surface(volume_width, volume_height),
+                "geometry": geometry,
+                "volumeSize": param_values.get("volumeSize", volume_width),
+            }
+        return Surface(width, height)
     attachments = {}
     previous_output = None
+    result = None
     for tick in iteration_schedule(time, iteration_count):
-        previous_output = _render_effect_once(
+        result = _render_effect_once(
             effect_id,
             params,
             inputs,
@@ -445,13 +591,14 @@ def render_effect(effect_id, params=None, inputs=None, width=256, height=256, se
             frame=tick["frame"],
             delta_time=tick["delta_time"],
         )
-    return previous_output
+        previous_output = _chain_bundle(result)["image"]
+    return result
 
 
 def _resolve_surface_marker(marker, current, surfaces):
     """Turn a compiled surface binding into a Surface (or None for unbound)."""
     if marker == "@current":
-        return current
+        return _chain_bundle(current)["image"]
     _, name = marker
     surf = surfaces.get(name)
     if surf is None:
@@ -465,8 +612,13 @@ def _effect_step_inputs(step, current, surfaces, external_textures):
     # render_effect resolves), and external textures (imageTex/textTex/named) pass
     # straight through. Explicit surface args and inputTex-defaults win over them.
     inputs = dict(external_textures or {})
-    if current is not None:
-        inputs["inputTex"] = current
+    bundle = _chain_bundle(current)
+    if bundle["image"] is not None:
+        inputs["inputTex"] = bundle["image"]
+    if bundle["volume"] is not None:
+        inputs["inputTex3d"] = bundle["volume"]
+    if bundle["geometry"] is not None:
+        inputs["inputGeo"] = bundle["geometry"]
     for pname, marker in step["surfaces"].items():
         surf = _resolve_surface_marker(marker, current, surfaces)
         if surf is not None:
@@ -476,7 +628,9 @@ def _effect_step_inputs(step, current, surfaces, external_textures):
 
 def _run_effect_step(step, current, surfaces, external_textures, width, height, seed, time):
     inputs = _effect_step_inputs(step, current, surfaces, external_textures)
-    return render_effect(step["effect_id"], step["params"], inputs, width=width, height=height, seed=seed, time=time)
+    effect = _meta()["effects"][step["effect_id"]]
+    params = _inherit_volume_size(effect, step["params"], _chain_bundle(current))
+    return render_effect(step["effect_id"], params, inputs, width=width, height=height, seed=seed, time=time)
 
 
 def _run_iterated_group(group, current, surfaces, external_textures, effects, width, height, seed, time):
@@ -485,6 +639,13 @@ def _run_iterated_group(group, current, surfaces, external_textures, effects, wi
     iteration_spec = first_effect["params"]["iterationCount"]
     iteration_count = _coerce(iteration_spec, first_step["params"].get("iterationCount"))
     if iteration_count <= 0:
+        if _is_chain_bundle(current):
+            return {
+                "image": current["image"].clone() if current["image"] is not None else None,
+                "volume": current["volume"].clone() if current["volume"] is not None else None,
+                "geometry": current["geometry"].clone() if current["geometry"] is not None else None,
+                "volumeSize": current["volumeSize"],
+            }
         return current.clone() if current is not None else Surface(width, height)
 
     state_size = None
@@ -492,16 +653,18 @@ def _run_iterated_group(group, current, surfaces, external_textures, effects, wi
         state_size = _coerce(first_effect["params"]["stateSize"], first_step["params"].get("stateSize"))
 
     group_input = current
-    attachments = {}
+    group_attachments = {}
+    step_attachments = [{} for _ in group["steps"]]
     previous_outputs = [None] * len(group["steps"])
     for tick in iteration_schedule(time, iteration_count):
         iteration_current = group_input
         for index, step in enumerate(group["steps"]):
             effect = effects[step["effect_id"]]
-            params = dict(step["params"])
+            params = _inherit_volume_size(effect, dict(step["params"]), _chain_bundle(iteration_current))
             if state_size is not None and "stateSize" in effect["params"]:
                 params["stateSize"] = state_size
             inputs = _effect_step_inputs(step, iteration_current, surfaces, external_textures)
+            attachments = {**step_attachments[index], **group_attachments}
             iteration_current = _render_effect_once(
                 step["effect_id"],
                 params,
@@ -515,7 +678,19 @@ def _run_iterated_group(group, current, surfaces, external_textures, effects, wi
                 frame=tick["frame"],
                 delta_time=tick["delta_time"],
             )
-            previous_outputs[index] = iteration_current
+            step_attachments[index] = {
+                name: surface
+                for name, surface in attachments.items()
+                if name != "global_accum" and not is_particle_state_name(name)
+            }
+            group_attachments.update(
+                {
+                    name: surface
+                    for name, surface in attachments.items()
+                    if name == "global_accum" or is_particle_state_name(name)
+                }
+            )
+            previous_outputs[index] = _chain_bundle(iteration_current)["image"]
         current = iteration_current
     return current
 
@@ -552,7 +727,7 @@ def render_dsl(source, width=512, height=512, seed=1, time=0.0, external_texture
                     if current is None:
                         raise ValueError(f"Surface {step['surface']} has not been written")
                 elif kind == "write":
-                    surfaces[step["surface"]] = current
+                    surfaces[step["surface"]] = _chain_bundle(current)["image"]
                 else:
                     current = _run_effect_step(step, current, surfaces, external_textures, width, height, seed, time)
     rendered = surfaces.get(plan["render_surface"])

@@ -131,7 +131,7 @@ class Scope:
 
 
 class CodeGen:
-    def __init__(self, program, outputs, varyings):
+    def __init__(self, program, outputs, varyings, js_vector_storage=False):
         self.program = program
         self.outputs = outputs or ["fragColor"]
         self.varyings = set(varyings or [])
@@ -145,6 +145,7 @@ class CodeGen:
         self.call_id = 0
         self.uses_deriv = False
         self.cur_out = []  # out/inout param pynames of the function being emitted
+        self.js_vector_storage = js_vector_storage
 
     # ---- collect ----
     def collect(self):
@@ -305,6 +306,13 @@ class CodeGen:
                 # Resolve the initializer in the ENCLOSING scope, before the new
                 # name is defined (GLSL `float time = time;` reads the outer time).
                 init_code = self.expr(dc["init"], scope)[0] if dc.get("init") is not None else None
+                if (
+                    self.js_vector_storage
+                    and init_code is not None
+                    and width_of(t) > 1
+                    and dc["init"].get("k") == "binary"
+                ):
+                    init_code = f"rt.construct({t['width']}, {init_code}{_construct_base(t)})"
                 e = scope.define(dc["name"], t)
                 if init_code is not None:
                     out.append(f"{pad}{e['py']} = {init_code}")
@@ -610,13 +618,26 @@ class CodeGen:
     def _e_construct(self, node, scope):
         tname = node["type"]
         args = [self.expr(a, scope) for a in node["args"]]
-        elems = ", ".join(a[0] for a in args)
         if node.get("array") is not None:  # array constructor TYPE[N](...)
+            elems = ", ".join(a[0] for a in args)
             elt = TYPE.get(tname, FLOAT)
             return (f"rt.array([{elems}])", {"base": elt["base"], "width": elt["width"], "array": True})
         if tname in self.structs:
+            elems = ", ".join(a[0] for a in args)
             return (f"[{elems}]", {"base": "struct", "width": 0, "struct": tname})
         t = TYPE.get(tname, {"base": "float", "width": max((width_of(a[1]) for a in args), default=1)})
+        arg_codes = []
+        for arg_node, (code, arg_type) in zip(node["args"], args, strict=True):
+            if (
+                self.js_vector_storage
+                and base_of(t) in {"int", "uint"}
+                and base_of(arg_type) == "float"
+                and width_of(arg_type) > 1
+                and arg_node.get("k") == "binary"
+            ):
+                code = f"rt.construct({width_of(arg_type)}, {code})"
+            arg_codes.append(code)
+        elems = ", ".join(arg_codes)
         return (f"rt.construct({t['width']}, {elems}{_construct_base(t)})", t)
 
     def _e_call(self, node, scope):
@@ -712,8 +733,8 @@ _ROUTED = {
 _SKIP_FUNCS = {"cpu_umul", "cpu_ivec2", "cpu_ivec3", "cpu_ivec4", "cpu_uvec2", "cpu_uvec3", "cpu_uvec4", "cpu_float"}
 
 
-def emit_python(program, outputs=None, varyings=None):
-    gen = CodeGen(program, outputs, varyings)
+def emit_python(program, outputs=None, varyings=None, js_vector_storage=False):
+    gen = CodeGen(program, outputs, varyings, js_vector_storage=js_vector_storage)
     gen.funcs_filter = _SKIP_FUNCS
     # drop overridden helper functions before emit
     program["decls"] = [d for d in program["decls"] if not (d.get("k") == "func" and d.get("name") in _SKIP_FUNCS)]

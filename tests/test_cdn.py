@@ -93,26 +93,26 @@ def test_fetch_effect_filter_blur():
 def test_eligible_ids():
     ids = _eligible_ids_or_skip()
 
-    # The CPU-iterated stateful/particle catalog expands eligibility to 188.
+    # Full CPU coverage includes the 188 image effects plus 15 volume effects
+    # and the two loop control effects.
     # drift over time rather than pinning an exact count.
-    assert abs(len(ids) - 188) <= 10, len(ids)
+    assert abs(len(ids) - 205) <= 10, len(ids)
     assert len(ids) == len(set(ids))  # no duplicates
-
-    for effect_id in ids:
-        assert "3d" not in effect_id, effect_id
 
     assert "synth/solid" in ids
     assert "filter/blur" in ids
     assert "synth/cellularAutomata" in ids
     assert "points/attractor" in ids
     assert "render/pointsEmit" in ids
+    assert "synth3d/noise3d" in ids
+    assert "filter3d/palette3d" in ids
+    assert "render/render3d" in ids
+    assert "render/loopBegin" in ids
+    assert "render/loopEnd" in ids
 
-    # Reactive/3D effects stay excluded.
-    for excluded in (
-        "synth/scope",
-        "classicNoisedeck/shapes3d",
-    ):
-        assert excluded not in ids
+    # Reactive and mesh effects stay excluded.
+    assert "synth/scope" not in ids
+    assert "render/meshRender" not in ids
 
 
 def test_eligible_ids_includes_cpu_iterated_catalog(monkeypatch):
@@ -139,20 +139,24 @@ def test_eligible_ids_includes_cpu_iterated_catalog(monkeypatch):
         "synth/navierStokes",
         "synth/reactionDiffusion",
     }
-    excluded = {
+    volume_and_control = {
+        "filter3d/flow3d",
         "render/loopBegin",
         "render/loopEnd",
+        "render/render3d",
+        "synth3d/reactionDiffusion3d",
+    }
+    excluded = {
         "render/meshRender",
         "render/environmentCubemap",
         "synth/scope",
-        "synth/volume3d",
     }
-    manifest = {effect_id: {} for effect_id in iterated | excluded | {"synth/solid"}}
+    manifest = {effect_id: {} for effect_id in iterated | volume_and_control | excluded | {"synth/solid"}}
     monkeypatch.setattr(cdn, "fetch_manifest", lambda _version: manifest)
 
     ids = set(cdn.eligible_ids("test-version"))
 
-    assert iterated <= ids
+    assert iterated | volume_and_control <= ids
     assert excluded.isdisjoint(ids)
 
 
@@ -176,6 +180,18 @@ def test_cpu_iteration_metadata_is_injected_for_iterated_effects():
         "max": 10000,
         "cpuOnly": True,
     }
+
+
+@pytest.mark.parametrize(
+    "effect_id",
+    ["filter3d/flow3d", "render/loopBegin", "synth3d/cellularAutomata3d", "synth3d/reactionDiffusion3d"],
+)
+def test_volume_and_loop_stateful_effects_receive_cpu_iteration_metadata(effect_id):
+    effect = {"params": {}}
+
+    cdn._inject_cpu_iteration(effect_id, effect)
+
+    assert effect["params"]["iterationCount"]["cpuOnly"] is True
 
 
 def test_effect_identity_falls_back_to_manifest_id_when_cdn_fields_are_missing():

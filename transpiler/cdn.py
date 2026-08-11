@@ -75,15 +75,19 @@ _HERE = Path(__file__).resolve().parent
 _CACHE_ROOT = _HERE / ".cdn-cache"
 _USER_AGENT = "noisemaker-python-transpiler (+https://noisedeck.app)"
 
-# Effects the transpiler does not target: full 3D volumetric effects, mesh &
-# cubemap rendering, render-loop control nodes, and live audio/MIDI effects.
-# Stateful and particle effects are supported by CPU-only per-frame iteration.
-_NAMESPACE_EXCLUSIONS = frozenset({"filter3d", "synth3d"})
+# Mesh and live audio/MIDI effects remain outside the CPU catalog. Stateful,
+# particle, volume, cubemap, and render-loop effects are supported.
 _RENDER_ALLOWLIST = frozenset(
     {
+        "render/loopBegin",
+        "render/loopEnd",
         "render/pointsBillboardRender",
         "render/pointsEmit",
         "render/pointsRender",
+        "render/render3d",
+        "render/renderCubemap3d",
+        "render/renderCubemapSurface",
+        "render/renderLit3d",
     }
 )
 _ID_EXCLUSIONS = frozenset(
@@ -91,8 +95,6 @@ _ID_EXCLUSIONS = frozenset(
         "synth/roll",
         "synth/scope",
         "synth/spectrum",
-        "classicNoisedeck/noise3d",
-        "classicNoisedeck/shapes3d",
     }
 )
 _ITERATED_IDS = frozenset(
@@ -101,6 +103,7 @@ _ITERATED_IDS = frozenset(
         "filter/feedback",
         "filter/motionBlur",
         "filter/temporalAberration",
+        "filter3d/flow3d",
         "points/attractor",
         "points/buddhabrot",
         "points/dla",
@@ -111,6 +114,7 @@ _ITERATED_IDS = frozenset(
         "points/life",
         "points/physarum",
         "points/physical",
+        "render/loopBegin",
         "render/pointsBillboardRender",
         "render/pointsEmit",
         "render/pointsRender",
@@ -118,8 +122,25 @@ _ITERATED_IDS = frozenset(
         "synth/mnca",
         "synth/navierStokes",
         "synth/reactionDiffusion",
+        "synth3d/cellularAutomata3d",
+        "synth3d/reactionDiffusion3d",
     }
 )
+
+
+def _effect_domain(effect_id: str) -> str:
+    namespace = effect_id.split("/", 1)[0]
+    if effect_id == "render/loopBegin":
+        return "loop-begin"
+    if effect_id == "render/loopEnd":
+        return "loop-end"
+    if namespace == "synth3d":
+        return "volume-generator"
+    if namespace == "filter3d":
+        return "volume-filter"
+    if effect_id.startswith("render/render"):
+        return "volume-renderer"
+    return "image"
 
 
 def _inject_cpu_iteration(effect_id: str, effect: dict) -> dict:
@@ -138,6 +159,11 @@ def _normalize_effect(effect_id: str, effect: dict) -> dict:
     namespace, func = effect_id.split("/", 1)
     effect["namespace"] = effect.get("namespace") or namespace
     effect["func"] = effect.get("func") or func
+    effect["domain"] = _effect_domain(effect_id)
+    if effect_id == "render/loopBegin":
+        effect["loopRole"] = "begin"
+    elif effect_id == "render/loopEnd":
+        effect["loopRole"] = "end"
     return _inject_cpu_iteration(effect_id, effect)
 
 
@@ -398,7 +424,9 @@ def fetch_effect(effect_id: str, version: str = CDN_VERSION) -> dict:
     # no JavaScript files ever live in this Python project).
     cache_file = _cache_dir(version) / "effects" / f"{effect_id}.json"
     if cache_file.exists():
-        return _normalize_effect(effect_id, json.loads(cache_file.read_text(encoding="utf-8")))
+        cached = _normalize_effect(effect_id, json.loads(cache_file.read_text(encoding="utf-8")))
+        if cached["domain"] in {"image", "loop-begin", "loop-end"} or cached.get("outputTex3d"):
+            return cached
 
     bundle = _fetch_text(f"{CDN_BASE}/{version}/effects/{effect_id}.js")
     region = _definition_region(bundle)
@@ -414,6 +442,9 @@ def fetch_effect(effect_id: str, version: str = CDN_VERSION) -> dict:
             "passes": override["passes"],
             "textures": override.get("textures", {}),
             "externalTexture": override.get("externalTexture"),
+            "outputTex": override.get("outputTex"),
+            "outputTex3d": override.get("outputTex3d"),
+            "outputGeo": override.get("outputGeo"),
             "programs": _extract_programs(bundle),
         }
     else:
@@ -425,6 +456,9 @@ def fetch_effect(effect_id: str, version: str = CDN_VERSION) -> dict:
             "passes": _parse_field(region, effect_id, "passes", []),
             "textures": _parse_field(region, effect_id, "textures", {}),
             "externalTexture": _parse_field(region, effect_id, "externalTexture", None),
+            "outputTex": _parse_field(region, effect_id, "outputTex", None),
+            "outputTex3d": _parse_field(region, effect_id, "outputTex3d", None),
+            "outputGeo": _parse_field(region, effect_id, "outputGeo", None),
             "programs": _extract_programs(bundle),
         }
     _normalize_effect(effect_id, result)
@@ -434,18 +468,12 @@ def fetch_effect(effect_id: str, version: str = CDN_VERSION) -> dict:
 
 
 def eligible_ids(version: str = CDN_VERSION) -> list[str]:
-    """Manifest effect ids the transpiler targets, including CPU-iterated
-    stateful/particle effects but excluding 3D, reactive, and control nodes."""
+    """Manifest effect ids targeted by the complete CPU catalog."""
     manifest = fetch_manifest(version)
     result = []
     for effect_id in manifest:
         namespace = effect_id.split("/", 1)[0]
-        if namespace in _NAMESPACE_EXCLUSIONS:
-            continue
         if namespace == "render" and effect_id not in _RENDER_ALLOWLIST:
-            continue
-        lowered = effect_id.lower()
-        if "3d" in lowered or "cubemap" in lowered or "mesh" in lowered:
             continue
         if effect_id in _ID_EXCLUSIONS:
             continue

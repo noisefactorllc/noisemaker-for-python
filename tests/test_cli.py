@@ -38,6 +38,11 @@ def test_resolve_effect_unknown():
         cli._resolve_effect("no/such/effect")
 
 
+def test_resolve_single_effect_command_rejects_typed_volume_effect():
+    with pytest.raises(click.BadParameter, match="DSL run command"):
+        cli._resolve_effect("synth3d/noise3d", "generator")
+
+
 def test_resolve_random_is_partitioned_by_kind():
     effects = _meta()["effects"]
     for _ in range(25):
@@ -45,7 +50,7 @@ def test_resolve_random_is_partitioned_by_kind():
         assert effects[cli._resolve_effect("random", "filter")]["kind"] == "filter"
 
 
-def test_resolve_random_excludes_iterated_and_external_texture_effects(monkeypatch):
+def test_resolve_random_excludes_non_image_iterated_and_external_texture_effects(monkeypatch):
     effects = _meta()["effects"]
     captured = []
 
@@ -59,6 +64,7 @@ def test_resolve_random_excludes_iterated_and_external_texture_effects(monkeypat
     cli._resolve_effect("random", "filter")
 
     assert captured
+    assert all(effects[effect_id].get("domain", "image") == "image" for effect_id in captured)
     assert all(not effects[effect_id].get("iterated") for effect_id in captured)
     assert all(not effects[effect_id].get("externalTexture") for effect_id in captured)
 

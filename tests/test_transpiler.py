@@ -53,6 +53,32 @@ def test_pipeline_invert_compiles():
     load_kernel(_transpile("filter/invert", "inv"))
 
 
+def test_vector_storage_boundaries_are_preserved_before_uint_conversion():
+    from transpiler.codegen import emit_python
+    from transpiler.parser import parse
+    from transpiler.preprocess import normalize
+
+    source = """
+        out vec4 fragColor;
+        void main() {
+            vec4 p = vec4(0.1234567);
+            vec4 ps = p + vec4(0.0000001);
+            uvec4 q = uvec4(ps * 1000.0);
+            fragColor = vec4(q) / 4294967296.0;
+        }
+    """
+    normalized = normalize(source, {})
+    generated = emit_python(
+        parse(normalized["source"]),
+        normalized["outputs"],
+        normalized["varyings"],
+        js_vector_storage=True,
+    )
+
+    assert "ps = rt.construct(4, rt.binary(" in generated
+    assert 'rt.construct(4, rt.construct(4, rt.binary("*", ps' in generated
+
+
 def test_nested_inout_call_is_an_expression_and_updates_caller():
     from noisemaker_cpu.kernel_loader import load_kernel
     from noisemaker_cpu.pass_runner import Ctx, run_pass

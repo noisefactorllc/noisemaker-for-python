@@ -160,3 +160,134 @@ def test_render_effect_binds_external_texture_linear():
     render_effect("filter/text", {}, {"inputTex": src, "textTex": tex}, width=8, height=8, seed=1)
     assert tex.filter == "linear"
     assert src.filter == "nearest"
+
+
+def _typed_effects():
+    effects = {
+        "synth3d/volumeSeed": {
+            "kind": "generator",
+            "domain": "volume-generator",
+            "params": {},
+            "passes": [{"inputs": {}}],
+        },
+        "synth3d/volumeState": {
+            "kind": "generator",
+            "domain": "volume-generator",
+            "iterated": True,
+            "params": {"iterationCount": {"type": "int", "default": 1}},
+            "passes": [{"inputs": {"seedTex": "source"}}],
+        },
+        "synth3d/otherSeed": {
+            "kind": "generator",
+            "domain": "volume-generator",
+            "params": {},
+            "passes": [{"inputs": {}}],
+        },
+        "filter3d/volumeFilter": {
+            "kind": "filter",
+            "domain": "volume-filter",
+            "params": {},
+            "passes": [{"inputs": {"inputTex3d": "inputTex3d"}}],
+        },
+        "render/volumeRender": {
+            "kind": "filter",
+            "domain": "volume-renderer",
+            "params": {},
+            "passes": [{"inputs": {"volumeCache": "inputTex3d"}}],
+        },
+        "render/loopBegin": {
+            "kind": "filter",
+            "domain": "loop-begin",
+            "loopRole": "begin",
+            "iterated": True,
+            "params": {"iterationCount": {"type": "int", "default": 3}},
+            "passes": [{"inputs": {"inputTex": "inputTex"}}],
+        },
+        "render/loopEnd": {
+            "kind": "filter",
+            "domain": "loop-end",
+            "loopRole": "end",
+            "params": {},
+            "passes": [{"inputs": {"inputTex": "inputTex"}}],
+        },
+        "synth/solid": {
+            "kind": "generator",
+            "domain": "image",
+            "params": {},
+            "passes": [{"inputs": {}}],
+        },
+        "filter/blur": {
+            "kind": "filter",
+            "domain": "image",
+            "params": {},
+            "passes": [{"inputs": {"inputTex": "inputTex"}}],
+        },
+    }
+    return effects
+
+
+def test_compile_typed_volume_chain_and_iterated_volume_generator():
+    plan = compile_dsl(
+        "search synth3d, filter3d, render\n"
+        "volumeSeed().volumeState(iterationCount: 1).volumeFilter().volumeRender().write(o0)\n"
+        "render(o0)",
+        _typed_effects(),
+    )
+
+    assert [step.get("effect_id") for step in plan["chains"][0]["steps"][:-1]] == [
+        "synth3d/volumeSeed",
+        "synth3d/volumeState",
+        "filter3d/volumeFilter",
+        "render/volumeRender",
+    ]
+
+
+@pytest.mark.parametrize(
+    ("source", "message"),
+    [
+        (
+            "search synth, filter3d\nsolid().volumeFilter().write(o0)",
+            "volume filter filter3d/volumeFilter requires a volume input",
+        ),
+        (
+            "search synth, render\nsolid().volumeRender().write(o0)",
+            "volume renderer render/volumeRender requires a volume input",
+        ),
+        ("search synth3d\nvolumeSeed().write(o0)", "write(surface) requires a current image"),
+        (
+            "search synth3d\nvolumeSeed().otherSeed().write(o0)",
+            "Generator synth3d/otherSeed must begin a chain",
+        ),
+    ],
+)
+def test_compile_rejects_invalid_typed_volume_chains(source, message):
+    with pytest.raises(DslError, match=message.replace("(", r"\(").replace(")", r"\)")):
+        compile_dsl(source, _typed_effects())
+
+
+def test_compile_balanced_loop_and_rejects_malformed_markers():
+    plan = compile_dsl(
+        "search synth, filter, render\nsolid().loopBegin().blur().loopEnd().write(o0)\nrender(o0)",
+        _typed_effects(),
+    )
+    assert [step.get("effect_id") for step in plan["chains"][0]["steps"][:-1]] == [
+        "synth/solid",
+        "render/loopBegin",
+        "filter/blur",
+        "render/loopEnd",
+    ]
+
+    malformed = (
+        ("search synth, render\nsolid().loopEnd().write(o0)", "loopEnd has no matching loopBegin"),
+        (
+            "search synth, render\nsolid().loopBegin().write(o0)",
+            "loopBegin must be closed by loopEnd before write",
+        ),
+        (
+            "search synth, render\nsolid().loopBegin().loopBegin().loopEnd().loopEnd().write(o0)",
+            "nested loopBegin regions are not supported",
+        ),
+    )
+    for source, message in malformed:
+        with pytest.raises(DslError, match=message):
+            compile_dsl(source, _typed_effects())

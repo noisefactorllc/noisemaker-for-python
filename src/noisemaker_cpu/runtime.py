@@ -46,13 +46,22 @@ def _is_scalar(v) -> bool:
     return isinstance(v, (int, float, np.floating, np.integer, bool))
 
 
+class _UIntVector(list):
+    """Unsigned-vector lanes as stored by the JavaScript CPU runtime.
+
+    Its uvec pool uses plain Arrays, so arithmetic assignments retain Number
+    values until a bitwise op or explicit uvec constructor coerces to uint32.
+    """
+
+
 class Runtime:
-    def __init__(self):
+    def __init__(self, *, js_uvec_numbers=False):
         self._ctx = None
         self._deriv_mode = None  # None | "record" | "replay"
         self._deriv_log = []  # record: list of (op, value)
         self._deriv_diffs = None  # replay: precomputed diff per call index
         self._deriv_i = 0
+        self.js_uvec_numbers = js_uvec_numbers
         # Per-render stdlib overrides (CPU adapters replace e.g. `sin` with a
         # range-reduced variant): name -> fn(*args) returning the final value.
         self.stdlib_override = {}
@@ -141,6 +150,8 @@ class Runtime:
             if len(supplied) == 1 and _is_scalar(supplied[0]) and width > 1:
                 iv = int(supplied[0])
                 iv = (iv & _U32) if base == "uint" else _s32(iv)
+                if base == "uint" and self.js_uvec_numbers:
+                    return _UIntVector([iv] * width)
                 return np.full(width, iv, dtype=np.int64)
             ivals = []
             for c in supplied:
@@ -149,7 +160,11 @@ class Runtime:
                 else:
                     ivals.extend(int(x) for x in np.asarray(c).ravel())
             ivals = [(v & _U32) if base == "uint" else _s32(v) for v in ivals]
-            return ivals[0] if width == 1 else np.array(ivals[:width], dtype=np.int64)
+            if width == 1:
+                return ivals[0]
+            if base == "uint" and self.js_uvec_numbers:
+                return _UIntVector(ivals[:width])
+            return np.array(ivals[:width], dtype=np.int64)
         if width == 1:
             c = supplied[0]
             return f32(c if _is_scalar(c) else np.asarray(c, dtype=F32).ravel()[0])
@@ -173,13 +188,17 @@ class Runtime:
         # hash seed keeps full precision instead of being truncated to float32.
         if _is_scalar(vec):
             return f32(vec)
-        if base in ("int", "uint"):
+        if base == "uint":
+            return _UIntVector(vec) if self.js_uvec_numbers else np.array(vec, dtype=np.int64)
+        if base == "int":
             return np.array(vec, dtype=np.int64)
         return np.array(vec, dtype=F32)
 
     # ---- swizzles ----
     def swizzle(self, vec, sw: str):
         idx = [_SWIZZLE[c] for c in sw]
+        if isinstance(vec, _UIntVector):
+            return vec[idx[0]] if len(idx) == 1 else _UIntVector(vec[index] for index in idx)
         v = np.asarray(vec)  # preserve dtype (int vectors must stay integer)
         if np.issubdtype(v.dtype, np.integer):
             return int(v[idx[0]]) if len(idx) == 1 else v[idx]
@@ -192,6 +211,13 @@ class Runtime:
         # `obj = rt.assign_swizzle(obj, ...)` rebinds obj to this fresh copy.
         # A stored vector is f32 in JS; snap the base and the assigned value so the
         # write happens at f32 (binary defers rounding). Int vectors stay integer.
+        if isinstance(vec, _UIntVector):
+            result = _UIntVector(vec)
+            idx = [_SWIZZLE[c] for c in sw]
+            values = [value] if _is_scalar(value) else list(value)
+            for offset, index in enumerate(idx):
+                result[index] = values[offset]
+            return result
         base = np.asarray(vec)
         v = np.array(base if np.issubdtype(base.dtype, np.integer) else base.astype(F32))
         idx = [_SWIZZLE[c] for c in sw]
@@ -238,6 +264,19 @@ class Runtime:
         return np.asarray(r, dtype=np.float64)
 
     def _int_binary(self, op, a, b, base):
+        # The JavaScript CPU transpiler emits `/` directly, even when both GLSL
+        # operands are integers. Preserve that fractional JS result; explicit
+        # int/ivec construction remains the coercion boundary.
+        if op == "/":
+            av = np.asarray(a, dtype=np.float64)
+            bv = np.asarray(b, dtype=np.float64)
+            with np.errstate(divide="ignore", invalid="ignore"):
+                result = np.divide(av, bv)
+            if _is_scalar(a) and _is_scalar(b):
+                return float(result)
+            return np.asarray(result, dtype=np.float64)
+        if base == "uint" and self.js_uvec_numbers:
+            return _js_uint_binary(op, a, b)
         if _is_scalar(a) and _is_scalar(b):
             return _int_scalar(op, int(a), int(b), base)
         # element-wise: uint uses uint64 (mul wraps mod 2^64 -> mask mod 2^32)
@@ -340,7 +379,7 @@ class Runtime:
     def pcg3d(self, v):
         arr = np.asarray(v).astype(np.int64)
         r = uintmath.pcg3d([int(arr[0]) & _U32, int(arr[1]) & _U32, int(arr[2]) & _U32])
-        return np.asarray(r, dtype=np.int64)
+        return _UIntVector(r) if self.js_uvec_numbers else np.asarray(r, dtype=np.int64)
 
     def hash_uint(self, x):
         return uintmath.hash_uint32(int(x) & _U32)
@@ -452,6 +491,39 @@ def _s32arr(x):
     return (((x.astype(np.int64) + 0x80000000) & _U32) - 0x80000000).astype(np.int64)
 
 
+def _js_uint_binary(op, a, b):
+    """Apply the operators emitted for uvec expressions by the JS backend."""
+
+    scalar = _is_scalar(a) and _is_scalar(b)
+    av, bv = np.broadcast_arrays(np.asarray(a, dtype=object), np.asarray(b, dtype=object))
+
+    def calculate(left, right):
+        if op == "+":
+            return float(left) + float(right)
+        if op == "-":
+            return float(left) - float(right)
+        if op == "*":
+            return float(left) * float(right)
+        if op == "%":
+            return float(np.fmod(float(left), float(right))) if right else float("nan")
+        left_i = _s32(uintmath.u32(left))
+        shift = uintmath.u32(right) & 31
+        if op == "&":
+            return _s32(left_i & _s32(uintmath.u32(right)))
+        if op == "|":
+            return _s32(left_i | _s32(uintmath.u32(right)))
+        if op == "^":
+            return _s32(left_i ^ _s32(uintmath.u32(right)))
+        if op == "<<":
+            return _s32(left_i << shift)
+        if op == ">>":
+            return _s32(left_i >> shift)
+        raise ValueError(f"unsupported uint op {op!r}")
+
+    values = [calculate(left, right) for left, right in zip(av.flat, bv.flat, strict=True)]
+    return values[0] if scalar else _UIntVector(values)
+
+
 def _int_scalar(op, a, b, base):
     if base == "uint":
         a &= _U32
@@ -465,7 +537,6 @@ def _int_scalar(op, a, b, base):
             "^": uintmath.uxor,
             "<<": uintmath.ushl,
             ">>": uintmath.ushr,
-            "/": lambda x, y: (x // y) if y else 0,
             "%": lambda x, y: (x % y) if y else 0,
         }
         return table[op](a, b)
@@ -485,8 +556,6 @@ def _int_scalar(op, a, b, base):
         return _s32(a << (b & 31))
     if op == ">>":
         return a >> (b & 31)
-    if op == "/":
-        return _s32(int(a / b)) if b else 0
     if op == "%":
         return _s32(a - b * int(a / b)) if b else 0
     raise ValueError(f"unsupported int op {op!r}")
@@ -511,8 +580,6 @@ def _int_vec(op, av, bv, base):
             return (av << (bv & np.uint64(31))) & m
         if op == ">>":
             return av >> (bv & np.uint64(31))
-        if op == "/":
-            return np.where(bv == 0, 0, av // np.maximum(bv, np.uint64(1)))
         if op == "%":
             return np.where(bv == 0, 0, av % np.maximum(bv, np.uint64(1)))
         raise ValueError(f"unsupported uint op {op!r}")
@@ -532,10 +599,10 @@ def _int_vec(op, av, bv, base):
         return _s32arr(av << (bv & 31))
     if op == ">>":
         return av >> (bv & 31)
-    if op in ("/", "%"):
+    if op == "%":
         safe = np.where(bv == 0, 1, bv)
         q = np.trunc(av / safe).astype(np.int64)
-        return np.where(bv == 0, 0, q if op == "/" else av - bv * q)
+        return np.where(bv == 0, 0, av - bv * q)
     raise ValueError(f"unsupported int op {op!r}")
 
 

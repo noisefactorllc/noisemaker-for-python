@@ -2,6 +2,7 @@ import numpy as np
 
 from noisemaker_cpu.draw_ops import (
     dla_deposit_grid,
+    flow3d_deposit,
     get_draw_op,
     lenia_deposit,
     points_billboard_render_deposit,
@@ -73,6 +74,7 @@ def test_lenia_and_points_render_deposit_alive_agents():
 def test_catalog_scatter_programs_are_registered():
     for key in (
         ("filter/wormhole", "deposit"),
+        ("filter3d/flow3d", "deposit"),
         ("points/dla", "depositGrid"),
         ("points/lenia", "deposit"),
         ("points/physarum", "deposit"),
@@ -80,6 +82,21 @@ def test_catalog_scatter_programs_are_registered():
         ("render/pointsBillboardRender", "deposit"),
     ):
         assert get_draw_op(*key) is not None
+
+
+def test_flow3d_deposit_flattens_voxel_z_into_volume_atlas():
+    inputs = {
+        "stateTex1": _surface(1, 1, [[1.0, 2.0, 3.0, 1.0]]),
+        "stateTex2": _surface(1, 1, [[0.25, 0.5, 0.75, 1.0]]),
+    }
+    destination = Surface(4, 16)
+
+    flow3d_deposit(inputs, destination, {"density": 100.0, "volumeSize": 4}, {"count": 1})
+
+    shader_y = 2 + 3 * 4
+    storage_y = destination.height - 1 - shader_y
+    offset = (storage_y * destination.width + 1) * 4
+    assert np.array_equal(destination.data[offset : offset + 4], np.array([0.25, 0.5, 0.75, 1.0], dtype=np.float32))
 
 
 def test_billboard_additive_pass_rasterizes_procedural_shape():

@@ -33,3 +33,8 @@ def test_rejects_bad_dimensions():
         Surface(0, 4)
     with pytest.raises(ValueError):
         Surface(4, -1)
+
+
+def test_rejects_allocations_above_surface_pixel_limit():
+    with pytest.raises(ValueError, match="16,777,216 pixel limit"):
+        Surface(4096, 4096**2)
