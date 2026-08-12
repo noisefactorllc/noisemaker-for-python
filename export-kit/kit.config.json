@@ -1,0 +1,25 @@
+{
+  "configVersion": 1,
+  "id": "python",
+  "series": "0.1",
+  "shaderSource": "kit",
+  "engineSource": "kit",
+  "pageTemplate": false,
+  "subtrees": [
+    { "from": "src/noisemaker_cpu", "to": "engine/noisemaker_cpu" }
+  ],
+  "licenses": [
+    { "from": "LICENSE", "to": "LICENSES/noisemaker-for-python-LICENSE.txt" }
+  ],
+  "requireFiles": ["run.py", "engine/noisemaker_cpu/renderer.py", "engine/noisemaker_cpu/png.py"],
+  "forbidDirs": ["shaders"],
+  "inject": {
+    "type": "dsl-file",
+    "target": "program.dsl"
+  },
+  "compat": {
+    "mode": "list",
+    "fromBundleMetadata": "src/noisemaker_cpu/bundle/metadata.json"
+  },
+  "engineBytesFrom": ["engine/"]
+}
