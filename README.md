@@ -27,7 +27,7 @@ pip install -e ".[dev]"      # requires Python 3.11+, numpy, click
 
 ## Render an effect
 
-CLI (modeled after the [`noisemaker`](https://github.com/noisedeck/noisemaker) CLI):
+CLI (modeled after the [`noisemaker`](https://github.com/noisefactorllc/noisemaker) CLI):
 
 ```bash
 # generate a single frame
