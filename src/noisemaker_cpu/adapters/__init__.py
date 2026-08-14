@@ -27,4 +27,4 @@ def get_adapter(effect_id, program):
 
 
 # Import adapter modules (deferred to the bottom) so they self-register.
-from . import crt, noise3d, palette, snow  # noqa: E402, F401
+from . import crt, median, noise3d, palette, snow  # noqa: E402, F401

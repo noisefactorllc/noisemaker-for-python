@@ -10,6 +10,7 @@ from __future__ import annotations
 import json
 import math
 import os
+import time as _clock
 
 import numpy as np
 
@@ -17,11 +18,13 @@ from .adapters import get_adapter
 from .adapters._palette_data import PALETTE_DATA
 from .draw_ops import get_draw_op
 from .dsl import compile_dsl
+from .frame_export import CpuFrameExportAdapter, FrameExportQueue
 from .iteration import compute_iteration_groups, is_particle_state_name, iteration_schedule
 from .kernel_loader import KernelCache
 from .overlay_gen import OVERLAY_EFFECTS, render_worm_overlay
 from .pass_runner import Ctx, run_pass, run_pass_deriv, run_pass_mrt
 from .runtime import F32, Runtime, f32
+from .sink import SinkManager
 from .surface import Surface
 from .texture_format import quantize_texture
 
@@ -734,3 +737,77 @@ def render_dsl(source, width=512, height=512, seed=1, time=0.0, external_texture
     if rendered is None:
         raise ValueError(f"Surface {plan['render_surface']} has not been written")
     return rendered
+
+
+class CpuRenderer:
+    """Stateful renderer facade that owns output sinks and export queues."""
+
+    def __init__(self, *, on_sink_error=None):
+        self.sink_manager = SinkManager(on_error=on_sink_error)
+        self._sink_descriptor = {
+            "width": 0,
+            "height": 0,
+            "format": "rgba8unorm",
+            "colorSpace": "srgb",
+            "alphaMode": "straight",
+            "fps": 60,
+        }
+        self._sinks_configured = False
+
+    def add_sink(self, sink):
+        return self.sink_manager.add(sink)
+
+    @staticmethod
+    def create_frame_export_queue(*, slots=3, on_error=None):
+        return FrameExportQueue(CpuFrameExportAdapter(), slots=slots, on_error=on_error)
+
+    def _configure_sinks(self, width, height) -> None:
+        extent_unchanged = self._sink_descriptor["width"] == width and self._sink_descriptor["height"] == height
+        if self._sinks_configured and extent_unchanged:
+            return
+        self._sink_descriptor["width"] = width
+        self._sink_descriptor["height"] = height
+        self._sinks_configured = True
+        self.sink_manager.configure(self._sink_descriptor)
+
+    @staticmethod
+    def _validate_options(width, height, seed, time) -> None:
+        if not isinstance(width, int) or isinstance(width, bool) or width <= 0:
+            raise ValueError("width must be a positive integer")
+        if not isinstance(height, int) or isinstance(height, bool) or height <= 0:
+            raise ValueError("height must be a positive integer")
+        valid_time_type = isinstance(time, (int, float, np.integer, np.floating)) and not isinstance(time, bool)
+        if not valid_time_type or not math.isfinite(time):
+            raise TypeError("time must be finite")
+        if not isinstance(seed, (int, np.integer)) or isinstance(seed, bool):
+            raise TypeError("seed must be an integer")
+
+    def render(
+        self,
+        source,
+        *,
+        width=512,
+        height=512,
+        seed=1,
+        time=0.0,
+        external_textures=None,
+        seed_surfaces=None,
+        presentation_timestamp=None,
+    ) -> Surface:
+        self._validate_options(width, height, seed, time)
+        self._configure_sinks(width, height)
+        result = render_dsl(
+            source,
+            width=width,
+            height=height,
+            seed=seed,
+            time=time,
+            external_textures=external_textures,
+            seed_surfaces=seed_surfaces,
+        )
+        timestamp = presentation_timestamp if presentation_timestamp is not None else _clock.perf_counter() * 1000
+        self.sink_manager.submit(result, timestamp)
+        return result
+
+    def dispose(self) -> None:
+        self.sink_manager.close()
