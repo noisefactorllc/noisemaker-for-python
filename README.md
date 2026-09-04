@@ -9,7 +9,7 @@ This is not the classic Python Noisemaker (Composer) library. This is a new
 effort centered around software shader execution.
 
 A pure-Python CPU implementation of the [Noisemaker](https://noisemaker.app)
-shader engine — the Python port of [`noisemaker-cpu`](https://github.com/noisefactorllc/noisemaker-cpu).
+shader engine — the Python port of [`noisemaker-for-cpu`](https://github.com/noisefactorllc/noisemaker-for-cpu).
 
 Effect kernels are **transpiled directly from the upstream GLSL** served by the
 `shaders.noisedeck.app` CDN (pinned by version), not hand-maintained. A pure-Python
@@ -74,7 +74,7 @@ pytest
 ```
 
 Cross-language parity against the JS engine (`scripts/parity.py`) needs a sibling
-`noisemaker-cpu` checkout and Node.
+`noisemaker-for-cpu` checkout and Node.
 
 ## License
 

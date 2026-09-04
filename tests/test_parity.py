@@ -13,7 +13,7 @@ from noisemaker_cpu.renderer import render_dsl, render_effect
 from noisemaker_cpu.surface import Surface
 
 CPU_DIR = os.environ.get("NOISEMAKER_CPU_DIR") or os.path.normpath(
-    os.path.join(os.path.dirname(__file__), "..", "..", "noisemaker-cpu")
+    os.path.join(os.path.dirname(__file__), "..", "..", "noisemaker-for-cpu")
 )
 CLI = os.path.join(CPU_DIR, "bin", "noisemaker-cpu.js")
 

@@ -17,7 +17,7 @@ from noisemaker_cpu.png import decode_png
 from noisemaker_cpu.renderer import _meta, render_effect
 
 CPU_DIR = os.environ.get("NOISEMAKER_CPU_DIR") or os.path.normpath(
-    os.path.join(os.path.dirname(__file__), "..", "..", "noisemaker-cpu")
+    os.path.join(os.path.dirname(__file__), "..", "..", "noisemaker-for-cpu")
 )
 CLI = os.path.join(CPU_DIR, "bin", "noisemaker-cpu.js")
 

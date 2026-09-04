@@ -10,9 +10,9 @@ from noisemaker_cpu.surface import Surface
 
 SIGNATURE = bytes([137, 80, 78, 71, 13, 10, 26, 10])
 
-# The JS PNG-encoder cross-check needs a sibling noisemaker-cpu checkout + node.
+# The JS PNG-encoder cross-check needs a sibling noisemaker-for-cpu checkout + node.
 CPU_DIR = os.environ.get("NOISEMAKER_CPU_DIR") or os.path.normpath(
-    os.path.join(os.path.dirname(__file__), "..", "..", "noisemaker-cpu")
+    os.path.join(os.path.dirname(__file__), "..", "..", "noisemaker-for-cpu")
 )
 
 
@@ -119,7 +119,7 @@ def test_round_trip_3x2_surface():
 
 def test_cross_check_against_js_encoder(tmp_path):
     if shutil.which("node") is None or not os.path.isdir(CPU_DIR):
-        pytest.skip("needs node + a sibling noisemaker-cpu checkout")
+        pytest.skip("needs node + a sibling noisemaker-for-cpu checkout")
     output_path = str(tmp_path / "nmpng_fix.png")
     subprocess.run(
         [
