@@ -12,17 +12,16 @@ A pure-Python CPU implementation of the [Noisemaker](https://noisemaker.app)
 shader engine — the Python port of [`noisemaker-for-cpu`](https://github.com/noisefactorllc/noisemaker-for-cpu).
 
 Effect kernels are **transpiled directly from the upstream GLSL** served by the
-`shaders.noisedeck.app` CDN (pinned by version), not hand-maintained. A pure-Python
-GLSL→Python transpiler (`transpiler/`) lexes, preprocesses, parses, and emits a
-NumPy-backed kernel per shader pass; a small runtime reproduces the reference
-engine's float model (float32 vectors, float64 scalar arithmetic, half-float
-texture quantization, screen-space derivatives, bit-exact uint32/PCG hashing).
+`shaders.noisedeck.app` CDN (pinned by version), not hand-maintained. A pure-Python GLSL→Python transpiler (`transpiler/`) lexes, preprocesses, parses, and emits a NumPy-backed kernel per shader pass. A small runtime reproduces the reference engine's float model:
 
-**All 188 catalog effects** are bundled. The 167 single-frame effects retain
-byte parity with the JavaScript engine's `effect` CLI, while the 21 stateful and
-particle effects have exact JS CPU DSL parity at controlled iteration counts.
-Iterated effects default to `iterationCount: 60`; particle pipelines share state
-from `pointsEmit()` through their point and render steps.
+- Float32 vectors.
+- Float64 scalar arithmetic.
+- Half-float texture quantization.
+- Screen-space derivatives.
+- Bit-exact uint32/PCG hashing.
+
+**The current bundle contains 205 CPU catalog effects.** The earlier 188-effect bundle documented byte parity with the JavaScript engine's `effect` CLI for its 167 single-frame effects. It also documented exact JS CPU DSL parity for its 21 stateful and particle effects at controlled iteration counts.
+Iterated effects default to `iterationCount: 60`. Particle pipelines share state from `pointsEmit()` through their point and render steps.
 
 ## Install
 
