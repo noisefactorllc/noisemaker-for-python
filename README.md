@@ -73,7 +73,9 @@ pytest
 ```
 
 Cross-language parity against the JS engine (`scripts/parity.py`) needs a sibling
-`noisemaker-for-cpu` checkout and Node.
+`noisemaker-for-cpu` checkout and Node. The image harness compares 169 effects
+with zero byte tolerance and exits unsuccessfully for differences or errors.
+It reports 36 iterated and typed effects separately; their DSL cases are in the test suite.
 
 ## License
 

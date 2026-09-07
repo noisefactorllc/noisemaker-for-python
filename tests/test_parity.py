@@ -437,3 +437,14 @@ def test_wormhole_kernel_is_byte_exact(tmp_path):
     py = render_effect("filter/wormhole", {}, {"inputTex": decode_png(png.read_bytes())}, width=24, height=24, seed=1)
     js = _js_render(["apply", "filter/wormhole", str(png), "--seed", "1"], str(tmp_path / "js.png"))
     assert _max_diff(js, py) == 0
+
+
+@pytest.mark.parametrize("effect_id", ["filter/mosaicTiles", "filter/stipple", "filter/strokes"])
+def test_canonical_hash_filters_are_byte_exact(tmp_path, effect_id):
+    js = _js_render(
+        ["effect", effect_id, "--width", "8", "--height", "8", "--seed", "1", "--time", "0.25"],
+        str(tmp_path / "reference.png"),
+    )
+    source = render_effect("synth/solid", width=8, height=8, seed=1, time=0.25)
+    py = render_effect(effect_id, inputs={"inputTex": source}, width=8, height=8, seed=1, time=0.25)
+    assert _max_diff(js, py) == 0

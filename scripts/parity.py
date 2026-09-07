@@ -112,7 +112,8 @@ def main():
     if "--only" in sys.argv:
         only = set(sys.argv[sys.argv.index("--only") + 1].split(","))
     effects = _meta()["effects"]
-    candidates = [i for i in effects if not only or i in only]
+    unknown = sorted(only - effects.keys()) if only is not None else []
+    candidates = [i for i in effects if only is None or i in only]
     skipped = [i for i in candidates if effects[i].get("iterated") or effects[i].get("domain", "image") != "image"]
     ids = [i for i in candidates if i not in skipped]
 
@@ -138,10 +139,10 @@ def main():
             errors.setdefault("shape-mismatch", []).append(eid)
             continue
         d = int(np.max(np.abs(ja - pa)))
-        (ok if d <= 2 else diffs).append(eid if d <= 2 else (eid, d))
+        (ok if d == 0 else diffs).append(eid if d == 0 else (eid, d))
 
     print(
-        f"\n=== PARITY: {len(ok)}/{len(ids)} pass (<=2)  |  {len(diffs)} diff  |  "
+        f"\n=== PARITY: {len(ok)}/{len(ids)} pass (byte-exact)  |  {len(diffs)} diff  |  "
         f"{sum(len(v) for v in errors.values())} runtime-error  |  {len(oracle_err)} oracle-error  |  "
         f"{len(skipped)} skipped ===\n"
     )
@@ -158,7 +159,10 @@ def main():
     if skipped:
         print(f"\nSKIPPED (iterated/typed-chain; covered by DSL parity tests): {len(skipped)}  e.g. {skipped[:5]}")
     print(f"\nPASS: {len(ok)}")
+    if unknown:
+        print(f"UNKNOWN EFFECTS: {unknown}")
+    return 1 if not ids or diffs or errors or oracle_err or unknown else 0
 
 
 if __name__ == "__main__":
-    main()
+    sys.exit(main())

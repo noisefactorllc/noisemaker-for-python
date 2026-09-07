@@ -34,9 +34,28 @@ def _resolve_shared_enums(params: dict) -> None:
 
 _HERE = os.path.dirname(__file__)
 BUNDLE = os.path.normpath(os.path.join(_HERE, "..", "src", "noisemaker_cpu", "bundle"))
-# This canonical JS kernel materializes intermediate vec4 values in
-# Float32Array storage before converting them to uvec4 hash lanes.
-_JS_VECTOR_STORAGE_KEYS = frozenset({"synth3d/noise3d:precompute"})
+# These canonical JS kernels materialize vector declarations in Float32Array
+# storage before later hash conversions or pigment calculations.
+_JS_VECTOR_STORAGE_KEYS = frozenset({"synth3d/noise3d:precompute", "filter/strokes:stkSmear"})
+
+
+def _adapt_source(effect_id: str, program: str, source: str) -> str:
+    # Match the canonical CPU hash casts without changing runtime arithmetic.
+    if effect_id in {"filter/mosaicTiles", "filter/stipple", "filter/strokes"}:
+        source = source.replace(
+            "return fract((p3.x + p3.y) * p3.z);",
+            "return fract(float(float(p3.x + p3.y) * p3.z));",
+        ).replace(
+            "return fract((p3.xx + p3.yz) * p3.zy);",
+            "return fract(vec2(float(float(p3.x + p3.y) * p3.z), float(float(p3.x + p3.z) * p3.y)));",
+        )
+    if effect_id == "filter/strokes" and program == "stkSmear":
+        # The canonical typed-array product rounds before accumulation.
+        pigment = "pigmentSum += srcSample(centerUV).rgb * mark;"
+        if source.count(pigment) != 1:
+            raise ValueError("strokes canonical pigment pattern changed")
+        source = source.replace(pigment, "pigmentSum += vec3(srcSample(centerUV).rgb * mark);")
+    return source
 
 
 def runtime_defines(params: dict) -> dict:
@@ -216,7 +235,7 @@ def build(ids, out_dir=BUNDLE, update_lock=False):
                 key = _key(eid, p["program"])
                 h = hashlib.sha256(glsl.strip().encode("utf-8")).hexdigest()
                 try:
-                    norm = normalize(glsl, defines)
+                    norm = normalize(_adapt_source(eid, p["program"], glsl), defines)
                     ast = parse(norm["source"])
                     py = emit_python(
                         ast,
