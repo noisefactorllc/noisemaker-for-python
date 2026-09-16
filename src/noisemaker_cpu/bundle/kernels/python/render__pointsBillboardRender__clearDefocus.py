@@ -8,12 +8,10 @@ def run_pixel(ctx, out):
     _u_VIEW_MODE = U.get("VIEW_MODE", 0)
     _u_BLEND_MODE = U.get("BLEND_MODE", 0)
     _u_BLUR_LAYER = U.get("BLUR_LAYER", 0)
-    _u_sourceTex = T["sourceTex"]
-    _u_resolution = U.get("resolution", rt.construct(2, 0.0))
+    _u_clearValue = U.get("clearValue", rt.f(0.0))
     g.fragColor = rt.construct(4, 0.0)
     def main__void():
-        uv = rt.binary("/", rt.swizzle(ctx.frag_coord, "xy"), _u_resolution, 2, "float")
-        g.fragColor[:] = rt.texture(_u_sourceTex, uv)
+        g.fragColor[:] = rt.construct(4, _u_clearValue)
     main__void()
     _c = g.fragColor
     out[0] = rt.f32(_c[0]); out[1] = rt.f32(_c[1]); out[2] = rt.f32(_c[2]); out[3] = rt.f32(_c[3])

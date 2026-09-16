@@ -7832,27 +7832,27 @@
         "_primaryTex": {
           "width": "input",
           "height": "input",
-          "format": "rgba16float"
+          "format": "rgba16f"
         },
         "_creativeTex": {
           "width": "input",
           "height": "input",
-          "format": "rgba16float"
+          "format": "rgba16f"
         },
         "_wheelsTex": {
           "width": "input",
           "height": "input",
-          "format": "rgba16float"
+          "format": "rgba16f"
         },
         "_hslTex": {
           "width": "input",
           "height": "input",
-          "format": "rgba16float"
+          "format": "rgba16f"
         },
         "_lutTex": {
           "width": "input",
           "height": "input",
-          "format": "rgba16float"
+          "format": "rgba16f"
         }
       },
       "passes": [
@@ -16160,6 +16160,17 @@
             "label": "source b"
           }
         },
+        "baseTex": {
+          "type": "surface",
+          "default": "none",
+          "ui": {
+            "label": "mask background",
+            "enabledBy": {
+              "param": "maskMode",
+              "eq": true
+            }
+          }
+        },
         "mix": {
           "type": "float",
           "default": 0,
@@ -16193,7 +16204,8 @@
           "key": "mixer/alphaMask:alphaMask",
           "inputs": {
             "inputTex": "inputTex",
-            "tex": "tex"
+            "tex": "tex",
+            "baseTex": "baseTex"
           },
           "outputs": {
             "fragColor": "outputTex"
@@ -17812,7 +17824,7 @@
           "default": 200,
           "uniform": "maxIter",
           "min": 20,
-          "max": 20,
+          "max": 2000.0,
           "step": 10,
           "ui": {
             "label": "max iterations",
@@ -17825,7 +17837,7 @@
           "default": 1,
           "uniform": "minIter",
           "min": 1,
-          "max": 10,
+          "max": 1000.0,
           "step": 1,
           "ui": {
             "label": "min iterations",
@@ -18385,7 +18397,7 @@
           "default": 10,
           "uniform": "stride",
           "min": 1,
-          "max": 10,
+          "max": 1000.0,
           "step": 1,
           "ui": {
             "label": "stride",
@@ -18491,6 +18503,106 @@
       ],
       "iterated": true
     },
+    "points/heightGrid": {
+      "namespace": "points",
+      "func": "heightGrid",
+      "kind": "filter",
+      "domain": "image",
+      "params": {
+        "heightTex": {
+          "type": "surface",
+          "default": "inputTex",
+          "ui": {
+            "label": "height map",
+            "category": "source"
+          }
+        },
+        "diffuseTex": {
+          "type": "surface",
+          "default": "inputTex",
+          "ui": {
+            "label": "diffuse map",
+            "category": "source"
+          }
+        },
+        "gridScale": {
+          "type": "float",
+          "default": 80,
+          "min": 1,
+          "max": 400,
+          "step": 1,
+          "uniform": "gridScale",
+          "ui": {
+            "label": "grid width",
+            "control": "slider",
+            "category": "terrain"
+          }
+        },
+        "heightScale": {
+          "type": "float",
+          "default": 20,
+          "min": -100,
+          "max": 100,
+          "step": 0.1,
+          "uniform": "heightScale",
+          "ui": {
+            "label": "height",
+            "control": "slider",
+            "category": "terrain"
+          }
+        },
+        "heightOffset": {
+          "type": "float",
+          "default": 0,
+          "min": -100,
+          "max": 100,
+          "step": 0.1,
+          "uniform": "heightOffset",
+          "ui": {
+            "label": "height offset",
+            "control": "slider",
+            "category": "terrain"
+          }
+        }
+      },
+      "textures": {},
+      "passes": [
+        {
+          "name": "agent",
+          "program": "agent",
+          "key": "points/heightGrid:agent",
+          "inputs": {
+            "xyzTex": "global_xyz",
+            "velTex": "global_vel",
+            "heightTex": "heightTex",
+            "diffuseTex": "diffuseTex"
+          },
+          "outputs": {
+            "outXYZ": "global_xyz",
+            "outVel": "global_vel",
+            "outRGBA": "global_rgba"
+          },
+          "uniforms": {
+            "gridScale": "gridScale",
+            "heightScale": "heightScale",
+            "heightOffset": "heightOffset"
+          },
+          "type": "compute",
+          "drawBuffers": 3
+        },
+        {
+          "name": "passthrough",
+          "program": "passthrough",
+          "key": "points/heightGrid:passthrough",
+          "inputs": {
+            "inputTex": "inputTex"
+          },
+          "outputs": {
+            "fragColor": "outputTex"
+          }
+        }
+      ]
+    },
     "points/hydraulic": {
       "namespace": "points",
       "func": "hydraulic",
@@ -18502,7 +18614,7 @@
           "default": 10,
           "uniform": "stride",
           "min": 1,
-          "max": 10,
+          "max": 1000.0,
           "step": 1,
           "ui": {
             "label": "stride",
@@ -19482,6 +19594,8 @@
         "shapeMode": {
           "type": "int",
           "default": 1,
+          "min": 0,
+          "max": 7,
           "uniform": "shapeMode",
           "choices": {
             "texture": 0,
@@ -19578,7 +19692,7 @@
           "type": "int",
           "default": 42,
           "min": 0,
-          "max": 10,
+          "max": 1000,
           "uniform": "seed",
           "ui": {
             "label": "seed",
@@ -19626,10 +19740,13 @@
         "viewMode": {
           "type": "int",
           "default": 0,
+          "min": 0,
+          "max": 2,
           "uniform": "viewMode",
           "choices": {
             "flat": 0,
-            "ortho": 1
+            "ortho": 1,
+            "perspective": 2
           },
           "ui": {
             "label": "view",
@@ -19721,6 +19838,93 @@
             "enabledBy": "viewMode"
           }
         },
+        "posZ": {
+          "type": "float",
+          "default": 0,
+          "uniform": "posZ",
+          "min": -200,
+          "max": 200,
+          "step": 0.1,
+          "ui": {
+            "label": "pos z",
+            "control": "slider",
+            "category": "view",
+            "enabledBy": "viewMode"
+          }
+        },
+        "fieldOfView": {
+          "type": "float",
+          "default": 60,
+          "uniform": "fieldOfView",
+          "min": 10,
+          "max": 150,
+          "step": 1,
+          "ui": {
+            "label": "field of view",
+            "control": "slider",
+            "category": "view",
+            "enabledBy": {
+              "param": "viewMode",
+              "eq": 2
+            }
+          }
+        },
+        "sizeDistance": {
+          "type": "float",
+          "default": 0,
+          "uniform": "sizeDistance",
+          "min": 0,
+          "max": 500,
+          "step": 1,
+          "ui": {
+            "label": "size fade distance",
+            "control": "slider",
+            "category": "distance",
+            "enabledBy": "viewMode"
+          }
+        },
+        "brightnessDistance": {
+          "type": "float",
+          "default": 0,
+          "uniform": "brightnessDistance",
+          "min": 0,
+          "max": 500,
+          "step": 1,
+          "ui": {
+            "label": "brightness fade distance",
+            "control": "slider",
+            "category": "distance",
+            "enabledBy": "viewMode"
+          }
+        },
+        "aperture": {
+          "type": "float",
+          "default": 0,
+          "uniform": "aperture",
+          "min": 0,
+          "max": 20,
+          "step": 0.1,
+          "ui": {
+            "label": "aperture",
+            "control": "slider",
+            "category": "focus",
+            "enabledBy": "viewMode"
+          }
+        },
+        "focalDistance": {
+          "type": "float",
+          "default": 80,
+          "uniform": "focalDistance",
+          "min": 1,
+          "max": 500,
+          "step": 1,
+          "ui": {
+            "label": "focal dist",
+            "control": "slider",
+            "category": "focus",
+            "enabledBy": "viewMode"
+          }
+        },
         "iterationCount": {
           "type": "int",
           "default": 60,
@@ -19730,6 +19934,43 @@
         }
       },
       "textures": {
+        "depthOrderA": {
+          "width": {
+            "param": "stateSize",
+            "default": 256
+          },
+          "height": {
+            "param": "stateSize",
+            "default": 256
+          },
+          "format": "rgba32f"
+        },
+        "depthOrderB": {
+          "width": {
+            "param": "stateSize",
+            "default": 256
+          },
+          "height": {
+            "param": "stateSize",
+            "default": 256
+          },
+          "format": "rgba32f"
+        },
+        "spriteMeanTiles": {
+          "width": 160,
+          "height": 160,
+          "format": "rgba32f"
+        },
+        "spriteMean": {
+          "width": 5,
+          "height": 5,
+          "format": "rgba32f"
+        },
+        "defocus": {
+          "width": "25%",
+          "height": "25%",
+          "format": "rgba16f"
+        },
         "global_billboard_trail": {
           "width": "100%",
           "height": "100%",
@@ -19738,17 +19979,969 @@
       },
       "passes": [
         {
+          "name": "depthKeys_1",
+          "program": "depthKeys",
+          "key": "render/pointsBillboardRender:depthKeys",
+          "inputs": {
+            "xyzTex": "global_xyz"
+          },
+          "outputs": {
+            "fragColor": "depthOrderA"
+          },
+          "uniforms": {
+            "viewMode": "viewMode",
+            "rotateX": "rotateX",
+            "rotateY": "rotateY",
+            "posZ": "posZ"
+          },
+          "type": "compute",
+          "conditions": {
+            "runIf": [
+              {
+                "uniform": "blendMode",
+                "equals": 1
+              },
+              {
+                "uniform": "viewMode",
+                "equals": 1
+              }
+            ],
+            "skipIf": [
+              {
+                "uniform": "viewMode",
+                "equals": 0
+              }
+            ]
+          },
+          "defines": {
+            "VIEW_MODE": 1
+          }
+        },
+        {
+          "name": "depthKeys_2",
+          "program": "depthKeys",
+          "key": "render/pointsBillboardRender:depthKeys",
+          "inputs": {
+            "xyzTex": "global_xyz"
+          },
+          "outputs": {
+            "fragColor": "depthOrderA"
+          },
+          "uniforms": {
+            "viewMode": "viewMode",
+            "rotateX": "rotateX",
+            "rotateY": "rotateY",
+            "posZ": "posZ"
+          },
+          "type": "compute",
+          "conditions": {
+            "runIf": [
+              {
+                "uniform": "blendMode",
+                "equals": 1
+              },
+              {
+                "uniform": "viewMode",
+                "equals": 2
+              }
+            ],
+            "skipIf": [
+              {
+                "uniform": "viewMode",
+                "equals": 0
+              }
+            ]
+          },
+          "defines": {
+            "VIEW_MODE": 2
+          }
+        },
+        {
+          "name": "depthMerge0",
+          "program": "depthMerge",
+          "key": "render/pointsBillboardRender:depthMerge",
+          "inputs": {
+            "orderTex": "depthOrderA"
+          },
+          "outputs": {
+            "fragColor": "depthOrderB"
+          },
+          "uniforms": {
+            "runLength": 1
+          },
+          "type": "compute",
+          "conditions": {
+            "runIf": [
+              {
+                "uniform": "blendMode",
+                "equals": 1
+              }
+            ],
+            "skipIf": [
+              {
+                "uniform": "viewMode",
+                "equals": 0
+              }
+            ]
+          }
+        },
+        {
+          "name": "depthMerge1",
+          "program": "depthMerge",
+          "key": "render/pointsBillboardRender:depthMerge",
+          "inputs": {
+            "orderTex": "depthOrderB"
+          },
+          "outputs": {
+            "fragColor": "depthOrderA"
+          },
+          "uniforms": {
+            "runLength": 2
+          },
+          "type": "compute",
+          "conditions": {
+            "runIf": [
+              {
+                "uniform": "blendMode",
+                "equals": 1
+              }
+            ],
+            "skipIf": [
+              {
+                "uniform": "viewMode",
+                "equals": 0
+              }
+            ]
+          }
+        },
+        {
+          "name": "depthMerge2",
+          "program": "depthMerge",
+          "key": "render/pointsBillboardRender:depthMerge",
+          "inputs": {
+            "orderTex": "depthOrderA"
+          },
+          "outputs": {
+            "fragColor": "depthOrderB"
+          },
+          "uniforms": {
+            "runLength": 4
+          },
+          "type": "compute",
+          "conditions": {
+            "runIf": [
+              {
+                "uniform": "blendMode",
+                "equals": 1
+              }
+            ],
+            "skipIf": [
+              {
+                "uniform": "viewMode",
+                "equals": 0
+              }
+            ]
+          }
+        },
+        {
+          "name": "depthMerge3",
+          "program": "depthMerge",
+          "key": "render/pointsBillboardRender:depthMerge",
+          "inputs": {
+            "orderTex": "depthOrderB"
+          },
+          "outputs": {
+            "fragColor": "depthOrderA"
+          },
+          "uniforms": {
+            "runLength": 8
+          },
+          "type": "compute",
+          "conditions": {
+            "runIf": [
+              {
+                "uniform": "blendMode",
+                "equals": 1
+              }
+            ],
+            "skipIf": [
+              {
+                "uniform": "viewMode",
+                "equals": 0
+              }
+            ]
+          }
+        },
+        {
+          "name": "depthMerge4",
+          "program": "depthMerge",
+          "key": "render/pointsBillboardRender:depthMerge",
+          "inputs": {
+            "orderTex": "depthOrderA"
+          },
+          "outputs": {
+            "fragColor": "depthOrderB"
+          },
+          "uniforms": {
+            "runLength": 16
+          },
+          "type": "compute",
+          "conditions": {
+            "runIf": [
+              {
+                "uniform": "blendMode",
+                "equals": 1
+              }
+            ],
+            "skipIf": [
+              {
+                "uniform": "viewMode",
+                "equals": 0
+              }
+            ]
+          }
+        },
+        {
+          "name": "depthMerge5",
+          "program": "depthMerge",
+          "key": "render/pointsBillboardRender:depthMerge",
+          "inputs": {
+            "orderTex": "depthOrderB"
+          },
+          "outputs": {
+            "fragColor": "depthOrderA"
+          },
+          "uniforms": {
+            "runLength": 32
+          },
+          "type": "compute",
+          "conditions": {
+            "runIf": [
+              {
+                "uniform": "blendMode",
+                "equals": 1
+              }
+            ],
+            "skipIf": [
+              {
+                "uniform": "viewMode",
+                "equals": 0
+              }
+            ]
+          }
+        },
+        {
+          "name": "depthMerge6",
+          "program": "depthMerge",
+          "key": "render/pointsBillboardRender:depthMerge",
+          "inputs": {
+            "orderTex": "depthOrderA"
+          },
+          "outputs": {
+            "fragColor": "depthOrderB"
+          },
+          "uniforms": {
+            "runLength": 64
+          },
+          "type": "compute",
+          "conditions": {
+            "runIf": [
+              {
+                "uniform": "blendMode",
+                "equals": 1
+              }
+            ],
+            "skipIf": [
+              {
+                "uniform": "viewMode",
+                "equals": 0
+              }
+            ]
+          }
+        },
+        {
+          "name": "depthMerge7",
+          "program": "depthMerge",
+          "key": "render/pointsBillboardRender:depthMerge",
+          "inputs": {
+            "orderTex": "depthOrderB"
+          },
+          "outputs": {
+            "fragColor": "depthOrderA"
+          },
+          "uniforms": {
+            "runLength": 128
+          },
+          "type": "compute",
+          "conditions": {
+            "runIf": [
+              {
+                "uniform": "blendMode",
+                "equals": 1
+              }
+            ],
+            "skipIf": [
+              {
+                "uniform": "viewMode",
+                "equals": 0
+              }
+            ]
+          }
+        },
+        {
+          "name": "depthMerge8",
+          "program": "depthMerge",
+          "key": "render/pointsBillboardRender:depthMerge",
+          "inputs": {
+            "orderTex": "depthOrderA"
+          },
+          "outputs": {
+            "fragColor": "depthOrderB"
+          },
+          "uniforms": {
+            "runLength": 256
+          },
+          "type": "compute",
+          "conditions": {
+            "runIf": [
+              {
+                "uniform": "blendMode",
+                "equals": 1
+              }
+            ],
+            "skipIf": [
+              {
+                "uniform": "viewMode",
+                "equals": 0
+              }
+            ]
+          }
+        },
+        {
+          "name": "depthMerge9",
+          "program": "depthMerge",
+          "key": "render/pointsBillboardRender:depthMerge",
+          "inputs": {
+            "orderTex": "depthOrderB"
+          },
+          "outputs": {
+            "fragColor": "depthOrderA"
+          },
+          "uniforms": {
+            "runLength": 512
+          },
+          "type": "compute",
+          "conditions": {
+            "runIf": [
+              {
+                "uniform": "blendMode",
+                "equals": 1
+              }
+            ],
+            "skipIf": [
+              {
+                "uniform": "viewMode",
+                "equals": 0
+              }
+            ]
+          }
+        },
+        {
+          "name": "depthMerge10",
+          "program": "depthMerge",
+          "key": "render/pointsBillboardRender:depthMerge",
+          "inputs": {
+            "orderTex": "depthOrderA"
+          },
+          "outputs": {
+            "fragColor": "depthOrderB"
+          },
+          "uniforms": {
+            "runLength": 1024
+          },
+          "type": "compute",
+          "conditions": {
+            "runIf": [
+              {
+                "uniform": "blendMode",
+                "equals": 1
+              }
+            ],
+            "skipIf": [
+              {
+                "uniform": "viewMode",
+                "equals": 0
+              }
+            ]
+          }
+        },
+        {
+          "name": "depthMerge11",
+          "program": "depthMerge",
+          "key": "render/pointsBillboardRender:depthMerge",
+          "inputs": {
+            "orderTex": "depthOrderB"
+          },
+          "outputs": {
+            "fragColor": "depthOrderA"
+          },
+          "uniforms": {
+            "runLength": 2048
+          },
+          "type": "compute",
+          "conditions": {
+            "runIf": [
+              {
+                "uniform": "blendMode",
+                "equals": 1
+              }
+            ],
+            "skipIf": [
+              {
+                "uniform": "viewMode",
+                "equals": 0
+              }
+            ]
+          }
+        },
+        {
+          "name": "depthMerge12",
+          "program": "depthMerge",
+          "key": "render/pointsBillboardRender:depthMerge",
+          "inputs": {
+            "orderTex": "depthOrderA"
+          },
+          "outputs": {
+            "fragColor": "depthOrderB"
+          },
+          "uniforms": {
+            "runLength": 4096
+          },
+          "type": "compute",
+          "conditions": {
+            "runIf": [
+              {
+                "uniform": "blendMode",
+                "equals": 1
+              }
+            ],
+            "skipIf": [
+              {
+                "uniform": "viewMode",
+                "equals": 0
+              }
+            ]
+          }
+        },
+        {
+          "name": "depthMerge13",
+          "program": "depthMerge",
+          "key": "render/pointsBillboardRender:depthMerge",
+          "inputs": {
+            "orderTex": "depthOrderB"
+          },
+          "outputs": {
+            "fragColor": "depthOrderA"
+          },
+          "uniforms": {
+            "runLength": 8192
+          },
+          "type": "compute",
+          "conditions": {
+            "runIf": [
+              {
+                "uniform": "blendMode",
+                "equals": 1
+              }
+            ],
+            "skipIf": [
+              {
+                "uniform": "viewMode",
+                "equals": 0
+              }
+            ]
+          }
+        },
+        {
+          "name": "depthMerge14",
+          "program": "depthMerge",
+          "key": "render/pointsBillboardRender:depthMerge",
+          "inputs": {
+            "orderTex": "depthOrderA"
+          },
+          "outputs": {
+            "fragColor": "depthOrderB"
+          },
+          "uniforms": {
+            "runLength": 16384
+          },
+          "type": "compute",
+          "conditions": {
+            "runIf": [
+              {
+                "uniform": "blendMode",
+                "equals": 1
+              }
+            ],
+            "skipIf": [
+              {
+                "uniform": "viewMode",
+                "equals": 0
+              }
+            ]
+          }
+        },
+        {
+          "name": "depthMerge15",
+          "program": "depthMerge",
+          "key": "render/pointsBillboardRender:depthMerge",
+          "inputs": {
+            "orderTex": "depthOrderB"
+          },
+          "outputs": {
+            "fragColor": "depthOrderA"
+          },
+          "uniforms": {
+            "runLength": 32768
+          },
+          "type": "compute",
+          "conditions": {
+            "runIf": [
+              {
+                "uniform": "blendMode",
+                "equals": 1
+              }
+            ],
+            "skipIf": [
+              {
+                "uniform": "viewMode",
+                "equals": 0
+              }
+            ]
+          }
+        },
+        {
+          "name": "depthMerge16",
+          "program": "depthMerge",
+          "key": "render/pointsBillboardRender:depthMerge",
+          "inputs": {
+            "orderTex": "depthOrderA"
+          },
+          "outputs": {
+            "fragColor": "depthOrderB"
+          },
+          "uniforms": {
+            "runLength": 65536
+          },
+          "type": "compute",
+          "conditions": {
+            "runIf": [
+              {
+                "uniform": "blendMode",
+                "equals": 1
+              }
+            ],
+            "skipIf": [
+              {
+                "uniform": "viewMode",
+                "equals": 0
+              }
+            ]
+          }
+        },
+        {
+          "name": "depthMerge17",
+          "program": "depthMerge",
+          "key": "render/pointsBillboardRender:depthMerge",
+          "inputs": {
+            "orderTex": "depthOrderB"
+          },
+          "outputs": {
+            "fragColor": "depthOrderA"
+          },
+          "uniforms": {
+            "runLength": 131072
+          },
+          "type": "compute",
+          "conditions": {
+            "runIf": [
+              {
+                "uniform": "blendMode",
+                "equals": 1
+              }
+            ],
+            "skipIf": [
+              {
+                "uniform": "viewMode",
+                "equals": 0
+              }
+            ]
+          }
+        },
+        {
+          "name": "depthMerge18",
+          "program": "depthMerge",
+          "key": "render/pointsBillboardRender:depthMerge",
+          "inputs": {
+            "orderTex": "depthOrderA"
+          },
+          "outputs": {
+            "fragColor": "depthOrderB"
+          },
+          "uniforms": {
+            "runLength": 262144
+          },
+          "type": "compute",
+          "conditions": {
+            "runIf": [
+              {
+                "uniform": "blendMode",
+                "equals": 1
+              }
+            ],
+            "skipIf": [
+              {
+                "uniform": "viewMode",
+                "equals": 0
+              }
+            ]
+          }
+        },
+        {
+          "name": "depthMerge19",
+          "program": "depthMerge",
+          "key": "render/pointsBillboardRender:depthMerge",
+          "inputs": {
+            "orderTex": "depthOrderB"
+          },
+          "outputs": {
+            "fragColor": "depthOrderA"
+          },
+          "uniforms": {
+            "runLength": 524288
+          },
+          "type": "compute",
+          "conditions": {
+            "runIf": [
+              {
+                "uniform": "blendMode",
+                "equals": 1
+              }
+            ],
+            "skipIf": [
+              {
+                "uniform": "viewMode",
+                "equals": 0
+              }
+            ]
+          }
+        },
+        {
+          "name": "depthMerge20",
+          "program": "depthMerge",
+          "key": "render/pointsBillboardRender:depthMerge",
+          "inputs": {
+            "orderTex": "depthOrderA"
+          },
+          "outputs": {
+            "fragColor": "depthOrderB"
+          },
+          "uniforms": {
+            "runLength": 1048576
+          },
+          "type": "compute",
+          "conditions": {
+            "runIf": [
+              {
+                "uniform": "blendMode",
+                "equals": 1
+              }
+            ],
+            "skipIf": [
+              {
+                "uniform": "viewMode",
+                "equals": 0
+              }
+            ]
+          }
+        },
+        {
+          "name": "depthMerge21",
+          "program": "depthMerge",
+          "key": "render/pointsBillboardRender:depthMerge",
+          "inputs": {
+            "orderTex": "depthOrderB"
+          },
+          "outputs": {
+            "fragColor": "depthOrderA"
+          },
+          "uniforms": {
+            "runLength": 2097152
+          },
+          "type": "compute",
+          "conditions": {
+            "runIf": [
+              {
+                "uniform": "blendMode",
+                "equals": 1
+              }
+            ],
+            "skipIf": [
+              {
+                "uniform": "viewMode",
+                "equals": 0
+              }
+            ]
+          }
+        },
+        {
+          "name": "spriteMeanTiles",
+          "program": "spriteMeanTiles",
+          "key": "render/pointsBillboardRender:spriteMeanTiles",
+          "inputs": {
+            "spriteTex": "tex"
+          },
+          "outputs": {
+            "fragColor": "spriteMeanTiles"
+          },
+          "uniforms": {
+            "shapeMode": "shapeMode",
+            "aperture": "aperture",
+            "viewMode": "viewMode"
+          },
+          "type": "compute",
+          "conditions": {
+            "runIf": [
+              {
+                "uniform": "shapeMode",
+                "equals": 0
+              }
+            ],
+            "skipIf": [
+              {
+                "uniform": "aperture",
+                "equals": 0
+              },
+              {
+                "uniform": "viewMode",
+                "equals": 0
+              }
+            ]
+          }
+        },
+        {
+          "name": "spriteMean",
+          "program": "spriteMean",
+          "key": "render/pointsBillboardRender:spriteMean",
+          "inputs": {
+            "tilesTex": "spriteMeanTiles"
+          },
+          "outputs": {
+            "fragColor": "spriteMean"
+          },
+          "uniforms": {
+            "shapeMode": "shapeMode",
+            "aperture": "aperture",
+            "viewMode": "viewMode"
+          },
+          "type": "compute",
+          "conditions": {
+            "skipIf": [
+              {
+                "uniform": "aperture",
+                "equals": 0
+              },
+              {
+                "uniform": "viewMode",
+                "equals": 0
+              }
+            ]
+          }
+        },
+        {
+          "name": "clearDefocus",
+          "program": "clearDefocus",
+          "key": "render/pointsBillboardRender:clearDefocus",
+          "inputs": {},
+          "outputs": {
+            "fragColor": "defocus"
+          },
+          "uniforms": {
+            "clearValue": 0
+          },
+          "conditions": {
+            "runIf": [
+              {
+                "uniform": "blendMode",
+                "equals": 0
+              }
+            ],
+            "skipIf": [
+              {
+                "uniform": "aperture",
+                "equals": 0
+              },
+              {
+                "uniform": "viewMode",
+                "equals": 0
+              }
+            ]
+          }
+        },
+        {
+          "name": "depositDefocus_1",
+          "program": "deposit",
+          "key": null,
+          "inputs": {
+            "xyzTex": "global_xyz",
+            "rgbaTex": "global_rgba",
+            "orderTex": "depthOrderA",
+            "spriteTex": "tex",
+            "spriteMeanTex": "spriteMean"
+          },
+          "outputs": {
+            "fragColor": "defocus"
+          },
+          "uniforms": {
+            "shapeMode": "shapeMode",
+            "blendMode": "blendMode",
+            "blurLayer": 1,
+            "depositOpacity": "depositOpacity",
+            "density": "density",
+            "pointSize": "pointSize",
+            "sizeVariation": "sizeVariation",
+            "rotationVar": "rotationVar",
+            "seed": "seed",
+            "viewMode": "viewMode",
+            "rotateX": "rotateX",
+            "rotateY": "rotateY",
+            "rotateZ": "rotateZ",
+            "viewScale": "viewScale",
+            "posX": "posX",
+            "posY": "posY",
+            "posZ": "posZ",
+            "fieldOfView": "fieldOfView",
+            "sizeDistance": "sizeDistance",
+            "brightnessDistance": "brightnessDistance",
+            "aperture": "aperture",
+            "focalDistance": "focalDistance"
+          },
+          "blend": true,
+          "drawMode": "billboards",
+          "count": "input",
+          "conditions": {
+            "runIf": [
+              {
+                "uniform": "blendMode",
+                "equals": 0
+              },
+              {
+                "uniform": "viewMode",
+                "equals": 1
+              }
+            ],
+            "skipIf": [
+              {
+                "uniform": "aperture",
+                "equals": 0
+              },
+              {
+                "uniform": "viewMode",
+                "equals": 0
+              }
+            ]
+          },
+          "defines": {
+            "VIEW_MODE": 1,
+            "BLEND_MODE": 0,
+            "BLUR_LAYER": 1
+          }
+        },
+        {
+          "name": "depositDefocus_2",
+          "program": "deposit",
+          "key": null,
+          "inputs": {
+            "xyzTex": "global_xyz",
+            "rgbaTex": "global_rgba",
+            "orderTex": "depthOrderA",
+            "spriteTex": "tex",
+            "spriteMeanTex": "spriteMean"
+          },
+          "outputs": {
+            "fragColor": "defocus"
+          },
+          "uniforms": {
+            "shapeMode": "shapeMode",
+            "blendMode": "blendMode",
+            "blurLayer": 1,
+            "depositOpacity": "depositOpacity",
+            "density": "density",
+            "pointSize": "pointSize",
+            "sizeVariation": "sizeVariation",
+            "rotationVar": "rotationVar",
+            "seed": "seed",
+            "viewMode": "viewMode",
+            "rotateX": "rotateX",
+            "rotateY": "rotateY",
+            "rotateZ": "rotateZ",
+            "viewScale": "viewScale",
+            "posX": "posX",
+            "posY": "posY",
+            "posZ": "posZ",
+            "fieldOfView": "fieldOfView",
+            "sizeDistance": "sizeDistance",
+            "brightnessDistance": "brightnessDistance",
+            "aperture": "aperture",
+            "focalDistance": "focalDistance"
+          },
+          "blend": true,
+          "drawMode": "billboards",
+          "count": "input",
+          "conditions": {
+            "runIf": [
+              {
+                "uniform": "blendMode",
+                "equals": 0
+              },
+              {
+                "uniform": "viewMode",
+                "equals": 2
+              }
+            ],
+            "skipIf": [
+              {
+                "uniform": "aperture",
+                "equals": 0
+              },
+              {
+                "uniform": "viewMode",
+                "equals": 0
+              }
+            ]
+          },
+          "defines": {
+            "VIEW_MODE": 2,
+            "BLEND_MODE": 0,
+            "BLUR_LAYER": 1
+          }
+        },
+        {
           "name": "diffuse",
           "program": "diffuse",
           "key": "render/pointsBillboardRender:diffuse",
           "inputs": {
-            "trailTex": "global_billboard_trail"
+            "trailTex": "global_billboard_trail",
+            "defocusTex": "defocus"
           },
           "outputs": {
             "fragColor": "global_billboard_trail"
           },
           "uniforms": {
-            "intensity": "intensity"
+            "intensity": "intensity",
+            "aperture": "aperture",
+            "viewMode": "viewMode",
+            "blendMode": "blendMode"
           }
         },
         {
@@ -19763,19 +20956,23 @@
           }
         },
         {
-          "name": "deposit",
+          "name": "deposit_0",
           "program": "deposit",
           "key": null,
           "inputs": {
             "xyzTex": "global_xyz",
             "rgbaTex": "global_rgba",
-            "spriteTex": "tex"
+            "orderTex": "depthOrderA",
+            "spriteTex": "tex",
+            "spriteMeanTex": "spriteMean"
           },
           "outputs": {
             "fragColor": "global_billboard_trail"
           },
           "uniforms": {
             "shapeMode": "shapeMode",
+            "blendMode": "blendMode",
+            "blurLayer": 0,
             "depositOpacity": "depositOpacity",
             "density": "density",
             "pointSize": "pointSize",
@@ -19788,7 +20985,13 @@
             "rotateZ": "rotateZ",
             "viewScale": "viewScale",
             "posX": "posX",
-            "posY": "posY"
+            "posY": "posY",
+            "posZ": "posZ",
+            "fieldOfView": "fieldOfView",
+            "sizeDistance": "sizeDistance",
+            "brightnessDistance": "brightnessDistance",
+            "aperture": "aperture",
+            "focalDistance": "focalDistance"
           },
           "blend": true,
           "drawMode": "billboards",
@@ -19798,24 +21001,37 @@
               {
                 "uniform": "blendMode",
                 "equals": 0
+              },
+              {
+                "uniform": "viewMode",
+                "equals": 0
               }
             ]
+          },
+          "defines": {
+            "VIEW_MODE": 0,
+            "BLEND_MODE": 0,
+            "BLUR_LAYER": 0
           }
         },
         {
-          "name": "deposit_alpha",
+          "name": "deposit_1",
           "program": "deposit",
           "key": null,
           "inputs": {
             "xyzTex": "global_xyz",
             "rgbaTex": "global_rgba",
-            "spriteTex": "tex"
+            "orderTex": "depthOrderA",
+            "spriteTex": "tex",
+            "spriteMeanTex": "spriteMean"
           },
           "outputs": {
             "fragColor": "global_billboard_trail"
           },
           "uniforms": {
             "shapeMode": "shapeMode",
+            "blendMode": "blendMode",
+            "blurLayer": 0,
             "depositOpacity": "depositOpacity",
             "density": "density",
             "pointSize": "pointSize",
@@ -19828,7 +21044,131 @@
             "rotateZ": "rotateZ",
             "viewScale": "viewScale",
             "posX": "posX",
-            "posY": "posY"
+            "posY": "posY",
+            "posZ": "posZ",
+            "fieldOfView": "fieldOfView",
+            "sizeDistance": "sizeDistance",
+            "brightnessDistance": "brightnessDistance",
+            "aperture": "aperture",
+            "focalDistance": "focalDistance"
+          },
+          "blend": true,
+          "drawMode": "billboards",
+          "count": "input",
+          "conditions": {
+            "runIf": [
+              {
+                "uniform": "blendMode",
+                "equals": 0
+              },
+              {
+                "uniform": "viewMode",
+                "equals": 1
+              }
+            ]
+          },
+          "defines": {
+            "VIEW_MODE": 1,
+            "BLEND_MODE": 0,
+            "BLUR_LAYER": 0
+          }
+        },
+        {
+          "name": "deposit_2",
+          "program": "deposit",
+          "key": null,
+          "inputs": {
+            "xyzTex": "global_xyz",
+            "rgbaTex": "global_rgba",
+            "orderTex": "depthOrderA",
+            "spriteTex": "tex",
+            "spriteMeanTex": "spriteMean"
+          },
+          "outputs": {
+            "fragColor": "global_billboard_trail"
+          },
+          "uniforms": {
+            "shapeMode": "shapeMode",
+            "blendMode": "blendMode",
+            "blurLayer": 0,
+            "depositOpacity": "depositOpacity",
+            "density": "density",
+            "pointSize": "pointSize",
+            "sizeVariation": "sizeVariation",
+            "rotationVar": "rotationVar",
+            "seed": "seed",
+            "viewMode": "viewMode",
+            "rotateX": "rotateX",
+            "rotateY": "rotateY",
+            "rotateZ": "rotateZ",
+            "viewScale": "viewScale",
+            "posX": "posX",
+            "posY": "posY",
+            "posZ": "posZ",
+            "fieldOfView": "fieldOfView",
+            "sizeDistance": "sizeDistance",
+            "brightnessDistance": "brightnessDistance",
+            "aperture": "aperture",
+            "focalDistance": "focalDistance"
+          },
+          "blend": true,
+          "drawMode": "billboards",
+          "count": "input",
+          "conditions": {
+            "runIf": [
+              {
+                "uniform": "blendMode",
+                "equals": 0
+              },
+              {
+                "uniform": "viewMode",
+                "equals": 2
+              }
+            ]
+          },
+          "defines": {
+            "VIEW_MODE": 2,
+            "BLEND_MODE": 0,
+            "BLUR_LAYER": 0
+          }
+        },
+        {
+          "name": "deposit_alpha_0",
+          "program": "deposit",
+          "key": null,
+          "inputs": {
+            "xyzTex": "global_xyz",
+            "rgbaTex": "global_rgba",
+            "orderTex": "depthOrderA",
+            "spriteTex": "tex",
+            "spriteMeanTex": "spriteMean"
+          },
+          "outputs": {
+            "fragColor": "global_billboard_trail"
+          },
+          "uniforms": {
+            "shapeMode": "shapeMode",
+            "blendMode": "blendMode",
+            "blurLayer": 0,
+            "depositOpacity": "depositOpacity",
+            "density": "density",
+            "pointSize": "pointSize",
+            "sizeVariation": "sizeVariation",
+            "rotationVar": "rotationVar",
+            "seed": "seed",
+            "viewMode": "viewMode",
+            "rotateX": "rotateX",
+            "rotateY": "rotateY",
+            "rotateZ": "rotateZ",
+            "viewScale": "viewScale",
+            "posX": "posX",
+            "posY": "posY",
+            "posZ": "posZ",
+            "fieldOfView": "fieldOfView",
+            "sizeDistance": "sizeDistance",
+            "brightnessDistance": "brightnessDistance",
+            "aperture": "aperture",
+            "focalDistance": "focalDistance"
           },
           "blend": [
             "ONE",
@@ -19841,8 +21181,141 @@
               {
                 "uniform": "blendMode",
                 "equals": 1
+              },
+              {
+                "uniform": "viewMode",
+                "equals": 0
               }
             ]
+          },
+          "defines": {
+            "VIEW_MODE": 0,
+            "BLEND_MODE": 1,
+            "BLUR_LAYER": 0
+          }
+        },
+        {
+          "name": "deposit_alpha_1",
+          "program": "deposit",
+          "key": null,
+          "inputs": {
+            "xyzTex": "global_xyz",
+            "rgbaTex": "global_rgba",
+            "orderTex": "depthOrderA",
+            "spriteTex": "tex",
+            "spriteMeanTex": "spriteMean"
+          },
+          "outputs": {
+            "fragColor": "global_billboard_trail"
+          },
+          "uniforms": {
+            "shapeMode": "shapeMode",
+            "blendMode": "blendMode",
+            "blurLayer": 0,
+            "depositOpacity": "depositOpacity",
+            "density": "density",
+            "pointSize": "pointSize",
+            "sizeVariation": "sizeVariation",
+            "rotationVar": "rotationVar",
+            "seed": "seed",
+            "viewMode": "viewMode",
+            "rotateX": "rotateX",
+            "rotateY": "rotateY",
+            "rotateZ": "rotateZ",
+            "viewScale": "viewScale",
+            "posX": "posX",
+            "posY": "posY",
+            "posZ": "posZ",
+            "fieldOfView": "fieldOfView",
+            "sizeDistance": "sizeDistance",
+            "brightnessDistance": "brightnessDistance",
+            "aperture": "aperture",
+            "focalDistance": "focalDistance"
+          },
+          "blend": [
+            "ONE",
+            "ONE_MINUS_SRC_ALPHA"
+          ],
+          "drawMode": "billboards",
+          "count": "input",
+          "conditions": {
+            "runIf": [
+              {
+                "uniform": "blendMode",
+                "equals": 1
+              },
+              {
+                "uniform": "viewMode",
+                "equals": 1
+              }
+            ]
+          },
+          "defines": {
+            "VIEW_MODE": 1,
+            "BLEND_MODE": 1,
+            "BLUR_LAYER": 0
+          }
+        },
+        {
+          "name": "deposit_alpha_2",
+          "program": "deposit",
+          "key": null,
+          "inputs": {
+            "xyzTex": "global_xyz",
+            "rgbaTex": "global_rgba",
+            "orderTex": "depthOrderA",
+            "spriteTex": "tex",
+            "spriteMeanTex": "spriteMean"
+          },
+          "outputs": {
+            "fragColor": "global_billboard_trail"
+          },
+          "uniforms": {
+            "shapeMode": "shapeMode",
+            "blendMode": "blendMode",
+            "blurLayer": 0,
+            "depositOpacity": "depositOpacity",
+            "density": "density",
+            "pointSize": "pointSize",
+            "sizeVariation": "sizeVariation",
+            "rotationVar": "rotationVar",
+            "seed": "seed",
+            "viewMode": "viewMode",
+            "rotateX": "rotateX",
+            "rotateY": "rotateY",
+            "rotateZ": "rotateZ",
+            "viewScale": "viewScale",
+            "posX": "posX",
+            "posY": "posY",
+            "posZ": "posZ",
+            "fieldOfView": "fieldOfView",
+            "sizeDistance": "sizeDistance",
+            "brightnessDistance": "brightnessDistance",
+            "aperture": "aperture",
+            "focalDistance": "focalDistance"
+          },
+          "blend": [
+            "ONE",
+            "ONE_MINUS_SRC_ALPHA"
+          ],
+          "drawMode": "billboards",
+          "count": "input",
+          "conditions": {
+            "runIf": [
+              {
+                "uniform": "blendMode",
+                "equals": 1
+              },
+              {
+                "uniform": "viewMode",
+                "equals": 2
+              }
+            ]
+          },
+          "defines": {
+            "VIEW_MODE": 2,
+            "BLEND_MODE": 1,
+            "BLUR_LAYER": 0
           }
         },
         {
@@ -20069,10 +21542,13 @@
         "viewMode": {
           "type": "int",
           "default": 0,
+          "min": 0,
+          "max": 2,
           "uniform": "viewMode",
           "choices": {
             "flat": 0,
-            "ortho": 1
+            "ortho": 1,
+            "perspective": 2
           },
           "ui": {
             "label": "view",
@@ -20164,6 +21640,37 @@
             "enabledBy": "viewMode"
           }
         },
+        "posZ": {
+          "type": "float",
+          "default": 0,
+          "uniform": "posZ",
+          "min": -200,
+          "max": 200,
+          "step": 0.1,
+          "ui": {
+            "label": "pos z",
+            "control": "slider",
+            "category": "view",
+            "enabledBy": "viewMode"
+          }
+        },
+        "fieldOfView": {
+          "type": "float",
+          "default": 60,
+          "uniform": "fieldOfView",
+          "min": 10,
+          "max": 150,
+          "step": 1,
+          "ui": {
+            "label": "field of view",
+            "control": "slider",
+            "category": "view",
+            "enabledBy": {
+              "param": "viewMode",
+              "eq": 2
+            }
+          }
+        },
         "matteOpacity": {
           "type": "float",
           "default": 1,
@@ -20237,7 +21744,9 @@
             "rotateZ": "rotateZ",
             "viewScale": "viewScale",
             "posX": "posX",
-            "posY": "posY"
+            "posY": "posY",
+            "posZ": "posZ",
+            "fieldOfView": "fieldOfView"
           },
           "blend": true,
           "drawMode": "points",
@@ -20610,6 +22119,321 @@
             "fragColor": "outputTex",
             "geoOut": "screenGeoBuffer"
           },
+          "drawBuffers": 2
+        }
+      ],
+      "outputTex3d": "inputTex3d",
+      "outputGeo": "screenGeoBuffer"
+    },
+    "render/renderLandscape3d": {
+      "namespace": "render",
+      "func": "renderLandscape3d",
+      "kind": "filter",
+      "domain": "volume-renderer",
+      "params": {
+        "volumeSize": {
+          "type": "int",
+          "default": 64,
+          "uniform": "volumeSize",
+          "ui": {
+            "label": "volume size",
+            "control": false
+          }
+        },
+        "threshold": {
+          "type": "float",
+          "default": 0.5,
+          "min": 0,
+          "max": 1,
+          "uniform": "threshold",
+          "ui": {
+            "label": "density threshold",
+            "control": false
+          }
+        },
+        "densitySource": {
+          "type": "int",
+          "default": 0,
+          "choices": {
+            "geometry": 0
+          },
+          "ui": {
+            "label": "density source",
+            "control": false
+          }
+        },
+        "zoom": {
+          "type": "float",
+          "default": 1,
+          "min": 0.25,
+          "max": 4,
+          "uniform": "zoom",
+          "ui": {
+            "label": "zoom",
+            "control": "slider"
+          }
+        },
+        "panX": {
+          "type": "float",
+          "default": 0,
+          "min": -1,
+          "max": 1,
+          "uniform": "panX",
+          "ui": {
+            "label": "pan x",
+            "control": "slider"
+          }
+        },
+        "panY": {
+          "type": "float",
+          "default": 0,
+          "min": -1,
+          "max": 1,
+          "uniform": "panY",
+          "ui": {
+            "label": "pan y",
+            "control": "slider"
+          }
+        },
+        "lightDirection": {
+          "type": "vec3",
+          "default": [
+            -0.4,
+            0.85,
+            0.6
+          ],
+          "uniform": "lightDirection",
+          "min": -1,
+          "max": 1,
+          "ui": {
+            "label": "light direction",
+            "control": "vector3"
+          }
+        },
+        "ambient": {
+          "type": "float",
+          "default": 0.35,
+          "min": 0,
+          "max": 1,
+          "uniform": "ambient",
+          "ui": {
+            "label": "ambient light",
+            "control": "slider"
+          }
+        },
+        "diffuseIntensity": {
+          "type": "float",
+          "default": 0.85,
+          "min": 0,
+          "max": 2,
+          "uniform": "diffuseIntensity",
+          "ui": {
+            "label": "diffuse light",
+            "control": "slider"
+          }
+        },
+        "specularIntensity": {
+          "type": "float",
+          "default": 0.12,
+          "min": 0,
+          "max": 1,
+          "uniform": "specularIntensity",
+          "ui": {
+            "label": "specular light",
+            "control": "slider"
+          }
+        },
+        "bgColor": {
+          "type": "color",
+          "default": [
+            0.025,
+            0.045,
+            0.075
+          ],
+          "uniform": "bgColor",
+          "ui": {
+            "label": "background color",
+            "control": "color"
+          }
+        },
+        "bgAlpha": {
+          "type": "float",
+          "default": 1,
+          "min": 0,
+          "max": 1,
+          "uniform": "bgAlpha",
+          "ui": {
+            "label": "background opacity",
+            "control": "slider"
+          }
+        },
+        "viewMode": {
+          "type": "int",
+          "default": 1,
+          "define": "VIEW_MODE",
+          "choices": {
+            "ortho": 1,
+            "perspective": 2
+          },
+          "ui": {
+            "label": "view",
+            "control": "dropdown",
+            "category": "view"
+          }
+        },
+        "rotateX": {
+          "type": "float",
+          "default": 0.3,
+          "min": 0,
+          "max": 6.283185,
+          "step": 0.01,
+          "uniform": "rotateX",
+          "ui": {
+            "label": "rotate x",
+            "control": "slider",
+            "category": "view",
+            "enabledBy": {
+              "param": "viewMode",
+              "eq": 2
+            }
+          }
+        },
+        "rotateY": {
+          "type": "float",
+          "default": 0,
+          "min": 0,
+          "max": 6.283185,
+          "step": 0.01,
+          "uniform": "rotateY",
+          "ui": {
+            "label": "rotate y",
+            "control": "slider",
+            "category": "view",
+            "enabledBy": {
+              "param": "viewMode",
+              "eq": 2
+            }
+          }
+        },
+        "rotateZ": {
+          "type": "float",
+          "default": 0,
+          "min": 0,
+          "max": 6.283185,
+          "step": 0.01,
+          "uniform": "rotateZ",
+          "ui": {
+            "label": "rotate z",
+            "control": "slider",
+            "category": "view",
+            "enabledBy": {
+              "param": "viewMode",
+              "eq": 2
+            }
+          }
+        },
+        "viewScale": {
+          "type": "float",
+          "default": 0.8,
+          "min": 0.1,
+          "max": 10,
+          "step": 0.01,
+          "uniform": "viewScale",
+          "ui": {
+            "label": "zoom",
+            "control": false
+          }
+        },
+        "posX": {
+          "type": "float",
+          "default": 0,
+          "min": -50,
+          "max": 50,
+          "step": 0.1,
+          "uniform": "posX",
+          "ui": {
+            "label": "pos x",
+            "control": "slider",
+            "category": "view",
+            "enabledBy": {
+              "param": "viewMode",
+              "eq": 2
+            }
+          }
+        },
+        "posY": {
+          "type": "float",
+          "default": 0,
+          "min": -50,
+          "max": 50,
+          "step": 0.1,
+          "uniform": "posY",
+          "ui": {
+            "label": "pos y",
+            "control": "slider",
+            "category": "view",
+            "enabledBy": {
+              "param": "viewMode",
+              "eq": 2
+            }
+          }
+        },
+        "posZ": {
+          "type": "float",
+          "default": 0,
+          "min": -200,
+          "max": 200,
+          "step": 0.1,
+          "uniform": "posZ",
+          "ui": {
+            "label": "pos z",
+            "control": "slider",
+            "category": "view",
+            "enabledBy": {
+              "param": "viewMode",
+              "eq": 2
+            }
+          }
+        },
+        "fieldOfView": {
+          "type": "float",
+          "default": 60,
+          "min": 10,
+          "max": 150,
+          "step": 1,
+          "uniform": "fieldOfView",
+          "ui": {
+            "label": "field of view",
+            "control": "slider",
+            "category": "view",
+            "enabledBy": {
+              "param": "viewMode",
+              "eq": 2
+            }
+          }
+        }
+      },
+      "textures": {
+        "screenGeoBuffer": {
+          "width": "screen",
+          "height": "screen",
+          "format": "rgba16f"
+        }
+      },
+      "passes": [
+        {
+          "name": "render",
+          "program": "landscape",
+          "key": "render/renderLandscape3d:landscape",
+          "inputs": {
+            "volumeCache": "inputTex3d",
+            "analyticalGeo": "inputGeo"
+          },
+          "outputs": {
+            "fragColor": "outputTex",
+            "geoOut": "screenGeoBuffer"
+          },
+          "type": "compute",
           "drawBuffers": 2
         }
       ],
@@ -21387,7 +23211,7 @@
           "default": 0,
           "uniform": "seed",
           "min": 0,
-          "max": 10,
+          "max": 1000.0,
           "ui": {
             "label": "seed",
             "control": "slider"
@@ -21799,7 +23623,7 @@
           "default": 300,
           "uniform": "iterations",
           "min": 50,
-          "max": 10,
+          "max": 1000.0,
           "ui": {
             "label": "iterations",
             "control": "slider",
@@ -22351,7 +24175,7 @@
           "default": 500,
           "uniform": "iterations",
           "min": 50,
-          "max": 20,
+          "max": 2000.0,
           "ui": {
             "label": "iterations",
             "control": "slider",
@@ -23966,7 +25790,7 @@
           "type": "int",
           "default": 0,
           "min": 0,
-          "max": 10,
+          "max": 1000.0,
           "uniform": "seed",
           "ui": {
             "label": "seed",
@@ -26213,6 +28037,126 @@
             "fragColor": "volumeCache",
             "geoOut": "geoBuffer"
           },
+          "drawBuffers": 2,
+          "viewport": {
+            "width": {
+              "param": "volumeSize",
+              "default": 64
+            },
+            "height": {
+              "param": "volumeSize",
+              "power": 2,
+              "default": 4096
+            }
+          }
+        }
+      ],
+      "outputTex3d": "volumeCache",
+      "outputGeo": "geoBuffer"
+    },
+    "synth3d/heightmap3d": {
+      "namespace": "synth3d",
+      "func": "heightmap3d",
+      "kind": "generator",
+      "domain": "volume-generator",
+      "params": {
+        "heightTex": {
+          "type": "surface",
+          "default": "none",
+          "ui": {
+            "label": "height image"
+          }
+        },
+        "tex": {
+          "type": "surface",
+          "default": "none",
+          "ui": {
+            "label": "color image"
+          }
+        },
+        "volumeSize": {
+          "type": "int",
+          "default": 64,
+          "uniform": "volumeSize",
+          "choices": {
+            "x16": 16,
+            "x32": 32,
+            "x64": 64,
+            "x128": 128
+          },
+          "randChoices": [
+            16,
+            32,
+            64
+          ],
+          "ui": {
+            "label": "volume size",
+            "control": "dropdown"
+          }
+        },
+        "heightScale": {
+          "type": "float",
+          "default": 0.35,
+          "min": 0,
+          "max": 1,
+          "uniform": "heightScale",
+          "ui": {
+            "label": "height scale",
+            "control": "slider"
+          }
+        },
+        "baseHeight": {
+          "type": "float",
+          "default": 0,
+          "min": 0,
+          "max": 1,
+          "uniform": "baseHeight",
+          "ui": {
+            "label": "base height",
+            "control": "slider"
+          }
+        }
+      },
+      "textures": {
+        "volumeCache": {
+          "width": {
+            "param": "volumeSize",
+            "default": 64
+          },
+          "height": {
+            "param": "volumeSize",
+            "power": 2,
+            "default": 4096
+          },
+          "format": "rgba16f"
+        },
+        "geoBuffer": {
+          "width": {
+            "param": "volumeSize",
+            "default": 64
+          },
+          "height": {
+            "param": "volumeSize",
+            "power": 2,
+            "default": 4096
+          },
+          "format": "rgba16f"
+        }
+      },
+      "passes": [
+        {
+          "name": "precompute",
+          "program": "precompute",
+          "key": "synth3d/heightmap3d:precompute",
+          "inputs": {
+            "heightTex": "heightTex",
+            "tex": "tex"
+          },
+          "outputs": {
+            "fragColor": "volumeCache",
+            "geoOut": "geoBuffer"
+          },
+          "type": "compute",
           "drawBuffers": 2,
           "viewport": {
             "width": {

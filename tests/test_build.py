@@ -42,14 +42,14 @@ def test_bundled_catalog_preserves_scientific_notation_enum_value():
 def test_bundled_catalog_has_complete_cpu_domain_partition():
     effects = json.loads((Path(build_module.BUNDLE) / "metadata.json").read_text())["effects"]
 
-    assert len(effects) == 205
+    assert len(effects) == 208
     assert Counter(definition["domain"] for definition in effects.values()) == {
-        "image": 190,
+        "image": 191,
         "loop-begin": 1,
         "loop-end": 1,
         "volume-filter": 2,
-        "volume-generator": 7,
-        "volume-renderer": 4,
+        "volume-generator": 8,
+        "volume-renderer": 5,
     }
 
 

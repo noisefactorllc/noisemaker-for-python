@@ -5,6 +5,9 @@ def run_pixel(ctx, out):
     class _G:
         pass
     g = _G()
+    _u_VIEW_MODE = U.get("VIEW_MODE", 0)
+    _u_BLEND_MODE = U.get("BLEND_MODE", 0)
+    _u_BLUR_LAYER = U.get("BLUR_LAYER", 0)
     _u_inputTex = T["inputTex"]
     _u_trailTex = T["trailTex"]
     _u_resolution = U.get("resolution", rt.construct(2, 0.0))

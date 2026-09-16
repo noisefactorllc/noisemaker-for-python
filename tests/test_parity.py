@@ -107,6 +107,29 @@ ITERATED_PROGRAMS = {
         ".pointsBillboardRender(seed: 42, tex: read(o0), pointSize: 40).write(o1)\n"
         "render(o1)\n"
     ),
+    "render/pointsBillboardRender:perspective_defocus": (
+        "search synth, points, render\n"
+        "polygon(radius: 0.7, fgAlpha: 0.1, bgAlpha: 0).write(o0)\n"
+        "perlin(seed: 0).pointsEmit(seed: 0, stateSize: 64, iterationCount: 2).physical()"
+        ".pointsBillboardRender(seed: 42, tex: read(o0), pointSize: 8, viewMode: perspective, "
+        "rotateX: 0.4, posZ: 10, sizeDistance: 60, brightnessDistance: 60, aperture: 4, "
+        "focalDistance: 70).write(o1)\n"
+        "render(o1)\n"
+    ),
+    "render/pointsBillboardRender:perspective_alpha_sort": (
+        "search synth, points, render\n"
+        "polygon(radius: 0.7, fgAlpha: 0.1, bgAlpha: 0).write(o0)\n"
+        "perlin(seed: 0).pointsEmit(seed: 0, stateSize: 64, iterationCount: 2).physical()"
+        ".pointsBillboardRender(seed: 42, tex: read(o0), pointSize: 8, viewMode: perspective, "
+        "rotateX: 0.4, posZ: 10, blendMode: alpha).write(o1)\n"
+        "render(o1)\n"
+    ),
+    "render/pointsRender:perspective": (
+        "search synth, points, render\n"
+        "perlin(seed: 0).pointsEmit(seed: 0, stateSize: 64, iterationCount: 2).physical()"
+        ".pointsRender(viewMode: perspective, rotateX: 0.4, posZ: 10, fieldOfView: 70).write(o0)\n"
+        "render(o0)\n"
+    ),
     "render/pointsEmit": (
         "search synth, points, render\n"
         "perlin(seed: 0).pointsEmit(seed: 0, stateSize: 64, iterationCount: 2)"

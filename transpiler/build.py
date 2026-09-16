@@ -135,6 +135,7 @@ _PASS_EXECUTION_KEYS = (
     "drawBuffers",
     "conditions",
     "viewport",
+    "defines",
 )
 
 
@@ -220,6 +221,19 @@ def build(ids, out_dir=BUNDLE, update_lock=False):
                 continue
             _resolve_shared_enums(eff["params"])
             defines = runtime_defines(eff["params"])
+            # Pass-level defines (reference 0ed489ec's `.flatMap()` per-viewMode/
+            # blendMode/blurLayer pass-cloning pattern): each clone bakes a
+            # different literal into e.g. VIEW_MODE at the reference's compile
+            # time, but since this transpiler lowers every `define:` name to a
+            # runtime-branch uniform (see runtime_defines/normalize above), all
+            # clones of the same program share one kernel -- the clone-specific
+            # value differs only in which uniform binding renderer.py supplies
+            # per pass-instance (_pass_metadata below). Union every pass.defines
+            # key across the whole effect so the shared kernel declares the
+            # uniform regardless of which clone's iteration transpiles first.
+            for p in eff["passes"]:
+                for name in (p.get("defines") or {}):
+                    defines.setdefault(name, "int")
             passes = []
             for p in eff["passes"]:
                 glsl = eff["programs"].get(p["program"])

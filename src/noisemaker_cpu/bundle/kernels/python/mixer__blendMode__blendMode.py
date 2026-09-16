@@ -58,19 +58,20 @@ def run_pixel(ctx, out):
         st = rt.binary("/", globalCoord, _u_fullResolution, 2, "float")
         color1 = rt.texture(_u_inputTex, rt.binary("/", rt.swizzle(ctx.frag_coord, "xy"), rt.construct(2, rt.texture_size(_u_inputTex)), 2, "float"))
         color2 = rt.texture(_u_tex, rt.binary("/", rt.swizzle(ctx.frag_coord, "xy"), rt.construct(2, rt.texture_size(_u_tex)), 2, "float"))
-        middle = applyBlendMode__vec4_vec4_int(color1, color2, _u_mode)
         amt = map__float_float_float_float_float(_u_mixAmt, rt.unary("-", rt.f(100.0)), rt.f(100.0), rt.f(0.0), rt.f(1.0))
-        color = rt.construct(4, 0.0)
-        factor = rt.f(0.0)
-        if rt.binary("<", amt, rt.f(0.5)):
-            factor = rt.binary("*", amt, rt.f(2.0), 1, "float")
-            color[:] = rt.component_wise("mix", color1, middle, factor, width=4)
-        else:
-            factor = rt.binary("*", rt.binary("-", amt, rt.f(0.5), 1, "float"), rt.f(2.0), 1, "float")
-            color[:] = rt.component_wise("mix", middle, color2, factor, width=4)
-        color = rt.assign_swizzle(color, "rgb", rt.component_wise("mix", rt.swizzle(color1, "rgb"), rt.swizzle(color, "rgb"), rt.swizzle(color2, "a"), width=3))
-        color = rt.assign_swizzle(color, "a", rt.binary("+", rt.binary("*", rt.swizzle(color2, "a"), amt, 1, "float"), rt.binary("*", rt.swizzle(color1, "a"), rt.binary("-", rt.f(1.0), rt.binary("*", rt.swizzle(color2, "a"), amt, 1, "float"), 1, "float"), 1, "float"), 1, "float"))
-        g.fragColor[:] = color
+        opacity = (amt if rt.binary("==", _u_mode, rt.i(8)) else rt.component_wise("min", rt.binary("*", amt, rt.f(2.0), 1, "float"), rt.f(1.0), width=1))
+        sourceAlpha = rt.binary("*", rt.swizzle(color2, "a"), opacity, 1, "float")
+        source = rt.binary("*", rt.swizzle(color2, "rgb"), opacity, 3, "float")
+        baseColor = rt.construct(4, 0.0)
+        sourceColor = rt.construct(4, 0.0)
+        blended = rt.construct(3, 0.0)
+        if rt.binary("!=", _u_mode, rt.i(8)):
+            baseColor = rt.construct(4, (rt.binary("/", rt.swizzle(color1, "rgb"), rt.swizzle(color1, "a"), 3, "float") if rt.binary(">", rt.swizzle(color1, "a"), rt.f(0.0)) else rt.construct(3, rt.f(0.0))), rt.f(1.0))
+            sourceColor = rt.construct(4, (rt.binary("/", rt.swizzle(color2, "rgb"), rt.swizzle(color2, "a"), 3, "float") if rt.binary(">", rt.swizzle(color2, "a"), rt.f(0.0)) else rt.construct(3, rt.f(0.0))), rt.f(1.0))
+            blended = rt.swizzle(applyBlendMode__vec4_vec4_int(baseColor, sourceColor, _u_mode), "rgb")
+            blended[:] = rt.component_wise("mix", blended, rt.swizzle(sourceColor, "rgb"), rt.component_wise("max", rt.binary("-", rt.binary("*", amt, rt.f(2.0), 1, "float"), rt.f(1.0), 1, "float"), rt.f(0.0), width=1), width=3)
+            source[:] = rt.binary("+", rt.binary("*", source, rt.binary("-", rt.f(1.0), rt.swizzle(color1, "a"), 1, "float"), 3, "float"), rt.binary("*", rt.binary("*", blended, sourceAlpha, 3, "float"), rt.swizzle(color1, "a"), 3, "float"), 3, "float")
+        g.fragColor[:] = rt.construct(4, rt.binary("+", source, rt.binary("*", rt.swizzle(color1, "rgb"), rt.binary("-", rt.f(1.0), sourceAlpha, 1, "float"), 3, "float"), 3, "float"), rt.binary("+", sourceAlpha, rt.binary("*", rt.swizzle(color1, "a"), rt.binary("-", rt.f(1.0), sourceAlpha, 1, "float"), 1, "float"), 1, "float"))
     main__void()
     _c = g.fragColor
     out[0] = rt.f32(_c[0]); out[1] = rt.f32(_c[1]); out[2] = rt.f32(_c[2]); out[3] = rt.f32(_c[3])

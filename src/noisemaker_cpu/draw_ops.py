@@ -137,9 +137,27 @@ def scatter_point_pixel(clip_x, clip_y, clip_w, dest_width, dest_height):
 
 
 def _compute_clip_center(x, y, z, uniforms):
-    if int(uniforms["viewMode"]) == 0:
-        return x * 2 - 1, y * 2 - 1
-    is_2d = abs(z) < 1 and 0 <= x <= 1 and 0 <= y <= 1
+    """Port of deposit.wgsl's vertex-stage world->clip projection, shared by
+    pointsRender and pointsBillboardRender. Returns (clip_x, clip_y,
+    camera_depth, camera_distance, projected_scale), or None if the point is
+    behind the near plane in perspective view (viewMode 2) -- the caller must
+    cull on None the same way the reference culls before emitting a vertex.
+    camera_depth/camera_distance/projected_scale are only meaningful when
+    viewMode != 0 (ortho/perspective); flat view returns the reference's
+    fixed camera_depth=80, camera_distance=0, projected_scale=1.
+    """
+    # NOTE on Y orientation: the WGSL reference flips clip_y (`1.0 - pos.y*2.0` in
+    # flat mode; an explicit `clipPos.y = -clipPos.y` for ortho/perspective) but
+    # this CPU port's pre-existing flat/ortho code never did (see
+    # noisemaker-for-cpu's sibling computeClipCenter, same "no flip" convention,
+    # predating this change) -- some other stage of this CPU pipeline already
+    # compensates. Preserve that established "never flip here" convention into
+    # the new perspective branch below for consistency, rather than matching the
+    # WGSL literally and risking a double-flip regression in flat/ortho.
+    view_mode = int(uniforms["viewMode"])
+    if view_mode == 0:
+        return x * 2 - 1, y * 2 - 1, 80.0, 0.0, 1.0
+    is_2d = view_mode == 1 and abs(z) < 1 and 0 <= x <= 1 and 0 <= y <= 1
     px, py, pz = (x - 0.5, y - 0.5, 0.0) if is_2d else (x, y, z)
     cos_x = math.cos(uniforms["rotateX"])
     sin_x = math.sin(uniforms["rotateX"])
@@ -150,13 +168,31 @@ def _compute_clip_center(x, y, z, uniforms):
     sin_y = math.sin(uniforms["rotateY"])
     x2 = x1 * cos_y + z1 * sin_y
     y2 = y1
+    z2 = -x1 * sin_y + z1 * cos_y
     cos_z = math.cos(uniforms["rotateZ"])
     sin_z = math.sin(uniforms["rotateZ"])
     fx = x2 * cos_z - y2 * sin_z + uniforms["posX"]
     fy = x2 * sin_z + y2 * cos_z + uniforms["posY"]
-    if is_2d:
-        return fx * 3.5 * uniforms["viewScale"], fy * 3.5 * uniforms["viewScale"]
-    return fx / 40 * uniforms["viewScale"], fy / 40 * uniforms["viewScale"]
+    fz = z2 + uniforms.get("posZ", 0.0)
+    camera_depth = 80.0 - fz
+    camera_distance = math.sqrt(fx * fx + fy * fy + camera_depth * camera_depth)
+    projected_scale = 1.0
+    if view_mode == 2:
+        if camera_depth <= 0.1:
+            return None
+        focal_length = 1.0 / math.tan(_clamp(uniforms["fieldOfView"], 10.0, 150.0) * 0.00872664626)
+        view_scale = uniforms["viewScale"]
+        clip_x = fx * focal_length * view_scale / camera_depth
+        clip_x *= uniforms["resolution"][1] / uniforms["resolution"][0]
+        clip_y = fy * focal_length * view_scale / camera_depth
+        projected_scale = 80.0 * focal_length * view_scale / (1.732050808 * camera_depth)
+    elif is_2d:
+        clip_x = fx * 3.5 * uniforms["viewScale"]
+        clip_y = fy * 3.5 * uniforms["viewScale"]
+    else:
+        clip_x = fx / 40 * uniforms["viewScale"]
+        clip_y = fy / 40 * uniforms["viewScale"]
+    return clip_x, clip_y, camera_depth, camera_distance, projected_scale
 
 
 def dla_deposit_grid(inputs, destination, uniforms, _render_pass):
@@ -239,7 +275,10 @@ def points_render_deposit(inputs, destination, uniforms, _render_pass):
         xyz = texel_fetch_agent(xyz_tex, sx, sy)
         if xyz[3] < 0.5:
             continue
-        clip_x, clip_y = _compute_clip_center(xyz[0], xyz[1], xyz[2], uniforms)
+        clip = _compute_clip_center(xyz[0], xyz[1], xyz[2], uniforms)
+        if clip is None:
+            continue
+        clip_x, clip_y, _camera_depth, _camera_distance, _projected_scale = clip
         offset = scatter_point_pixel(clip_x, clip_y, 1, destination.width, destination.height)
         if offset is None:
             continue
@@ -347,37 +386,136 @@ def _billboard_fragment(shape_mode, sprite, u, v, color, opacity):
     return np.asarray([color[0] * alpha, color[1] * alpha, color[2] * alpha, alpha * color[3]], dtype=F32) * opacity
 
 
+def _blur_weight(u, v, cu, cv, expansion):
+    """Port of deposit.wgsl's blurWeight: a tapered radial gaussian, normalized so
+    the source-grid contributions retain RGBA mass and spatial centers."""
+    px = (u - cu) / expansion
+    py = (v - cv) / expansion
+    p2 = px * px + py * py
+    gaussian = math.exp(-p2 / 0.0648) * (1 - _smoothstep(0.45, 0.5, math.sqrt(p2)))
+    normalization = 1.0 / (0.19724318 * expansion * expansion)
+    return gaussian * normalization
+
+
+def _blur_sample(shape_mode, sprite, u, v, color, opacity):
+    """Port of deposit.wgsl's blurSample: shadeSprite, but transparent outside
+    the sprite's own [0,1] UV range (the padded quad can sample past it)."""
+    if u < 0.0 or u > 1.0 or v < 0.0 or v > 1.0:
+        return np.zeros(4, dtype=F32)
+    return _billboard_fragment(shape_mode, sprite, u, v, color, opacity)
+
+
+def _shade_particle(shape_mode, sprite, sprite_mean, u, v, color, opacity, blur_radius):
+    """Port of deposit.wgsl's shadeParticle (the VIEW_MODE!=0, blurRadius>0 case;
+    callers already handle the two early-out cases that return shadeSprite directly)."""
+    expansion = max(1.0 + 2.0 * blur_radius, 2.2516403)
+    if shape_mode == 0:
+        blurred = np.zeros(4, dtype=F32)
+        for yy in range(5):
+            for xx in range(5):
+                source = np.asarray(texel_fetch_agent(sprite_mean, xx, yy), dtype=F32)
+                blurred = blurred + source * _blur_weight(u, v, xx / 4.0, yy / 4.0, expansion)
+        blurred = blurred * np.asarray(color, dtype=F32) * opacity
+    else:
+        mean_color = np.asarray(texel_fetch_agent(sprite_mean, 0, 0), dtype=F32) * np.asarray(color, dtype=F32) * opacity
+        cu, cv = (0.5, 0.54) if shape_mode == 5 else (0.5, 0.5)
+        blurred = mean_color * _blur_weight(u, v, cu, cv, expansion)
+    if blur_radius >= 0.5:
+        return blurred
+    sharp = _blur_sample(shape_mode, sprite, u, v, color, opacity)
+    t = _smoothstep(0.0, 0.5, blur_radius)
+    return sharp * (1 - t) + blurred * t
+
+
 def points_billboard_render_deposit(inputs, destination, uniforms, render_pass):
     xyz_tex = inputs["xyzTex"]
     rgba_tex = inputs["rgbaTex"]
+    # Only actually read when blendMode==1 (orderTex) or blurRadius>0 (spriteMeanTex) further
+    # down, both gated below -- absent in a fixture that never exercises those paths is fine.
+    order_tex = inputs.get("orderTex")
     sprite_tex = inputs["spriteTex"]
+    sprite_mean_tex = inputs.get("spriteMeanTex")
     threshold = uniforms["density"] / 100
     shape_mode = int(uniforms["shapeMode"])
+    view_mode = int(uniforms["viewMode"])
+    blend_mode = int(uniforms.get("blendMode", 0))
+    blur_layer = int(uniforms.get("blurLayer", 0))
     opacity = uniforms["depositOpacity"] / 100
     size_variation = uniforms["sizeVariation"] / 100
     rotation_variation = uniforms["rotationVar"] / 100
+    size_distance = uniforms.get("sizeDistance", 0.0)
+    brightness_distance = uniforms.get("brightnessDistance", 0.0)
+    aperture = uniforms.get("aperture", 0.0)
+    focal_distance = uniforms.get("focalDistance", 80.0)
     blend = render_pass.get("blend")
     premultiplied = isinstance(blend, list) and [str(value).upper() for value in blend] == [
         "ONE",
         "ONE_MINUS_SRC_ALPHA",
     ]
-    for vertex in range(xyz_tex.width * xyz_tex.height):
-        if _fract(vertex * GOLDEN_RATIO_CONJUGATE) > threshold:
+    state_size = xyz_tex.width
+    total_agents = xyz_tex.width * xyz_tex.height
+
+    # Whole-draw gate for the BLUR_LAYER==1 (additive defocus contribution) clone:
+    # a uniform-only condition, so it is equivalent to skipping the entire pass
+    # rather than re-checking it per vertex like deposit.wgsl does.
+    if blur_layer == 1 and (view_mode == 0 or aperture <= 0.0 or blend_mode != 0):
+        return
+
+    for vertex in range(total_agents):
+        particle_id = vertex
+        if blend_mode == 1 and view_mode != 0:
+            order_sx = particle_id % state_size
+            order_sy = particle_id // state_size
+            particle_id = int(texel_fetch_agent(order_tex, order_sx, order_sy)[1])
+
+        if _fract(particle_id * GOLDEN_RATIO_CONJUGATE) > threshold:
             continue
-        sx = vertex % xyz_tex.width
-        sy = vertex // xyz_tex.width
+        sx = particle_id % xyz_tex.width
+        sy = particle_id // xyz_tex.width
         xyz = texel_fetch_agent(xyz_tex, sx, sy)
         if xyz[3] < 0.5:
             continue
         color = texel_fetch_agent(rgba_tex, sx, sy)
-        center_x, center_y = _compute_clip_center(xyz[0], xyz[1], xyz[2], uniforms)
-        final_size = uniforms["pointSize"] * (1 - size_variation * (_hash(vertex, uniforms["seed"]) - 0.5))
-        if not final_size > 0:
+        clip = _compute_clip_center(xyz[0], xyz[1], xyz[2], uniforms)
+        if clip is None:
             continue
-        rotation = rotation_variation * _hash(vertex + 1234.5, uniforms["seed"]) * _TAU_APPROX
+        center_x, center_y, camera_depth, camera_distance, projected_scale = clip
+
+        size_noise = _hash(particle_id, uniforms["seed"])
+        size_multiplier = 1 - size_variation * (size_noise - 0.5)
+        size_fade = 1.0
+        brightness_fade = 1.0
+        blur_pixels = 0.0
+        if view_mode != 0:
+            if size_distance > 0:
+                size_fade = 1 - _smoothstep(0.0, size_distance, camera_distance)
+            if brightness_distance > 0:
+                brightness_fade = 1 - _smoothstep(0.0, brightness_distance, camera_distance)
+            blur_pixels = min(32.0, aperture * abs(camera_depth - focal_distance) / max(abs(camera_depth), 0.1))
+
+        base_size = uniforms["pointSize"] * size_multiplier * projected_scale
+        blur_radius = blur_pixels / max(base_size, 0.001)
+        support_radius = max(blur_radius, 0.62582015) if blur_pixels > 0 else 0.0
+        support_pixels = max(blur_pixels, base_size * 0.62582015) if blur_pixels > 0 else 0.0
+        low_weight = (
+            _smoothstep(4.0, 8.0, blur_pixels * size_fade) * _smoothstep(0.5, 1.0, blur_radius)
+            if blend_mode == 0
+            else 0.0
+        )
+        layer_weight = low_weight if blur_layer == 1 else 1.0 - low_weight
+        procedural_padding = 0.04 if shape_mode == 5 else 0.0
+        blur_padding = (procedural_padding if shape_mode != 0 else 0.5) if blur_pixels > 0 else 0.0
+        final_size = (base_size * (1 + 2 * blur_padding) + 2 * support_pixels) * size_fade
+        if not (final_size > 0) or not (brightness_fade > 0) or not (layer_weight > 0):
+            continue
+        pixel_color = np.asarray(color, dtype=F32) * brightness_fade * layer_weight
+
+        rotation_noise = _hash(particle_id + 1234.5, uniforms["seed"])
+        rotation = rotation_variation * rotation_noise * _TAU_APPROX
         cos_rotation, sin_rotation = math.cos(rotation), math.sin(rotation)
         size_clip_x = final_size / destination.width
         size_clip_y = final_size / destination.height
+        uv_scale = 0.5 + blur_padding + support_radius
         corners = []
         for ox, oy in _QUAD_CORNERS:
             rotated_x = ox * cos_rotation - oy * sin_rotation
@@ -401,14 +539,14 @@ def points_billboard_render_deposit(inputs, destination, uniforms, render_pass):
                 offset_y = -a * sin_rotation + b * cos_rotation
                 if offset_x < -1 or offset_x > 1 or offset_y < -1 or offset_y > 1:
                     continue
-                source = _billboard_fragment(
-                    shape_mode,
-                    sprite_tex,
-                    offset_x * 0.5 + 0.5,
-                    offset_y * 0.5 + 0.5,
-                    color,
-                    opacity,
-                )
+                u = offset_x * uv_scale + 0.5
+                v = offset_y * uv_scale + 0.5
+                if view_mode == 0 or blur_radius <= 0.0:
+                    source = _billboard_fragment(shape_mode, sprite_tex, u, v, pixel_color, opacity)
+                else:
+                    source = _shade_particle(
+                        shape_mode, sprite_tex, sprite_mean_tex, u, v, pixel_color, opacity, blur_radius
+                    )
                 dest_offset = (storage_row * destination.width + column) * 4
                 if premultiplied:
                     destination.data[dest_offset : dest_offset + 4] = source + destination.data[

@@ -151,8 +151,11 @@ class _DefaultTex(dict):
         return self._default
 
 
+_REMAP_BOUNDS_SLOT = 267
+
+
 def _remap_uniform_data(u, width, height):
-    """Pack synth/remap's std140 `data[267]` block from the bound uniforms —
+    """Pack synth/remap's std140 `data[275]` block from the bound uniforms —
     port of noisemaker-cpu renderer.js remapUniformData. At the default
     zoneCount=0 this yields the background color for every pixel."""
 
@@ -160,7 +163,7 @@ def _remap_uniform_data(u, width, height):
         v = u.get(name)
         return default if v is None else v
 
-    data = [np.zeros(4, dtype=F32) for _ in range(267)]
+    data = [np.zeros(4, dtype=F32) for _ in range(275)]
     bg = np.asarray(g("bgColor", [0, 0, 0]), dtype=F32)
     data[0] = np.array([bg[0], bg[1], bg[2], g("bgAlpha", 1)], dtype=F32)
     data[1] = np.array([g("zoneCount", 0), g("smoothEdge", 0.04), 0, g("time", 0)], dtype=F32)
@@ -170,6 +173,7 @@ def _remap_uniform_data(u, width, height):
         )
         for pair in range(32):
             data[10 + zone * 32 + pair] = np.asarray(g(f"zone{zone}_v{pair}", [0, 0, 0, 0]), dtype=F32)
+        data[_REMAP_BOUNDS_SLOT + zone] = np.asarray(g(f"zone{zone}_bounds", [0, 0, 1, 1]), dtype=F32)
     data[266] = np.array([width, height, 0, 0], dtype=F32)
     return data
 
@@ -411,10 +415,20 @@ def _render_effect_once(
         # name (e.g. `color`) while this pass's GLSL declares another (`splatColor`).
         pass_uniforms = dict(uniforms)
         for glsl_name, param_name in (p.get("uniforms") or {}).items():
-            if param_name in effect_uniforms:
+            if not isinstance(param_name, str):
+                # A literal pass-level uniform override (e.g. depthMerge's per-clone
+                # `runLength`, pointsBillboardRender deposit's `blurLayer`) -- not a
+                # reference to another param name, use the value as-is.
+                pass_uniforms[glsl_name] = param_name
+            elif param_name in effect_uniforms:
                 pass_uniforms[glsl_name] = effect_uniforms[param_name]
             elif param_name in uniforms:
                 pass_uniforms[glsl_name] = uniforms[param_name]
+        # Pass-level defines (e.g. VIEW_MODE/BLEND_MODE/BLUR_LAYER on a
+        # `.flatMap()`-cloned pass): bind this clone's literal value as if it
+        # were an ordinary uniform, matching how build.py's runtime_defines
+        # lowered the identifier to a `uniform int NAME` runtime branch.
+        pass_uniforms.update(p.get("defines") or {})
         if not _pass_enabled(p, pass_uniforms):
             continue
         for _ in range(_repeat_count(p, pass_uniforms)):
