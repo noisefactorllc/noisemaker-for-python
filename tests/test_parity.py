@@ -116,14 +116,15 @@ ITERATED_PROGRAMS = {
         "focalDistance: 70).write(o1)\n"
         "render(o1)\n"
     ),
-    "render/pointsBillboardRender:perspective_alpha_sort": (
-        "search synth, points, render\n"
-        "polygon(radius: 0.7, fgAlpha: 0.1, bgAlpha: 0).write(o0)\n"
-        "perlin(seed: 0).pointsEmit(seed: 0, stateSize: 64, iterationCount: 2).physical()"
-        ".pointsBillboardRender(seed: 42, tex: read(o0), pointSize: 8, viewMode: perspective, "
-        "rotateX: 0.4, posZ: 10, blendMode: alpha).write(o1)\n"
-        "render(o1)\n"
-    ),
+    # NOTE: blendMode:alpha's depth-sort (depthKeys + a 22-stage depthMerge cascade) is
+    # deliberately NOT added here as a DSL-chain byte-parity fixture. It's a fullscreen pass
+    # over the stateSize x stateSize order texture regardless of the render target's own size,
+    # and the DSL validator enforces stateSize >= 64 (4096 order-texture pixels x 22 merge
+    # stages = ~90k interpreted-Python per-pixel kernel invocations) -- multiple minutes here,
+    # not a viable addition to the routine test suite. The reindex logic itself (the part this
+    # port hand-implements, as opposed to depthKeys/depthMerge which are auto-transpiled from
+    # GLSL like every other fullscreen kernel) is covered directly and quickly by
+    # tests/test_scatter_adapters.py's blendMode=1 reindex test instead.
     "render/pointsRender:perspective": (
         "search synth, points, render\n"
         "perlin(seed: 0).pointsEmit(seed: 0, stateSize: 64, iterationCount: 2).physical()"
