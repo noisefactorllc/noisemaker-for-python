@@ -76,6 +76,7 @@ def export_bytes(surface, alpha_mode):
 
 
 def test_public_api_exports_output_runtime():
+    assert noisemaker_cpu.CpuFrameExportAdapter is CpuFrameExportAdapter
     assert noisemaker_cpu.CpuRenderer is CpuRenderer
     assert noisemaker_cpu.FrameExportQueue is FrameExportQueue
     assert noisemaker_cpu.SinkManager is SinkManager
@@ -297,6 +298,62 @@ def test_cpu_frame_export_rejects_extent_mismatch_without_consuming_a_slot():
     assert errors == ["CPU frame export source extent 1x1 does not match configured extent 2x1"]
     assert queue.stats == {"accepted": 0, "dropped": 0, "completed": 0, "failed": 1}
     assert queue.available
+
+
+def test_cpu_frame_export_adapter_direct_lifecycle_and_alpha_modes():
+    adapter = CpuFrameExportAdapter()
+    slot = adapter.create_slot(
+        0, {"width": 2, "height": 1, "format": "rgba8unorm", "colorSpace": "srgb", "alphaMode": "straight", "fps": 30}
+    )
+    assert slot.index == 0
+    assert not slot.ready
+    assert adapter.poll(slot) is False
+
+    frame = Surface(2, 1, np.array([0.5, 0.2, 0.8, 1.0, 0.0, 1.0, 0.0, 0.5], dtype=np.float32))
+    adapter.begin(slot, frame)
+    assert adapter.poll(slot) is True
+
+    read_frame = adapter.read(slot)
+    assert read_frame.width == 2
+    assert read_frame.height == 1
+    assert list(read_frame.data) == [128, 51, 204, 255, 0, 255, 0, 128]
+    assert adapter.poll(slot) is False
+
+    opaque_slot = adapter.create_slot(
+        1, {"width": 1, "height": 1, "format": "rgba8unorm", "colorSpace": "srgb", "alphaMode": "opaque", "fps": 30}
+    )
+    adapter.begin(opaque_slot, Surface(1, 1, np.array([0.25, 0.5, 0.75, 0.1], dtype=np.float32)))
+    assert list(adapter.read(opaque_slot).data) == [64, 128, 191, 255]
+
+    premul_slot = adapter.create_slot(
+        2,
+        {
+            "width": 1,
+            "height": 1,
+            "format": "rgba8unorm",
+            "colorSpace": "srgb",
+            "alphaMode": "premultiplied",
+            "fps": 30,
+        },
+    )
+    adapter.begin(premul_slot, Surface(1, 1, np.array([0.5, 1.0, 0.25, 0.5], dtype=np.float32)))
+    assert list(adapter.read(premul_slot).data) == [64, 128, 32, 128]
+
+    adapter.destroy_slot(slot)
+    with pytest.raises(RuntimeError, match="not usable"):
+        adapter.begin(slot, frame)
+    with pytest.raises(RuntimeError, match="not usable"):
+        adapter.poll(slot)
+    with pytest.raises(RuntimeError, match="not usable"):
+        adapter.read(slot)
+
+    adapter.destroy_slot(opaque_slot)
+    with pytest.raises(RuntimeError, match="not usable"):
+        adapter.poll(opaque_slot)
+
+    adapter.destroy_slot(premul_slot)
+    with pytest.raises(RuntimeError, match="not usable"):
+        adapter.poll(premul_slot)
 
 
 def test_cpu_renderer_configures_and_submits_successful_frames_with_explicit_timestamps():

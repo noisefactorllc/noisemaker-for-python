@@ -232,15 +232,24 @@ class CpuFrameExportAdapter:
             )
 
         source = np.asarray(surface.data, dtype=np.float64).reshape(-1, 4)
-        values = source.copy()
-        alpha = source[:, 3]
-        if slot.alpha_mode == "premultiplied":
-            values[:, :3] *= alpha[:, None]
-        if slot.alpha_mode == "opaque":
-            values[:, 3] = 1.0
-        finite = np.where(np.isfinite(values), values, 0.0)
-        quantized = np.floor(np.clip(finite, 0.0, 1.0) * 255.0 + 0.5).astype(np.uint8)
-        slot.data[:] = quantized.reshape(-1).tobytes()
+        alpha_mode = slot.alpha_mode
+        if alpha_mode == "premultiplied":
+            values = source.copy()
+            values[:, :3] *= source[:, 3, None]
+            finite = np.where(np.isfinite(values), values, 0.0)
+            quantized = np.floor(np.clip(finite, 0.0, 1.0) * 255.0 + 0.5).astype(np.uint8)
+            slot.data[:] = quantized.tobytes()
+        elif alpha_mode == "opaque":
+            finite = np.where(np.isfinite(source[:, :3]), source[:, :3], 0.0)
+            quantized = np.empty((source.shape[0], 4), dtype=np.uint8)
+            quantized[:, :3] = np.floor(np.clip(finite, 0.0, 1.0) * 255.0 + 0.5).astype(np.uint8)
+            quantized[:, 3] = 255
+            slot.data[:] = quantized.tobytes()
+        else:
+            # straight mode (guaranteed by _validate_descriptor in create_slot)
+            finite = np.where(np.isfinite(source), source, 0.0)
+            quantized = np.floor(np.clip(finite, 0.0, 1.0) * 255.0 + 0.5).astype(np.uint8)
+            slot.data[:] = quantized.tobytes()
         slot.ready = True
 
     def poll(self, slot) -> bool:
