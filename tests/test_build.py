@@ -249,3 +249,42 @@ def test_build_replaces_stale_bundle_artifacts(tmp_path, monkeypatch):
     assert pass_keys == {"synth/test:main"}
     assert set(lock["hashes"]) == pass_keys
     assert {path.name for path in (out_dir / "kernels" / "python").iterdir()} == {"synth__test__main.py"}
+
+
+def test_export_kit_config_is_valid_and_matches_catalog():
+    root = Path(__file__).resolve().parent.parent
+    config_path = root / "export-kit" / "kit.config.json"
+    assert config_path.is_file(), "missing export-kit/kit.config.json"
+    config = json.loads(config_path.read_text(encoding="utf-8"))
+    assert config.get("id") == "python"
+    assert config.get("compat", {}).get("mode") == "list"
+
+    for subtree in config.get("subtrees", []):
+        assert (root / subtree["from"]).exists(), f"missing subtree source {subtree['from']}"
+    for license_entry in config.get("licenses", []):
+        assert (root / license_entry["from"]).is_file(), f"missing license source {license_entry['from']}"
+
+    metadata_rel = config.get("compat", {}).get("fromBundleMetadata")
+    assert metadata_rel is not None, "compat.fromBundleMetadata missing"
+    metadata_path = root / metadata_rel
+    assert metadata_path.is_file(), f"missing {metadata_rel}"
+
+    metadata = json.loads(metadata_path.read_text(encoding="utf-8"))
+    effects = metadata.get("effects", {})
+    assert len(effects) == 208, "expected 208 catalog effects"
+    for effect_id, effect in effects.items():
+        assert effect.get("func"), f"effect {effect_id} should declare non-empty func"
+        assert effect.get("domain"), f"effect {effect_id} should declare non-empty domain"
+
+    pass_keys = {
+        render_pass["key"]
+        for effect in effects.values()
+        for render_pass in effect.get("passes", [])
+        if render_pass.get("key") is not None
+    }
+
+    lock_path = metadata_path.parent / "bundle-lock.json"
+    assert lock_path.is_file(), "missing bundle-lock.json"
+    lock = json.loads(lock_path.read_text(encoding="utf-8"))
+    assert len(lock.get("hashes", {})) == 297, "expected 297 locked program hashes"
+    assert set(lock.get("hashes", {}).keys()) == pass_keys
