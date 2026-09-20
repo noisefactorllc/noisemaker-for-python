@@ -4,6 +4,7 @@ import json
 import os
 import shutil
 import subprocess
+from pathlib import Path
 
 import numpy as np
 import pytest
@@ -472,3 +473,19 @@ def test_canonical_hash_filters_are_byte_exact(tmp_path, effect_id):
     source = render_effect("synth/solid", width=8, height=8, seed=1, time=0.25)
     py = render_effect(effect_id, inputs={"inputTex": source}, width=8, height=8, seed=1, time=0.25)
     assert _max_diff(js, py) == 0
+
+
+def test_cpu_upstream_source_lock_and_catalog_parity():
+    """Verify sibling noisemaker-for-cpu's source lock points to the audited
+    revision and that catalog effect parity is maintained."""
+    source_lock_path = Path(CPU_DIR) / "scripts" / "upstream" / "source-lock.js"
+    assert source_lock_path.is_file(), f"missing {source_lock_path}"
+    source_lock_text = source_lock_path.read_text(encoding="utf-8")
+    assert "export const PINNED_UPSTREAM_REVISION = 'beabda385253a3461d2ee5ee2f1b032cbe9a2832'" in source_lock_text
+    assert "export const PINNED_SOURCE_DIGEST = '7c536c61938402fe8f56156e792b57ad201747798a8a943fac3eadb1ff53b885'" in source_lock_text
+
+    snapshot_path = Path(CPU_DIR) / "src" / "effects" / "generated" / "upstream-snapshot.js"
+    assert snapshot_path.is_file(), f"missing {snapshot_path}"
+    snapshot_text = snapshot_path.read_text(encoding="utf-8")
+    assert 'export const UPSTREAM_REVISION = "beabda385253a3461d2ee5ee2f1b032cbe9a2832"' in snapshot_text
+
