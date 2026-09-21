@@ -22,7 +22,7 @@ Effect kernels are **transpiled directly from the upstream GLSL** served by the
 - Screen-space derivatives.
 - Bit-exact uint32/PCG hashing.
 
-**The current bundle contains 208 CPU catalog effects.** The earlier 188-effect bundle documented byte parity with the JavaScript engine's `effect` CLI for its 167 single-frame effects. It also documented exact JS CPU DSL parity for its 21 stateful and particle effects at controlled iteration counts.
+**The current bundle contains 205 CPU catalog effects.** The earlier 188-effect bundle documented byte parity with the JavaScript engine's `effect` CLI for its 167 single-frame effects. It also documented exact JS CPU DSL parity for its 21 stateful and particle effects at controlled iteration counts.
 Iterated effects default to `iterationCount: 60`. Particle pipelines share state from `pointsEmit()` through their point and render steps.
 
 ## Install

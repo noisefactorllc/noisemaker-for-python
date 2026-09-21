@@ -42,9 +42,9 @@ def test_bundled_catalog_preserves_scientific_notation_enum_value():
 def test_bundled_catalog_has_complete_cpu_domain_partition():
     effects = json.loads((Path(build_module.BUNDLE) / "metadata.json").read_text())["effects"]
 
-    assert len(effects) == 208
+    assert len(effects) == 205
     assert Counter(definition["domain"] for definition in effects.values()) == {
-        "image": 191,
+        "image": 188,
         "loop-begin": 1,
         "loop-end": 1,
         "volume-filter": 2,
@@ -271,7 +271,7 @@ def test_export_kit_config_is_valid_and_matches_catalog():
 
     metadata = json.loads(metadata_path.read_text(encoding="utf-8"))
     effects = metadata.get("effects", {})
-    assert len(effects) == 208, "expected 208 catalog effects"
+    assert len(effects) == 205, "expected 205 catalog effects"
     for effect_id, effect in effects.items():
         assert effect.get("func"), f"effect {effect_id} should declare non-empty func"
         assert effect.get("domain"), f"effect {effect_id} should declare non-empty domain"
@@ -286,5 +286,5 @@ def test_export_kit_config_is_valid_and_matches_catalog():
     lock_path = metadata_path.parent / "bundle-lock.json"
     assert lock_path.is_file(), "missing bundle-lock.json"
     lock = json.loads(lock_path.read_text(encoding="utf-8"))
-    assert len(lock.get("hashes", {})) == 297, "expected 297 locked program hashes"
+    assert len(lock.get("hashes", {})) == 294, "expected 294 locked program hashes"
     assert set(lock.get("hashes", {}).keys()) == pass_keys

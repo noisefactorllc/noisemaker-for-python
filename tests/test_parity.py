@@ -481,11 +481,11 @@ def test_cpu_upstream_source_lock_and_catalog_parity():
     source_lock_path = Path(CPU_DIR) / "scripts" / "upstream" / "source-lock.js"
     assert source_lock_path.is_file(), f"missing {source_lock_path}"
     source_lock_text = source_lock_path.read_text(encoding="utf-8")
-    assert "export const PINNED_UPSTREAM_REVISION = 'beabda385253a3461d2ee5ee2f1b032cbe9a2832'" in source_lock_text
-    assert "export const PINNED_SOURCE_DIGEST = '7c536c61938402fe8f56156e792b57ad201747798a8a943fac3eadb1ff53b885'" in source_lock_text
+    assert "export const PINNED_UPSTREAM_REVISION = 'f61ac07320888732594689258c6f7042cde0303b'" in source_lock_text
+    assert "export const PINNED_SOURCE_DIGEST = 'cfc89f8f95b9b1798e14d3604a8cd786bfcc2243e427e8042f5a8aea0b982caf'" in source_lock_text
 
     snapshot_path = Path(CPU_DIR) / "src" / "effects" / "generated" / "upstream-snapshot.js"
     assert snapshot_path.is_file(), f"missing {snapshot_path}"
     snapshot_text = snapshot_path.read_text(encoding="utf-8")
-    assert 'export const UPSTREAM_REVISION = "beabda385253a3461d2ee5ee2f1b032cbe9a2832"' in snapshot_text
+    assert 'export const UPSTREAM_REVISION = "f61ac07320888732594689258c6f7042cde0303b"' in snapshot_text
 
