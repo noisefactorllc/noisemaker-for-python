@@ -138,6 +138,40 @@ class SinkManager:
             if self._iteration_depth == 0:
                 self._compact_registrations()
 
+    def should_defer_render(self) -> bool:
+        """Report whether any active sink asks the renderer to skip drawing the
+        next frame, for example while its encoder works through a backlog.
+        Sinks opt in with an optional defer_render() or deferRender() method.
+        A throwing sink is counted as failed, reported, and does not defer rendering.
+        """
+        if self._closed:
+            return False
+
+        self._iteration_depth += 1
+        try:
+            for registration in self._registrations:
+                if not registration.active:
+                    continue
+                sink = registration.sink
+                defer_fn = getattr(sink, "defer_render", None)
+                if not callable(defer_fn):
+                    defer_fn = getattr(sink, "deferRender", None)
+                if not callable(defer_fn):
+                    continue
+                try:
+                    if defer_fn() is True:
+                        return True
+                except Exception as error:
+                    registration.stats["failed"] += 1
+                    self._report(error, sink)
+            return False
+        finally:
+            self._iteration_depth -= 1
+            if self._iteration_depth == 0:
+                self._compact_registrations()
+
+    shouldDeferRender = should_defer_render
+
     def submit(self, frame, timestamp) -> None:
         if self._closed:
             return

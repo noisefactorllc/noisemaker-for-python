@@ -171,6 +171,113 @@ def test_sink_manager_close_is_terminal_and_closes_every_sink_after_an_error():
         manager.add(RecordingSink())
 
 
+def test_sink_manager_should_defer_render_reports_sink_deferral_handles_exceptions_and_honors_unregister():
+    reported = []
+    manager = SinkManager(on_error=lambda error, sink: reported.append((str(error), sink)))
+
+    defer = False
+
+    class DeferringSink(RecordingSink):
+        def defer_render(self):
+            return defer
+
+    regular_sink = RecordingSink()
+
+    class ThrowingSink(RecordingSink):
+        def defer_render(self):
+            raise RuntimeError("defer failed")
+
+    deferring_sink = DeferringSink()
+    throwing_sink = ThrowingSink()
+
+    assert manager.should_defer_render() is False
+    assert manager.shouldDeferRender() is False
+    manager.add(regular_sink)
+    assert manager.should_defer_render() is False
+
+    unregister = manager.add(deferring_sink)
+    assert manager.should_defer_render() is False
+
+    # Non-boolean truthy values must not trigger deferral (strict boolean True required)
+    defer = 1
+    assert manager.should_defer_render() is False
+    defer = "yes"
+    assert manager.should_defer_render() is False
+
+    defer = True
+    assert manager.should_defer_render() is True
+    assert manager.shouldDeferRender() is True
+
+    defer = False
+    manager.add(throwing_sink)
+    # Throwing sink does not cause should_defer_render to raise or defer; reported via on_error
+    assert manager.should_defer_render() is False
+    assert len(reported) > 0
+    assert manager.stats.get(throwing_sink)["failed"] > 0
+
+    defer = True
+    assert manager.should_defer_render() is True
+
+    unregister()
+    assert manager.should_defer_render() is False
+
+    # CamelCase deferRender is also recognized
+    camel_defer = True
+
+    class CamelCaseSink(RecordingSink):
+        def deferRender(self):
+            return camel_defer
+
+    camel_sink = CamelCaseSink()
+    remove_camel = manager.add(camel_sink)
+    assert manager.should_defer_render() is True
+    camel_defer = False
+    assert manager.should_defer_render() is False
+    remove_camel()
+
+    # Non-callable defer_render attribute falls back to callable deferRender method
+    class HybridSink(RecordingSink):
+        def __init__(self):
+            super().__init__()
+            self.defer_render = "not-callable"
+
+        def deferRender(self):
+            return True
+
+    hybrid_sink = HybridSink()
+    remove_hybrid = manager.add(hybrid_sink)
+    assert manager.should_defer_render() is True
+    remove_hybrid()
+
+    manager.close()
+    assert manager.should_defer_render() is False
+
+
+def test_cpu_renderer_delegates_should_defer_render_to_sink_manager():
+    renderer = CpuRenderer()
+    assert callable(renderer.should_defer_render)
+    assert callable(renderer.shouldDeferRender)
+    assert renderer.should_defer_render() is False
+    assert renderer.shouldDeferRender() is False
+
+    defer = False
+
+    class DeferringSink(RecordingSink):
+        def defer_render(self):
+            return defer
+
+    deferring_sink = DeferringSink()
+    remove = renderer.add_sink(deferring_sink)
+
+    assert renderer.should_defer_render() is False
+    defer = True
+    assert renderer.should_defer_render() is True
+    assert renderer.shouldDeferRender() is True
+
+    remove()
+    assert renderer.should_defer_render() is False
+
+
 def test_frame_export_queue_validates_adapter_and_bounded_slot_count():
     with pytest.raises(TypeError, match="adapter"):
         FrameExportQueue(object())

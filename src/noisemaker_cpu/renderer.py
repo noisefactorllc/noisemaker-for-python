@@ -771,6 +771,11 @@ class CpuRenderer:
     def add_sink(self, sink):
         return self.sink_manager.add(sink)
 
+    def should_defer_render(self) -> bool:
+        return self.sink_manager.should_defer_render()
+
+    shouldDeferRender = should_defer_render
+
     @staticmethod
     def create_frame_export_queue(*, slots=3, on_error=None):
         return FrameExportQueue(CpuFrameExportAdapter(), slots=slots, on_error=on_error)
