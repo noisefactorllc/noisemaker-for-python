@@ -1,4 +1,5 @@
 import os
+import random
 import shutil
 import subprocess
 import zlib
@@ -67,9 +68,153 @@ def _filter4_encode(pixels: bytes, width: int, height: int, bpp: int) -> bytes:
     return bytes(out)
 
 
-def _build_png(width: int, height: int, filtered_scanlines: bytes) -> bytes:
+def _filtered_scanlines(pixels: bytes, width: int, height: int, bpp: int, filters) -> bytes:
+    """Hand-filter raw top-down scanlines with arbitrary per-row filter types.
+
+    Predictors use the reconstructed (= original, as in any valid PNG encoder)
+    previous pixel bytes, matching the spec's encoder side.
+    """
+    stride = width * bpp
+    out = bytearray((stride + 1) * height)
+    for y in range(height):
+        filt = filters[y]
+        out[y * (stride + 1)] = filt
+        for x in range(stride):
+            pos = y * stride + x
+            left = pixels[pos - bpp] if x >= bpp else 0
+            up = pixels[pos - stride] if y > 0 else 0
+            upper_left = pixels[pos - stride - bpp] if y > 0 and x >= bpp else 0
+            if filt == 0:
+                predictor = 0
+            elif filt == 1:
+                predictor = left
+            elif filt == 2:
+                predictor = up
+            elif filt == 3:
+                predictor = (left + up) >> 1
+            else:
+                predictor = _paeth_predictor(left, up, upper_left)
+            out[y * (stride + 1) + 1 + x] = (pixels[pos] - predictor) & 0xFF
+    return bytes(out)
+
+
+def _build_png(
+    width: int, height: int, filtered_scanlines: bytes, color_type: int = 6, extra_chunks: bytes = b""
+) -> bytes:
     idat = zlib.compress(filtered_scanlines, 9)
-    return SIGNATURE + _png_chunk("IHDR", _ihdr(width, height)) + _png_chunk("IDAT", idat) + _png_chunk("IEND")
+    return (
+        SIGNATURE
+        + _png_chunk("IHDR", _ihdr(width, height, color_type))
+        + extra_chunks
+        + _png_chunk("IDAT", idat)
+        + _png_chunk("IEND")
+    )
+
+
+def test_decode_png_sub_and_up_filter_round_trip():
+    """Hand-filtered fixtures for the vectorized Sub (1) and Up (2) paths."""
+    width, height, bpp = 5, 3, 4
+    rng = random.Random(9)
+    raw = bytes(rng.randrange(256) for _ in range(width * height * bpp))
+    filtered = _filtered_scanlines(raw, width, height, bpp, [1, 2, 1])
+    stride = width * bpp
+    assert filtered[0] == 1
+    assert filtered[stride + 1] == 2
+    assert filtered[2 * (stride + 1)] == 1
+    surface = decode_png(_build_png(width, height, filtered))
+    assert surface.width == width
+    assert surface.height == height
+    assert surface.to_rgba8() == raw
+
+
+def test_decode_png_all_row_filters_round_trip():
+    """Every row filter, one per row, including the scalar Average/Paeth paths."""
+    width, height, bpp = 7, 5, 4
+    rng = random.Random(17)
+    raw = bytes(rng.randrange(256) for _ in range(width * height * bpp))
+    filtered = _filtered_scanlines(raw, width, height, bpp, [0, 1, 2, 3, 4])
+    stride = width * bpp
+    for y, filt in enumerate([0, 1, 2, 3, 4]):
+        assert filtered[y * (stride + 1)] == filt
+    surface = decode_png(_build_png(width, height, filtered))
+    assert surface.to_rgba8() == raw
+
+
+def test_decode_png_grayscale():
+    width, height = 2, 1
+    raw = bytes([0x40, 0x80])
+    fl = _filtered_scanlines(raw, width, height, 1, [0] * height)
+    surface = decode_png(_build_png(width, height, fl, color_type=0))
+    assert surface.to_rgba8() == bytes([0x40, 0x40, 0x40, 255, 0x80, 0x80, 0x80, 255])
+
+
+def test_decode_png_grayscale_with_transparent_key():
+    width, height = 2, 1
+    raw = bytes([0x40, 0x80])
+    trns = bytes([0x00, 0x80])  # gray sample 0x0080 is transparent
+    extra = _png_chunk("tRNS", trns)
+    fl = _filtered_scanlines(raw, width, height, 1, [0] * height)
+    surface = decode_png(_build_png(width, height, fl, color_type=0, extra_chunks=extra))
+    assert surface.to_rgba8() == bytes([0x40, 0x40, 0x40, 255, 0x80, 0x80, 0x80, 0])
+
+
+def test_decode_png_truecolor():
+    width, height = 2, 1
+    raw = bytes([255, 0, 0, 0, 255, 0])
+    fl = _filtered_scanlines(raw, width, height, 3, [0] * height)
+    surface = decode_png(_build_png(width, height, fl, color_type=2))
+    assert surface.to_rgba8() == bytes([255, 0, 0, 255, 0, 255, 0, 255])
+
+
+def test_decode_png_truecolor_with_transparent_key():
+    width, height = 2, 1
+    raw = bytes([255, 0, 0, 0, 255, 0])
+    trns = bytes([0x00, 0x00, 0x00, 0xFF, 0x00, 0x00])  # 16-bit key: red 0, green 255, blue 0
+    extra = _png_chunk("tRNS", trns)
+    fl = _filtered_scanlines(raw, width, height, 3, [0] * height)
+    surface = decode_png(_build_png(width, height, fl, color_type=2, extra_chunks=extra))
+    assert surface.to_rgba8() == bytes([255, 0, 0, 255, 0, 255, 0, 0])
+
+
+def test_decode_png_palette():
+    width, height = 3, 1
+    palette = bytes([10, 20, 30, 40, 50, 60, 70, 80, 90])
+    raw = bytes([2, 0, 1])
+    extra = _png_chunk("PLTE", palette)
+    fl = _filtered_scanlines(raw, width, height, 1, [0] * height)
+    surface = decode_png(_build_png(width, height, fl, color_type=3, extra_chunks=extra))
+    assert surface.to_rgba8() == bytes([70, 80, 90, 255, 10, 20, 30, 255, 40, 50, 60, 255])
+
+
+def test_decode_png_palette_with_partial_transparency():
+    width, height = 4, 1
+    palette = bytes([10, 20, 30, 40, 50, 60, 70, 80, 90, 100, 110, 120])
+    raw = bytes([0, 1, 2, 3])
+    # tRNS alpha for indices 0 and 1 only; later indices stay opaque.
+    extra = _png_chunk("PLTE", palette) + _png_chunk("tRNS", bytes([128, 0]))
+    fl = _filtered_scanlines(raw, width, height, 1, [0] * height)
+    surface = decode_png(_build_png(width, height, fl, color_type=3, extra_chunks=extra))
+    assert surface.to_rgba8() == bytes(
+        [10, 20, 30, 128, 40, 50, 60, 0, 70, 80, 90, 255, 100, 110, 120, 255]
+    )
+
+
+def test_decode_png_palette_index_out_of_range():
+    width, height = 1, 1
+    palette = bytes([10, 20, 30, 40, 50, 60])  # 2 entries
+    raw = bytes([5])
+    extra = _png_chunk("PLTE", palette)
+    fl = _filtered_scanlines(raw, width, height, 1, [0] * height)
+    with pytest.raises(ValueError, match="PNG palette index 5 is out of range"):
+        decode_png(_build_png(width, height, fl, color_type=3, extra_chunks=extra))
+
+
+def test_decode_png_grayscale_with_alpha():
+    width, height = 2, 1
+    raw = bytes([0x11, 255, 0x22, 64])
+    fl = _filtered_scanlines(raw, width, height, 2, [0] * height)
+    surface = decode_png(_build_png(width, height, fl, color_type=4))
+    assert surface.to_rgba8() == bytes([0x11, 0x11, 0x11, 255, 0x22, 0x22, 0x22, 64])
 
 
 def test_encode_png_has_signature_and_chunk_markers():

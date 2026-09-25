@@ -1,6 +1,7 @@
 """PNG codec — faithful port of noisemaker-cpu `src/node/png.js`.
 
-Zero-dependency (stdlib ``zlib`` only). Encodes ``Surface`` objects as 8-bit
+Zero-dependency at runtime beyond the declared `numpy` requirement (stdlib
+``zlib`` for the codec itself). Encodes ``Surface`` objects as 8-bit
 RGBA PNGs (color type 6, no interlace, filter type 0/None per scanline) and
 decodes arbitrary well-formed 8-bit, non-interlaced PNGs (grayscale, RGB,
 palette, grayscale+alpha, RGBA; all five row filters: None/Sub/Up/Average/
