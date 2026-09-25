@@ -4,6 +4,17 @@ Current compatibility matrix: [compatibility report](COMPATIBILITY.md).
 
 ## 1. Scope and source revisions
 
+Daily review: 2026-09-25. Current inspected source: [`49d8e51ec4b71104dc03728c84c60cae3e2857d3`](https://github.com/noisefactorllc/noisemaker-for-python/commit/49d8e51ec4b71104dc03728c84c60cae3e2857d3).
+Full rendered parity remains **unverified** with open nondefault parity failures. No release approval or new closure follows from this review.
+Reviewed worker audit: `audit-20260925-090206` at source [`912e6a9aac32c668a5242b8d52aa4415ca3a848e`](https://github.com/noisefactorllc/noisemaker-for-python/commit/912e6a9aac32c668a5242b8d52aa4415ca3a848e), published in commit [`4ff7b03247b59cead0b63a7ee3a7b5697f7bf58e`](https://github.com/noisefactorllc/noisemaker-for-python/commit/4ff7b03247b59cead0b63a7ee3a7b5697f7bf58e).
+Post-worker commit [`49d8e51ec4b71104dc03728c84c60cae3e2857d3`](https://github.com/noisefactorllc/noisemaker-for-python/commit/49d8e51ec4b71104dc03728c84c60cae3e2857d3) updated sibling source lock assertions in `tests/test_parity.py` for upstream `240740dd2d30cbd0984b179834ab24abe71c8fb2`.
+Python runtime bundle and engine sources remain at the earlier snapshot with 205 effects versus 210 in published `1.0.180`.
+Current upstream discovery SHA: `240740dd2d30cbd0984b179834ab24abe71c8fb2`.
+Local and remote `main` match at `49d8e51ec4b71104dc03728c84c60cae3e2857d3`.
+Served kit `0.1.7` identifies `1901b267a8b8ef29efc702cc3976b70f8aae0404`.
+
+### Worker audit observations
+
 Worker audit: 2026-09-25. Reviewed source: [`912e6a9aac32c668a5242b8d52aa4415ca3a848e`](https://github.com/noisefactorllc/noisemaker-for-python/commit/912e6a9aac32c668a5242b8d52aa4415ca3a848e).
 Local and remote `main` matched before execution. Tests used regular-file snapshots with recorded source hashes.
 CPU oracle: `fcb576f39a2632a6d50e79ca9f6a1bfb0daa7221`, with upstream pin `4891b9953f9fd8a61cf9ae0dda2fe747a9be82df`.
@@ -136,8 +147,15 @@ Review CI boundary: No workflow run exists at the inspected source SHA. A passin
 
 ### Daily review, 2026-09-25
 
-64 CLI, DSL, and output-runtime tests pass at the current source. These checks include useful PNG output but do not supply a complete reference-versus-Python pixel denominator. The served kit remains at a different source. GAP-001 remains open and current full rendered parity is unverified. [Raw evidence](/Users/alex/.codex/automations/noisemaker-port-completion-audit/review-20260925-053200/python-current-tests.json).
-The review checked source changes, worker evidence, source-bound CI where present, and current served inventories. Full installed-host and platform qualification remains incomplete.
+The daily review inspected worker audit `audit-20260925-090206` and post-worker commit `49d8e51ec4b71104dc03728c84c60cae3e2857d3`.
+All 64 CLI, DSL, and output-runtime tests pass at current source `49d8e51ec4b71104dc03728c84c60cae3e2857d3`.
+The sibling source lock test passes against `/workspace/repos/noisemaker-for-cpu`.
+The review independently reproduced GAP-004: the built wheel contains 328 files and zero JSON files, omitting `bundle/metadata.json`.
+The review checked GAP-005: four-component solid color produces alpha difference 179 against the CPU oracle, and feedback diverges by one byte.
+Exact reviewed-source CI contains zero runs and zero checks.
+Full installed-host and platform qualification remains incomplete.
+GAP-001 remains open, and the suite leaves current full rendered parity unverified.
+[Earlier raw evidence](/Users/alex/.codex/automations/noisemaker-port-completion-audit/review-20260925-053200/python-current-tests.json).
 
 Environment: macOS 26.5, Darwin arm64.
 [Source SHA-256 records](/Users/alex/.codex/automations/noisemaker-port-completion-audit/evidence-20260924-remaining-gap-documents/noisemaker-for-python-source-hashes.json) bind these checks to the reviewed revision.
@@ -262,6 +280,11 @@ Implementation belongs to the separate job. Do not port additional effects or ad
 
 ## 6. Pass history
 
+2026-09-25 daily review at `49d8e51ec4b71104dc03728c84c60cae3e2857d3`: reviewed worker audit `audit-20260925-090206` (published in `4ff7b03247b59cead0b63a7ee3a7b5697f7bf58e`).
+Verified post-audit commit `49d8e51ec4b71104dc03728c84c60cae3e2857d3` in `tests/test_parity.py`.
+Independently reproduced GAP-004 missing metadata in built wheel. Checked GAP-005 nondefault numerical parity differences.
+Five open gaps remain. Zero closures. Full parity and release readiness remain unqualified.
+
 2026-09-25 worker audit at `912e6a9aac32c668a5242b8d52aa4415ca3a848e`: added GAP-004 and GAP-005. No gap closed.
 Default image parity, installed workflows, current authority drift, and complete served-file reproduction now have source-bound evidence.
 Full parity and release readiness remain unqualified. [Run evidence](/Users/alex/.codex/automations/noisemaker-port-completion-audit/evidence-audit-20260925-090206/parity-results.json).
@@ -270,6 +293,8 @@ Full parity and release readiness remain unqualified. [Run evidence](/Users/alex
 
 | Date | Source SHA | Changes | Tested scope | Remaining limits |
 |---|---|---|---|---|
+| 2026-09-25 | `49d8e51ec4b71104dc03728c84c60cae3e2857d3` | Reviewed audit-20260925-090206 and post-worker parity test update. Reproduced GAP-004. Zero closures. | 64 CLI, DSL, and output tests pass. Sibling source lock test passes. Wheel build and nondefault parity checks reproduced. | Full parity, wheel packaging, platforms, and release gates remain open. |
+| 2026-09-25 | `912e6a9aac32c668a5242b8d52aa4415ca3a848e` | Added GAP-004 and GAP-005. Default image parity, installed workflows, authority drift, served kit verified. | 167 exact default passes, 38 skips, 2 independent numerical failures, 2 landscape rejections. | Wheel fails, nondefault parity fails, complete authority parity unverified. |
 | 2026-09-24 | `70c03da6944be1319ccc249fd9646dd9df05e86c` | Created six-section register and README link. No closures. | Initial collection failed because Click was missing. After isolated Click installation, 62 CLI, DSL, and output tests passed with 10 warnings. | Full audit, installed workflows, current rendered parity, platforms, and releases remain unqualified. |
 
 Run ID: `20260924-remaining-gap-documents`.
