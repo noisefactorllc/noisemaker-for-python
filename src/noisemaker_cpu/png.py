@@ -14,6 +14,8 @@ from __future__ import annotations
 
 import zlib
 
+import numpy as np
+
 from noisemaker_cpu.surface import Surface
 
 SIGNATURE = bytes([137, 80, 78, 71, 13, 10, 26, 10])
@@ -111,22 +113,39 @@ def _decode_scanlines(compressed: bytes, width: int, height: int, bytes_per_pixe
         filt = filtered[source_row]
         if filt > 4:
             raise ValueError(f"Unsupported PNG row filter {filt}")
-        for x in range(stride):
-            raw = filtered[source_row + x + 1]
-            left = decoded[target_row + x - bytes_per_pixel] if x >= bytes_per_pixel else 0
-            up = decoded[target_row + x - stride] if y > 0 else 0
-            upper_left = decoded[target_row + x - stride - bytes_per_pixel] if y > 0 and x >= bytes_per_pixel else 0
-            if filt == 0:
-                predictor = 0
-            elif filt == 1:
-                predictor = left
-            elif filt == 2:
-                predictor = up
-            elif filt == 3:
-                predictor = (left + up) >> 1
+        if filt == 0:
+            # None: straight copy (C-speed slice assignment).
+            decoded[target_row : target_row + stride] = filtered[source_row + 1 : source_row + 1 + stride]
+        elif filt == 2:
+            # Up: recon = raw + prior row (mod 256). Rows are independent of
+            # their own neighbors, so this vectorizes exactly.
+            row = np.frombuffer(filtered, np.uint8, stride, source_row + 1)
+            if y == 0:
+                decoded[target_row : target_row + stride] = row.tobytes()
             else:
-                predictor = _paeth(left, up, upper_left)
-            decoded[target_row + x] = (raw + predictor) & 0xFF
+                up = np.frombuffer(decoded, np.uint8, stride, target_row - stride)
+                decoded[target_row : target_row + stride] = ((row + up) & 0xFF).tobytes()
+        elif filt == 1:
+            # Sub: recon[x] = raw[x] + recon[x - bpp] (mod 256). Reshaping the
+            # row to (stride // bpp, bpp) puts each byte on the same lane as
+            # its `x - bpp` neighbor, so a per-column cumulative sum (uint8
+            # wraparound is exactly PNG's mod-256 arithmetic) vectorizes it.
+            lanes = np.frombuffer(filtered, np.uint8, stride, source_row + 1).reshape(
+                stride // bytes_per_pixel, bytes_per_pixel
+            )
+            decoded[target_row : target_row + stride] = np.add.accumulate(lanes, axis=0, dtype=np.uint8).tobytes()
+        else:
+            # Average (3) and Paeth (4) are sequentially dependent byte-by-byte.
+            for x in range(stride):
+                raw = filtered[source_row + x + 1]
+                left = decoded[target_row + x - bytes_per_pixel] if x >= bytes_per_pixel else 0
+                up = decoded[target_row + x - stride] if y > 0 else 0
+                upper_left = decoded[target_row + x - stride - bytes_per_pixel] if y > 0 and x >= bytes_per_pixel else 0
+                if filt == 3:
+                    predictor = (left + up) >> 1
+                else:
+                    predictor = _paeth(left, up, upper_left)
+                decoded[target_row + x] = (raw + predictor) & 0xFF
     return decoded
 
 
@@ -241,37 +260,39 @@ def decode_png(data: bytes) -> Surface:
     transparent_blue = int.from_bytes(transparency[4:6], "big") if color_type == 2 and transparency is not None else -1
 
     decoded = _decode_scanlines(b"".join(idat_chunks), width, height, components)
-    rgba = bytearray(width * height * 4)
-    for pixel in range(width * height):
-        source = pixel * components
-        target = pixel * 4
-        if color_type == 0:
-            value = decoded[source]
-            rgba[target] = value
-            rgba[target + 1] = value
-            rgba[target + 2] = value
-            rgba[target + 3] = 0 if value == transparent_gray else 255
-        elif color_type == 2:
-            r, g, b = decoded[source], decoded[source + 1], decoded[source + 2]
-            rgba[target] = r
-            rgba[target + 1] = g
-            rgba[target + 2] = b
-            rgba[target + 3] = 0 if r == transparent_red and g == transparent_green and b == transparent_blue else 255
-        elif color_type == 3:
-            index = decoded[source]
-            if index * 3 + 2 >= len(palette):
-                raise ValueError(f"PNG palette index {index} is out of range")
-            rgba[target] = palette[index * 3]
-            rgba[target + 1] = palette[index * 3 + 1]
-            rgba[target + 2] = palette[index * 3 + 2]
-            rgba[target + 3] = transparency[index] if transparency is not None and index < len(transparency) else 255
-        elif color_type == 4:
-            value = decoded[source]
-            rgba[target] = value
-            rgba[target + 1] = value
-            rgba[target + 2] = value
-            rgba[target + 3] = decoded[source + 1]
+    count = width * height
+    dec = np.frombuffer(bytes(decoded), np.uint8).reshape(count, components)
+    rgba = np.empty((count, 4), dtype=np.uint8)
+    if color_type == 0:
+        value = dec[:, 0]
+        rgba[:, 0:3] = value[:, None]
+        rgba[:, 3] = np.where(value == transparent_gray, 0, 255)
+    elif color_type == 2:
+        rgba[:, 0:3] = dec
+        rgba[:, 3] = np.where(
+            (dec[:, 0] == transparent_red) & (dec[:, 1] == transparent_green) & (dec[:, 2] == transparent_blue),
+            0,
+            255,
+        )
+    elif color_type == 3:
+        indices = dec[:, 0].astype(np.int64)
+        out_of_range = indices * 3 + 2 >= len(palette)
+        if out_of_range.any():
+            raise ValueError(f"PNG palette index {indices[out_of_range][0]} is out of range")
+        rgb = np.frombuffer(palette, np.uint8, len(palette)).reshape(-1, 3)[indices]
+        rgba[:, 0:3] = rgb
+        if transparency is not None:
+            alpha = np.full(count, 255, dtype=np.uint8)
+            in_key = indices < len(transparency)
+            key = np.frombuffer(transparency, np.uint8)[indices[in_key]]
+            alpha[in_key] = key
+            rgba[:, 3] = alpha
         else:
-            rgba[target : target + 4] = decoded[source : source + 4]
+            rgba[:, 3] = 255
+    elif color_type == 4:
+        rgba[:, 0:3] = dec[:, 0:1]
+        rgba[:, 3] = dec[:, 1]
+    else:
+        rgba[:] = dec
 
-    return Surface.from_rgba8(width, height, bytes(rgba))
+    return Surface.from_rgba8(width, height, rgba.tobytes())
