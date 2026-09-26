@@ -55,7 +55,7 @@ def run_pixel(ctx, out):
         if rt.binary(">", roundness, rt.f(0.0)):
             scale[:] = rt.component_wise("mix", aspectRatio, rt.construct(2, rt.f(1.0)), roundness, width=2)
         else:
-            scale[:] = rt.component_wise("mix", aspectRatio, rt.binary("*", aspectRatio, rt.construct(2, rt.binary("+", rt.f(1.0), rt.component_wise("abs", roundness, width=1), 1, "float"), rt.binary("-", rt.f(1.0), rt.binary("*", rt.component_wise("abs", roundness, width=1), rt.f(0.5), 1, "float"), 1, "float")), 2, "float"), rt.unary("-", roundness), width=2)
+            scale[:] = rt.component_wise("mix", aspectRatio, rt.binary("*", aspectRatio, rt.array([rt.binary("+", rt.f(1.0), rt.component_wise("abs", roundness, width=1), 1, "float"), rt.binary("-", rt.f(1.0), rt.binary("*", rt.component_wise("abs", roundness, width=1), rt.f(0.5), 1, "float"), 1, "float")]), 2, "float"), rt.unary("-", roundness), width=2)
         centered[:] = rt.binary("*", centered, scale, 2, "float")
         dist = rt.binary("*", rt.length(centered), rt.f(2.0), 1, "float")
         inner = rt.binary("-", midpoint, rt.binary("*", feather, rt.f(0.5), 1, "float"), 1, "float")

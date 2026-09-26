@@ -173,8 +173,8 @@ def run_pixel(ctx, out):
         if rt.binary("==", _u_animation, rt.i(5)):
             visA = unfoldVis__float(rt.f(0.0))
             visB = unfoldVis__float(rt.f(0.5))
-        dA = rt.binary("-", rt.length(rt.binary("-", p, rt.construct(2, rt.unary("-", sep), rt.f(0.0)), 2, "float")), rA, 1, "float")
-        dB = rt.binary("-", rt.length(rt.binary("-", p, rt.construct(2, sep, rt.f(0.0)), 2, "float")), rB, 1, "float")
+        dA = rt.binary("-", rt.length(rt.binary("-", p, rt.array([rt.unary("-", sep), rt.f(0.0)]), 2, "float")), rA, 1, "float")
+        dB = rt.binary("-", rt.length(rt.binary("-", p, rt.array([sep, rt.f(0.0)]), 2, "float")), rB, 1, "float")
         m = rt.f(0.0)
         m = rt.component_wise("max", m, rt.binary("*", outlineEdge__float_float(dA, lineWidth), visA, 1, "float"), width=1)
         m = rt.component_wise("max", m, rt.binary("*", outlineEdge__float_float(dB, lineWidth), visB, 1, "float"), width=1)

@@ -63,7 +63,7 @@ def run_pixel(ctx, out):
         p[:] = rt.binary("-", p, rt.binary("*", rt.binary("*", rt.f(2.0), rt.component_wise("max", rt.dot(k2, p), rt.f(0.0), width=1), 1, "float"), k2, 2, "float"), 2, "float")
         p = rt.assign_swizzle(p, "x", rt.component_wise("abs", rt.swizzle(p, "x"), width=1))
         p = rt.assign_swizzle(p, "y", rt.binary("-", rt.swizzle(p, "y"), r, 1, "float"))
-        ba = rt.binary("-", rt.binary("*", rf, rt.construct(2, rt.unary("-", rt.swizzle(k1, "y")), rt.swizzle(k1, "x")), 2, "float"), rt.construct(2, rt.f(0.0), rt.f(1.0)), 2, "float")
+        ba = rt.binary("-", rt.binary("*", rf, rt.construct(2, rt.unary("-", rt.swizzle(k1, "y")), rt.swizzle(k1, "x")), 2, "float"), rt.array([rt.f(0.0), rt.f(1.0)]), 2, "float")
         h = rt.component_wise("clamp", rt.binary("/", rt.dot(p, ba), rt.dot(ba, ba), 1, "float"), rt.f(0.0), r, width=1)
         return rt.binary("*", rt.length(rt.binary("-", p, rt.binary("*", ba, h, 2, "float"), 2, "float")), rt.component_wise("sign", rt.binary("-", rt.binary("*", rt.swizzle(p, "y"), rt.swizzle(ba, "x"), 1, "float"), rt.binary("*", rt.swizzle(p, "x"), rt.swizzle(ba, "y"), 1, "float"), 1, "float"), width=1), 1, "float")
     def sdfRing__vec2_float(p, r):

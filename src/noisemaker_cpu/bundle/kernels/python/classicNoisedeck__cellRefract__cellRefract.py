@@ -147,7 +147,7 @@ def run_pixel(ctx, out):
                                 (rgb.__setitem__(0, c), rgb.__setitem__(1, rt.f(0.0)), rgb.__setitem__(2, x), rgb)[-1]
                             else:
                                 (rgb.__setitem__(0, rt.f(0.0)), rgb.__setitem__(1, rt.f(0.0)), rgb.__setitem__(2, rt.f(0.0)), rgb)[-1]
-        return rt.binary("+", rgb, rt.construct(3, m, m, m), 3, "float")
+        return rt.binary("+", rgb, m, 3, "float")
     def rgb2hsv__vec3(rgb):
         rgb = rt.copy(rgb, "float")
         r = rt.swizzle(rgb, "r")
@@ -438,7 +438,7 @@ def run_pixel(ctx, out):
         blend = rt.f(1.0)
         freq = map__float_float_float_float_float(_u_scale, rt.f(1.0), rt.f(100.0), rt.f(20.0), rt.f(1.0))
         cellSize = map__float_float_float_float_float(_u_cellScale, rt.f(1.0), rt.f(100.0), rt.f(3.0), rt.f(0.75))
-        d = cells__vec2_float_float(rt.binary("*", st, rt.construct(2, rt.binary("/", rt.swizzle(_u_fullResolution, "x"), rt.swizzle(_u_fullResolution, "y"), 1, "float"), rt.f(1.0)), 2, "float"), freq, cellSize)
+        d = cells__vec2_float_float(rt.binary("*", st, rt.array([rt.binary("/", rt.swizzle(_u_fullResolution, "x"), rt.swizzle(_u_fullResolution, "y"), 1, "float"), rt.f(1.0)]), 2, "float"), freq, cellSize)
         ref = map__float_float_float_float_float(_u_refractAmt, rt.f(0.0), rt.f(100.0), rt.f(0.0), rt.f(0.125))
         refLen = rt.binary("+", d, rt.binary("/", _u_direction, rt.f(360.0), 1, "float"), 1, "float")
         st = rt.assign_swizzle(st, "x", rt.binary("+", rt.swizzle(st, "x"), rt.binary("*", rt.component_wise("cos", rt.binary("*", refLen, rt.f(6.28318530718), 1, "float"), width=1), ref, 1, "float"), 1, "float"))

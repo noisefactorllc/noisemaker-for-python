@@ -13,10 +13,10 @@ def run_pixel(ctx, out):
         fragCoord = rt.swizzle(ctx.frag_coord, "xy")
         texel = rt.binary("/", rt.f(1.0), rt.construct(2, texSize), 2, "float")
         uv = rt.binary("/", fragCoord, rt.construct(2, texSize), 2, "float")
-        uR = rt.swizzle(rt.texture(_u_velTex, rt.binary("+", uv, rt.construct(2, rt.swizzle(texel, "x"), rt.f(0.0)), 2, "float")), "rg")
-        uL = rt.swizzle(rt.texture(_u_velTex, rt.binary("-", uv, rt.construct(2, rt.swizzle(texel, "x"), rt.f(0.0)), 2, "float")), "rg")
-        uT = rt.swizzle(rt.texture(_u_velTex, rt.binary("+", uv, rt.construct(2, rt.f(0.0), rt.swizzle(texel, "y")), 2, "float")), "rg")
-        uB = rt.swizzle(rt.texture(_u_velTex, rt.binary("-", uv, rt.construct(2, rt.f(0.0), rt.swizzle(texel, "y")), 2, "float")), "rg")
+        uR = rt.swizzle(rt.texture(_u_velTex, rt.binary("+", uv, rt.array([rt.swizzle(texel, "x"), rt.f(0.0)]), 2, "float")), "rg")
+        uL = rt.swizzle(rt.texture(_u_velTex, rt.binary("-", uv, rt.array([rt.swizzle(texel, "x"), rt.f(0.0)]), 2, "float")), "rg")
+        uT = rt.swizzle(rt.texture(_u_velTex, rt.binary("+", uv, rt.array([rt.f(0.0), rt.swizzle(texel, "y")]), 2, "float")), "rg")
+        uB = rt.swizzle(rt.texture(_u_velTex, rt.binary("-", uv, rt.array([rt.f(0.0), rt.swizzle(texel, "y")]), 2, "float")), "rg")
         if rt.binary("<", rt.swizzle(fragCoord, "x"), rt.f(1.0)):
             uL = rt.assign_swizzle(uL, "x", rt.unary("-", rt.swizzle(uR, "x")))
         if rt.binary(">", rt.swizzle(fragCoord, "x"), rt.binary("-", rt.construct(1, rt.swizzle(texSize, "x")), rt.f(1.0), 1, "float")):

@@ -124,7 +124,7 @@ def run_pixel(ctx, out):
             inkM = roundDotCoverage__vec2_float_float(rt.binary("-", rt.component_wise("fract", ruvM, width=2), rt.f(0.5), 2, "float"), valM, _u_sharpness)
             inkY = roundDotCoverage__vec2_float_float(rt.binary("-", rt.component_wise("fract", ruvY, width=2), rt.f(0.5), 2, "float"), valY, _u_sharpness)
             inkK = roundDotCoverage__vec2_float_float(rt.binary("-", rt.component_wise("fract", ruvK, width=2), rt.f(0.5), 2, "float"), valK, _u_sharpness)
-            screened = rt.binary("*", rt.binary("-", rt.construct(3, rt.f(1.0)), rt.construct(3, inkC, inkM, inkY), 3, "float"), rt.binary("-", rt.f(1.0), inkK, 1, "float"), 3, "float")
+            screened = rt.binary("*", rt.binary("-", rt.construct(3, rt.f(1.0)), rt.array([inkC, inkM, inkY]), 3, "float"), rt.binary("-", rt.f(1.0), inkK, 1, "float"), 3, "float")
             g.fragColor[:] = rt.construct(4, screened, alpha)
             return
         else:

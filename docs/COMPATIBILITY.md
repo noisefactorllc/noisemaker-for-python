@@ -73,7 +73,7 @@ Historical measurements remain bound to their original revisions in [completion 
 | README 512×512 first result | blocked | Probe exceeded 180 seconds under concurrent load. Smaller output passes. |
 | Minimum Python 3.11, other systems, upgrades | unverified | Runtime unavailable or workflow not executed. |
 | Default image parity | verified | 167 exact 8×8 comparisons against the recorded CPU snapshot. |
-| Nondefault alpha and feedback | failed | Maximum byte differences 179 and 1 respectively. GAP-005. |
+| Nondefault alpha and feedback | verified | Fixed 2026-09-26 at this source: four-component solid colors and the feedback program byte-match the pinned oracle `bfbe5476` at 8-bit and rgba16f level per the committed fixtures in `tests/data/gap005-oracle/` (with seed-sensitivity and statefulness controls). GAP-005 closed. |
 | Current landscape filtering | failed | Both valid choices are rejected as unknown parameters. GAP-001. |
 | Complete current-authority parity | stale | Three shader differences, missing cases, incomplete parameter matrix, and later upstream language changes. |
 | Source-update parity enforcement | blocked | No current exact-source CI checks or complete parity gate. |

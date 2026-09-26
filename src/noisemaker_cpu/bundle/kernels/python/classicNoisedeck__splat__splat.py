@@ -87,7 +87,7 @@ def run_pixel(ctx, out):
         return rt.component_wise("step", map__float_float_float_float_float(_u_speckCutoff, rt.f(0.0), rt.f(100.0), rt.f(0.6), rt.f(0.7)), d, width=1)
     def shape__vec2_int_float(st, sides, blend):
         st = rt.copy(st, "float")
-        st[:] = rt.binary("-", rt.binary("*", st, rt.f(2.0), 2, "float"), rt.construct(2, rt.binary("/", rt.swizzle(_u_fullResolution, "x"), rt.swizzle(_u_fullResolution, "y"), 1, "float"), rt.f(1.0)), 2, "float")
+        st[:] = rt.binary("-", rt.binary("*", st, rt.f(2.0), 2, "float"), rt.array([rt.binary("/", rt.swizzle(_u_fullResolution, "x"), rt.swizzle(_u_fullResolution, "y"), 1, "float"), rt.f(1.0)]), 2, "float")
         a = rt.binary("+", rt.component_wise("atan", rt.swizzle(st, "x"), rt.swizzle(st, "y"), width=1), rt.f(3.14159265359), 1, "float")
         r = rt.binary("/", rt.f(6.28318530718), rt.construct(1, sides), 1, "float")
         return rt.binary("*", rt.binary("*", rt.component_wise("cos", rt.binary("-", rt.binary("*", rt.component_wise("floor", rt.binary("+", rt.f(0.5), rt.binary("/", a, r, 1, "float"), 1, "float"), width=1), r, 1, "float"), a, 1, "float"), width=1), rt.length(st), 1, "float"), blend, 1, "float")
@@ -95,7 +95,7 @@ def run_pixel(ctx, out):
         globalCoord = rt.binary("+", rt.swizzle(ctx.frag_coord, "xy"), _u_tileOffset, 2, "float")
         uv = rt.binary("/", globalCoord, _u_fullResolution, 2, "float")
         color = rt.texture(_u_inputTex, rt.binary("/", rt.swizzle(ctx.frag_coord, "xy"), rt.construct(2, rt.texture_size(_u_inputTex)), 2, "float"))
-        noiseCoord = rt.binary("*", uv, rt.construct(2, rt.binary("/", rt.swizzle(_u_fullResolution, "x"), rt.swizzle(_u_fullResolution, "y"), 1, "float"), rt.f(1.0)), 2, "float")
+        noiseCoord = rt.binary("*", uv, rt.array([rt.binary("/", rt.swizzle(_u_fullResolution, "x"), rt.swizzle(_u_fullResolution, "y"), 1, "float"), rt.f(1.0)]), 2, "float")
         speckMask = rt.f(0.0)
         if _u_useSpecks:
             speckMask = speckle__vec2_vec2(rt.binary("+", noiseCoord, _u_speckSeed, 2, "float"), rt.binary("*", rt.construct(2, rt.f(32.0)), map__float_float_float_float_float(_u_speckScale, rt.f(1.0), rt.f(5.0), rt.f(2.0), rt.f(0.5)), 2, "float"))

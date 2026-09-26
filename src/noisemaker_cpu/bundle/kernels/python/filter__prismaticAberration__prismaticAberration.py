@@ -47,7 +47,7 @@ def run_pixel(ctx, out):
                                 (rgb.__setitem__(0, c), rgb.__setitem__(1, rt.f(0.0)), rgb.__setitem__(2, x), rgb)[-1]
                             else:
                                 (rgb.__setitem__(0, rt.f(0.0)), rgb.__setitem__(1, rt.f(0.0)), rgb.__setitem__(2, rt.f(0.0)), rgb)[-1]
-        return rt.binary("+", rgb, rt.construct(3, m, m, m), 3, "float")
+        return rt.binary("+", rgb, m, 3, "float")
     def rgb2hsv__vec3(rgb):
         rgb = rt.copy(rgb, "float")
         r = rt.swizzle(rgb, "r")
@@ -82,7 +82,7 @@ def run_pixel(ctx, out):
         globalUV = rt.binary("/", rt.binary("+", rt.swizzle(ctx.frag_coord, "xy"), _u_tileOffset, 2, "float"), fullRes, 2, "float")
         globalAspect = rt.binary("/", rt.swizzle(fullRes, "x"), rt.swizzle(fullRes, "y"), 1, "float")
         color = rt.construct(4, rt.f(0.0), rt.f(0.0), rt.f(0.0), rt.f(1.0))
-        diff = rt.binary("-", rt.construct(2, rt.binary("*", rt.f(0.5), globalAspect, 1, "float"), rt.f(0.5)), rt.construct(2, rt.binary("*", rt.swizzle(globalUV, "x"), globalAspect, 1, "float"), rt.swizzle(globalUV, "y")), 2, "float")
+        diff = rt.binary("-", rt.construct(2, rt.binary("*", rt.f(0.5), globalAspect, 1, "float"), rt.f(0.5)), rt.array([rt.binary("*", rt.swizzle(globalUV, "x"), globalAspect, 1, "float"), rt.swizzle(globalUV, "y")]), 2, "float")
         centerDist = rt.length(diff)
         lensedCoords = uv
         aberrationOffset = rt.binary("*", rt.binary("*", rt.binary("*", map__float_float_float_float_float(_u_aberrationAmt, rt.f(0.0), rt.f(100.0), rt.f(0.0), rt.f(0.05)), centerDist, 1, "float"), rt.f(3.14159265359), 1, "float"), rt.f(0.5), 1, "float")

@@ -175,9 +175,9 @@ def run_pixel(ctx, out):
     def computeGradient__vec3_float(p, eps):
         p = rt.copy(p, "float")
         d0 = computeFractal__vec3(p)[0]
-        dx = computeFractal__vec3(rt.binary("+", p, rt.construct(3, eps, rt.f(0.0), rt.f(0.0)), 3, "float"))[0]
-        dy = computeFractal__vec3(rt.binary("+", p, rt.construct(3, rt.f(0.0), eps, rt.f(0.0)), 3, "float"))[0]
-        dz = computeFractal__vec3(rt.binary("+", p, rt.construct(3, rt.f(0.0), rt.f(0.0), eps), 3, "float"))[0]
+        dx = computeFractal__vec3(rt.binary("+", p, rt.array([eps, rt.f(0.0), rt.f(0.0)]), 3, "float"))[0]
+        dy = computeFractal__vec3(rt.binary("+", p, rt.array([rt.f(0.0), eps, rt.f(0.0)]), 3, "float"))[0]
+        dz = computeFractal__vec3(rt.binary("+", p, rt.array([rt.f(0.0), rt.f(0.0), eps]), 3, "float"))[0]
         return rt.binary("/", rt.construct(3, rt.binary("-", dx, d0, 1, "float"), rt.binary("-", dy, d0, 1, "float"), rt.binary("-", dz, d0, 1, "float")), eps, 3, "float")
     def applyCollisionAvoidance__vec3(pos):
         pos = rt.copy(pos, "float")

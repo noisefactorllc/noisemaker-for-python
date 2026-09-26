@@ -201,9 +201,9 @@ def run_pixel(ctx, out):
         trap = rt.component_wise("clamp", rt.binary("*", rt.swizzle(result, "y"), rt.f(0.5), 1, "float"), rt.f(0.0), rt.f(1.0), width=1)
         iterRatio = rt.swizzle(result, "z")
         eps = rt.f(0.01)
-        dxp = rt.swizzle(computeFractal__vec3_vec3(rt.binary("+", p, rt.construct(3, eps, rt.f(0.0), rt.f(0.0)), 3, "float"), juliaC), "x")
-        dyp = rt.swizzle(computeFractal__vec3_vec3(rt.binary("+", p, rt.construct(3, rt.f(0.0), eps, rt.f(0.0)), 3, "float"), juliaC), "x")
-        dzp = rt.swizzle(computeFractal__vec3_vec3(rt.binary("+", p, rt.construct(3, rt.f(0.0), rt.f(0.0), eps), 3, "float"), juliaC), "x")
+        dxp = rt.swizzle(computeFractal__vec3_vec3(rt.binary("+", p, rt.array([eps, rt.f(0.0), rt.f(0.0)]), 3, "float"), juliaC), "x")
+        dyp = rt.swizzle(computeFractal__vec3_vec3(rt.binary("+", p, rt.array([rt.f(0.0), eps, rt.f(0.0)]), 3, "float"), juliaC), "x")
+        dzp = rt.swizzle(computeFractal__vec3_vec3(rt.binary("+", p, rt.array([rt.f(0.0), rt.f(0.0), eps]), 3, "float"), juliaC), "x")
         gradient = rt.binary("/", rt.construct(3, rt.binary("-", dxp, dist, 1, "float"), rt.binary("-", dyp, dist, 1, "float"), rt.binary("-", dzp, dist, 1, "float")), eps, 3, "float")
         normal = rt.normalize(rt.binary("+", gradient, rt.construct(3, rt.f(1e-06)), 3, "float"))
         if rt.binary("==", _u_colorMode, rt.i(0)):

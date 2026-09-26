@@ -76,7 +76,7 @@ def run_pixel(ctx, out):
         return rt.binary("-", rt.length(q), rt.swizzle(t, "y"), 1, "float")
     def cylinderSDF__vec3(p):
         p = rt.copy(p, "float")
-        d = rt.binary("-", rt.component_wise("abs", rt.construct(2, rt.length(rt.swizzle(p, "xz")), rt.swizzle(p, "y")), width=2), rt.construct(2, rt.f(0.35), rt.f(0.45)), 2, "float")
+        d = rt.binary("-", rt.component_wise("abs", rt.construct(2, rt.length(rt.swizzle(p, "xz")), rt.swizzle(p, "y")), width=2), rt.array([rt.f(0.35), rt.f(0.45)]), 2, "float")
         return rt.binary("+", rt.component_wise("min", rt.component_wise("max", rt.swizzle(d, "x"), rt.swizzle(d, "y"), width=1), rt.f(0.0), width=1), rt.length(rt.component_wise("max", d, rt.f(0.0), width=2)), 1, "float")
     def coneSDF__vec3(p):
         p = rt.copy(p, "float")
@@ -140,9 +140,9 @@ def run_pixel(ctx, out):
         lf2 = map__float_float_float_float_float(_u_loopBScale, rt.f(1.0), rt.f(100.0), rt.f(6.0), rt.f(1.0))
         d = computeValue__vec3_float_float(p, lf1, lf2)
         eps = rt.binary("/", rt.f(1.0), volSizeF, 1, "float")
-        dx = computeValue__vec3_float_float(rt.binary("+", p, rt.construct(3, eps, rt.f(0.0), rt.f(0.0)), 3, "float"), lf1, lf2)
-        dy = computeValue__vec3_float_float(rt.binary("+", p, rt.construct(3, rt.f(0.0), eps, rt.f(0.0)), 3, "float"), lf1, lf2)
-        dz = computeValue__vec3_float_float(rt.binary("+", p, rt.construct(3, rt.f(0.0), rt.f(0.0), eps), 3, "float"), lf1, lf2)
+        dx = computeValue__vec3_float_float(rt.binary("+", p, rt.array([eps, rt.f(0.0), rt.f(0.0)]), 3, "float"), lf1, lf2)
+        dy = computeValue__vec3_float_float(rt.binary("+", p, rt.array([rt.f(0.0), eps, rt.f(0.0)]), 3, "float"), lf1, lf2)
+        dz = computeValue__vec3_float_float(rt.binary("+", p, rt.array([rt.f(0.0), rt.f(0.0), eps]), 3, "float"), lf1, lf2)
         gradient = rt.binary("/", rt.construct(3, rt.binary("-", dx, d, 1, "float"), rt.binary("-", dy, d, 1, "float"), rt.binary("-", dz, d, 1, "float")), eps, 3, "float")
         normal = rt.normalize(rt.binary("+", rt.unary("-", gradient), rt.construct(3, rt.f(1e-06)), 3, "float"))
         g.fragColor[:] = rt.construct(4, d, d, d, rt.f(1.0))

@@ -72,9 +72,9 @@ def run_pixel(ctx, out):
     def calcNormal__vec3(p):
         p = rt.copy(p, "float")
         eps = rt.binary("/", rt.f(2.0), rt.construct(1, _u_volumeSize), 1, "float")
-        dx = rt.binary("-", getField__vec3(rt.binary("+", p, rt.construct(3, eps, rt.f(0.0), rt.f(0.0)), 3, "float")), getField__vec3(rt.binary("-", p, rt.construct(3, eps, rt.f(0.0), rt.f(0.0)), 3, "float")), 1, "float")
-        dy = rt.binary("-", getField__vec3(rt.binary("+", p, rt.construct(3, rt.f(0.0), eps, rt.f(0.0)), 3, "float")), getField__vec3(rt.binary("-", p, rt.construct(3, rt.f(0.0), eps, rt.f(0.0)), 3, "float")), 1, "float")
-        dz = rt.binary("-", getField__vec3(rt.binary("+", p, rt.construct(3, rt.f(0.0), rt.f(0.0), eps), 3, "float")), getField__vec3(rt.binary("-", p, rt.construct(3, rt.f(0.0), rt.f(0.0), eps), 3, "float")), 1, "float")
+        dx = rt.binary("-", getField__vec3(rt.binary("+", p, rt.array([eps, rt.f(0.0), rt.f(0.0)]), 3, "float")), getField__vec3(rt.binary("-", p, rt.array([eps, rt.f(0.0), rt.f(0.0)]), 3, "float")), 1, "float")
+        dy = rt.binary("-", getField__vec3(rt.binary("+", p, rt.array([rt.f(0.0), eps, rt.f(0.0)]), 3, "float")), getField__vec3(rt.binary("-", p, rt.array([rt.f(0.0), eps, rt.f(0.0)]), 3, "float")), 1, "float")
+        dz = rt.binary("-", getField__vec3(rt.binary("+", p, rt.array([rt.f(0.0), rt.f(0.0), eps]), 3, "float")), getField__vec3(rt.binary("-", p, rt.array([rt.f(0.0), rt.f(0.0), eps]), 3, "float")), 1, "float")
         n = rt.construct(3, dx, dy, dz)
         len = rt.length(n)
         if rt.binary("<", len, rt.f(0.0001)):
@@ -237,7 +237,7 @@ def run_pixel(ctx, out):
             (fullRes.__setitem__(0, rt.f(1024.0)), fullRes.__setitem__(1, rt.f(1024.0)), fullRes)[-1]
         globalCoord = rt.binary("+", rt.swizzle(ctx.frag_coord, "xy"), _u_tileOffset, 2, "float")
         uv = rt.binary("/", rt.binary("-", globalCoord, rt.binary("*", rt.f(0.5), fullRes, 2, "float"), 2, "float"), rt.swizzle(fullRes, "y"), 2, "float")
-        ro = rt.binary("*", rt.binary("*", _u_cameraPosition, rt.construct(3, rt.unary("-", rt.f(1.0)), rt.f(1.0), rt.f(1.0)), 3, "float"), rt.f(3.5), 3, "float")
+        ro = rt.binary("*", rt.binary("*", _u_cameraPosition, rt.array([rt.unary("-", rt.f(1.0)), rt.f(1.0), rt.f(1.0)]), 3, "float"), rt.f(3.5), 3, "float")
         forward = rt.construct(3, 0.0)
         if rt.binary("<", rt.length(ro), rt.f(0.001)):
             (forward.__setitem__(0, rt.f(0.0)), forward.__setitem__(1, rt.f(0.0)), forward.__setitem__(2, rt.unary("-", rt.f(1.0))), forward)[-1]
@@ -249,7 +249,7 @@ def run_pixel(ctx, out):
         right = rt.normalize(rt.cross(worldUp, forward))
         up = rt.cross(forward, right)
         rd = rt.normalize(rt.binary("+", rt.binary("+", forward, rt.binary("*", rt.swizzle(uv, "x"), right, 3, "float"), 3, "float"), rt.binary("*", rt.swizzle(uv, "y"), up, 3, "float"), 3, "float"))
-        worldLightDir = rt.normalize(rt.binary("*", _u_lightDirection, rt.construct(3, rt.unary("-", rt.f(1.0)), rt.f(1.0), rt.f(1.0)), 3, "float"))
+        worldLightDir = rt.normalize(rt.binary("*", _u_lightDirection, rt.array([rt.unary("-", rt.f(1.0)), rt.f(1.0), rt.f(1.0)]), 3, "float"))
         angle = rt.binary("*", rt.binary("*", _u_time, g.TAU, 1, "float"), rt.construct(1, _u_orbitSpeed), 1, "float")
         c = rt.component_wise("cos", angle, width=1)
         s = rt.component_wise("sin", angle, width=1)

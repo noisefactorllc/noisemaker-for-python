@@ -236,7 +236,7 @@ def run_pixel(ctx, out):
         x2 = rt.binary("+", rt.binary("-", x0, i2, 3, "float"), rt.swizzle(C, "yyy"), 3, "float")
         x3 = rt.binary("-", x0, rt.swizzle(D, "yyy"), 3, "float")
         i[:] = mod289__vec3(i)
-        p = permute__vec4(rt.binary("+", rt.binary("+", permute__vec4(rt.binary("+", rt.binary("+", permute__vec4(rt.binary("+", rt.swizzle(i, "z"), rt.construct(4, rt.f(0.0), rt.swizzle(i1, "z"), rt.swizzle(i2, "z"), rt.f(1.0)), 4, "float")), rt.swizzle(i, "y"), 4, "float"), rt.construct(4, rt.f(0.0), rt.swizzle(i1, "y"), rt.swizzle(i2, "y"), rt.f(1.0)), 4, "float")), rt.swizzle(i, "x"), 4, "float"), rt.construct(4, rt.f(0.0), rt.swizzle(i1, "x"), rt.swizzle(i2, "x"), rt.f(1.0)), 4, "float"))
+        p = permute__vec4(rt.binary("+", rt.binary("+", permute__vec4(rt.binary("+", rt.binary("+", permute__vec4(rt.binary("+", rt.swizzle(i, "z"), rt.construct(4, rt.f(0.0), rt.swizzle(i1, "z"), rt.swizzle(i2, "z"), rt.f(1.0)), 4, "float")), rt.swizzle(i, "y"), 4, "float"), rt.array([rt.f(0.0), rt.swizzle(i1, "y"), rt.swizzle(i2, "y"), rt.f(1.0)]), 4, "float")), rt.swizzle(i, "x"), 4, "float"), rt.array([rt.f(0.0), rt.swizzle(i1, "x"), rt.swizzle(i2, "x"), rt.f(1.0)]), 4, "float"))
         n_ = rt.f(0.142857142857)
         ns = rt.binary("-", rt.binary("*", n_, rt.swizzle(D, "wyz"), 3, "float"), rt.swizzle(D, "xzx"), 3, "float")
         j = rt.binary("-", p, rt.binary("*", rt.f(49.0), rt.component_wise("floor", rt.binary("*", rt.binary("*", p, rt.swizzle(ns, "z"), 4, "float"), rt.swizzle(ns, "z"), 4, "float"), width=4), 4, "float"), 4, "float")
@@ -354,9 +354,9 @@ def run_pixel(ctx, out):
         p = rt.copy(p, "float")
         epsilon = rt.f(0.01)
         d = getDist__vec3(p)
-        dx = rt.binary("-", getDist__vec3(rt.binary("+", p, rt.construct(3, epsilon, rt.f(0.0), rt.f(0.0)), 3, "float")), d, 1, "float")
-        dy = rt.binary("-", getDist__vec3(rt.binary("+", p, rt.construct(3, rt.f(0.0), epsilon, rt.f(0.0)), 3, "float")), d, 1, "float")
-        dz = rt.binary("-", getDist__vec3(rt.binary("+", p, rt.construct(3, rt.f(0.0), rt.f(0.0), epsilon), 3, "float")), d, 1, "float")
+        dx = rt.binary("-", getDist__vec3(rt.binary("+", p, rt.array([epsilon, rt.f(0.0), rt.f(0.0)]), 3, "float")), d, 1, "float")
+        dy = rt.binary("-", getDist__vec3(rt.binary("+", p, rt.array([rt.f(0.0), epsilon, rt.f(0.0)]), 3, "float")), d, 1, "float")
+        dz = rt.binary("-", getDist__vec3(rt.binary("+", p, rt.array([rt.f(0.0), rt.f(0.0), epsilon]), 3, "float")), d, 1, "float")
         return rt.normalize(rt.construct(3, dx, dy, dz))
     def rayMarch__vec3_vec3(rayOrigin, rayDirection):
         rayOrigin = rt.copy(rayOrigin, "float")
@@ -407,7 +407,7 @@ def run_pixel(ctx, out):
                                 (rgb.__setitem__(0, c), rgb.__setitem__(1, rt.f(0.0)), rgb.__setitem__(2, x), rgb)[-1]
                             else:
                                 (rgb.__setitem__(0, rt.f(0.0)), rgb.__setitem__(1, rt.f(0.0)), rgb.__setitem__(2, rt.f(0.0)), rgb)[-1]
-        return rt.binary("+", rgb, rt.construct(3, m, m, m), 3, "float")
+        return rt.binary("+", rgb, m, 3, "float")
     def rgb2hsv__vec3(rgb):
         rgb = rt.copy(rgb, "float")
         r = rt.swizzle(rgb, "r")
@@ -437,7 +437,7 @@ def run_pixel(ctx, out):
         rayDirection = rt.normalize(rt.construct(3, st, rt.f(1.0)))
         d = rayMarch__vec3_vec3(rayOrigin, rayDirection)
         p = rt.binary("+", rayOrigin, rt.binary("*", rayDirection, d, 3, "float"), 3, "float")
-        lightPosition = rt.binary("+", rayOrigin, rt.construct(3, rt.unary("-", rt.f(5.0)), rt.f(5.0), rt.unary("-", rt.f(10.0))), 3, "float")
+        lightPosition = rt.binary("+", rayOrigin, rt.array([rt.unary("-", rt.f(5.0)), rt.f(5.0), rt.unary("-", rt.f(10.0))]), 3, "float")
         lightVector = rt.normalize(rt.binary("-", lightPosition, p, 3, "float"))
         normal = getNormal__vec3(p)
         diffuse = rt.component_wise("clamp", rt.dot(normal, lightVector), rt.f(0.0), rt.f(1.0), width=1)

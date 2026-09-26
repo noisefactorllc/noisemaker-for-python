@@ -23,7 +23,7 @@ def run_pixel(ctx, out):
     def hash3__vec3(p):
         p = rt.copy(p, "float")
         p[:] = rt.binary("+", p, rt.binary("*", rt.construct(1, _u_seed), rt.f(0.1), 1, "float"), 3, "float")
-        p[:] = rt.component_wise("fract", rt.binary("*", p, rt.construct(3, rt.f(0.1031), rt.f(0.103), rt.f(0.0973)), 3, "float"), width=3)
+        p[:] = rt.component_wise("fract", rt.binary("*", p, rt.array([rt.f(0.1031), rt.f(0.103), rt.f(0.0973)]), 3, "float"), width=3)
         p[:] = rt.binary("+", p, rt.dot(p, rt.binary("+", rt.swizzle(p, "yxz"), rt.f(33.33), 3, "float")), 3, "float")
         return rt.component_wise("fract", rt.binary("*", rt.binary("+", rt.swizzle(p, "x"), rt.swizzle(p, "y"), 1, "float"), rt.swizzle(p, "z"), 1, "float"), width=1)
     def atlasTexel__ivec3_int(p, volSize):

@@ -74,9 +74,9 @@ def run_pixel(ctx, out):
         f = rt.component_wise("fract", p, width=2)
         u = rt.binary("*", rt.binary("*", f, f, 2, "float"), rt.binary("-", rt.f(3.0), rt.binary("*", rt.f(2.0), f, 2, "float"), 2, "float"), 2, "float")
         a = hash2D__vec2(i)
-        b = hash2D__vec2(rt.binary("+", i, rt.construct(2, rt.f(1.0), rt.f(0.0)), 2, "float"))
-        c = hash2D__vec2(rt.binary("+", i, rt.construct(2, rt.f(0.0), rt.f(1.0)), 2, "float"))
-        d = hash2D__vec2(rt.binary("+", i, rt.construct(2, rt.f(1.0), rt.f(1.0)), 2, "float"))
+        b = hash2D__vec2(rt.binary("+", i, rt.array([rt.f(1.0), rt.f(0.0)]), 2, "float"))
+        c = hash2D__vec2(rt.binary("+", i, rt.array([rt.f(0.0), rt.f(1.0)]), 2, "float"))
+        d = hash2D__vec2(rt.binary("+", i, rt.f(1.0), 2, "float"))
         return rt.component_wise("mix", rt.component_wise("mix", a, b, rt.swizzle(u, "x"), width=1), rt.component_wise("mix", c, d, rt.swizzle(u, "x"), width=1), rt.swizzle(u, "y"), width=1)
     def fbmNoise__vec2(p):
         p = rt.copy(p, "float")

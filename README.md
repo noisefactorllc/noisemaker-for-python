@@ -83,8 +83,9 @@ Cross-language parity against the JS engine (`scripts/parity.py`) needs a siblin
 source-bound result (worker at `912e6a9`, see `docs/COMPATIBILITY.md` §6)
 compared 167 effects with zero byte tolerance and reported 38 exclusions (see
 `docs/COMPATIBILITY.md` §6). No DSL-harness result is on record for this
-source. Two independent numerical failures and two
-landscape rejections remain open (see `docs/COMPLETION_GAPS.md` GAP-001, GAP-005),
+source. One independent numerical failure area (GAP-001 authority drift) and two
+landscape rejections remain open (see `docs/COMPLETION_GAPS.md` GAP-001;
+GAP-005 nondefault color/feedback parity closed 2026-09-26),
 and the 38 image-harness exclusions were not run in that harness's context, so
 full-catalog parity is unqualified. No parity result currently on record
 qualifies the 205-effect bundle as a whole.

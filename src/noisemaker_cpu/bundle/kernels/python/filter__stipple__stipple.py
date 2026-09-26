@@ -22,7 +22,7 @@ def run_pixel(ctx, out):
         return rt.component_wise("fract", rt.construct(1, rt.binary("*", rt.construct(1, rt.binary("+", rt.swizzle(p3, "x"), rt.swizzle(p3, "y"), 1, "float")), rt.swizzle(p3, "z"), 1, "float")), width=1)
     def hash22__vec2(p):
         p = rt.copy(p, "float")
-        p3 = rt.component_wise("fract", rt.binary("*", rt.construct(3, rt.swizzle(p, "xyx")), rt.construct(3, rt.f(0.1031), rt.f(0.103), rt.f(0.0973)), 3, "float"), width=3)
+        p3 = rt.component_wise("fract", rt.binary("*", rt.construct(3, rt.swizzle(p, "xyx")), rt.array([rt.f(0.1031), rt.f(0.103), rt.f(0.0973)]), 3, "float"), width=3)
         p3[:] = rt.binary("+", p3, rt.dot(p3, rt.binary("+", rt.swizzle(p3, "yzx"), rt.f(33.33), 3, "float")), 3, "float")
         return rt.component_wise("fract", rt.construct(2, rt.construct(1, rt.binary("*", rt.construct(1, rt.binary("+", rt.swizzle(p3, "x"), rt.swizzle(p3, "y"), 1, "float")), rt.swizzle(p3, "z"), 1, "float")), rt.construct(1, rt.binary("*", rt.construct(1, rt.binary("+", rt.swizzle(p3, "x"), rt.swizzle(p3, "z"), 1, "float")), rt.swizzle(p3, "y"), 1, "float"))), width=2)
     def lum__vec3(c):
@@ -33,7 +33,7 @@ def run_pixel(ctx, out):
         i = rt.component_wise("floor", p, width=2)
         f = rt.component_wise("fract", p, width=2)
         u = rt.binary("*", rt.binary("*", f, f, 2, "float"), rt.binary("-", rt.f(3.0), rt.binary("*", rt.f(2.0), f, 2, "float"), 2, "float"), 2, "float")
-        return rt.component_wise("mix", rt.component_wise("mix", hash12__vec2(i), hash12__vec2(rt.binary("+", i, rt.construct(2, rt.f(1.0), rt.f(0.0)), 2, "float")), rt.swizzle(u, "x"), width=1), rt.component_wise("mix", hash12__vec2(rt.binary("+", i, rt.construct(2, rt.f(0.0), rt.f(1.0)), 2, "float")), hash12__vec2(rt.binary("+", i, rt.construct(2, rt.f(1.0), rt.f(1.0)), 2, "float")), rt.swizzle(u, "x"), width=1), rt.swizzle(u, "y"), width=1)
+        return rt.component_wise("mix", rt.component_wise("mix", hash12__vec2(i), hash12__vec2(rt.binary("+", i, rt.array([rt.f(1.0), rt.f(0.0)]), 2, "float")), rt.swizzle(u, "x"), width=1), rt.component_wise("mix", hash12__vec2(rt.binary("+", i, rt.array([rt.f(0.0), rt.f(1.0)]), 2, "float")), hash12__vec2(rt.binary("+", i, rt.f(1.0), 2, "float")), rt.swizzle(u, "x"), width=1), rt.swizzle(u, "y"), width=1)
     def fbm__vec2(p):
         p = rt.copy(p, "float")
         v = rt.f(0.0)
@@ -129,7 +129,7 @@ def run_pixel(ctx, out):
                 if rt.binary("==", _u_MODE, rt.i(1)):
                     noiseP[:] = rt.binary("/", gc, _u_grainSize, 2, "float")
                 else:
-                    noiseP[:] = rt.binary("*", gc, rt.construct(2, rt.binary("/", rt.f(1.0), _u_grainSize, 1, "float"), rt.binary("/", rt.f(1.0), rt.binary("*", _u_grainSize, rt.f(8.0), 1, "float"), 1, "float")), 2, "float")
+                    noiseP[:] = rt.binary("*", gc, rt.array([rt.binary("/", rt.f(1.0), _u_grainSize, 1, "float"), rt.binary("/", rt.f(1.0), rt.binary("*", _u_grainSize, rt.f(8.0), 1, "float"), 1, "float")]), 2, "float")
                 n = vnoise__vec2(rt.binary("+", noiseP, rt.binary("*", rt.construct(1, _u_seed), rt.f(101.7), 1, "float"), 2, "float"))
                 n = rt.binary("+", n, rt.binary("/", rt.binary("-", _u_density, rt.f(50.0), 1, "float"), rt.f(100.0), 1, "float"), 1, "float")
                 src = rt.swizzle(rt.texture(_u_inputTex, uv), "rgb")

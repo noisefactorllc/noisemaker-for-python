@@ -58,7 +58,7 @@ def run_pixel(ctx, out):
         local = rt.construct(2, 0.0)
         effectiveScale = rt.f(0.0)
         if rt.binary("==", _u_symmetry, rt.i(3)):
-            local = hexCoord__vec2(rt.binary("*", rt.binary("+", st, rt.construct(2, _u_offsetX, _u_offsetY), 2, "float"), rep, 2, "float"))
+            local = hexCoord__vec2(rt.binary("*", rt.binary("+", st, rt.array([_u_offsetX, _u_offsetY]), 2, "float"), rep, 2, "float"))
             local[:] = rt.binary("/", local, _u_scale, 2, "float")
             st[:] = rotationalFold__vec2_int(rt.binary("+", local, rt.f(0.5), 2, "float"), rt.i(6))
         else:

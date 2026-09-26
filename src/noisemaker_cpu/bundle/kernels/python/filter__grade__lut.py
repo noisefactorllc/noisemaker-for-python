@@ -217,7 +217,7 @@ def run_pixel(ctx, out):
         rgb = rt.assign_swizzle(rgb, "g", rt.binary("*", rt.component_wise("pow", rt.swizzle(rgb, "g"), rt.f(0.9), width=1), rt.f(0.9), 1, "float"))
         rgb = rt.assign_swizzle(rgb, "b", rt.binary("*", rt.component_wise("pow", rt.swizzle(rgb, "b"), rt.f(0.85), width=1), rt.f(1.1), 1, "float"))
         depth = rt.binary("-", rt.f(1.0), rt.binary("*", luma__vec3(rgb), rt.f(0.3), 1, "float"), 1, "float")
-        rgb[:] = rt.component_wise("mix", rgb, rt.binary("*", rgb, rt.construct(3, rt.f(0.4), rt.f(0.7), rt.f(1.0)), 3, "float"), rt.binary("*", rt.f(0.3), depth, 1, "float"), width=3)
+        rgb[:] = rt.component_wise("mix", rgb, rt.binary("*", rgb, rt.array([rt.f(0.4), rt.f(0.7), rt.f(1.0)]), 3, "float"), rt.binary("*", rt.f(0.3), depth, 1, "float"), width=3)
         return rt.component_wise("clamp", rgb, rt.f(0.0), rt.f(1.0), width=3)
     def lutSunset__vec3(rgb):
         rgb = rt.copy(rgb, "float")

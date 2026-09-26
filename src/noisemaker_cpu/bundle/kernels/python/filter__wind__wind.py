@@ -48,7 +48,7 @@ def run_pixel(ctx, out):
             if rt.binary(">", distancePx, reach):
                 break
             sampleDistance = rt.binary("+", distancePx, staggerPhase, 1, "float")
-            sampleUV = rt.component_wise("clamp", rt.binary("/", rt.binary("+", rt.swizzle(ctx.frag_coord, "xy"), rt.construct(2, rt.binary("*", marchDir, sampleDistance, 1, "float"), rt.f(0.0)), 2, "float"), _u_resolution, 2, "float"), rt.f(0.0), rt.f(1.0), width=2)
+            sampleUV = rt.component_wise("clamp", rt.binary("/", rt.binary("+", rt.swizzle(ctx.frag_coord, "xy"), rt.array([rt.binary("*", marchDir, sampleDistance, 1, "float"), rt.f(0.0)]), 2, "float"), _u_resolution, 2, "float"), rt.f(0.0), rt.f(1.0), width=2)
             candidate = rt.swizzle(rt.texture(_u_inputTex, sampleUV), "rgb")
             contrast = rt.binary("-", rt.binary("-", lum__vec3(candidate), baseLum, 1, "float"), edge, 1, "float")
             activation = rt.component_wise("smoothstep", rt.f(0.0), rt.f(0.08), contrast, width=1)

@@ -20,7 +20,7 @@ def run_pixel(ctx, out):
         fullRes = (_u_fullResolution if rt.binary(">", rt.swizzle(_u_fullResolution, "x"), rt.f(0.0)) else _u_resolution)
         globalUV = rt.binary("/", rt.binary("+", rt.swizzle(ctx.frag_coord, "xy"), _u_tileOffset, 2, "float"), fullRes, 2, "float")
         globalAspect = rt.binary("/", rt.swizzle(fullRes, "x"), rt.swizzle(fullRes, "y"), 1, "float")
-        diff = rt.binary("-", rt.construct(2, rt.binary("*", rt.f(0.5), globalAspect, 1, "float"), rt.f(0.5)), rt.construct(2, rt.binary("*", rt.swizzle(globalUV, "x"), globalAspect, 1, "float"), rt.swizzle(globalUV, "y")), 2, "float")
+        diff = rt.binary("-", rt.construct(2, rt.binary("*", rt.f(0.5), globalAspect, 1, "float"), rt.f(0.5)), rt.array([rt.binary("*", rt.swizzle(globalUV, "x"), globalAspect, 1, "float"), rt.swizzle(globalUV, "y")]), 2, "float")
         centerDist = rt.length(diff)
         aberrationOffset = rt.binary("*", rt.binary("*", rt.binary("*", map__float_float_float_float_float(_u_aberrationAmt, rt.f(0.0), rt.f(100.0), rt.f(0.0), rt.f(0.05)), centerDist, 1, "float"), rt.f(3.14159265359), 1, "float"), rt.f(0.5), 1, "float")
         redOffset = rt.component_wise("mix", rt.component_wise("clamp", rt.binary("+", rt.swizzle(uv, "x"), aberrationOffset, 1, "float"), rt.f(0.0), rt.f(1.0), width=1), rt.swizzle(uv, "x"), rt.swizzle(uv, "x"), width=1)

@@ -35,7 +35,7 @@ def run_pixel(ctx, out):
     def main__void():
         globalCoord = rt.binary("+", rt.swizzle(ctx.frag_coord, "xy"), _u_tileOffset, 2, "float")
         dimensions = rt.texture_size(_u_inputTex)
-        uv = rt.binary("/", rt.binary("-", rt.swizzle(ctx.frag_coord, "xy"), rt.construct(2, rt.f(0.5)), 2, "float"), rt.construct(2, rt.component_wise("max", rt.swizzle(dimensions, "x"), rt.i(1), width=1), rt.component_wise("max", rt.swizzle(dimensions, "y"), rt.i(1), width=1)), 2, "float")
+        uv = rt.binary("/", rt.binary("-", rt.swizzle(ctx.frag_coord, "xy"), rt.construct(2, rt.f(0.5)), 2, "float"), rt.array([rt.component_wise("max", rt.swizzle(dimensions, "x"), rt.i(1), width=1), rt.component_wise("max", rt.swizzle(dimensions, "y"), rt.i(1), width=1)]), 2, "float")
         texel = rt.texture(_u_inputTex, uv)
         value = valueMapComponent__vec4(texel)
         g.fragColor[:] = rt.construct(4, value, value, value, rt.swizzle(texel, "a"))

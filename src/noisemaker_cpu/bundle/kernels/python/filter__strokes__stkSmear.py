@@ -24,10 +24,10 @@ def run_pixel(ctx, out):
         i = rt.component_wise("floor", p, width=2)
         f = rt.component_wise("fract", p, width=2)
         u = rt.construct(2, rt.binary("*", rt.binary("*", f, f, 2, "float"), rt.binary("-", rt.f(3.0), rt.binary("*", rt.f(2.0), f, 2, "float"), 2, "float"), 2, "float"))
-        return rt.component_wise("mix", rt.component_wise("mix", hash12__vec2(i), hash12__vec2(rt.binary("+", i, rt.construct(2, rt.f(1.0), rt.f(0.0)), 2, "float")), rt.swizzle(u, "x"), width=1), rt.component_wise("mix", hash12__vec2(rt.binary("+", i, rt.construct(2, rt.f(0.0), rt.f(1.0)), 2, "float")), hash12__vec2(rt.binary("+", i, rt.construct(2, rt.f(1.0)), 2, "float")), rt.swizzle(u, "x"), width=1), rt.swizzle(u, "y"), width=1)
+        return rt.component_wise("mix", rt.component_wise("mix", hash12__vec2(i), hash12__vec2(rt.binary("+", i, rt.array([rt.f(1.0), rt.f(0.0)]), 2, "float")), rt.swizzle(u, "x"), width=1), rt.component_wise("mix", hash12__vec2(rt.binary("+", i, rt.array([rt.f(0.0), rt.f(1.0)]), 2, "float")), hash12__vec2(rt.binary("+", i, rt.construct(2, rt.f(1.0)), 2, "float")), rt.swizzle(u, "x"), width=1), rt.swizzle(u, "y"), width=1)
     def hash22__vec2(p):
         p = rt.copy(p, "float")
-        p3 = rt.component_wise("fract", rt.binary("*", rt.construct(3, rt.swizzle(p, "xyx")), rt.construct(3, rt.f(0.1031), rt.f(0.103), rt.f(0.0973)), 3, "float"), width=3)
+        p3 = rt.component_wise("fract", rt.binary("*", rt.construct(3, rt.swizzle(p, "xyx")), rt.array([rt.f(0.1031), rt.f(0.103), rt.f(0.0973)]), 3, "float"), width=3)
         p3[:] = rt.binary("+", p3, rt.dot(p3, rt.binary("+", rt.swizzle(p3, "yzx"), rt.f(33.33), 3, "float")), 3, "float")
         return rt.component_wise("fract", rt.construct(2, rt.construct(1, rt.binary("*", rt.construct(1, rt.binary("+", rt.swizzle(p3, "x"), rt.swizzle(p3, "y"), 1, "float")), rt.swizzle(p3, "z"), 1, "float")), rt.construct(1, rt.binary("*", rt.construct(1, rt.binary("+", rt.swizzle(p3, "x"), rt.swizzle(p3, "z"), 1, "float")), rt.swizzle(p3, "y"), 1, "float"))), width=2)
     def lum__vec3(c):
@@ -36,14 +36,14 @@ def run_pixel(ctx, out):
     def lumGradient__vec2(uv):
         uv = rt.copy(uv, "float")
         px = rt.construct(2, rt.binary("/", rt.f(1.0), _u_resolution, 2, "float"))
-        tl = lum__vec3(rt.swizzle(rt.texture(_u_inputTex, rt.binary("+", uv, rt.binary("*", px, rt.construct(2, rt.unary("-", rt.f(1.0)), rt.f(1.0)), 2, "float"), 2, "float")), "rgb"))
-        l = lum__vec3(rt.swizzle(rt.texture(_u_inputTex, rt.binary("+", uv, rt.binary("*", px, rt.construct(2, rt.unary("-", rt.f(1.0)), rt.f(0.0)), 2, "float"), 2, "float")), "rgb"))
-        bl = lum__vec3(rt.swizzle(rt.texture(_u_inputTex, rt.binary("+", uv, rt.binary("*", px, rt.construct(2, rt.unary("-", rt.f(1.0)), rt.unary("-", rt.f(1.0))), 2, "float"), 2, "float")), "rgb"))
-        tr = lum__vec3(rt.swizzle(rt.texture(_u_inputTex, rt.binary("+", uv, rt.binary("*", px, rt.construct(2, rt.f(1.0), rt.f(1.0)), 2, "float"), 2, "float")), "rgb"))
-        r = lum__vec3(rt.swizzle(rt.texture(_u_inputTex, rt.binary("+", uv, rt.binary("*", px, rt.construct(2, rt.f(1.0), rt.f(0.0)), 2, "float"), 2, "float")), "rgb"))
-        br = lum__vec3(rt.swizzle(rt.texture(_u_inputTex, rt.binary("+", uv, rt.binary("*", px, rt.construct(2, rt.f(1.0), rt.unary("-", rt.f(1.0))), 2, "float"), 2, "float")), "rgb"))
-        t = lum__vec3(rt.swizzle(rt.texture(_u_inputTex, rt.binary("+", uv, rt.binary("*", px, rt.construct(2, rt.f(0.0), rt.f(1.0)), 2, "float"), 2, "float")), "rgb"))
-        b = lum__vec3(rt.swizzle(rt.texture(_u_inputTex, rt.binary("+", uv, rt.binary("*", px, rt.construct(2, rt.f(0.0), rt.unary("-", rt.f(1.0))), 2, "float"), 2, "float")), "rgb"))
+        tl = lum__vec3(rt.swizzle(rt.texture(_u_inputTex, rt.binary("+", uv, rt.binary("*", px, rt.array([rt.unary("-", rt.f(1.0)), rt.f(1.0)]), 2, "float"), 2, "float")), "rgb"))
+        l = lum__vec3(rt.swizzle(rt.texture(_u_inputTex, rt.binary("+", uv, rt.binary("*", px, rt.array([rt.unary("-", rt.f(1.0)), rt.f(0.0)]), 2, "float"), 2, "float")), "rgb"))
+        bl = lum__vec3(rt.swizzle(rt.texture(_u_inputTex, rt.binary("+", uv, rt.binary("*", px, rt.unary("-", rt.f(1.0)), 2, "float"), 2, "float")), "rgb"))
+        tr = lum__vec3(rt.swizzle(rt.texture(_u_inputTex, rt.binary("+", uv, rt.binary("*", px, rt.f(1.0), 2, "float"), 2, "float")), "rgb"))
+        r = lum__vec3(rt.swizzle(rt.texture(_u_inputTex, rt.binary("+", uv, rt.binary("*", px, rt.array([rt.f(1.0), rt.f(0.0)]), 2, "float"), 2, "float")), "rgb"))
+        br = lum__vec3(rt.swizzle(rt.texture(_u_inputTex, rt.binary("+", uv, rt.binary("*", px, rt.array([rt.f(1.0), rt.unary("-", rt.f(1.0))]), 2, "float"), 2, "float")), "rgb"))
+        t = lum__vec3(rt.swizzle(rt.texture(_u_inputTex, rt.binary("+", uv, rt.binary("*", px, rt.array([rt.f(0.0), rt.f(1.0)]), 2, "float"), 2, "float")), "rgb"))
+        b = lum__vec3(rt.swizzle(rt.texture(_u_inputTex, rt.binary("+", uv, rt.binary("*", px, rt.array([rt.f(0.0), rt.unary("-", rt.f(1.0))]), 2, "float"), 2, "float")), "rgb"))
         return rt.construct(2, rt.binary("-", rt.binary("-", rt.binary("-", rt.binary("+", rt.binary("+", tr, rt.binary("*", rt.f(2.0), r, 1, "float"), 1, "float"), br, 1, "float"), tl, 1, "float"), rt.binary("*", rt.f(2.0), l, 1, "float"), 1, "float"), bl, 1, "float"), rt.binary("-", rt.binary("-", rt.binary("-", rt.binary("+", rt.binary("+", tl, rt.binary("*", rt.f(2.0), t, 1, "float"), 1, "float"), tr, 1, "float"), bl, 1, "float"), rt.binary("*", rt.f(2.0), b, 1, "float"), 1, "float"), br, 1, "float"))
     def rotate2D__vec2_float(v, angleDeg):
         v = rt.copy(v, "float")
@@ -84,9 +84,9 @@ def run_pixel(ctx, out):
                 _for1_first = False
                 if not (rt.binary("<=", cx, rt.i(1))):
                     break
-                cell = rt.construct(2, rt.binary("+", baseCell, rt.construct(2, rt.construct(1, cx), rt.construct(1, cy)), 2, "float"))
+                cell = rt.construct(2, rt.binary("+", baseCell, rt.array([rt.construct(1, cx), rt.construct(1, cy)]), 2, "float"))
                 jitter = rt.construct(2, rt.binary("-", hash22__vec2(rt.binary("+", cell, rt.f(17.3), 2, "float")), rt.f(0.5), 2, "float"))
-                center = rt.construct(2, rt.binary("*", rt.binary("+", rt.binary("+", cell, rt.f(0.5), 2, "float"), rt.binary("*", jitter, rt.construct(2, rt.f(0.56), rt.f(0.4)), 2, "float"), 2, "float"), spacing, 2, "float"))
+                center = rt.construct(2, rt.binary("*", rt.binary("+", rt.binary("+", cell, rt.f(0.5), 2, "float"), rt.binary("*", jitter, rt.array([rt.f(0.56), rt.f(0.4)]), 2, "float"), 2, "float"), spacing, 2, "float"))
                 delta = rt.construct(2, rt.binary("-", oriented, center, 2, "float"))
                 angle = rt.binary("*", rt.binary("-", hash12__vec2(rt.binary("+", cell, rt.f(29.1), 2, "float")), rt.f(0.5), 1, "float"), rt.f(0.34), 1, "float")
                 co = rt.component_wise("cos", angle, width=1)
@@ -109,7 +109,7 @@ def run_pixel(ctx, out):
     def sprayJitter__vec2_float(gc, tap):
         gc = rt.copy(gc, "float")
         p = rt.construct(2, rt.binary("/", gc, rt.f(7.0), 2, "float"))
-        return rt.binary("-", rt.construct(2, valueNoise2__vec2(rt.binary("+", p, rt.construct(2, rt.binary("*", tap, rt.f(0.73), 1, "float"), rt.f(7.0)), 2, "float")), valueNoise2__vec2(rt.binary("+", rt.binary("+", p, rt.construct(2, rt.f(11.0), rt.binary("*", tap, rt.f(0.79), 1, "float")), 2, "float"), rt.f(37.1), 2, "float"))), rt.f(0.5), 2, "float")
+        return rt.binary("-", rt.construct(2, valueNoise2__vec2(rt.binary("+", p, rt.array([rt.binary("*", tap, rt.f(0.73), 1, "float"), rt.f(7.0)]), 2, "float")), valueNoise2__vec2(rt.binary("+", rt.binary("+", p, rt.array([rt.f(11.0), rt.binary("*", tap, rt.f(0.79), 1, "float")]), 2, "float"), rt.f(37.1), 2, "float"))), rt.f(0.5), 2, "float")
     def srcSample__vec2(sampleUV):
         sampleUV = rt.copy(sampleUV, "float")
         px = rt.construct(2, 0.0)
@@ -119,10 +119,10 @@ def run_pixel(ctx, out):
             px = rt.construct(2, rt.binary("/", rt.f(1.0), _u_resolution, 2, "float"))
             s = rt.texture(_u_inputTex, sampleUV)
             e = rt.swizzle(s, "rgb")
-            e[:] = rt.component_wise("min", e, rt.swizzle(rt.texture(_u_inputTex, rt.binary("+", sampleUV, rt.construct(2, rt.swizzle(px, "x"), rt.f(0.0)), 2, "float")), "rgb"), width=3)
-            e[:] = rt.component_wise("min", e, rt.swizzle(rt.texture(_u_inputTex, rt.binary("-", sampleUV, rt.construct(2, rt.swizzle(px, "x"), rt.f(0.0)), 2, "float")), "rgb"), width=3)
-            e[:] = rt.component_wise("min", e, rt.swizzle(rt.texture(_u_inputTex, rt.binary("+", sampleUV, rt.construct(2, rt.f(0.0), rt.swizzle(px, "y")), 2, "float")), "rgb"), width=3)
-            e[:] = rt.component_wise("min", e, rt.swizzle(rt.texture(_u_inputTex, rt.binary("-", sampleUV, rt.construct(2, rt.f(0.0), rt.swizzle(px, "y")), 2, "float")), "rgb"), width=3)
+            e[:] = rt.component_wise("min", e, rt.swizzle(rt.texture(_u_inputTex, rt.binary("+", sampleUV, rt.array([rt.swizzle(px, "x"), rt.f(0.0)]), 2, "float")), "rgb"), width=3)
+            e[:] = rt.component_wise("min", e, rt.swizzle(rt.texture(_u_inputTex, rt.binary("-", sampleUV, rt.array([rt.swizzle(px, "x"), rt.f(0.0)]), 2, "float")), "rgb"), width=3)
+            e[:] = rt.component_wise("min", e, rt.swizzle(rt.texture(_u_inputTex, rt.binary("+", sampleUV, rt.array([rt.f(0.0), rt.swizzle(px, "y")]), 2, "float")), "rgb"), width=3)
+            e[:] = rt.component_wise("min", e, rt.swizzle(rt.texture(_u_inputTex, rt.binary("-", sampleUV, rt.array([rt.f(0.0), rt.swizzle(px, "y")]), 2, "float")), "rgb"), width=3)
             return rt.construct(4, e, rt.swizzle(s, "a"))
         else:
             return rt.texture(_u_inputTex, sampleUV)

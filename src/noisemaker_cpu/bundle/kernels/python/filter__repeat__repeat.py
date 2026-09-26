@@ -21,7 +21,7 @@ def run_pixel(ctx, out):
         globalUV = rt.binary("/", globalCoord, _u_fullResolution, 2, "float")
         st = globalUV
         st = rt.assign_swizzle(st, "x", rt.binary("*", rt.swizzle(st, "x"), _u_aspect, 1, "float"))
-        st[:] = rt.binary("+", rt.binary("*", st, rt.construct(2, _u_x, _u_y), 2, "float"), rt.construct(2, rt.binary("*", _u_offsetX, _u_aspect, 1, "float"), _u_offsetY), 2, "float")
+        st[:] = rt.binary("+", rt.binary("*", st, rt.array([_u_x, _u_y]), 2, "float"), rt.array([rt.binary("*", _u_offsetX, _u_aspect, 1, "float"), _u_offsetY]), 2, "float")
         st = rt.assign_swizzle(st, "x", rt.binary("/", rt.swizzle(st, "x"), _u_aspect, 1, "float"))
         if rt.binary("==", _u_wrap, rt.i(0)):
             st[:] = rt.component_wise("abs", rt.binary("-", rt.component_wise("mod", rt.binary("+", st, rt.f(1.0), 2, "float"), rt.f(2.0), width=2), rt.f(1.0), 2, "float"), width=2)

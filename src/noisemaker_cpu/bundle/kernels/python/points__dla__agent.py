@@ -36,7 +36,7 @@ def run_pixel(ctx, out):
         return (seed, seed)
         return (None, seed)
     def randomDirection__float(seed):
-        theta = rt.binary("*", (((_retc0 := rand__float(seed)), (seed := _retc0[1]), _retc0[0])[-1]), rt.f(6.28318530718), 1, "float")
+        theta = rt.binary("*", (((_retc1 := rand__float(seed)), (seed := _retc1[1]), _retc1[0])[-1]), rt.f(6.28318530718), 1, "float")
         return (rt.construct(2, rt.component_wise("cos", theta, width=1), rt.component_wise("sin", theta, width=1)), seed)
         return (None, seed)
     def wrap01__vec2(v):
@@ -53,10 +53,10 @@ def run_pixel(ctx, out):
         texel = rt.binary("/", radius, gridDims, 2, "float")
         accum = rt.f(0.0)
         accum = rt.binary("+", accum, sampleGrid__vec2(uv), 1, "float")
-        accum = rt.binary("+", accum, sampleGrid__vec2(rt.binary("+", uv, rt.construct(2, rt.swizzle(texel, "x"), rt.f(0.0)), 2, "float")), 1, "float")
-        accum = rt.binary("+", accum, sampleGrid__vec2(rt.binary("-", uv, rt.construct(2, rt.swizzle(texel, "x"), rt.f(0.0)), 2, "float")), 1, "float")
-        accum = rt.binary("+", accum, sampleGrid__vec2(rt.binary("+", uv, rt.construct(2, rt.f(0.0), rt.swizzle(texel, "y")), 2, "float")), 1, "float")
-        accum = rt.binary("+", accum, sampleGrid__vec2(rt.binary("-", uv, rt.construct(2, rt.f(0.0), rt.swizzle(texel, "y")), 2, "float")), 1, "float")
+        accum = rt.binary("+", accum, sampleGrid__vec2(rt.binary("+", uv, rt.array([rt.swizzle(texel, "x"), rt.f(0.0)]), 2, "float")), 1, "float")
+        accum = rt.binary("+", accum, sampleGrid__vec2(rt.binary("-", uv, rt.array([rt.swizzle(texel, "x"), rt.f(0.0)]), 2, "float")), 1, "float")
+        accum = rt.binary("+", accum, sampleGrid__vec2(rt.binary("+", uv, rt.array([rt.f(0.0), rt.swizzle(texel, "y")]), 2, "float")), 1, "float")
+        accum = rt.binary("+", accum, sampleGrid__vec2(rt.binary("-", uv, rt.array([rt.f(0.0), rt.swizzle(texel, "y")]), 2, "float")), 1, "float")
         return rt.binary("*", accum, rt.f(0.2), 1, "float")
     def main__void():
         coord = rt.construct(2, rt.swizzle(ctx.frag_coord, "xy"), base="int")
@@ -82,7 +82,7 @@ def run_pixel(ctx, out):
         texel = rt.binary("/", rt.f(1.0), rt.component_wise("max", rt.swizzle(gridDims, "x"), rt.swizzle(gridDims, "y"), width=1), 1, "float")
         local = neighborhood__vec2_float(pos, rt.f(2.0))
         proximity = rt.component_wise("smoothstep", rt.f(0.015), rt.f(0.12), local, width=1)
-        randomDir = (((_retc1 := randomDirection__float(seed)), (seed := _retc1[1]), _retc1[0])[-1])
+        randomDir = (((_retc2 := randomDirection__float(seed)), (seed := _retc2[1]), _retc2[0])[-1])
         inputW = rt.binary("/", _u_inputWeight, rt.f(100.0), 1, "float")
         stepDir = randomDir
         inputDims = rt.construct(2, 0.0, base="int")
@@ -98,7 +98,7 @@ def run_pixel(ctx, out):
                 inputDir[:] = rt.normalize(inputDir)
                 stepDir[:] = rt.normalize(rt.component_wise("mix", randomDir, inputDir, inputW, width=2))
         stepSize = rt.binary("*", rt.binary("*", rt.binary("/", _u_stride, rt.f(10.0), 1, "float"), texel, 1, "float"), rt.component_wise("mix", rt.f(3.0), rt.f(0.5), proximity, width=1), 1, "float")
-        stepDir[:] = rt.binary("+", stepDir, rt.binary("*", (((_retc2 := randomDirection__float(seed)), (seed := _retc2[1]), _retc2[0])[-1]), rt.f(0.3), 2, "float"), 2, "float")
+        stepDir[:] = rt.binary("+", stepDir, rt.binary("*", (((_retc4 := randomDirection__float(seed)), (seed := _retc4[1]), _retc4[0])[-1]), rt.f(0.3), 2, "float"), 2, "float")
         stepDir[:] = rt.normalize(stepDir)
         candidate = wrap01__vec2(rt.binary("+", pos, rt.binary("*", stepDir, stepSize, 2, "float"), 2, "float"))
         here = sampleGrid__vec2(candidate)
@@ -108,7 +108,7 @@ def run_pixel(ctx, out):
         attritionRate = rt.f(0.0)
         if rt.binary(">", _u_attrition, rt.f(0.0)):
             attritionRate = rt.binary("*", _u_attrition, rt.f(0.01), 1, "float")
-            if rt.binary("<", (((_retc3 := rand__float(seed)), (seed := _retc3[1]), _retc3[0])[-1]), attritionRate):
+            if rt.binary("<", (((_retc5 := rand__float(seed)), (seed := _retc5[1]), _retc5[0])[-1]), attritionRate):
                 needsRespawn = True
         if stuck:
             g.outXYZ[:] = rt.construct(4, candidate, rt.f(0.0), rt.f(0.0))

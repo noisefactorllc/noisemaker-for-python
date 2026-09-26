@@ -520,10 +520,66 @@ class CodeGen:
         w = max(width_of(a_t), width_of(b_t))
         return (f"({a_code} if {c_code} else {b_code})", {"base": base_of(a_t), "width": w})
 
+    def _splat_fused_code(self, node, scope, width):
+        """Emit a vecN(scalar, ...) operand of a component-wise binary without
+        pre-rounding its scalar arguments. The JS glsl-transpiler (canonical
+        kernels) fuses such inline constructors into per-component scalar
+        arithmetic and rounds each component only once at the pooled
+        Float32Array store; materializing the constructor with rt.construct
+        would round every element twice and land 1 ULP off at quantization
+        boundaries (e.g. synth/noise's `st -= vec2(resolution.x / resolution.y
+        * 0.5, 0.5)`, feedback's `rgb + vec3(m, m, m)`).
+
+        Returns (code, type): a bare scalar expression for a uniform splat
+        (broadcast by rt.binary), or an rt.array([...]) of raw float64 elements
+        for distinct scalars. None when the node is not a foldable float-vector
+        constructor of scalars."""
+        if node.get("k") != "construct" or node.get("array") is not None:
+            return None
+        if node.get("type") not in ("vec2", "vec3", "vec4") or width != int(node["type"][-1]):
+            return None
+        args = node.get("args") or []
+        if len(args) != width or any(a.get("k") == "cond" for a in args):
+            return None
+        codes = []
+        for arg in args:
+            code, t = self.expr(arg, scope)
+            if width_of(t) != 1:
+                return None
+            codes.append(code)
+        if all(c == codes[0] for c in codes[1:]):
+            return (codes[0], FLOAT)
+        return (f"rt.array([{', '.join(codes)}])", TYPE[node["type"]])
+
     def _e_binary(self, node, scope):
         op = node["op"]
+        # Probe for a foldable vecN(scalar, ...) splat operand BEFORE emitting
+        # that operand, so a successful fold evaluates each splat argument
+        # exactly once. expr() is pure code-string generation (no statement
+        # emission, no scope mutation), so when the fold fails the operand is
+        # simply evaluated again on the normal path with no side effects.
+        splat_l = splat_r = None
+        l_probe = self.expr(node["l"], scope) if op in ("+", "-", "*", "/") else None
+        if l_probe is not None and width_of(l_probe[1]) > 1:
+            splat_r = self._splat_fused_code(node["r"], scope, width_of(l_probe[1]))
+        else:
+            r_probe = self.expr(node["r"], scope) if l_probe is not None else None
+            if r_probe is not None and width_of(r_probe[1]) > 1:
+                splat_l = self._splat_fused_code(node["l"], scope, width_of(r_probe[1]))
         l_code, l_t = self.expr(node["l"], scope)
         r_code, r_t = self.expr(node["r"], scope)
+        # GLSL vecN(scalar[, scalar, ...]) splats inside a component-wise binary:
+        # the JS oracle (glsl-transpiler) folds the splat into per-component
+        # scalar arithmetic with the UNROUNDED scalars (e.g. filter/feedback
+        # hsv2rgb's `rgb + vec3(m, m, m)` emits `rgb[0] + m` over a raw float64
+        # m). Pre-rounding the scalars in rt.construct double-rounds and lands
+        # 1 ULP off at quantization boundaries; fuse the splat to raw unrounded
+        # scalars (uniform → broadcast, distinct → rt.array of raw elements).
+        if op in ("+", "-", "*", "/"):
+            if splat_r is not None:
+                r_code, r_t = splat_r
+            elif splat_l is not None:
+                l_code, l_t = splat_l
         if op in ("==", "!=", "<", ">", "<=", ">=", "&&", "||"):
             pyop = {"&&": "and", "||": "or"}.get(op)
             if pyop:

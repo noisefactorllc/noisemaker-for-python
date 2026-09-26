@@ -236,15 +236,20 @@ class Runtime:
             return self._logical(op, a, b)
         if base in ("int", "uint") or op in ("&", "|", "^", "<<", ">>"):
             return self._int_binary(op, a, b, "uint" if base == "uint" else "int")
-        # Compute in float64 and DEFER the float32 rounding — mirrors JS, which reads
-        # Float32Array elements as float64, evaluates the whole component expression
-        # in float64, and rounds to f32 only when the result is stored into a
-        # Float32Array (a `new PooledFloat32Array([...])` at an assignment or a
-        # function argument). So a compound like `uv - i + dot` rounds ONCE, not after
-        # each op. Rounding per-op double-rounds and accumulates sub-ULP error through
-        # the noise generator's simplex; the f32 rounding instead happens at the
-        # consumption boundaries below (swizzle, dot, component_wise, construct,
-        # assign_swizzle, output), each of which snaps its float vector inputs to f32.
+        # Compute in float64 and DEFER the float32 rounding, matching the JS
+        # oracle's canonical GLSL kernels (csl/glsl-runtime.js): scalar temps
+        # are plain JS float64 and every vector result is stored into a pooled
+        # Float32Array, so f32 rounding happens at the consumption boundaries
+        # below (swizzle, dot, component_wise, construct, assign_swizzle,
+        # output), not per operator. Rounding per-op double-rounds and diverges
+        # by one f32 ULP (verified against the noise generator's simplex).
+        # The one deviation from deferral is the width truncation below: JS
+        # `binary` allocates the result at the DECLARED type width, so a vec4
+        # uniform multiplied into a vec3 expression yields 3 components
+        # (csl/runtime.js binary is the transpiled-kernel reference for that
+        # storage shape; the canonical path expresses the same op
+        # component-wise). Without it, synth/solid's vec4 `color` param leaks
+        # its fourth channel and solid alpha diverges from the oracle.
         av = a if _is_scalar(a) else np.asarray(a, dtype=np.float64)
         bv = b if _is_scalar(b) else np.asarray(b, dtype=np.float64)
         if op == "+":
@@ -261,7 +266,13 @@ class Runtime:
             raise ValueError(f"unsupported binary op {op!r}")
         if _is_scalar(av) and _is_scalar(bv):
             return float(r)
-        return np.asarray(r, dtype=np.float64)
+        result = np.asarray(r, dtype=np.float64)
+        if width is not None and result.ndim > 0 and result.shape[0] > width:
+            # JS $rt.binary truncates the component-wise result to the declared
+            # type width (csl/runtime.js binary): a vec4 uniform multiplied into
+            # a vec3 expression yields 3 components, never 4.
+            result = result[:width]
+        return result
 
     def _int_binary(self, op, a, b, base):
         # The JavaScript CPU transpiler emits `/` directly, even when both GLSL

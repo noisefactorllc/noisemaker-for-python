@@ -93,14 +93,14 @@ def run_pixel(ctx, out):
         u = rt.construct(3, quintic__float(rt.swizzle(f, "x")), quintic__float(rt.swizzle(f, "y")), quintic__float(rt.swizzle(f, "z")))
         iz0 = wrapZ__float(rt.swizzle(i, "z"))
         iz1 = wrapZ__float(rt.binary("+", rt.swizzle(i, "z"), rt.f(1.0), 1, "float"))
-        n000 = rt.dot(grad3__vec3(rt.binary("+", rt.construct(3, rt.swizzle(i, "xy"), iz0), rt.construct(3, rt.i(0), rt.i(0), rt.i(0)), 3, "float")), rt.binary("-", f, rt.construct(3, rt.i(0), rt.i(0), rt.i(0)), 3, "float"))
-        n100 = rt.dot(grad3__vec3(rt.binary("+", rt.construct(3, rt.swizzle(i, "xy"), iz0), rt.construct(3, rt.i(1), rt.i(0), rt.i(0)), 3, "float")), rt.binary("-", f, rt.construct(3, rt.i(1), rt.i(0), rt.i(0)), 3, "float"))
-        n010 = rt.dot(grad3__vec3(rt.binary("+", rt.construct(3, rt.swizzle(i, "xy"), iz0), rt.construct(3, rt.i(0), rt.i(1), rt.i(0)), 3, "float")), rt.binary("-", f, rt.construct(3, rt.i(0), rt.i(1), rt.i(0)), 3, "float"))
-        n110 = rt.dot(grad3__vec3(rt.binary("+", rt.construct(3, rt.swizzle(i, "xy"), iz0), rt.construct(3, rt.i(1), rt.i(1), rt.i(0)), 3, "float")), rt.binary("-", f, rt.construct(3, rt.i(1), rt.i(1), rt.i(0)), 3, "float"))
-        n001 = rt.dot(grad3__vec3(rt.binary("+", rt.construct(3, rt.swizzle(i, "xy"), iz1), rt.construct(3, rt.i(0), rt.i(0), rt.i(0)), 3, "float")), rt.binary("-", f, rt.construct(3, rt.i(0), rt.i(0), rt.i(1)), 3, "float"))
-        n101 = rt.dot(grad3__vec3(rt.binary("+", rt.construct(3, rt.swizzle(i, "xy"), iz1), rt.construct(3, rt.i(1), rt.i(0), rt.i(0)), 3, "float")), rt.binary("-", f, rt.construct(3, rt.i(1), rt.i(0), rt.i(1)), 3, "float"))
-        n011 = rt.dot(grad3__vec3(rt.binary("+", rt.construct(3, rt.swizzle(i, "xy"), iz1), rt.construct(3, rt.i(0), rt.i(1), rt.i(0)), 3, "float")), rt.binary("-", f, rt.construct(3, rt.i(0), rt.i(1), rt.i(1)), 3, "float"))
-        n111 = rt.dot(grad3__vec3(rt.binary("+", rt.construct(3, rt.swizzle(i, "xy"), iz1), rt.construct(3, rt.i(1), rt.i(1), rt.i(0)), 3, "float")), rt.binary("-", f, rt.construct(3, rt.i(1), rt.i(1), rt.i(1)), 3, "float"))
+        n000 = rt.dot(grad3__vec3(rt.binary("+", rt.construct(3, rt.swizzle(i, "xy"), iz0), rt.i(0), 3, "float")), rt.binary("-", f, rt.i(0), 3, "float"))
+        n100 = rt.dot(grad3__vec3(rt.binary("+", rt.construct(3, rt.swizzle(i, "xy"), iz0), rt.array([rt.i(1), rt.i(0), rt.i(0)]), 3, "float")), rt.binary("-", f, rt.array([rt.i(1), rt.i(0), rt.i(0)]), 3, "float"))
+        n010 = rt.dot(grad3__vec3(rt.binary("+", rt.construct(3, rt.swizzle(i, "xy"), iz0), rt.array([rt.i(0), rt.i(1), rt.i(0)]), 3, "float")), rt.binary("-", f, rt.array([rt.i(0), rt.i(1), rt.i(0)]), 3, "float"))
+        n110 = rt.dot(grad3__vec3(rt.binary("+", rt.construct(3, rt.swizzle(i, "xy"), iz0), rt.array([rt.i(1), rt.i(1), rt.i(0)]), 3, "float")), rt.binary("-", f, rt.array([rt.i(1), rt.i(1), rt.i(0)]), 3, "float"))
+        n001 = rt.dot(grad3__vec3(rt.binary("+", rt.construct(3, rt.swizzle(i, "xy"), iz1), rt.i(0), 3, "float")), rt.binary("-", f, rt.array([rt.i(0), rt.i(0), rt.i(1)]), 3, "float"))
+        n101 = rt.dot(grad3__vec3(rt.binary("+", rt.construct(3, rt.swizzle(i, "xy"), iz1), rt.array([rt.i(1), rt.i(0), rt.i(0)]), 3, "float")), rt.binary("-", f, rt.array([rt.i(1), rt.i(0), rt.i(1)]), 3, "float"))
+        n011 = rt.dot(grad3__vec3(rt.binary("+", rt.construct(3, rt.swizzle(i, "xy"), iz1), rt.array([rt.i(0), rt.i(1), rt.i(0)]), 3, "float")), rt.binary("-", f, rt.array([rt.i(0), rt.i(1), rt.i(1)]), 3, "float"))
+        n111 = rt.dot(grad3__vec3(rt.binary("+", rt.construct(3, rt.swizzle(i, "xy"), iz1), rt.array([rt.i(1), rt.i(1), rt.i(0)]), 3, "float")), rt.binary("-", f, rt.i(1), 3, "float"))
         nx00 = rt.component_wise("mix", n000, n100, rt.swizzle(u, "x"), width=1)
         nx10 = rt.component_wise("mix", n010, n110, rt.swizzle(u, "x"), width=1)
         nx01 = rt.component_wise("mix", n001, n101, rt.swizzle(u, "x"), width=1)
@@ -191,8 +191,8 @@ def run_pixel(ctx, out):
             if rt.binary(">=", i, iterations):
                 break
             fi = rt.construct(1, i)
-            nx = warpNoise2D__vec2_float(rt.binary("+", rt.binary("*", p, wFreq, 2, "float"), rt.construct(2, rt.binary("+", rt.binary("*", fi, rt.f(5.2), 1, "float"), rt.f(1.7), 1, "float"), rt.binary("+", rt.binary("*", fi, rt.f(1.3), 1, "float"), rt.f(13.7), 1, "float")), 2, "float"), timeAngle)
-            ny = warpNoise2D__vec2_float(rt.binary("+", rt.binary("*", p, wFreq, 2, "float"), rt.construct(2, rt.binary("+", rt.binary("*", fi, rt.f(2.8), 1, "float"), rt.f(7.3), 1, "float"), rt.binary("+", rt.binary("*", fi, rt.f(4.1), 1, "float"), rt.f(3.9), 1, "float")), 2, "float"), timeAngle)
+            nx = warpNoise2D__vec2_float(rt.binary("+", rt.binary("*", p, wFreq, 2, "float"), rt.array([rt.binary("+", rt.binary("*", fi, rt.f(5.2), 1, "float"), rt.f(1.7), 1, "float"), rt.binary("+", rt.binary("*", fi, rt.f(1.3), 1, "float"), rt.f(13.7), 1, "float")]), 2, "float"), timeAngle)
+            ny = warpNoise2D__vec2_float(rt.binary("+", rt.binary("*", p, wFreq, 2, "float"), rt.array([rt.binary("+", rt.binary("*", fi, rt.f(2.8), 1, "float"), rt.f(7.3), 1, "float"), rt.binary("+", rt.binary("*", fi, rt.f(4.1), 1, "float"), rt.f(3.9), 1, "float")]), 2, "float"), timeAngle)
             p[:] = rt.binary("+", p, rt.binary("*", rt.construct(2, nx, ny), disp, 2, "float"), 2, "float")
         return p
     def warpNoise3D__vec2_float(p, z):
@@ -214,8 +214,8 @@ def run_pixel(ctx, out):
             if rt.binary(">=", i, iterations):
                 break
             fi = rt.construct(1, i)
-            nx = warpNoise3D__vec2_float(rt.binary("+", rt.binary("*", p, wFreq, 2, "float"), rt.construct(2, rt.binary("+", rt.binary("*", fi, rt.f(5.2), 1, "float"), rt.f(1.7), 1, "float"), rt.binary("+", rt.binary("*", fi, rt.f(1.3), 1, "float"), rt.f(13.7), 1, "float")), 2, "float"), z)
-            ny = warpNoise3D__vec2_float(rt.binary("+", rt.binary("*", p, wFreq, 2, "float"), rt.construct(2, rt.binary("+", rt.binary("*", fi, rt.f(2.8), 1, "float"), rt.f(7.3), 1, "float"), rt.binary("+", rt.binary("*", fi, rt.f(4.1), 1, "float"), rt.f(3.9), 1, "float")), 2, "float"), z)
+            nx = warpNoise3D__vec2_float(rt.binary("+", rt.binary("*", p, wFreq, 2, "float"), rt.array([rt.binary("+", rt.binary("*", fi, rt.f(5.2), 1, "float"), rt.f(1.7), 1, "float"), rt.binary("+", rt.binary("*", fi, rt.f(1.3), 1, "float"), rt.f(13.7), 1, "float")]), 2, "float"), z)
+            ny = warpNoise3D__vec2_float(rt.binary("+", rt.binary("*", p, wFreq, 2, "float"), rt.array([rt.binary("+", rt.binary("*", fi, rt.f(2.8), 1, "float"), rt.f(7.3), 1, "float"), rt.binary("+", rt.binary("*", fi, rt.f(4.1), 1, "float"), rt.f(3.9), 1, "float")]), 2, "float"), z)
             p[:] = rt.binary("+", p, rt.binary("*", rt.construct(2, nx, ny), disp, 2, "float"), 2, "float")
         return p
     def main__void():

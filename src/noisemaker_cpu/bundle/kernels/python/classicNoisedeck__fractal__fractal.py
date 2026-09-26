@@ -82,7 +82,7 @@ def run_pixel(ctx, out):
                                 (rgb.__setitem__(0, c), rgb.__setitem__(1, rt.f(0.0)), rgb.__setitem__(2, x), rgb)[-1]
                             else:
                                 (rgb.__setitem__(0, rt.f(0.0)), rgb.__setitem__(1, rt.f(0.0)), rgb.__setitem__(2, rt.f(0.0)), rgb)[-1]
-        return rt.binary("+", rgb, rt.construct(3, m, m, m), 3, "float")
+        return rt.binary("+", rgb, m, 3, "float")
     def rgb2hsv__vec3(rgb):
         rgb = rt.copy(rgb, "float")
         r = rt.swizzle(rgb, "r")
@@ -201,7 +201,7 @@ def run_pixel(ctx, out):
         _offsetY = map__float_float_float_float_float(_u_offsetY, rt.unary("-", rt.f(100.0)), rt.f(100.0), rt.unary("-", rt.f(1.0)), rt.f(1.0))
         c = rt.construct(2, rt.binary("+", rt.binary("*", rt.component_wise("sin", rt.binary("*", _u_time, rt.f(6.28318530718), 1, "float"), width=1), s, 1, "float"), _offsetX, 1, "float"), rt.binary("+", rt.binary("*", rt.component_wise("cos", rt.binary("*", _u_time, rt.f(6.28318530718), 1, "float"), width=1), s, 1, "float"), _offsetY, 1, "float"))
         st[:] = rotate2D__vec2_float(st, _u_rotation)
-        st[:] = rt.binary("*", rt.binary("-", st, rt.construct(2, rt.binary("/", rt.binary("*", rt.f(0.5), rt.swizzle(_u_fullResolution, "x"), 1, "float"), rt.swizzle(_u_fullResolution, "y"), 1, "float"), rt.f(0.5)), 2, "float"), zoom, 2, "float")
+        st[:] = rt.binary("*", rt.binary("-", st, rt.array([rt.binary("/", rt.binary("*", rt.f(0.5), rt.swizzle(_u_fullResolution, "x"), 1, "float"), rt.swizzle(_u_fullResolution, "y"), 1, "float"), rt.f(0.5)]), 2, "float"), zoom, 2, "float")
         z = rt.assign_swizzle(z, "x", rt.binary("+", rt.swizzle(st, "x"), map__float_float_float_float_float(_u_centerX, rt.unary("-", rt.f(100.0)), rt.f(100.0), rt.f(1.0), rt.unary("-", rt.f(1.0))), 1, "float"))
         z = rt.assign_swizzle(z, "y", rt.binary("+", rt.swizzle(st, "y"), map__float_float_float_float_float(_u_centerY, rt.unary("-", rt.f(100.0)), rt.f(100.0), rt.f(1.0), rt.unary("-", rt.f(1.0))), 1, "float"))
         iter = 0

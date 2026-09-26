@@ -156,9 +156,9 @@ def run_pixel(ctx, out):
     def calcNormal__vec3(p):
         p = rt.copy(p, "float")
         eps = rt.binary("/", rt.f(2.0), rt.construct(1, _u_volumeSize), 1, "float")
-        dx = rt.binary("-", getField__vec3(rt.binary("+", p, rt.construct(3, eps, rt.f(0.0), rt.f(0.0)), 3, "float")), getField__vec3(rt.binary("-", p, rt.construct(3, eps, rt.f(0.0), rt.f(0.0)), 3, "float")), 1, "float")
-        dy = rt.binary("-", getField__vec3(rt.binary("+", p, rt.construct(3, rt.f(0.0), eps, rt.f(0.0)), 3, "float")), getField__vec3(rt.binary("-", p, rt.construct(3, rt.f(0.0), eps, rt.f(0.0)), 3, "float")), 1, "float")
-        dz = rt.binary("-", getField__vec3(rt.binary("+", p, rt.construct(3, rt.f(0.0), rt.f(0.0), eps), 3, "float")), getField__vec3(rt.binary("-", p, rt.construct(3, rt.f(0.0), rt.f(0.0), eps), 3, "float")), 1, "float")
+        dx = rt.binary("-", getField__vec3(rt.binary("+", p, rt.array([eps, rt.f(0.0), rt.f(0.0)]), 3, "float")), getField__vec3(rt.binary("-", p, rt.array([eps, rt.f(0.0), rt.f(0.0)]), 3, "float")), 1, "float")
+        dy = rt.binary("-", getField__vec3(rt.binary("+", p, rt.array([rt.f(0.0), eps, rt.f(0.0)]), 3, "float")), getField__vec3(rt.binary("-", p, rt.array([rt.f(0.0), eps, rt.f(0.0)]), 3, "float")), 1, "float")
+        dz = rt.binary("-", getField__vec3(rt.binary("+", p, rt.array([rt.f(0.0), rt.f(0.0), eps]), 3, "float")), getField__vec3(rt.binary("-", p, rt.array([rt.f(0.0), rt.f(0.0), eps]), 3, "float")), 1, "float")
         n = rt.construct(3, dx, dy, dz)
         len = rt.length(n)
         if rt.binary("<", len, rt.f(0.0001)):

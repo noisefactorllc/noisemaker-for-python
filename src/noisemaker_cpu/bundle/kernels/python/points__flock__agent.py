@@ -200,7 +200,7 @@ def run_pixel(ctx, out):
         if rt.binary(">", _u_noiseWeight, rt.f(0.0)):
             noiseScale = rt.f(0.01)
             nx = noise2D__vec2(rt.binary("+", rt.binary("*", pos, noiseScale, 2, "float"), rt.binary("*", _u_time, rt.f(0.5), 1, "float"), 2, "float"))
-            ny = noise2D__vec2(rt.binary("+", rt.binary("+", rt.binary("*", pos, noiseScale, 2, "float"), rt.construct(2, rt.f(100.0), rt.f(100.0)), 2, "float"), rt.binary("*", _u_time, rt.f(0.5), 1, "float"), 2, "float"))
+            ny = noise2D__vec2(rt.binary("+", rt.binary("+", rt.binary("*", pos, noiseScale, 2, "float"), rt.f(100.0), 2, "float"), rt.binary("*", _u_time, rt.f(0.5), 1, "float"), 2, "float"))
             noiseForce = rt.binary("*", rt.binary("*", rt.construct(2, nx, ny), _u_maxForce, 2, "float"), _u_noiseWeight, 2, "float")
             steer[:] = rt.binary("+", steer, noiseForce, 2, "float")
         wallForce = rt.construct(2, 0.0)

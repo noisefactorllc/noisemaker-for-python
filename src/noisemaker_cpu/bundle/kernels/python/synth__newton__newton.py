@@ -137,8 +137,8 @@ def run_pixel(ctx, out):
         p = [rt.construct(4, 0.0), rt.f(0.0), rt.f(0.0)]
         if rt.binary(">", poiIdx, rt.i(0)):
             p = getPOI__int(poiIdx)
-            cHi[:] = rt.binary("+", rt.swizzle(p[0], "xy"), rt.construct(2, _u_centerHiX, _u_centerHiY), 2, "float")
-            cLo[:] = rt.binary("+", rt.swizzle(p[0], "zw"), rt.construct(2, _u_centerLoX, _u_centerLoY), 2, "float")
+            cHi[:] = rt.binary("+", rt.swizzle(p[0], "xy"), rt.array([_u_centerHiX, _u_centerHiY]), 2, "float")
+            cLo[:] = rt.binary("+", rt.swizzle(p[0], "zw"), rt.array([_u_centerLoX, _u_centerLoY]), 2, "float")
             effDegree = p[1]
             effZoomDepth = rt.component_wise("min", _u_zoomDepth, p[2], width=1)
         else:

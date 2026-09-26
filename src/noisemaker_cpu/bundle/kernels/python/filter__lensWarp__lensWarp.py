@@ -66,7 +66,7 @@ def run_pixel(ctx, out):
         scaled = rt.construct(2, rt.binary("*", rt.swizzle(delta, "x"), aspectRatio, 1, "float"), rt.swizzle(delta, "y"))
         maxRadius = rt.length(rt.construct(2, rt.binary("*", aspectRatio, rt.f(0.5), 1, "float"), rt.f(0.5)))
         mask = rt.component_wise("pow", rt.component_wise("clamp", rt.binary("/", rt.length(scaled), maxRadius, 1, "float"), rt.f(0.0), rt.f(1.0), width=1), rt.f(5.0), width=1)
-        noiseCoord = rt.binary("*", uv, rt.construct(2, aspectRatio, rt.f(1.0)), 2, "float")
+        noiseCoord = rt.binary("*", uv, rt.array([aspectRatio, rt.f(1.0)]), 2, "float")
         noiseX = perlinNoise__vec2_vec2(rt.binary("+", noiseCoord, rt.f(42.0), 2, "float"), rt.construct(2, rt.f(2.0)))
         noiseY = perlinNoise__vec2_vec2(rt.binary("+", noiseCoord, rt.f(97.0), 2, "float"), rt.construct(2, rt.f(2.0)))
         uv = rt.assign_swizzle(uv, "x", rt.binary("+", rt.swizzle(uv, "x"), rt.binary("*", rt.binary("*", rt.binary("-", noiseX, rt.f(0.5), 1, "float"), clampedDisplacement, 1, "float"), mask, 1, "float"), 1, "float"))

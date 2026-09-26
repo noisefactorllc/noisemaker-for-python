@@ -58,10 +58,10 @@ def run_pixel(ctx, out):
         fragCoord = rt.copy(fragCoord, "float")
         texelSize = rt.copy(texelSize, "float")
         centerRGB = rt.copy(centerRGB, "float")
-        northRGB = rt.swizzle(rt.texture(_u_inputTex, rt.binary("*", rt.binary("+", fragCoord, rt.construct(2, rt.f(0.0), rt.f(1.0)), 2, "float"), texelSize, 2, "float")), "rgb")
-        southRGB = rt.swizzle(rt.texture(_u_inputTex, rt.binary("*", rt.binary("+", fragCoord, rt.construct(2, rt.f(0.0), rt.unary("-", rt.f(1.0))), 2, "float"), texelSize, 2, "float")), "rgb")
-        eastRGB = rt.swizzle(rt.texture(_u_inputTex, rt.binary("*", rt.binary("+", fragCoord, rt.construct(2, rt.f(1.0), rt.f(0.0)), 2, "float"), texelSize, 2, "float")), "rgb")
-        westRGB = rt.swizzle(rt.texture(_u_inputTex, rt.binary("*", rt.binary("+", fragCoord, rt.construct(2, rt.unary("-", rt.f(1.0)), rt.f(0.0)), 2, "float"), texelSize, 2, "float")), "rgb")
+        northRGB = rt.swizzle(rt.texture(_u_inputTex, rt.binary("*", rt.binary("+", fragCoord, rt.array([rt.f(0.0), rt.f(1.0)]), 2, "float"), texelSize, 2, "float")), "rgb")
+        southRGB = rt.swizzle(rt.texture(_u_inputTex, rt.binary("*", rt.binary("+", fragCoord, rt.array([rt.f(0.0), rt.unary("-", rt.f(1.0))]), 2, "float"), texelSize, 2, "float")), "rgb")
+        eastRGB = rt.swizzle(rt.texture(_u_inputTex, rt.binary("*", rt.binary("+", fragCoord, rt.array([rt.f(1.0), rt.f(0.0)]), 2, "float"), texelSize, 2, "float")), "rgb")
+        westRGB = rt.swizzle(rt.texture(_u_inputTex, rt.binary("*", rt.binary("+", fragCoord, rt.array([rt.unary("-", rt.f(1.0)), rt.f(0.0)]), 2, "float"), texelSize, 2, "float")), "rgb")
         centerL = rt.f(0.0)
         centerOnSide = False
         crossing = False
@@ -112,7 +112,7 @@ def run_pixel(ctx, out):
                     w = getWeight__int_int_int(dx, dy, kernelType)
                     if rt.binary("==", w, rt.f(0.0)):
                         continue
-                    sampleCoord = rt.binary("+", rt.swizzle(ctx.frag_coord, "xy"), rt.construct(2, rt.construct(1, dx), rt.construct(1, dy)), 2, "float")
+                    sampleCoord = rt.binary("+", rt.swizzle(ctx.frag_coord, "xy"), rt.array([rt.construct(1, dx), rt.construct(1, dy)]), 2, "float")
                     localUV = rt.binary("*", sampleCoord, texelSize, 2, "float")
                     s = rt.swizzle(rt.texture(_u_inputTex, localUV), "rgb")
                     if useLuma:

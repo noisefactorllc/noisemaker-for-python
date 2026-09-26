@@ -63,7 +63,7 @@ def run_pixel(ctx, out):
         fullRes = (_u_fullResolution if rt.binary(">", rt.swizzle(_u_fullResolution, "x"), rt.f(0.0)) else _u_resolution)
         aspectRatio = rt.binary("/", rt.swizzle(fullRes, "x"), rt.swizzle(fullRes, "y"), 1, "float")
         uv = rt.binary("/", rt.binary("+", rt.swizzle(ctx.frag_coord, "xy"), _u_tileOffset, 2, "float"), fullRes, 2, "float")
-        noiseCoord = rt.binary("*", uv, rt.construct(2, aspectRatio, rt.f(1.0)), 2, "float")
+        noiseCoord = rt.binary("*", uv, rt.array([aspectRatio, rt.f(1.0)]), 2, "float")
         noiseScale = rt.construct(2, rt.component_wise("abs", rt.binary("*", _u_scale, rt.f(3.0), 1, "float"), width=1))
         dx = rt.binary("*", rt.binary("*", rt.binary("-", perlinNoise__vec2_vec2(rt.binary("+", noiseCoord, rt.construct(1, _u_seed), 2, "float"), noiseScale), rt.f(0.5), 1, "float"), _u_strength, 1, "float"), rt.f(0.01), 1, "float")
         dy = rt.binary("*", rt.binary("*", rt.binary("-", perlinNoise__vec2_vec2(rt.binary("+", rt.binary("+", noiseCoord, rt.construct(1, _u_seed), 2, "float"), rt.f(10.0), 2, "float"), noiseScale), rt.f(0.5), 1, "float"), _u_strength, 1, "float"), rt.f(0.01), 1, "float")

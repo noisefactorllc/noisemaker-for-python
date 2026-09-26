@@ -27,15 +27,15 @@ def run_pixel(ctx, out):
         uv = rt.copy(uv, "float")
         size = rt.copy(size, "float")
         val = rt.construct(3, rt.f(0.0))
-        val[:] = rt.binary("+", val, rt.binary("*", rt.swizzle(rt.texture(tex, rt.binary("/", rt.binary("+", uv, rt.construct(2, rt.unary("-", rt.i(1)), rt.unary("-", rt.i(1))), 2, "float"), size, 2, "float")), "rgb"), rt.f(0.05), 3, "float"), 3, "float")
-        val[:] = rt.binary("+", val, rt.binary("*", rt.swizzle(rt.texture(tex, rt.binary("/", rt.binary("+", uv, rt.construct(2, rt.i(0), rt.unary("-", rt.i(1))), 2, "float"), size, 2, "float")), "rgb"), rt.f(0.2), 3, "float"), 3, "float")
-        val[:] = rt.binary("+", val, rt.binary("*", rt.swizzle(rt.texture(tex, rt.binary("/", rt.binary("+", uv, rt.construct(2, rt.i(1), rt.unary("-", rt.i(1))), 2, "float"), size, 2, "float")), "rgb"), rt.f(0.05), 3, "float"), 3, "float")
-        val[:] = rt.binary("+", val, rt.binary("*", rt.swizzle(rt.texture(tex, rt.binary("/", rt.binary("+", uv, rt.construct(2, rt.unary("-", rt.i(1)), rt.i(0)), 2, "float"), size, 2, "float")), "rgb"), rt.f(0.2), 3, "float"), 3, "float")
-        val[:] = rt.binary("+", val, rt.binary("*", rt.swizzle(rt.texture(tex, rt.binary("/", rt.binary("+", uv, rt.construct(2, rt.i(0), rt.i(0)), 2, "float"), size, 2, "float")), "rgb"), rt.unary("-", rt.f(1.0)), 3, "float"), 3, "float")
-        val[:] = rt.binary("+", val, rt.binary("*", rt.swizzle(rt.texture(tex, rt.binary("/", rt.binary("+", uv, rt.construct(2, rt.i(1), rt.i(0)), 2, "float"), size, 2, "float")), "rgb"), rt.f(0.2), 3, "float"), 3, "float")
-        val[:] = rt.binary("+", val, rt.binary("*", rt.swizzle(rt.texture(tex, rt.binary("/", rt.binary("+", uv, rt.construct(2, rt.unary("-", rt.i(1)), rt.i(1)), 2, "float"), size, 2, "float")), "rgb"), rt.f(0.05), 3, "float"), 3, "float")
-        val[:] = rt.binary("+", val, rt.binary("*", rt.swizzle(rt.texture(tex, rt.binary("/", rt.binary("+", uv, rt.construct(2, rt.i(0), rt.i(1)), 2, "float"), size, 2, "float")), "rgb"), rt.f(0.2), 3, "float"), 3, "float")
-        val[:] = rt.binary("+", val, rt.binary("*", rt.swizzle(rt.texture(tex, rt.binary("/", rt.binary("+", uv, rt.construct(2, rt.i(1), rt.i(1)), 2, "float"), size, 2, "float")), "rgb"), rt.f(0.05), 3, "float"), 3, "float")
+        val[:] = rt.binary("+", val, rt.binary("*", rt.swizzle(rt.texture(tex, rt.binary("/", rt.binary("+", uv, rt.unary("-", rt.i(1)), 2, "float"), size, 2, "float")), "rgb"), rt.f(0.05), 3, "float"), 3, "float")
+        val[:] = rt.binary("+", val, rt.binary("*", rt.swizzle(rt.texture(tex, rt.binary("/", rt.binary("+", uv, rt.array([rt.i(0), rt.unary("-", rt.i(1))]), 2, "float"), size, 2, "float")), "rgb"), rt.f(0.2), 3, "float"), 3, "float")
+        val[:] = rt.binary("+", val, rt.binary("*", rt.swizzle(rt.texture(tex, rt.binary("/", rt.binary("+", uv, rt.array([rt.i(1), rt.unary("-", rt.i(1))]), 2, "float"), size, 2, "float")), "rgb"), rt.f(0.05), 3, "float"), 3, "float")
+        val[:] = rt.binary("+", val, rt.binary("*", rt.swizzle(rt.texture(tex, rt.binary("/", rt.binary("+", uv, rt.array([rt.unary("-", rt.i(1)), rt.i(0)]), 2, "float"), size, 2, "float")), "rgb"), rt.f(0.2), 3, "float"), 3, "float")
+        val[:] = rt.binary("+", val, rt.binary("*", rt.swizzle(rt.texture(tex, rt.binary("/", rt.binary("+", uv, rt.i(0), 2, "float"), size, 2, "float")), "rgb"), rt.unary("-", rt.f(1.0)), 3, "float"), 3, "float")
+        val[:] = rt.binary("+", val, rt.binary("*", rt.swizzle(rt.texture(tex, rt.binary("/", rt.binary("+", uv, rt.array([rt.i(1), rt.i(0)]), 2, "float"), size, 2, "float")), "rgb"), rt.f(0.2), 3, "float"), 3, "float")
+        val[:] = rt.binary("+", val, rt.binary("*", rt.swizzle(rt.texture(tex, rt.binary("/", rt.binary("+", uv, rt.array([rt.unary("-", rt.i(1)), rt.i(1)]), 2, "float"), size, 2, "float")), "rgb"), rt.f(0.05), 3, "float"), 3, "float")
+        val[:] = rt.binary("+", val, rt.binary("*", rt.swizzle(rt.texture(tex, rt.binary("/", rt.binary("+", uv, rt.array([rt.i(0), rt.i(1)]), 2, "float"), size, 2, "float")), "rgb"), rt.f(0.2), 3, "float"), 3, "float")
+        val[:] = rt.binary("+", val, rt.binary("*", rt.swizzle(rt.texture(tex, rt.binary("/", rt.binary("+", uv, rt.i(1), 2, "float"), size, 2, "float")), "rgb"), rt.f(0.05), 3, "float"), 3, "float")
         return val
     def map__float_float_float_float_float(value, inMin, inMax, outMin, outMax):
         return rt.binary("+", outMin, rt.binary("/", rt.binary("*", rt.binary("-", outMax, outMin, 1, "float"), rt.binary("-", value, inMin, 1, "float"), 1, "float"), rt.binary("-", inMax, inMin, 1, "float"), 1, "float"), 1, "float")
@@ -44,7 +44,7 @@ def run_pixel(ctx, out):
         return rt.binary("+", rt.binary("+", rt.binary("*", rt.f(0.2126), rt.swizzle(color, "r"), 1, "float"), rt.binary("*", rt.f(0.7152), rt.swizzle(color, "g"), 1, "float"), 1, "float"), rt.binary("*", rt.f(0.0722), rt.swizzle(color, "b"), 1, "float"), 1, "float")
     def hash__vec2(p):
         p = rt.copy(p, "float")
-        p2 = rt.component_wise("fract", rt.binary("*", p, rt.construct(2, rt.f(0.1031), rt.f(0.103)), 2, "float"), width=2)
+        p2 = rt.component_wise("fract", rt.binary("*", p, rt.array([rt.f(0.1031), rt.f(0.103)]), 2, "float"), width=2)
         p2[:] = rt.binary("+", p2, rt.dot(p2, rt.binary("+", rt.swizzle(p2, "yx"), rt.f(33.33), 2, "float")), 2, "float")
         return rt.component_wise("fract", rt.binary("*", rt.binary("+", rt.swizzle(p2, "x"), rt.swizzle(p2, "y"), 1, "float"), rt.swizzle(p2, "x"), 1, "float"), width=1)
     def main__void():

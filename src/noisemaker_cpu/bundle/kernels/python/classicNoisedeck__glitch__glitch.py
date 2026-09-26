@@ -130,7 +130,7 @@ def run_pixel(ctx, out):
             st = rt.assign_swizzle(st, "y", rt.component_wise("mod", rt.binary("+", rt.swizzle(st, "y"), rt.binary("*", rt.component_wise("sin", rt.binary("*", yOffset, rt.f(6.28318530718), 1, "float"), width=1), refract, 1, "float"), 1, "float"), rt.f(1.0), width=1))
         diff = rt.construct(2, rt.binary("-", rt.f(0.5), st, 2, "float"))
         if _u_aspectLens:
-            diff[:] = rt.binary("-", rt.construct(2, rt.binary("/", rt.binary("*", rt.f(0.5), rt.swizzle(_u_fullResolution, "x"), 1, "float"), rt.swizzle(_u_fullResolution, "y"), 1, "float"), rt.f(0.5)), rt.construct(2, rt.binary("/", rt.binary("*", rt.swizzle(st, "x"), rt.swizzle(_u_fullResolution, "x"), 1, "float"), rt.swizzle(_u_fullResolution, "y"), 1, "float"), rt.swizzle(st, "y")), 2, "float")
+            diff[:] = rt.binary("-", rt.construct(2, rt.binary("/", rt.binary("*", rt.f(0.5), rt.swizzle(_u_fullResolution, "x"), 1, "float"), rt.swizzle(_u_fullResolution, "y"), 1, "float"), rt.f(0.5)), rt.array([rt.binary("/", rt.binary("*", rt.swizzle(st, "x"), rt.swizzle(_u_fullResolution, "x"), 1, "float"), rt.swizzle(_u_fullResolution, "y"), 1, "float"), rt.swizzle(st, "y")]), 2, "float")
         centerDist = rt.length(diff)
         distort = rt.f(0.0)
         zoom = rt.f(1.0)

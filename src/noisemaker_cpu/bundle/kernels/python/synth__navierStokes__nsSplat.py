@@ -69,8 +69,8 @@ def run_pixel(ctx, out):
         if (bool(rt.binary(">", iForce, rt.f(0.0))) or bool(rt.binary(">", iDye, rt.f(0.0)))):
             texel = rt.binary("/", rt.f(1.0), rt.construct(2, texSize), 2, "float")
             lc = lum__vec3(rt.swizzle(rt.texture(_u_inputTex, uv), "rgb"))
-            lr = lum__vec3(rt.swizzle(rt.texture(_u_inputTex, rt.binary("+", uv, rt.construct(2, rt.swizzle(texel, "x"), rt.f(0.0)), 2, "float")), "rgb"))
-            lu = lum__vec3(rt.swizzle(rt.texture(_u_inputTex, rt.binary("+", uv, rt.construct(2, rt.f(0.0), rt.swizzle(texel, "y")), 2, "float")), "rgb"))
+            lr = lum__vec3(rt.swizzle(rt.texture(_u_inputTex, rt.binary("+", uv, rt.array([rt.swizzle(texel, "x"), rt.f(0.0)]), 2, "float")), "rgb"))
+            lu = lum__vec3(rt.swizzle(rt.texture(_u_inputTex, rt.binary("+", uv, rt.array([rt.f(0.0), rt.swizzle(texel, "y")]), 2, "float")), "rgb"))
             grad = rt.construct(2, rt.binary("-", lr, lc, 1, "float"), rt.binary("-", lu, lc, 1, "float"))
             vel[:] = rt.binary("+", vel, rt.binary("*", rt.binary("*", grad, iForce, 2, "float"), rt.f(50.0), 2, "float"), 2, "float")
             dye = rt.binary("+", dye, rt.binary("*", rt.binary("*", rt.binary("*", lc, iDye, 1, "float"), dt, 1, "float"), rt.f(60.0), 1, "float"), 1, "float")
