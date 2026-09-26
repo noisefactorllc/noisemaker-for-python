@@ -27,6 +27,11 @@ noisemaker-py = "noisemaker_cpu.cli:main"
 [tool.setuptools.packages.find]
 where = ["src"]
 
+# Runtime data: the vendored shader bundle (metadata, lock, kernels). Without
+# this the installed wheel/sdist cannot render anything (GAP-004).
+[tool.setuptools.package-data]
+noisemaker_cpu = ["bundle/**/*.json", "bundle/kernels/**/*.py", "bundle/kernels/**/*.json"]
+
 [tool.pytest.ini_options]
 testpaths = ["tests"]
 

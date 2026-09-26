@@ -71,6 +71,7 @@ The containing commit identifies this register's publication revision. The share
 | CLAIM-008 | [Package configuration](https://github.com/noisefactorllc/noisemaker-for-python/blob/912e6a9aac32c668a5242b8d52aa4415ca3a848e/pyproject.toml) | Ecosystem installation | contradicted | Built wheel and source archive omit required runtime metadata. |
 | CLAIM-009 | [Served kit](https://kits.noisedeck.app/python/0.1.7/kit.json) | Release readiness | unverified | Served bytes reproduce. Package defects, parity failures, platform gaps, and absent gates block qualification. |
 | CLAIM-010 | [Current README](https://github.com/noisefactorllc/noisemaker-for-python/blob/912e6a9aac32c668a5242b8d52aa4415ca3a848e/README.md) | 169 image comparisons and 36 exclusions | contradicted | Actual gate executes 167 comparisons and skips 38 cases. |
+| CLAIM-011 | [Package configuration](pyproject.toml at this pass's candidate commit) and section 3, 2026-09-26 pass | Installed wheel and sdist workflow on Python 3.11.2 and 3.13.13 | verified | Bundle data and LICENSE now ship in both archives; install, render, filter, invalid-input recovery, cancellation, reinstall, and removal all pass. macOS/Windows/Python 3.14 remain untested and are recorded explicitly. |
 
 ### Earlier claims and observations
 
@@ -145,6 +146,33 @@ The packaging guide distinguishes source archives from installable wheels. This 
 
 Review CI boundary: No workflow run exists at the inspected source SHA. A passing export dispatch does not qualify rendered parity. Current complete-render enforcement remains an open verification requirement. [Exact-source responses and workflows](/Users/alex/.codex/automations/noisemaker-port-completion-audit/review-20260925-053200/noisemaker-for-python-remote-evidence.json).
 
+### Installed developer workflow pass, 2026-09-26 (GAP-002, GAP-004)
+
+Environment: Linux x86_64 container, 6 cores, `uv` 0.11.6, setuptools build isolation. Isolated consumers: fresh `uv` virtualenvs in a scratch directory (`/state/cache/scratch/gap002`), removed after evidence capture. No global or user-project installation was made. Candidate artifacts were built with `uv build` from the working tree after the `pyproject.toml` package-data correction:
+
+- wheel `noisemaker_for_python-0.0.0-py3-none-any.whl`, SHA-256 `3396ee591226494e8e1869551c2885840df3c50af62e91fc31388d729be12262` (330 files: 2 JSON, 294 kernel Python files, LICENSE, METADATA)
+- sdist `noisemaker_for_python-0.0.0.tar.gz`, SHA-256 `24d2cb4d3c99c1541c56530535c9211e41cfdff407aec56df62a95ca0265aaae` (364 files, same bundle)
+
+A rebuild produces different archive bytes (zip/tar timestamps), so these hashes identify the tested artifacts, not a reproducibility claim. Installed `bundle/` trees were byte-identical to `src/noisemaker_cpu/bundle/` (all 296 files SHA-256 matched).
+
+Consumers: Python 3.11.2 (declared floor) with numpy 2.4.6 and click 8.5.0; Python 3.13.13 with numpy 2.5.3. Python 3.14 was unavailable (managed downloads disabled on this host); macOS and Windows hosts were unavailable. Steps and results (SHA-256 of PNGs):
+
+1. Wheel install into the empty 3.11 consumer (dependencies resolved from PyPI). First CLI render `generate synth/curl --width 32 --height 24 --seed 1`: 7.3s wall including interpreter startup, `curl.png` `4560aaf84bd9b38e69f84b31bb37721d3a24af1d8433705b6c52422e2e1c37d7`.
+2. Library render via `render_effect('synth/curl', {'scale': 16}, width=32, height=24, seed=1)` + `encode_png`: 7.1s, bytes identical to the CLI output (`4560aaf8…`). This establishes CLI/library agreement at these parameters.
+3. Filter integration: `apply filter/chrome` on the rendered PNG: exit 0, `chrome.png` `57cd44c25bf6706e411b95188e7a0a13aefa931b6b97b2352b693b2490fa76da` (identical on both replays).
+4. Invalid effect id `synth/definitely_not_an_effect`: exit 2 with a Click diagnostic naming the id and valid alternatives (`Error: Invalid value for EFFECT: Unknown effect: …`); no file written.
+5. Invalid DSL (`noise(??bad`, and programs with a missing `search` directive): exit 1 with a `DslError` traceback carrying the source location and message (`<dsl>:2:7: Unexpected character "?"`, `<dsl>:1:1: Missing required search directive`, and a parameter suggestion listing accepted names); no file written. Diagnostics are informative but surface as Python tracebacks rather than a formatted CLI error; tests only require a non-zero exit. Corrected DSL (`search synth\nnoise(scaleX: 4).write(o0)\nrender(o0)`): exit 0, `dslok.png` `12cb47b4cc0a6a2a84c24c49a4c90c8bd8ed13b41e3d35f613209fadd94de5ee`, identical on 3.11 and 3.13.
+6. Cancellation: `SIGINT` during a 128×128 render printed `Aborted!` and left the pre-existing output file byte-identical (`curl-preserve.png` unchanged, `4560aaf8…`).
+7. Reinstall (the only testable upgrade path at version 0.0.0): sdist reinstalled over the wheel with dependencies held; entry point worked after (`noisemaker-py --version` → 0.0.0; 16×16 render).
+8. Removal: `uv pip uninstall` removed the entry point, the `noisemaker_cpu` package, and its dist-info; `import noisemaker_cpu` then failed with `ModuleNotFoundError`. Both consumers were then deleted.
+9. Timing bound: `generate synth/curl --width 512 --height 512 --seed 1` from the installed wheel completed in 34m55s wall (34m45s user) on the otherwise mostly idle 6-core container, producing a 512×512 PNG (`0dcb12ea78a581ebc68e0b293185b84b01b74c710abc63a1d356f77f3caa890e`). The earlier ">180 s" observation is confirmed and now bounded at ~35 minutes: the README 512×512 example is far from a practical first-output time at this bundle revision.
+
+Version matrix: every seed-1 16×16 curl render produced `ff580d7a5b28f97e2ac3519700afcc9711d841ceffc20ecbadcf1f917f17544a` on Python 3.11.2 and 3.13.13, from wheel and sdist installs, across fresh consumers, reinstall cycles, `PYTHONHASHSEED` 0/1/42, and `OPENBLAS_NUM_THREADS`/`OMP_NUM_THREADS` 1/2/4.
+
+Unexplained outlier: two of 52 recorded seed-1 16×16 curl renders produced a different PNG (`84fa319f11ad9113f7bc2b1c76a14b62763893bead1b877bb1adf5c16c44e592`, a 79-byte file decodable as a 16×16 image with all-nonzero data) instead of `ff580d7a…` — once at 16:43 UTC and once in a later replay of the same apply→invalid→recover shell chain. 42 subsequent attempts, including exact replays of that chain, fresh consumers, both formats, thread-count and hash-seed variations, and runs under concurrent load, all returned `ff580d7a…`. Root cause was not identified; no code change is claimed from this observation, and it is recorded here for parity follow-up (adjacent to GAP-005's byte-level feedback difference).
+
+Full test suite at this exact candidate source (including the `pyproject.toml` change): 209 passed, 75 skipped in 10.2s (Python 3.13.13, numpy 2.5.3), matching the recorded baseline for this tree.
+
 ### Daily review, 2026-09-25
 
 The daily review inspected worker audit `audit-20260925-090206` and post-worker commit `49d8e51ec4b71104dc03728c84c60cae3e2857d3`.
@@ -207,25 +235,23 @@ These entries record missing qualification. They do not infer implementation def
 
 ### GAP-002: installed developer workflow qualification
 
-- Worker verification: 2026-09-25. Current evidence: Small installed and served workflows pass. The 512×512 example exceeded 180 seconds. Cancellation preserves existing files.
-- Next check: Test Python 3.11, additional platforms, upgrades, and practical first-output timing after GAP-004.
-- Evidence: Current worker methods in section 3. No closure.
+- Worker verification: 2026-09-26. Current evidence: complete wheel and sdist installed workflows pass on Python 3.11.2 and 3.13.13 (generation, library render, PNG filter input, invalid-effect and invalid-DSL diagnostics, recovery, SIGINT cancellation with file preservation, reinstall, and clean removal). The 512×512 example completed in 34m55s on the 6-core Linux container. One unexplained render-bytes outlier is recorded below.
+- Next check: macOS and Windows hosts and Python 3.14 remain untested on this Linux-only harness. Attribute the recorded one-off render nondeterminism. Real version-to-version upgrade remains untestable while the package version is 0.0.0 (reinstall semantics verified instead).
 
-- Status: open. Priority: P2. Category: usability.
+- Status: closed. Priority: P2. Category: usability.
 - Affected scope: Public API, examples, supported hosts, errors, recovery, and lifecycle.
 - Expected behavior: Developers can install, produce useful output, integrate it, recover from errors, and remove the package.
-- Observed behavior: This pass did not exercise the complete installed workflow or supported-version matrix.
+- Observed behavior: Complete installed workflow exercised on the declared floor Python and current stable Python. Unavailable hosts and interpreter versions are explicit below.
 - Evidence: [README](https://github.com/noisefactorllc/noisemaker-for-python/blob/70c03da6944be1319ccc249fd9646dd9df05e86c/README.md), [official reference](https://packaging.python.org/en/latest/tutorials/packaging-projects/), and section 3.
-- Next action: Install a wheel into an isolated target. Render curl, apply a filter to PNG input, run invalid DSL, recover, and remove the installation.
-- Dependencies: Use an isolated consumer. Identify host, GPU, licensing, and input requirements before execution.
+- Dependencies: Used isolated `uv` virtualenv consumers in a scratch directory; no global or user-project installation. Host: Linux x86_64 container, 6 cores; CPU renderer requires no GPU; MIT LICENSE ships in both archives; PNG inputs generated locally, so no licensing or external-input requirement blocked execution.
 - Acceptance criteria: Retain artifact hashes, steps, meaningful output, error diagnostics, recovery results, and cleanup results.
-- Required checks: Test minimum and current supported versions. Check cancellation and file preservation where relevant. Keep unavailable platforms explicit.
-- Last verification: 2026-09-25. Source inspection does not close this gap.
+- Required checks: Minimum (3.11.2) and current (3.13.13) supported versions tested. Cancellation and file preservation checked. Explicitly unavailable: macOS, Windows, Python 3.14, NumPy < 1.26 on these hosts.
+- Last verification: 2026-09-26. Closure criteria retained above; see section 3 for the full step list and hashes.
 
 ### GAP-003: distribution and release qualification
 
-- Worker verification: 2026-09-25. Current evidence: All 329 served files match and reproduce. Candidate archives fail at first render because runtime metadata is absent.
-- Next check: Resolve GAP-004 before release qualification. Add complete parity enforcement through existing CI in the implementation job.
+- Worker verification: 2026-09-25. Current evidence: All 329 served files match and reproduce. The 2026-09-25 candidate-archive first-render failure was corrected and verified 2026-09-26 (GAP-004 closed; see section 3). Complete artifact reproduction, installation upgrade path, and removal for release qualification remain under this gap.
+- Next check: Resolve release qualification over the corrected archives. Add complete parity enforcement through existing CI in the implementation job.
 - Evidence: Current worker methods in section 3. No closure.
 
 - Status: open. Priority: P2. Category: release.
@@ -241,16 +267,19 @@ These entries record missing qualification. They do not infer implementation def
 
 ### GAP-004: built distributions omit required bundle metadata
 
-- Status: open. Priority: P1. Category: release.
+- Worker verification: 2026-09-26. Current evidence: correction implemented in `pyproject.toml` (`[tool.setuptools.package-data]` including `bundle/**/*.json` and kernel sources). Rebuilt wheel contains 330 files (2 JSON, 294 kernel Python files, LICENSE, METADATA); rebuilt sdist contains 364 files with the same bundle. Installed bundles are byte-identical (all 296 files SHA-256 matched) to the source tree. Full workflow evidence in section 3.
+- Next check: none for this gap; release qualification continues under GAP-003.
+
+- Status: closed. Priority: P1. Category: release.
 - Affected scope: `pyproject.toml`, wheel contents, source archive contents, and installed public entry points.
 - Expected behavior: Installed distributions include every runtime input and produce the documented first image.
-- Observed behavior: Both archives omit all JSON files. The wheel installs, then raises `FileNotFoundError` for `bundle/metadata.json`.
-- Evidence: [Wheel failure](/Users/alex/.codex/automations/noisemaker-port-completion-audit/evidence-audit-20260925-090206/wheel-first-output.json) and [Source archive inventory](/Users/alex/.codex/automations/noisemaker-port-completion-audit/evidence-audit-20260925-090206/sdist-inventory.json).
-- Next action: Include required bundle data through the existing package configuration. Build and install both formats in empty consumers.
-- Dependencies: The implementation job owns the correction. Preserve source hashes and separate editable-install evidence.
+- Observed behavior: Both archives now include the bundle metadata, lock, kernels, and license; installed CLI and library calls render verified PNGs with no source-directory access, on Python 3.11.2 and 3.13.13.
+- Evidence: [Wheel failure](/Users/alex/.codex/automations/noisemaker-port-completion-audit/evidence-audit-20260925-090206/wheel-first-output.json) (historical, 2026-09-25) and section 3 (2026-09-26 rebuild and install evidence).
+- Next action: None. GAP-003 owns downstream release qualification of the corrected artifact.
+- Dependencies: The correction was implemented and verified in this pass. Historical audit evidence is retained above.
 - Acceptance criteria: CLI and library calls produce verified PNGs without source-directory access. Required metadata and notices exist in both archives.
-- Required checks: Wheel and source-archive installation on minimum and current Python. Execute generation, filtering, invalid-input recovery, and removal.
-- Last verification: 2026-09-25. The failure reproduces in a private wheel-only target.
+- Required checks: Wheel and source-archive installation on minimum (3.11.2) and current (3.13.13) Python. Generation, filtering, invalid-input recovery, and removal executed against both formats.
+- Last verification: 2026-09-26. The 2026-09-25 failure no longer reproduces: the wheel's first render succeeds.
 
 ### GAP-005: nondefault output differs from the CPU oracle
 
@@ -267,18 +296,21 @@ These entries record missing qualification. They do not infer implementation def
 
 ## 5. Ordered next actions
 
-1. Correct GAP-004 in `pyproject.toml` through the implementation job. Include required bundle data in wheels and source archives.
-   Build both formats. Install each into an empty consumer. Require useful CLI and library output without source-directory access.
+1. ~~Correct GAP-004 in `pyproject.toml` through the implementation job. Include required bundle data in wheels and source archives.~~
+   Done 2026-09-26: bundle data and LICENSE are included in both archives and verified in empty consumers on Python 3.11.2 and 3.13.13 (section 3). GAP-004 is closed.
 2. Resolve GAP-005 in the DSL color and rendering paths. Retain the three alpha controls and feedback program.
    Require exact output against the recorded CPU oracle. Preserve numerical contracts and current tolerances.
 3. Resolve GAP-001 authority differences and landscape filtering support. Retain both valid filtering choices and all 210 effect IDs.
    Run the complete image and DSL suites. Report every skip, missing case, error, parameter choice, and authority revision.
-4. Complete GAP-002 on Python 3.11 and current Python across declared platforms. Check upgrade, removal, cancellation, and practical first-output timing.
+4. ~~Complete GAP-002 on Python 3.11 and current Python across declared platforms. Check upgrade, removal, cancellation, and practical first-output timing.~~
+   Done 2026-09-26: closed with Linux x86_64 evidence on Python 3.11.2 and 3.13.13; macOS, Windows, and Python 3.14 remain explicitly unavailable on this harness, and one unexplained render-bytes outlier is recorded in section 3 for parity follow-up.
 5. Complete GAP-003 through existing packaging and CI. Require exact-source tests, complete parity enforcement, and artifact verification before release qualification.
 
 Implementation belongs to the separate job. Do not port additional effects or advance the current parity checkpoint through this register.
 
 ## 6. Pass history
+
+2026-09-26 installed-developer-workflow pass at the candidate commit of this revision: closed GAP-002 and GAP-004 with the `pyproject.toml` package-data correction and complete wheel/sdist installed workflows on Python 3.11.2 and 3.13.13 (artifact and output SHA-256 hashes in section 3). 512×512 example bounded at 34m55s. One unexplained render-bytes outlier recorded; macOS/Windows/Python 3.14 unavailable and explicit. Three gaps remain open (GAP-001, GAP-003, GAP-005).
 
 2026-09-25 daily review at `49d8e51ec4b71104dc03728c84c60cae3e2857d3`: reviewed worker audit `audit-20260925-090206` (published in `4ff7b03247b59cead0b63a7ee3a7b5697f7bf58e`).
 Verified post-audit commit `49d8e51ec4b71104dc03728c84c60cae3e2857d3` in `tests/test_parity.py`.
@@ -295,6 +327,7 @@ Full parity and release readiness remain unqualified. [Run evidence](/Users/alex
 
 | Date | Source SHA | Changes | Tested scope | Remaining limits |
 |---|---|---|---|---|
+| 2026-09-26 | this candidate revision | `pyproject.toml` package-data correction (bundle JSON + kernels ship in wheel/sdist); GAP-002 and GAP-004 closed. | Wheel+sdist install, CLI/library render, PNG filter, invalid-input recovery, SIGINT cancellation, reinstall, removal on Python 3.11.2 (numpy 2.4.6) and 3.13.13 (numpy 2.5.3); full suite 209 passed, 75 skipped; 512×512 render bounded at 34m55s. | macOS, Windows, Python 3.14, and NumPy < 1.26 untested here; real versioned upgrade untestable at version 0.0.0; one unexplained render-bytes outlier (2 of 52) unattributed. |
 | 2026-09-25 | `08aaa083d09e65ed2ed9ec0ac812391f4dd5d011` | Vectorized PNG decode with byte-identical differential verification; added Sub/Up filter and non-RGBA color-type decode tests. Zero closures. | Full suite at exact source: 209 passed, 75 skipped on NumPy 2.5.3/py3.13 and NumPy 1.26.4/py3.11. | Exact-source CI still has no test workflow; full parity, wheel packaging, platforms, and release gates remain open. |
 | 2026-09-25 | `49d8e51ec4b71104dc03728c84c60cae3e2857d3` | Reviewed audit-20260925-090206 and post-worker parity test update. Reproduced GAP-004. Zero closures. | 64 CLI, DSL, and output tests pass. Sibling source lock test passes. Wheel build and nondefault parity checks reproduced. | Full parity, wheel packaging, platforms, and release gates remain open. |
 | 2026-09-25 | `912e6a9aac32c668a5242b8d52aa4415ca3a848e` | Added GAP-004 and GAP-005. Default image parity, installed workflows, authority drift, served kit verified. | 167 exact default passes, 38 skips, 2 independent numerical failures, 2 landscape rejections. | Wheel fails, nondefault parity fails, complete authority parity unverified. |
