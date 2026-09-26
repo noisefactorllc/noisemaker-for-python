@@ -26,7 +26,7 @@ Effect kernels are **transpiled directly from the upstream GLSL** served by the
 - Screen-space derivatives.
 - Bit-exact uint32/PCG hashing.
 
-**The current bundle contains 205 CPU catalog effects.** For the current 205-effect bundle, an image harness at worker source `912e6a9` compared the 167 single-frame effects runnable at the harness's fixed context with zero byte tolerance (all passing; the remaining 38 effects were excluded from that harness's context, and the 38 exclusions remain under review in `docs/COMPLETION_GAPS.md` GAP-001). A separate DSL harness documented exact JS CPU DSL parity for 21 stateful and particle effects at controlled iteration counts; that harness's identity and scope are recorded in `docs/COMPATIBILITY.md` §6. These 167- and 21-effect results do not establish parity for the full 205-effect catalog, and no current full-catalog parity statement is made here.
+**The current bundle contains 205 CPU catalog effects.** For the current 205-effect bundle, an image harness at worker source `912e6a9` compared the 167 single-frame effects runnable at the harness's fixed context with zero byte tolerance (all passing; the remaining 38 effects were excluded from that harness's context, and the 38 exclusions remain under review in `docs/COMPLETION_GAPS.md` GAP-001). The image harness's 167-effect result is recorded in `docs/COMPATIBILITY.md` §6. These 167 comparisons do not establish parity for the full 205-effect catalog, and no current full-catalog parity statement is made here.
 Iterated effects default to `iterationCount: 60`. Particle pipelines share state from `pointsEmit()` through their point and render steps.
 
 ## Install
@@ -81,10 +81,9 @@ pytest
 Cross-language parity against the JS engine (`scripts/parity.py`) needs a sibling
 `noisemaker-for-cpu` checkout and Node. The image harness's most recent
 source-bound result (worker at `912e6a9`, see `docs/COMPATIBILITY.md` §6)
-compared 167 effects with zero byte tolerance and reported 38 exclusions. The
-DSL harness's most recent source-bound result (worker at `912e6a9`, see
-`docs/COMPATIBILITY.md` §6) covered 21 stateful and particle effects at
-controlled iteration counts. Two independent numerical failures and two
+compared 167 effects with zero byte tolerance and reported 38 exclusions (see
+`docs/COMPATIBILITY.md` §6). No DSL-harness result is on record for this
+source. Two independent numerical failures and two
 landscape rejections remain open (see `docs/COMPLETION_GAPS.md` GAP-001, GAP-005),
 and the 38 image-harness exclusions were not run in that harness's context, so
 full-catalog parity is unqualified. No parity result currently on record
