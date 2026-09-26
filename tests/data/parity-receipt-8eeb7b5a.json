@@ -1,0 +1,1070 @@
+{
+  "byteExact": {
+    "classicNoisedeck/bitEffects": {
+      "oraclePngSha256": "fff82c166ec411f87b34e24739514aeaa7201c109aca63be381bad812865c2bc",
+      "oracleRgba8Sha256": "c3d4ec2c6abd9042db090e9d40357a980a1e0b3cb0fc5aaba9b88ea9c9bf5203",
+      "pythonPngSha256": "fff82c166ec411f87b34e24739514aeaa7201c109aca63be381bad812865c2bc",
+      "pythonRgba8Sha256": "c3d4ec2c6abd9042db090e9d40357a980a1e0b3cb0fc5aaba9b88ea9c9bf5203"
+    },
+    "classicNoisedeck/caustic": {
+      "oraclePngSha256": "7dac86fbb4d367198ec037e9fed6dba34b41475553df921c8d092ed8dc90b1e1",
+      "oracleRgba8Sha256": "f4ed29350002fdf403644a0270752ca07e2d996bf635e13b80cf7344cfc72fdc",
+      "pythonPngSha256": "1d2403746adf1fb39b0c46486b264a0cfc742c02bbdac70ecdd98e44b6a7a325",
+      "pythonRgba8Sha256": "f4ed29350002fdf403644a0270752ca07e2d996bf635e13b80cf7344cfc72fdc"
+    },
+    "classicNoisedeck/cellNoise": {
+      "oraclePngSha256": "0cb28574512fda9200aa8f29550b2991409e299011accddcd0a0f42a93cabf1c",
+      "oracleRgba8Sha256": "d434a88bccb6258319c54e020c165b43704c06b1c88d4db6fbd887c2423f5c8b",
+      "pythonPngSha256": "0cb28574512fda9200aa8f29550b2991409e299011accddcd0a0f42a93cabf1c",
+      "pythonRgba8Sha256": "d434a88bccb6258319c54e020c165b43704c06b1c88d4db6fbd887c2423f5c8b"
+    },
+    "classicNoisedeck/cellRefract": {
+      "oraclePngSha256": "02aea643711b59b7f35a7bb1a5719fa741fc052bff92b5e78a085c327169f9f8",
+      "oracleRgba8Sha256": "eec68212ac4794baa76cf2d4520d0401aeb7156ee1ee28dabbc0bf0fdec54cb7",
+      "pythonPngSha256": "02aea643711b59b7f35a7bb1a5719fa741fc052bff92b5e78a085c327169f9f8",
+      "pythonRgba8Sha256": "eec68212ac4794baa76cf2d4520d0401aeb7156ee1ee28dabbc0bf0fdec54cb7"
+    },
+    "classicNoisedeck/coalesce": {
+      "oraclePngSha256": "a28defbe4dcaa9f3d3087f1a85c44fb0b30a775c33fd8f9dbc5a93ad2a991ccf",
+      "oracleRgba8Sha256": "8037d3a5dc50daeec2da15827b23998126ed02bacee14700b8291824a425144b",
+      "pythonPngSha256": "a28defbe4dcaa9f3d3087f1a85c44fb0b30a775c33fd8f9dbc5a93ad2a991ccf",
+      "pythonRgba8Sha256": "8037d3a5dc50daeec2da15827b23998126ed02bacee14700b8291824a425144b"
+    },
+    "classicNoisedeck/colorLab": {
+      "oraclePngSha256": "02aea643711b59b7f35a7bb1a5719fa741fc052bff92b5e78a085c327169f9f8",
+      "oracleRgba8Sha256": "eec68212ac4794baa76cf2d4520d0401aeb7156ee1ee28dabbc0bf0fdec54cb7",
+      "pythonPngSha256": "02aea643711b59b7f35a7bb1a5719fa741fc052bff92b5e78a085c327169f9f8",
+      "pythonRgba8Sha256": "eec68212ac4794baa76cf2d4520d0401aeb7156ee1ee28dabbc0bf0fdec54cb7"
+    },
+    "classicNoisedeck/composite": {
+      "oraclePngSha256": "a28defbe4dcaa9f3d3087f1a85c44fb0b30a775c33fd8f9dbc5a93ad2a991ccf",
+      "oracleRgba8Sha256": "8037d3a5dc50daeec2da15827b23998126ed02bacee14700b8291824a425144b",
+      "pythonPngSha256": "a28defbe4dcaa9f3d3087f1a85c44fb0b30a775c33fd8f9dbc5a93ad2a991ccf",
+      "pythonRgba8Sha256": "8037d3a5dc50daeec2da15827b23998126ed02bacee14700b8291824a425144b"
+    },
+    "classicNoisedeck/effects": {
+      "oraclePngSha256": "02aea643711b59b7f35a7bb1a5719fa741fc052bff92b5e78a085c327169f9f8",
+      "oracleRgba8Sha256": "eec68212ac4794baa76cf2d4520d0401aeb7156ee1ee28dabbc0bf0fdec54cb7",
+      "pythonPngSha256": "02aea643711b59b7f35a7bb1a5719fa741fc052bff92b5e78a085c327169f9f8",
+      "pythonRgba8Sha256": "eec68212ac4794baa76cf2d4520d0401aeb7156ee1ee28dabbc0bf0fdec54cb7"
+    },
+    "classicNoisedeck/fractal": {
+      "oraclePngSha256": "bde48b8af9d89dffd5764b6e09e6e0ea0d4cbb364c4597c5854a4fa9bb712069",
+      "oracleRgba8Sha256": "cf9f2435f21d80a60e97f3ea1f7c8cc80329099a715e67816c52c1dc18f42abe",
+      "pythonPngSha256": "bde48b8af9d89dffd5764b6e09e6e0ea0d4cbb364c4597c5854a4fa9bb712069",
+      "pythonRgba8Sha256": "cf9f2435f21d80a60e97f3ea1f7c8cc80329099a715e67816c52c1dc18f42abe"
+    },
+    "classicNoisedeck/glitch": {
+      "oraclePngSha256": "02aea643711b59b7f35a7bb1a5719fa741fc052bff92b5e78a085c327169f9f8",
+      "oracleRgba8Sha256": "eec68212ac4794baa76cf2d4520d0401aeb7156ee1ee28dabbc0bf0fdec54cb7",
+      "pythonPngSha256": "02aea643711b59b7f35a7bb1a5719fa741fc052bff92b5e78a085c327169f9f8",
+      "pythonRgba8Sha256": "eec68212ac4794baa76cf2d4520d0401aeb7156ee1ee28dabbc0bf0fdec54cb7"
+    },
+    "classicNoisedeck/kaleido": {
+      "oraclePngSha256": "02aea643711b59b7f35a7bb1a5719fa741fc052bff92b5e78a085c327169f9f8",
+      "oracleRgba8Sha256": "eec68212ac4794baa76cf2d4520d0401aeb7156ee1ee28dabbc0bf0fdec54cb7",
+      "pythonPngSha256": "02aea643711b59b7f35a7bb1a5719fa741fc052bff92b5e78a085c327169f9f8",
+      "pythonRgba8Sha256": "eec68212ac4794baa76cf2d4520d0401aeb7156ee1ee28dabbc0bf0fdec54cb7"
+    },
+    "classicNoisedeck/lensDistortion": {
+      "oraclePngSha256": "02aea643711b59b7f35a7bb1a5719fa741fc052bff92b5e78a085c327169f9f8",
+      "oracleRgba8Sha256": "eec68212ac4794baa76cf2d4520d0401aeb7156ee1ee28dabbc0bf0fdec54cb7",
+      "pythonPngSha256": "02aea643711b59b7f35a7bb1a5719fa741fc052bff92b5e78a085c327169f9f8",
+      "pythonRgba8Sha256": "eec68212ac4794baa76cf2d4520d0401aeb7156ee1ee28dabbc0bf0fdec54cb7"
+    },
+    "classicNoisedeck/moodscape": {
+      "oraclePngSha256": "5ff27c8098a701a99aeca834695d25872fda1fdd4bb7b487a5818a880c2d813e",
+      "oracleRgba8Sha256": "fa6ba78caaa7bf441cb681d2ebba705285db3a0e4650f919c3927515985306f6",
+      "pythonPngSha256": "b4acf599dd67d42264ba75d0bf7164f335b6979db9b5887e19c21f141d9e3386",
+      "pythonRgba8Sha256": "fa6ba78caaa7bf441cb681d2ebba705285db3a0e4650f919c3927515985306f6"
+    },
+    "classicNoisedeck/noise": {
+      "oraclePngSha256": "0bb1bb7545aa736ef452c1889efdd89a049ed9155b28e41f167cfc64b2f24352",
+      "oracleRgba8Sha256": "92143ceecc7eff5a5dc16ee9f2e885cf24822eac5617c5d3e12595f2cf1e811f",
+      "pythonPngSha256": "5edf243b69ca06bcef26f0e1b5b28e924c71e0af6658e24ae8a4d7d6df5217ab",
+      "pythonRgba8Sha256": "92143ceecc7eff5a5dc16ee9f2e885cf24822eac5617c5d3e12595f2cf1e811f"
+    },
+    "classicNoisedeck/noise3d": {
+      "oraclePngSha256": "107f576a60ab7201375bf9ccd7a63c7b6bfe57d34c841633ae2c24f413c75e28",
+      "oracleRgba8Sha256": "9b8052ef8b45b9e1d508d23d64746595989acada4168fe0958ea03651c3a76e2",
+      "pythonPngSha256": "fe2a8bbbdb995ef71f338fdd6f0424bc45cbd0bab9ae5c0af7ce6f62afbac585",
+      "pythonRgba8Sha256": "9b8052ef8b45b9e1d508d23d64746595989acada4168fe0958ea03651c3a76e2"
+    },
+    "classicNoisedeck/refract": {
+      "oraclePngSha256": "02aea643711b59b7f35a7bb1a5719fa741fc052bff92b5e78a085c327169f9f8",
+      "oracleRgba8Sha256": "eec68212ac4794baa76cf2d4520d0401aeb7156ee1ee28dabbc0bf0fdec54cb7",
+      "pythonPngSha256": "02aea643711b59b7f35a7bb1a5719fa741fc052bff92b5e78a085c327169f9f8",
+      "pythonRgba8Sha256": "eec68212ac4794baa76cf2d4520d0401aeb7156ee1ee28dabbc0bf0fdec54cb7"
+    },
+    "classicNoisedeck/shapeMixer": {
+      "oraclePngSha256": "354ef609d1dbff5bf294a76395ef58bec6f4ca2dca4b714e16ec64403126887e",
+      "oracleRgba8Sha256": "528328b23dc8aa30b512d4020f08231286f2430bca43c1375af1a3ee4fe74183",
+      "pythonPngSha256": "354ef609d1dbff5bf294a76395ef58bec6f4ca2dca4b714e16ec64403126887e",
+      "pythonRgba8Sha256": "528328b23dc8aa30b512d4020f08231286f2430bca43c1375af1a3ee4fe74183"
+    },
+    "classicNoisedeck/shapes": {
+      "oraclePngSha256": "3a3626bf8e3e0506682b4e9d60273380047dee162aaf07014d78885a41f469b3",
+      "oracleRgba8Sha256": "c623ebc0ff70a67ac65a43d0fd69bb63ef8a9759f3bdd01d59462d02081318b0",
+      "pythonPngSha256": "dd19247932734a707fe1c37939a69dd0062ea2a2553f57335a56b3532e4206a0",
+      "pythonRgba8Sha256": "c623ebc0ff70a67ac65a43d0fd69bb63ef8a9759f3bdd01d59462d02081318b0"
+    },
+    "classicNoisedeck/shapes3d": {
+      "oraclePngSha256": "ba319e2b6d3fb55959a27b2527583198acc839df9ba244717b3eaea93bf156e3",
+      "oracleRgba8Sha256": "2f3a19dc693eba6c025b5aaeda4fbd4b320b4fa6ef27f9f67a5ccd6a7259837d",
+      "pythonPngSha256": "ba319e2b6d3fb55959a27b2527583198acc839df9ba244717b3eaea93bf156e3",
+      "pythonRgba8Sha256": "2f3a19dc693eba6c025b5aaeda4fbd4b320b4fa6ef27f9f67a5ccd6a7259837d"
+    },
+    "classicNoisedeck/splat": {
+      "oraclePngSha256": "a2ca5558d8467b8fea491894bc599d21c296c6adc0524d11092bc55854aead0d",
+      "oracleRgba8Sha256": "5950cfedaed7df70e0666d6622a2792cd432bf2f16bb59d5578f9d8c06f35679",
+      "pythonPngSha256": "a2ca5558d8467b8fea491894bc599d21c296c6adc0524d11092bc55854aead0d",
+      "pythonRgba8Sha256": "5950cfedaed7df70e0666d6622a2792cd432bf2f16bb59d5578f9d8c06f35679"
+    },
+    "filter/adjust": {
+      "oraclePngSha256": "02aea643711b59b7f35a7bb1a5719fa741fc052bff92b5e78a085c327169f9f8",
+      "oracleRgba8Sha256": "eec68212ac4794baa76cf2d4520d0401aeb7156ee1ee28dabbc0bf0fdec54cb7",
+      "pythonPngSha256": "02aea643711b59b7f35a7bb1a5719fa741fc052bff92b5e78a085c327169f9f8",
+      "pythonRgba8Sha256": "eec68212ac4794baa76cf2d4520d0401aeb7156ee1ee28dabbc0bf0fdec54cb7"
+    },
+    "filter/bloom": {
+      "oraclePngSha256": "02aea643711b59b7f35a7bb1a5719fa741fc052bff92b5e78a085c327169f9f8",
+      "oracleRgba8Sha256": "eec68212ac4794baa76cf2d4520d0401aeb7156ee1ee28dabbc0bf0fdec54cb7",
+      "pythonPngSha256": "02aea643711b59b7f35a7bb1a5719fa741fc052bff92b5e78a085c327169f9f8",
+      "pythonRgba8Sha256": "eec68212ac4794baa76cf2d4520d0401aeb7156ee1ee28dabbc0bf0fdec54cb7"
+    },
+    "filter/blur": {
+      "oraclePngSha256": "02aea643711b59b7f35a7bb1a5719fa741fc052bff92b5e78a085c327169f9f8",
+      "oracleRgba8Sha256": "eec68212ac4794baa76cf2d4520d0401aeb7156ee1ee28dabbc0bf0fdec54cb7",
+      "pythonPngSha256": "02aea643711b59b7f35a7bb1a5719fa741fc052bff92b5e78a085c327169f9f8",
+      "pythonRgba8Sha256": "eec68212ac4794baa76cf2d4520d0401aeb7156ee1ee28dabbc0bf0fdec54cb7"
+    },
+    "filter/bulge": {
+      "oraclePngSha256": "02aea643711b59b7f35a7bb1a5719fa741fc052bff92b5e78a085c327169f9f8",
+      "oracleRgba8Sha256": "eec68212ac4794baa76cf2d4520d0401aeb7156ee1ee28dabbc0bf0fdec54cb7",
+      "pythonPngSha256": "02aea643711b59b7f35a7bb1a5719fa741fc052bff92b5e78a085c327169f9f8",
+      "pythonRgba8Sha256": "eec68212ac4794baa76cf2d4520d0401aeb7156ee1ee28dabbc0bf0fdec54cb7"
+    },
+    "filter/celShading": {
+      "oraclePngSha256": "6312631df7f0e8f4333629e123cce33831973aaa5cd769c8298f746e7587554f",
+      "oracleRgba8Sha256": "9bf767bf86244729dda4d4a97e7f8f74fbdafb904562cc91c3c01d15e7729baf",
+      "pythonPngSha256": "6312631df7f0e8f4333629e123cce33831973aaa5cd769c8298f746e7587554f",
+      "pythonRgba8Sha256": "9bf767bf86244729dda4d4a97e7f8f74fbdafb904562cc91c3c01d15e7729baf"
+    },
+    "filter/channel": {
+      "oraclePngSha256": "02aea643711b59b7f35a7bb1a5719fa741fc052bff92b5e78a085c327169f9f8",
+      "oracleRgba8Sha256": "eec68212ac4794baa76cf2d4520d0401aeb7156ee1ee28dabbc0bf0fdec54cb7",
+      "pythonPngSha256": "02aea643711b59b7f35a7bb1a5719fa741fc052bff92b5e78a085c327169f9f8",
+      "pythonRgba8Sha256": "eec68212ac4794baa76cf2d4520d0401aeb7156ee1ee28dabbc0bf0fdec54cb7"
+    },
+    "filter/chroma": {
+      "oraclePngSha256": "30160553fec73b75e7b8948d5428297344cd48e60c534725b9c7b035469e14bd",
+      "oracleRgba8Sha256": "2c893cd47b6757133987906e00c55e6dcce3c567b9df9e7f91ffecd3604cc6a6",
+      "pythonPngSha256": "30160553fec73b75e7b8948d5428297344cd48e60c534725b9c7b035469e14bd",
+      "pythonRgba8Sha256": "2c893cd47b6757133987906e00c55e6dcce3c567b9df9e7f91ffecd3604cc6a6"
+    },
+    "filter/chromaticAberration": {
+      "oraclePngSha256": "02aea643711b59b7f35a7bb1a5719fa741fc052bff92b5e78a085c327169f9f8",
+      "oracleRgba8Sha256": "eec68212ac4794baa76cf2d4520d0401aeb7156ee1ee28dabbc0bf0fdec54cb7",
+      "pythonPngSha256": "02aea643711b59b7f35a7bb1a5719fa741fc052bff92b5e78a085c327169f9f8",
+      "pythonRgba8Sha256": "eec68212ac4794baa76cf2d4520d0401aeb7156ee1ee28dabbc0bf0fdec54cb7"
+    },
+    "filter/chrome": {
+      "oraclePngSha256": "22707f0c886fe2239c9d2d1618cc75d2525133f101bd056b256f0cbb1cbb8426",
+      "oracleRgba8Sha256": "3022ef53f9caf2f92917a90fd19289279ac8fed74f26ac477d9ebb572fcfd94b",
+      "pythonPngSha256": "22707f0c886fe2239c9d2d1618cc75d2525133f101bd056b256f0cbb1cbb8426",
+      "pythonRgba8Sha256": "3022ef53f9caf2f92917a90fd19289279ac8fed74f26ac477d9ebb572fcfd94b"
+    },
+    "filter/clouds": {
+      "oraclePngSha256": "0a9eefd8940aad7f3507df5964e3421fffa2db3e31706a1828c7c4ae92ba8741",
+      "oracleRgba8Sha256": "000d0909d4d466dd2cc81f746260bbb236357baa1d49fbbe9afa83e43dc32a99",
+      "pythonPngSha256": "0a9eefd8940aad7f3507df5964e3421fffa2db3e31706a1828c7c4ae92ba8741",
+      "pythonRgba8Sha256": "000d0909d4d466dd2cc81f746260bbb236357baa1d49fbbe9afa83e43dc32a99"
+    },
+    "filter/colorReplace": {
+      "oraclePngSha256": "02aea643711b59b7f35a7bb1a5719fa741fc052bff92b5e78a085c327169f9f8",
+      "oracleRgba8Sha256": "eec68212ac4794baa76cf2d4520d0401aeb7156ee1ee28dabbc0bf0fdec54cb7",
+      "pythonPngSha256": "02aea643711b59b7f35a7bb1a5719fa741fc052bff92b5e78a085c327169f9f8",
+      "pythonRgba8Sha256": "eec68212ac4794baa76cf2d4520d0401aeb7156ee1ee28dabbc0bf0fdec54cb7"
+    },
+    "filter/corrupt": {
+      "oraclePngSha256": "02aea643711b59b7f35a7bb1a5719fa741fc052bff92b5e78a085c327169f9f8",
+      "oracleRgba8Sha256": "eec68212ac4794baa76cf2d4520d0401aeb7156ee1ee28dabbc0bf0fdec54cb7",
+      "pythonPngSha256": "02aea643711b59b7f35a7bb1a5719fa741fc052bff92b5e78a085c327169f9f8",
+      "pythonRgba8Sha256": "eec68212ac4794baa76cf2d4520d0401aeb7156ee1ee28dabbc0bf0fdec54cb7"
+    },
+    "filter/craquelure": {
+      "oraclePngSha256": "02aea643711b59b7f35a7bb1a5719fa741fc052bff92b5e78a085c327169f9f8",
+      "oracleRgba8Sha256": "eec68212ac4794baa76cf2d4520d0401aeb7156ee1ee28dabbc0bf0fdec54cb7",
+      "pythonPngSha256": "02aea643711b59b7f35a7bb1a5719fa741fc052bff92b5e78a085c327169f9f8",
+      "pythonRgba8Sha256": "eec68212ac4794baa76cf2d4520d0401aeb7156ee1ee28dabbc0bf0fdec54cb7"
+    },
+    "filter/crt": {
+      "oraclePngSha256": "e871b8b6a918e82cd8f7612f721fb0c80cfb73b8ca3ef5df593471e11b9ce03f",
+      "oracleRgba8Sha256": "c56efe9db8ddd55869e61c1a519cc6cf29d9dd3707032ce460ae0800a68c1db1",
+      "pythonPngSha256": "e871b8b6a918e82cd8f7612f721fb0c80cfb73b8ca3ef5df593471e11b9ce03f",
+      "pythonRgba8Sha256": "c56efe9db8ddd55869e61c1a519cc6cf29d9dd3707032ce460ae0800a68c1db1"
+    },
+    "filter/degauss": {
+      "oraclePngSha256": "02aea643711b59b7f35a7bb1a5719fa741fc052bff92b5e78a085c327169f9f8",
+      "oracleRgba8Sha256": "eec68212ac4794baa76cf2d4520d0401aeb7156ee1ee28dabbc0bf0fdec54cb7",
+      "pythonPngSha256": "02aea643711b59b7f35a7bb1a5719fa741fc052bff92b5e78a085c327169f9f8",
+      "pythonRgba8Sha256": "eec68212ac4794baa76cf2d4520d0401aeb7156ee1ee28dabbc0bf0fdec54cb7"
+    },
+    "filter/deriv": {
+      "oraclePngSha256": "30160553fec73b75e7b8948d5428297344cd48e60c534725b9c7b035469e14bd",
+      "oracleRgba8Sha256": "2c893cd47b6757133987906e00c55e6dcce3c567b9df9e7f91ffecd3604cc6a6",
+      "pythonPngSha256": "30160553fec73b75e7b8948d5428297344cd48e60c534725b9c7b035469e14bd",
+      "pythonRgba8Sha256": "2c893cd47b6757133987906e00c55e6dcce3c567b9df9e7f91ffecd3604cc6a6"
+    },
+    "filter/directionalBlur": {
+      "oraclePngSha256": "02aea643711b59b7f35a7bb1a5719fa741fc052bff92b5e78a085c327169f9f8",
+      "oracleRgba8Sha256": "eec68212ac4794baa76cf2d4520d0401aeb7156ee1ee28dabbc0bf0fdec54cb7",
+      "pythonPngSha256": "02aea643711b59b7f35a7bb1a5719fa741fc052bff92b5e78a085c327169f9f8",
+      "pythonRgba8Sha256": "eec68212ac4794baa76cf2d4520d0401aeb7156ee1ee28dabbc0bf0fdec54cb7"
+    },
+    "filter/dither": {
+      "oraclePngSha256": "7f965ae034ff3b8073022a695d8e9831c6e4d151582fbbcfef1a6d2610ff073c",
+      "oracleRgba8Sha256": "7d7de0823e89ae54bd3f520defe3b1cadd6b4bec6aa787f89e9e0ac02fcf6b7d",
+      "pythonPngSha256": "7f965ae034ff3b8073022a695d8e9831c6e4d151582fbbcfef1a6d2610ff073c",
+      "pythonRgba8Sha256": "7d7de0823e89ae54bd3f520defe3b1cadd6b4bec6aa787f89e9e0ac02fcf6b7d"
+    },
+    "filter/edge": {
+      "oraclePngSha256": "30160553fec73b75e7b8948d5428297344cd48e60c534725b9c7b035469e14bd",
+      "oracleRgba8Sha256": "2c893cd47b6757133987906e00c55e6dcce3c567b9df9e7f91ffecd3604cc6a6",
+      "pythonPngSha256": "30160553fec73b75e7b8948d5428297344cd48e60c534725b9c7b035469e14bd",
+      "pythonRgba8Sha256": "2c893cd47b6757133987906e00c55e6dcce3c567b9df9e7f91ffecd3604cc6a6"
+    },
+    "filter/emboss": {
+      "oraclePngSha256": "02aea643711b59b7f35a7bb1a5719fa741fc052bff92b5e78a085c327169f9f8",
+      "oracleRgba8Sha256": "eec68212ac4794baa76cf2d4520d0401aeb7156ee1ee28dabbc0bf0fdec54cb7",
+      "pythonPngSha256": "02aea643711b59b7f35a7bb1a5719fa741fc052bff92b5e78a085c327169f9f8",
+      "pythonRgba8Sha256": "eec68212ac4794baa76cf2d4520d0401aeb7156ee1ee28dabbc0bf0fdec54cb7"
+    },
+    "filter/extrude": {
+      "oraclePngSha256": "02aea643711b59b7f35a7bb1a5719fa741fc052bff92b5e78a085c327169f9f8",
+      "oracleRgba8Sha256": "eec68212ac4794baa76cf2d4520d0401aeb7156ee1ee28dabbc0bf0fdec54cb7",
+      "pythonPngSha256": "02aea643711b59b7f35a7bb1a5719fa741fc052bff92b5e78a085c327169f9f8",
+      "pythonRgba8Sha256": "eec68212ac4794baa76cf2d4520d0401aeb7156ee1ee28dabbc0bf0fdec54cb7"
+    },
+    "filter/fibers": {
+      "oraclePngSha256": "02aea643711b59b7f35a7bb1a5719fa741fc052bff92b5e78a085c327169f9f8",
+      "oracleRgba8Sha256": "eec68212ac4794baa76cf2d4520d0401aeb7156ee1ee28dabbc0bf0fdec54cb7",
+      "pythonPngSha256": "02aea643711b59b7f35a7bb1a5719fa741fc052bff92b5e78a085c327169f9f8",
+      "pythonRgba8Sha256": "eec68212ac4794baa76cf2d4520d0401aeb7156ee1ee28dabbc0bf0fdec54cb7"
+    },
+    "filter/flipMirror": {
+      "oraclePngSha256": "02aea643711b59b7f35a7bb1a5719fa741fc052bff92b5e78a085c327169f9f8",
+      "oracleRgba8Sha256": "eec68212ac4794baa76cf2d4520d0401aeb7156ee1ee28dabbc0bf0fdec54cb7",
+      "pythonPngSha256": "02aea643711b59b7f35a7bb1a5719fa741fc052bff92b5e78a085c327169f9f8",
+      "pythonRgba8Sha256": "eec68212ac4794baa76cf2d4520d0401aeb7156ee1ee28dabbc0bf0fdec54cb7"
+    },
+    "filter/fxaa": {
+      "oraclePngSha256": "02aea643711b59b7f35a7bb1a5719fa741fc052bff92b5e78a085c327169f9f8",
+      "oracleRgba8Sha256": "eec68212ac4794baa76cf2d4520d0401aeb7156ee1ee28dabbc0bf0fdec54cb7",
+      "pythonPngSha256": "02aea643711b59b7f35a7bb1a5719fa741fc052bff92b5e78a085c327169f9f8",
+      "pythonRgba8Sha256": "eec68212ac4794baa76cf2d4520d0401aeb7156ee1ee28dabbc0bf0fdec54cb7"
+    },
+    "filter/glowingEdge": {
+      "oraclePngSha256": "02aea643711b59b7f35a7bb1a5719fa741fc052bff92b5e78a085c327169f9f8",
+      "oracleRgba8Sha256": "eec68212ac4794baa76cf2d4520d0401aeb7156ee1ee28dabbc0bf0fdec54cb7",
+      "pythonPngSha256": "02aea643711b59b7f35a7bb1a5719fa741fc052bff92b5e78a085c327169f9f8",
+      "pythonRgba8Sha256": "eec68212ac4794baa76cf2d4520d0401aeb7156ee1ee28dabbc0bf0fdec54cb7"
+    },
+    "filter/glyphMap": {
+      "oraclePngSha256": "aa367d95dccccf13b2aee2154a13e26a4ccb02291824767f78e637b94384e644",
+      "oracleRgba8Sha256": "c54335e2024b57b28504cd7a6081b9429e021347f0acc3a7dc9bd594356f9d77",
+      "pythonPngSha256": "aa367d95dccccf13b2aee2154a13e26a4ccb02291824767f78e637b94384e644",
+      "pythonRgba8Sha256": "c54335e2024b57b28504cd7a6081b9429e021347f0acc3a7dc9bd594356f9d77"
+    },
+    "filter/grade": {
+      "oraclePngSha256": "02aea643711b59b7f35a7bb1a5719fa741fc052bff92b5e78a085c327169f9f8",
+      "oracleRgba8Sha256": "eec68212ac4794baa76cf2d4520d0401aeb7156ee1ee28dabbc0bf0fdec54cb7",
+      "pythonPngSha256": "02aea643711b59b7f35a7bb1a5719fa741fc052bff92b5e78a085c327169f9f8",
+      "pythonRgba8Sha256": "eec68212ac4794baa76cf2d4520d0401aeb7156ee1ee28dabbc0bf0fdec54cb7"
+    },
+    "filter/grain": {
+      "oraclePngSha256": "309f726c7ec2224c00ea75ef10976252f9221f6699865e70ac856115f6b412e8",
+      "oracleRgba8Sha256": "048256d207aba24130e29280e223bbfe56038e656be0d9be95646387b0eb889c",
+      "pythonPngSha256": "309f726c7ec2224c00ea75ef10976252f9221f6699865e70ac856115f6b412e8",
+      "pythonRgba8Sha256": "048256d207aba24130e29280e223bbfe56038e656be0d9be95646387b0eb889c"
+    },
+    "filter/grime": {
+      "oraclePngSha256": "45079fcc8a8ad2d62ceb22218e67a5b686f69abe452da12b2af35b031beef5c3",
+      "oracleRgba8Sha256": "21b9f8e2681ae263321aa63dfe43f1db0abe6873d5d582b57bb399f753db6210",
+      "pythonPngSha256": "45079fcc8a8ad2d62ceb22218e67a5b686f69abe452da12b2af35b031beef5c3",
+      "pythonRgba8Sha256": "21b9f8e2681ae263321aa63dfe43f1db0abe6873d5d582b57bb399f753db6210"
+    },
+    "filter/halftone": {
+      "oraclePngSha256": "61187ed7b15ac76dd310d8d492c510125e471bc0e74ac2666c3dcb5da36edefc",
+      "oracleRgba8Sha256": "e3ce7b09cb3672a118622247d5f39472c204c9340ad05290d81ad4053a92aaf3",
+      "pythonPngSha256": "61187ed7b15ac76dd310d8d492c510125e471bc0e74ac2666c3dcb5da36edefc",
+      "pythonRgba8Sha256": "e3ce7b09cb3672a118622247d5f39472c204c9340ad05290d81ad4053a92aaf3"
+    },
+    "filter/hatch": {
+      "oraclePngSha256": "9102d988ec8cc0b4e406b2d6cfcdaceaf39f893243697ba61f3af5acf346739f",
+      "oracleRgba8Sha256": "f2a074fa2d336458ee4f9037897c410dfd879e53a1ff16b079777082b0dcf52f",
+      "pythonPngSha256": "9102d988ec8cc0b4e406b2d6cfcdaceaf39f893243697ba61f3af5acf346739f",
+      "pythonRgba8Sha256": "f2a074fa2d336458ee4f9037897c410dfd879e53a1ff16b079777082b0dcf52f"
+    },
+    "filter/highPass": {
+      "oraclePngSha256": "ed045ee7662a6a4dff4ebe3c726968812a07f2b72bd5ccb3af99475c452d0c14",
+      "oracleRgba8Sha256": "adc2fd2fa5acae08b529fbc51dd801384efcd440ec636b8e512b854f85aff318",
+      "pythonPngSha256": "ed045ee7662a6a4dff4ebe3c726968812a07f2b72bd5ccb3af99475c452d0c14",
+      "pythonRgba8Sha256": "adc2fd2fa5acae08b529fbc51dd801384efcd440ec636b8e512b854f85aff318"
+    },
+    "filter/historicPalette": {
+      "oraclePngSha256": "f1927cda133064657916e46ce974cb0978bab2bdc6229e58f19b6924a7ad7247",
+      "oracleRgba8Sha256": "ee6811d000781d73864985b9da80278a1e945cdb8b8deb8dd87fc117aa86cb43",
+      "pythonPngSha256": "f1927cda133064657916e46ce974cb0978bab2bdc6229e58f19b6924a7ad7247",
+      "pythonRgba8Sha256": "ee6811d000781d73864985b9da80278a1e945cdb8b8deb8dd87fc117aa86cb43"
+    },
+    "filter/invert": {
+      "oraclePngSha256": "02aea643711b59b7f35a7bb1a5719fa741fc052bff92b5e78a085c327169f9f8",
+      "oracleRgba8Sha256": "eec68212ac4794baa76cf2d4520d0401aeb7156ee1ee28dabbc0bf0fdec54cb7",
+      "pythonPngSha256": "02aea643711b59b7f35a7bb1a5719fa741fc052bff92b5e78a085c327169f9f8",
+      "pythonRgba8Sha256": "eec68212ac4794baa76cf2d4520d0401aeb7156ee1ee28dabbc0bf0fdec54cb7"
+    },
+    "filter/lens": {
+      "oraclePngSha256": "02aea643711b59b7f35a7bb1a5719fa741fc052bff92b5e78a085c327169f9f8",
+      "oracleRgba8Sha256": "eec68212ac4794baa76cf2d4520d0401aeb7156ee1ee28dabbc0bf0fdec54cb7",
+      "pythonPngSha256": "02aea643711b59b7f35a7bb1a5719fa741fc052bff92b5e78a085c327169f9f8",
+      "pythonRgba8Sha256": "eec68212ac4794baa76cf2d4520d0401aeb7156ee1ee28dabbc0bf0fdec54cb7"
+    },
+    "filter/lensFlare": {
+      "oraclePngSha256": "d7fc931c146395cf819e0091afa04aff55788d67d9d1faef95436c24b3864932",
+      "oracleRgba8Sha256": "d38db707790fddb06f0cb1d9f11378fad6a172d48af4345839c901149ce99d9e",
+      "pythonPngSha256": "9940a9e5b87de2b217580a3324a53ef06f4659d5c7901637f47686970e870f32",
+      "pythonRgba8Sha256": "d38db707790fddb06f0cb1d9f11378fad6a172d48af4345839c901149ce99d9e"
+    },
+    "filter/lensWarp": {
+      "oraclePngSha256": "02aea643711b59b7f35a7bb1a5719fa741fc052bff92b5e78a085c327169f9f8",
+      "oracleRgba8Sha256": "eec68212ac4794baa76cf2d4520d0401aeb7156ee1ee28dabbc0bf0fdec54cb7",
+      "pythonPngSha256": "02aea643711b59b7f35a7bb1a5719fa741fc052bff92b5e78a085c327169f9f8",
+      "pythonRgba8Sha256": "eec68212ac4794baa76cf2d4520d0401aeb7156ee1ee28dabbc0bf0fdec54cb7"
+    },
+    "filter/lightLeak": {
+      "oraclePngSha256": "de19b31ed39a948cdbbe85c4b14283bb4f39580585f154f5f5621b475a77425f",
+      "oracleRgba8Sha256": "8c2471e953e61c3fd5757c404898a1c79347ada69deb9642c6c2f6c0facdb24c",
+      "pythonPngSha256": "59245200d4e1089ad826a06adbd843442fe27c573d3f2f782752e901b86b0262",
+      "pythonRgba8Sha256": "8c2471e953e61c3fd5757c404898a1c79347ada69deb9642c6c2f6c0facdb24c"
+    },
+    "filter/lighting": {
+      "oraclePngSha256": "66c3701262662377e74275fada86ace74f499a765826b80afb70beedb4ed4ff4",
+      "oracleRgba8Sha256": "789f199e500ccf2913d7994fc28c1713e685adc610af7d1e718791d41e87f98f",
+      "pythonPngSha256": "66c3701262662377e74275fada86ace74f499a765826b80afb70beedb4ed4ff4",
+      "pythonRgba8Sha256": "789f199e500ccf2913d7994fc28c1713e685adc610af7d1e718791d41e87f98f"
+    },
+    "filter/lowPoly": {
+      "oraclePngSha256": "3ae0575b6aea5283a86b7ba68515eb3a33c359e1a049d32001e09634427d527c",
+      "oracleRgba8Sha256": "bd8205e8e7a466d3fc8ecdb3e0f7edc3a546c7d07cc417d95ec62e5b27a8b8aa",
+      "pythonPngSha256": "3ae0575b6aea5283a86b7ba68515eb3a33c359e1a049d32001e09634427d527c",
+      "pythonRgba8Sha256": "bd8205e8e7a466d3fc8ecdb3e0f7edc3a546c7d07cc417d95ec62e5b27a8b8aa"
+    },
+    "filter/median": {
+      "oraclePngSha256": "02aea643711b59b7f35a7bb1a5719fa741fc052bff92b5e78a085c327169f9f8",
+      "oracleRgba8Sha256": "eec68212ac4794baa76cf2d4520d0401aeb7156ee1ee28dabbc0bf0fdec54cb7",
+      "pythonPngSha256": "02aea643711b59b7f35a7bb1a5719fa741fc052bff92b5e78a085c327169f9f8",
+      "pythonRgba8Sha256": "eec68212ac4794baa76cf2d4520d0401aeb7156ee1ee28dabbc0bf0fdec54cb7"
+    },
+    "filter/morphology": {
+      "oraclePngSha256": "02aea643711b59b7f35a7bb1a5719fa741fc052bff92b5e78a085c327169f9f8",
+      "oracleRgba8Sha256": "eec68212ac4794baa76cf2d4520d0401aeb7156ee1ee28dabbc0bf0fdec54cb7",
+      "pythonPngSha256": "02aea643711b59b7f35a7bb1a5719fa741fc052bff92b5e78a085c327169f9f8",
+      "pythonRgba8Sha256": "eec68212ac4794baa76cf2d4520d0401aeb7156ee1ee28dabbc0bf0fdec54cb7"
+    },
+    "filter/mosaicTiles": {
+      "oraclePngSha256": "83bcb3be91bdadd4f3806d6ef3fd118a913f55c798d45e49020b51ae865b6463",
+      "oracleRgba8Sha256": "ff921199a8102fe56724852232c959ee01b3dfbfaaa4c4061488186e19115d53",
+      "pythonPngSha256": "83bcb3be91bdadd4f3806d6ef3fd118a913f55c798d45e49020b51ae865b6463",
+      "pythonRgba8Sha256": "ff921199a8102fe56724852232c959ee01b3dfbfaaa4c4061488186e19115d53"
+    },
+    "filter/normalMap": {
+      "oraclePngSha256": "1757cdc24e2419f3b1016d990de4d3045775e282c4a182f7c20e0412c43522d7",
+      "oracleRgba8Sha256": "b07095fe36d4f870d3ee94116cf05bfaa38770444e1d15b4dfcbe3d63c3f0eb0",
+      "pythonPngSha256": "1757cdc24e2419f3b1016d990de4d3045775e282c4a182f7c20e0412c43522d7",
+      "pythonRgba8Sha256": "b07095fe36d4f870d3ee94116cf05bfaa38770444e1d15b4dfcbe3d63c3f0eb0"
+    },
+    "filter/normalize": {
+      "oraclePngSha256": "02aea643711b59b7f35a7bb1a5719fa741fc052bff92b5e78a085c327169f9f8",
+      "oracleRgba8Sha256": "eec68212ac4794baa76cf2d4520d0401aeb7156ee1ee28dabbc0bf0fdec54cb7",
+      "pythonPngSha256": "02aea643711b59b7f35a7bb1a5719fa741fc052bff92b5e78a085c327169f9f8",
+      "pythonRgba8Sha256": "eec68212ac4794baa76cf2d4520d0401aeb7156ee1ee28dabbc0bf0fdec54cb7"
+    },
+    "filter/octaveWarp": {
+      "oraclePngSha256": "02aea643711b59b7f35a7bb1a5719fa741fc052bff92b5e78a085c327169f9f8",
+      "oracleRgba8Sha256": "eec68212ac4794baa76cf2d4520d0401aeb7156ee1ee28dabbc0bf0fdec54cb7",
+      "pythonPngSha256": "02aea643711b59b7f35a7bb1a5719fa741fc052bff92b5e78a085c327169f9f8",
+      "pythonRgba8Sha256": "eec68212ac4794baa76cf2d4520d0401aeb7156ee1ee28dabbc0bf0fdec54cb7"
+    },
+    "filter/oilPaint": {
+      "oraclePngSha256": "bc17d867c1ce3be36b32b4be9d0fb5dd8be45c369a4f41a4d3eb524d1085b1d6",
+      "oracleRgba8Sha256": "22e659f896e1800f8bc7e35edd32bc92302e1b4f23190919e7dc6cfe06da3875",
+      "pythonPngSha256": "bc17d867c1ce3be36b32b4be9d0fb5dd8be45c369a4f41a4d3eb524d1085b1d6",
+      "pythonRgba8Sha256": "22e659f896e1800f8bc7e35edd32bc92302e1b4f23190919e7dc6cfe06da3875"
+    },
+    "filter/osd": {
+      "oraclePngSha256": "9630036261471a0f41ab2e7c0ec4df416e88e7d7131611eefd643378352ab604",
+      "oracleRgba8Sha256": "9086915dd5b37e5ca1cc04df9a3c0ebdc883559cf65bbe824575015651045749",
+      "pythonPngSha256": "9630036261471a0f41ab2e7c0ec4df416e88e7d7131611eefd643378352ab604",
+      "pythonRgba8Sha256": "9086915dd5b37e5ca1cc04df9a3c0ebdc883559cf65bbe824575015651045749"
+    },
+    "filter/outline": {
+      "oraclePngSha256": "02aea643711b59b7f35a7bb1a5719fa741fc052bff92b5e78a085c327169f9f8",
+      "oracleRgba8Sha256": "eec68212ac4794baa76cf2d4520d0401aeb7156ee1ee28dabbc0bf0fdec54cb7",
+      "pythonPngSha256": "02aea643711b59b7f35a7bb1a5719fa741fc052bff92b5e78a085c327169f9f8",
+      "pythonRgba8Sha256": "eec68212ac4794baa76cf2d4520d0401aeb7156ee1ee28dabbc0bf0fdec54cb7"
+    },
+    "filter/palette": {
+      "oraclePngSha256": "c77dcd59a783d3e2a3c0b8e6a6b19eb76e8ef134a356e77fbec799c0addc423a",
+      "oracleRgba8Sha256": "c67dcdf8f9ec00d5e9bbb1bb91e46f16f37e1ce1ec296dc15f08d0a8bd2bb083",
+      "pythonPngSha256": "c77dcd59a783d3e2a3c0b8e6a6b19eb76e8ef134a356e77fbec799c0addc423a",
+      "pythonRgba8Sha256": "c67dcdf8f9ec00d5e9bbb1bb91e46f16f37e1ce1ec296dc15f08d0a8bd2bb083"
+    },
+    "filter/parallax": {
+      "oraclePngSha256": "02aea643711b59b7f35a7bb1a5719fa741fc052bff92b5e78a085c327169f9f8",
+      "oracleRgba8Sha256": "eec68212ac4794baa76cf2d4520d0401aeb7156ee1ee28dabbc0bf0fdec54cb7",
+      "pythonPngSha256": "02aea643711b59b7f35a7bb1a5719fa741fc052bff92b5e78a085c327169f9f8",
+      "pythonRgba8Sha256": "eec68212ac4794baa76cf2d4520d0401aeb7156ee1ee28dabbc0bf0fdec54cb7"
+    },
+    "filter/patchwork": {
+      "oraclePngSha256": "ab2c1dead8365960ea1492a835733fb16cc8d0fec6c80e12125acbb5b36911e1",
+      "oracleRgba8Sha256": "b6c32a59d4e54b3520c290e13d82dedd539a5a12ad0f35cee54cbbddb55a6db2",
+      "pythonPngSha256": "ab2c1dead8365960ea1492a835733fb16cc8d0fec6c80e12125acbb5b36911e1",
+      "pythonRgba8Sha256": "b6c32a59d4e54b3520c290e13d82dedd539a5a12ad0f35cee54cbbddb55a6db2"
+    },
+    "filter/photocopy": {
+      "oraclePngSha256": "1e3eb416f2953b3b8923b4eb00664527f082f2eee50028fe6177902e15e5b44d",
+      "oracleRgba8Sha256": "ecbdc65346772a2d513f33f5dbb269ccc2e41634fac722bf7a445fe55a072a05",
+      "pythonPngSha256": "1e3eb416f2953b3b8923b4eb00664527f082f2eee50028fe6177902e15e5b44d",
+      "pythonRgba8Sha256": "ecbdc65346772a2d513f33f5dbb269ccc2e41634fac722bf7a445fe55a072a05"
+    },
+    "filter/pinch": {
+      "oraclePngSha256": "02aea643711b59b7f35a7bb1a5719fa741fc052bff92b5e78a085c327169f9f8",
+      "oracleRgba8Sha256": "eec68212ac4794baa76cf2d4520d0401aeb7156ee1ee28dabbc0bf0fdec54cb7",
+      "pythonPngSha256": "02aea643711b59b7f35a7bb1a5719fa741fc052bff92b5e78a085c327169f9f8",
+      "pythonRgba8Sha256": "eec68212ac4794baa76cf2d4520d0401aeb7156ee1ee28dabbc0bf0fdec54cb7"
+    },
+    "filter/pixelSort": {
+      "oraclePngSha256": "02aea643711b59b7f35a7bb1a5719fa741fc052bff92b5e78a085c327169f9f8",
+      "oracleRgba8Sha256": "eec68212ac4794baa76cf2d4520d0401aeb7156ee1ee28dabbc0bf0fdec54cb7",
+      "pythonPngSha256": "02aea643711b59b7f35a7bb1a5719fa741fc052bff92b5e78a085c327169f9f8",
+      "pythonRgba8Sha256": "eec68212ac4794baa76cf2d4520d0401aeb7156ee1ee28dabbc0bf0fdec54cb7"
+    },
+    "filter/pixels": {
+      "oraclePngSha256": "02aea643711b59b7f35a7bb1a5719fa741fc052bff92b5e78a085c327169f9f8",
+      "oracleRgba8Sha256": "eec68212ac4794baa76cf2d4520d0401aeb7156ee1ee28dabbc0bf0fdec54cb7",
+      "pythonPngSha256": "02aea643711b59b7f35a7bb1a5719fa741fc052bff92b5e78a085c327169f9f8",
+      "pythonRgba8Sha256": "eec68212ac4794baa76cf2d4520d0401aeb7156ee1ee28dabbc0bf0fdec54cb7"
+    },
+    "filter/plasticWrap": {
+      "oraclePngSha256": "02aea643711b59b7f35a7bb1a5719fa741fc052bff92b5e78a085c327169f9f8",
+      "oracleRgba8Sha256": "eec68212ac4794baa76cf2d4520d0401aeb7156ee1ee28dabbc0bf0fdec54cb7",
+      "pythonPngSha256": "02aea643711b59b7f35a7bb1a5719fa741fc052bff92b5e78a085c327169f9f8",
+      "pythonRgba8Sha256": "eec68212ac4794baa76cf2d4520d0401aeb7156ee1ee28dabbc0bf0fdec54cb7"
+    },
+    "filter/polar": {
+      "oraclePngSha256": "02aea643711b59b7f35a7bb1a5719fa741fc052bff92b5e78a085c327169f9f8",
+      "oracleRgba8Sha256": "eec68212ac4794baa76cf2d4520d0401aeb7156ee1ee28dabbc0bf0fdec54cb7",
+      "pythonPngSha256": "02aea643711b59b7f35a7bb1a5719fa741fc052bff92b5e78a085c327169f9f8",
+      "pythonRgba8Sha256": "eec68212ac4794baa76cf2d4520d0401aeb7156ee1ee28dabbc0bf0fdec54cb7"
+    },
+    "filter/pondRipples": {
+      "oraclePngSha256": "02aea643711b59b7f35a7bb1a5719fa741fc052bff92b5e78a085c327169f9f8",
+      "oracleRgba8Sha256": "eec68212ac4794baa76cf2d4520d0401aeb7156ee1ee28dabbc0bf0fdec54cb7",
+      "pythonPngSha256": "02aea643711b59b7f35a7bb1a5719fa741fc052bff92b5e78a085c327169f9f8",
+      "pythonRgba8Sha256": "eec68212ac4794baa76cf2d4520d0401aeb7156ee1ee28dabbc0bf0fdec54cb7"
+    },
+    "filter/posterize": {
+      "oraclePngSha256": "c1af30ad569c6e52b5b95071508783dec4a646b5431f99630fcbb26191dd8334",
+      "oracleRgba8Sha256": "8afc0decf12085ccdfd6d2d5d36255b970597dee7a4fb73824be9d1c321d00ef",
+      "pythonPngSha256": "c1af30ad569c6e52b5b95071508783dec4a646b5431f99630fcbb26191dd8334",
+      "pythonRgba8Sha256": "8afc0decf12085ccdfd6d2d5d36255b970597dee7a4fb73824be9d1c321d00ef"
+    },
+    "filter/prismaticAberration": {
+      "oraclePngSha256": "02aea643711b59b7f35a7bb1a5719fa741fc052bff92b5e78a085c327169f9f8",
+      "oracleRgba8Sha256": "eec68212ac4794baa76cf2d4520d0401aeb7156ee1ee28dabbc0bf0fdec54cb7",
+      "pythonPngSha256": "02aea643711b59b7f35a7bb1a5719fa741fc052bff92b5e78a085c327169f9f8",
+      "pythonRgba8Sha256": "eec68212ac4794baa76cf2d4520d0401aeb7156ee1ee28dabbc0bf0fdec54cb7"
+    },
+    "filter/reindex": {
+      "oraclePngSha256": "02aea643711b59b7f35a7bb1a5719fa741fc052bff92b5e78a085c327169f9f8",
+      "oracleRgba8Sha256": "eec68212ac4794baa76cf2d4520d0401aeb7156ee1ee28dabbc0bf0fdec54cb7",
+      "pythonPngSha256": "02aea643711b59b7f35a7bb1a5719fa741fc052bff92b5e78a085c327169f9f8",
+      "pythonRgba8Sha256": "eec68212ac4794baa76cf2d4520d0401aeb7156ee1ee28dabbc0bf0fdec54cb7"
+    },
+    "filter/relief": {
+      "oraclePngSha256": "bf659c25db719f9472665c13d188e818512860b8db3bf50b7d323682ac351101",
+      "oracleRgba8Sha256": "586a4e390ad3d62525906f3fb57f6cf4e6260054669e4cb49cc33c7511aee460",
+      "pythonPngSha256": "bf659c25db719f9472665c13d188e818512860b8db3bf50b7d323682ac351101",
+      "pythonRgba8Sha256": "586a4e390ad3d62525906f3fb57f6cf4e6260054669e4cb49cc33c7511aee460"
+    },
+    "filter/repeat": {
+      "oraclePngSha256": "02aea643711b59b7f35a7bb1a5719fa741fc052bff92b5e78a085c327169f9f8",
+      "oracleRgba8Sha256": "eec68212ac4794baa76cf2d4520d0401aeb7156ee1ee28dabbc0bf0fdec54cb7",
+      "pythonPngSha256": "02aea643711b59b7f35a7bb1a5719fa741fc052bff92b5e78a085c327169f9f8",
+      "pythonRgba8Sha256": "eec68212ac4794baa76cf2d4520d0401aeb7156ee1ee28dabbc0bf0fdec54cb7"
+    },
+    "filter/reverb": {
+      "oraclePngSha256": "02aea643711b59b7f35a7bb1a5719fa741fc052bff92b5e78a085c327169f9f8",
+      "oracleRgba8Sha256": "eec68212ac4794baa76cf2d4520d0401aeb7156ee1ee28dabbc0bf0fdec54cb7",
+      "pythonPngSha256": "02aea643711b59b7f35a7bb1a5719fa741fc052bff92b5e78a085c327169f9f8",
+      "pythonRgba8Sha256": "eec68212ac4794baa76cf2d4520d0401aeb7156ee1ee28dabbc0bf0fdec54cb7"
+    },
+    "filter/ridge": {
+      "oraclePngSha256": "f0e1c8ef3bdc28093427b22e79dbc84a53ff22d74eb0756bfccfb50d12282cda",
+      "oracleRgba8Sha256": "3d6876a0146de8576eb2395a858de1213d1b92c65b779df3a331cfd5a4584546",
+      "pythonPngSha256": "f0e1c8ef3bdc28093427b22e79dbc84a53ff22d74eb0756bfccfb50d12282cda",
+      "pythonRgba8Sha256": "3d6876a0146de8576eb2395a858de1213d1b92c65b779df3a331cfd5a4584546"
+    },
+    "filter/rotate": {
+      "oraclePngSha256": "02aea643711b59b7f35a7bb1a5719fa741fc052bff92b5e78a085c327169f9f8",
+      "oracleRgba8Sha256": "eec68212ac4794baa76cf2d4520d0401aeb7156ee1ee28dabbc0bf0fdec54cb7",
+      "pythonPngSha256": "02aea643711b59b7f35a7bb1a5719fa741fc052bff92b5e78a085c327169f9f8",
+      "pythonRgba8Sha256": "eec68212ac4794baa76cf2d4520d0401aeb7156ee1ee28dabbc0bf0fdec54cb7"
+    },
+    "filter/scale": {
+      "oraclePngSha256": "02aea643711b59b7f35a7bb1a5719fa741fc052bff92b5e78a085c327169f9f8",
+      "oracleRgba8Sha256": "eec68212ac4794baa76cf2d4520d0401aeb7156ee1ee28dabbc0bf0fdec54cb7",
+      "pythonPngSha256": "02aea643711b59b7f35a7bb1a5719fa741fc052bff92b5e78a085c327169f9f8",
+      "pythonRgba8Sha256": "eec68212ac4794baa76cf2d4520d0401aeb7156ee1ee28dabbc0bf0fdec54cb7"
+    },
+    "filter/scanlineError": {
+      "oraclePngSha256": "1c2fceca867ce94afd4c18fd81479afb91822458b7b5d32cd20736c454ee365c",
+      "oracleRgba8Sha256": "3f63c898ed221d5341c1fa8ebc87b94a5657c4b9b05536adc5506843ccbee393",
+      "pythonPngSha256": "1c2fceca867ce94afd4c18fd81479afb91822458b7b5d32cd20736c454ee365c",
+      "pythonRgba8Sha256": "3f63c898ed221d5341c1fa8ebc87b94a5657c4b9b05536adc5506843ccbee393"
+    },
+    "filter/scatter": {
+      "oraclePngSha256": "02aea643711b59b7f35a7bb1a5719fa741fc052bff92b5e78a085c327169f9f8",
+      "oracleRgba8Sha256": "eec68212ac4794baa76cf2d4520d0401aeb7156ee1ee28dabbc0bf0fdec54cb7",
+      "pythonPngSha256": "02aea643711b59b7f35a7bb1a5719fa741fc052bff92b5e78a085c327169f9f8",
+      "pythonRgba8Sha256": "eec68212ac4794baa76cf2d4520d0401aeb7156ee1ee28dabbc0bf0fdec54cb7"
+    },
+    "filter/scratches": {
+      "oraclePngSha256": "00c78908f21c8343f2486fd5f4ac60c3568c8d3907b7508ff7447412550c87ed",
+      "oracleRgba8Sha256": "fc14ac115deced98c590dc5adfaddbff2c19dd5354306c9f8c9652a3dde15647",
+      "pythonPngSha256": "00c78908f21c8343f2486fd5f4ac60c3568c8d3907b7508ff7447412550c87ed",
+      "pythonRgba8Sha256": "fc14ac115deced98c590dc5adfaddbff2c19dd5354306c9f8c9652a3dde15647"
+    },
+    "filter/scroll": {
+      "oraclePngSha256": "02aea643711b59b7f35a7bb1a5719fa741fc052bff92b5e78a085c327169f9f8",
+      "oracleRgba8Sha256": "eec68212ac4794baa76cf2d4520d0401aeb7156ee1ee28dabbc0bf0fdec54cb7",
+      "pythonPngSha256": "02aea643711b59b7f35a7bb1a5719fa741fc052bff92b5e78a085c327169f9f8",
+      "pythonRgba8Sha256": "eec68212ac4794baa76cf2d4520d0401aeb7156ee1ee28dabbc0bf0fdec54cb7"
+    },
+    "filter/seamless": {
+      "oraclePngSha256": "02aea643711b59b7f35a7bb1a5719fa741fc052bff92b5e78a085c327169f9f8",
+      "oracleRgba8Sha256": "eec68212ac4794baa76cf2d4520d0401aeb7156ee1ee28dabbc0bf0fdec54cb7",
+      "pythonPngSha256": "02aea643711b59b7f35a7bb1a5719fa741fc052bff92b5e78a085c327169f9f8",
+      "pythonRgba8Sha256": "eec68212ac4794baa76cf2d4520d0401aeb7156ee1ee28dabbc0bf0fdec54cb7"
+    },
+    "filter/sharpen": {
+      "oraclePngSha256": "02aea643711b59b7f35a7bb1a5719fa741fc052bff92b5e78a085c327169f9f8",
+      "oracleRgba8Sha256": "eec68212ac4794baa76cf2d4520d0401aeb7156ee1ee28dabbc0bf0fdec54cb7",
+      "pythonPngSha256": "02aea643711b59b7f35a7bb1a5719fa741fc052bff92b5e78a085c327169f9f8",
+      "pythonRgba8Sha256": "eec68212ac4794baa76cf2d4520d0401aeb7156ee1ee28dabbc0bf0fdec54cb7"
+    },
+    "filter/simpleAberration": {
+      "oraclePngSha256": "02aea643711b59b7f35a7bb1a5719fa741fc052bff92b5e78a085c327169f9f8",
+      "oracleRgba8Sha256": "eec68212ac4794baa76cf2d4520d0401aeb7156ee1ee28dabbc0bf0fdec54cb7",
+      "pythonPngSha256": "02aea643711b59b7f35a7bb1a5719fa741fc052bff92b5e78a085c327169f9f8",
+      "pythonRgba8Sha256": "eec68212ac4794baa76cf2d4520d0401aeb7156ee1ee28dabbc0bf0fdec54cb7"
+    },
+    "filter/sine": {
+      "oraclePngSha256": "0987a418b1959378b620dae8a15c7614ce77ff6d84e8a4c8ec3f9a304ba3972a",
+      "oracleRgba8Sha256": "9d2cd31d5833e67fa79ba709ecb604a15a616bec4f3b92399aaa1779c2eace23",
+      "pythonPngSha256": "0987a418b1959378b620dae8a15c7614ce77ff6d84e8a4c8ec3f9a304ba3972a",
+      "pythonRgba8Sha256": "9d2cd31d5833e67fa79ba709ecb604a15a616bec4f3b92399aaa1779c2eace23"
+    },
+    "filter/skew": {
+      "oraclePngSha256": "02aea643711b59b7f35a7bb1a5719fa741fc052bff92b5e78a085c327169f9f8",
+      "oracleRgba8Sha256": "eec68212ac4794baa76cf2d4520d0401aeb7156ee1ee28dabbc0bf0fdec54cb7",
+      "pythonPngSha256": "02aea643711b59b7f35a7bb1a5719fa741fc052bff92b5e78a085c327169f9f8",
+      "pythonRgba8Sha256": "eec68212ac4794baa76cf2d4520d0401aeb7156ee1ee28dabbc0bf0fdec54cb7"
+    },
+    "filter/smooth": {
+      "oraclePngSha256": "02aea643711b59b7f35a7bb1a5719fa741fc052bff92b5e78a085c327169f9f8",
+      "oracleRgba8Sha256": "eec68212ac4794baa76cf2d4520d0401aeb7156ee1ee28dabbc0bf0fdec54cb7",
+      "pythonPngSha256": "02aea643711b59b7f35a7bb1a5719fa741fc052bff92b5e78a085c327169f9f8",
+      "pythonRgba8Sha256": "eec68212ac4794baa76cf2d4520d0401aeb7156ee1ee28dabbc0bf0fdec54cb7"
+    },
+    "filter/smoothstep": {
+      "oraclePngSha256": "02aea643711b59b7f35a7bb1a5719fa741fc052bff92b5e78a085c327169f9f8",
+      "oracleRgba8Sha256": "eec68212ac4794baa76cf2d4520d0401aeb7156ee1ee28dabbc0bf0fdec54cb7",
+      "pythonPngSha256": "02aea643711b59b7f35a7bb1a5719fa741fc052bff92b5e78a085c327169f9f8",
+      "pythonRgba8Sha256": "eec68212ac4794baa76cf2d4520d0401aeb7156ee1ee28dabbc0bf0fdec54cb7"
+    },
+    "filter/snow": {
+      "oraclePngSha256": "f2f0448c27919f90d4e9bff031928b2230d0e1e9fbcbf35851d9b84537b9e68a",
+      "oracleRgba8Sha256": "171598f2c46b9fbc222f5c1f7f765372edb0a2b99889d619ab777aff9a92fc5b",
+      "pythonPngSha256": "f2f0448c27919f90d4e9bff031928b2230d0e1e9fbcbf35851d9b84537b9e68a",
+      "pythonRgba8Sha256": "171598f2c46b9fbc222f5c1f7f765372edb0a2b99889d619ab777aff9a92fc5b"
+    },
+    "filter/sobel": {
+      "oraclePngSha256": "30160553fec73b75e7b8948d5428297344cd48e60c534725b9c7b035469e14bd",
+      "oracleRgba8Sha256": "2c893cd47b6757133987906e00c55e6dcce3c567b9df9e7f91ffecd3604cc6a6",
+      "pythonPngSha256": "30160553fec73b75e7b8948d5428297344cd48e60c534725b9c7b035469e14bd",
+      "pythonRgba8Sha256": "2c893cd47b6757133987906e00c55e6dcce3c567b9df9e7f91ffecd3604cc6a6"
+    },
+    "filter/spatter": {
+      "oraclePngSha256": "11d12e16475d4e62ac6f68c7a051e81a793c60522db66e300aff0544c05c5b1b",
+      "oracleRgba8Sha256": "a3b2a1e549b2bc781a7bd753c0d1b8d6d97157dee02a660bea3b2c6e7a710453",
+      "pythonPngSha256": "11d12e16475d4e62ac6f68c7a051e81a793c60522db66e300aff0544c05c5b1b",
+      "pythonRgba8Sha256": "a3b2a1e549b2bc781a7bd753c0d1b8d6d97157dee02a660bea3b2c6e7a710453"
+    },
+    "filter/spinBlur": {
+      "oraclePngSha256": "02aea643711b59b7f35a7bb1a5719fa741fc052bff92b5e78a085c327169f9f8",
+      "oracleRgba8Sha256": "eec68212ac4794baa76cf2d4520d0401aeb7156ee1ee28dabbc0bf0fdec54cb7",
+      "pythonPngSha256": "02aea643711b59b7f35a7bb1a5719fa741fc052bff92b5e78a085c327169f9f8",
+      "pythonRgba8Sha256": "eec68212ac4794baa76cf2d4520d0401aeb7156ee1ee28dabbc0bf0fdec54cb7"
+    },
+    "filter/spiral": {
+      "oraclePngSha256": "02aea643711b59b7f35a7bb1a5719fa741fc052bff92b5e78a085c327169f9f8",
+      "oracleRgba8Sha256": "eec68212ac4794baa76cf2d4520d0401aeb7156ee1ee28dabbc0bf0fdec54cb7",
+      "pythonPngSha256": "02aea643711b59b7f35a7bb1a5719fa741fc052bff92b5e78a085c327169f9f8",
+      "pythonRgba8Sha256": "eec68212ac4794baa76cf2d4520d0401aeb7156ee1ee28dabbc0bf0fdec54cb7"
+    },
+    "filter/spookyTicker": {
+      "oraclePngSha256": "02aea643711b59b7f35a7bb1a5719fa741fc052bff92b5e78a085c327169f9f8",
+      "oracleRgba8Sha256": "eec68212ac4794baa76cf2d4520d0401aeb7156ee1ee28dabbc0bf0fdec54cb7",
+      "pythonPngSha256": "02aea643711b59b7f35a7bb1a5719fa741fc052bff92b5e78a085c327169f9f8",
+      "pythonRgba8Sha256": "eec68212ac4794baa76cf2d4520d0401aeb7156ee1ee28dabbc0bf0fdec54cb7"
+    },
+    "filter/stamp": {
+      "oraclePngSha256": "77789c5efab72527d0a580e55696a1651c2db4890b8923d5ce1c79c93ca4404c",
+      "oracleRgba8Sha256": "097096e742b567eda1afa9a64a560f0424841f11bf0cf9814182dad012f3b971",
+      "pythonPngSha256": "77789c5efab72527d0a580e55696a1651c2db4890b8923d5ce1c79c93ca4404c",
+      "pythonRgba8Sha256": "097096e742b567eda1afa9a64a560f0424841f11bf0cf9814182dad012f3b971"
+    },
+    "filter/step": {
+      "oraclePngSha256": "30160553fec73b75e7b8948d5428297344cd48e60c534725b9c7b035469e14bd",
+      "oracleRgba8Sha256": "2c893cd47b6757133987906e00c55e6dcce3c567b9df9e7f91ffecd3604cc6a6",
+      "pythonPngSha256": "30160553fec73b75e7b8948d5428297344cd48e60c534725b9c7b035469e14bd",
+      "pythonRgba8Sha256": "2c893cd47b6757133987906e00c55e6dcce3c567b9df9e7f91ffecd3604cc6a6"
+    },
+    "filter/stipple": {
+      "oraclePngSha256": "57f84e47de1b56846456e30a6034c748f4ce8321dbef5b04813e41e537192d66",
+      "oracleRgba8Sha256": "8efea2545856646161c95e6b1b8c151f6b02efaa31f6a1b365457fa3f7b5452c",
+      "pythonPngSha256": "e6e02e9710fab445d69b48af13c00ac025a1e4b9d04c69d056a7b8ccd7115cb0",
+      "pythonRgba8Sha256": "8efea2545856646161c95e6b1b8c151f6b02efaa31f6a1b365457fa3f7b5452c"
+    },
+    "filter/strayHair": {
+      "oraclePngSha256": "4d47ccb6cdb9986b93cbbcf00b46c2927e8f528c3c0ec9615a6f14803c85af52",
+      "oracleRgba8Sha256": "7886e38fe2582a07ae4313745d6650f8181a48bf7433d88d415767af11dd3809",
+      "pythonPngSha256": "4d47ccb6cdb9986b93cbbcf00b46c2927e8f528c3c0ec9615a6f14803c85af52",
+      "pythonRgba8Sha256": "7886e38fe2582a07ae4313745d6650f8181a48bf7433d88d415767af11dd3809"
+    },
+    "filter/strokes": {
+      "oraclePngSha256": "26e82e022d05a8a85a990600641955c79419de54a65e8d35239b0dfc566104d9",
+      "oracleRgba8Sha256": "5cac76a591ccb25ae8a7e60354d8303414e8dbaec4f781a80bdd01b2fb08841a",
+      "pythonPngSha256": "26e82e022d05a8a85a990600641955c79419de54a65e8d35239b0dfc566104d9",
+      "pythonRgba8Sha256": "5cac76a591ccb25ae8a7e60354d8303414e8dbaec4f781a80bdd01b2fb08841a"
+    },
+    "filter/tetraColorArray": {
+      "oraclePngSha256": "5012fcd60d4f99a379d23c17ffd2b2e1af0613b252d1677d0a51fb9e5082cb32",
+      "oracleRgba8Sha256": "6f4fcf1af30c309e138fbd73a595275e3a5ffbc7ae8aedcbe8ef794426f06127",
+      "pythonPngSha256": "5012fcd60d4f99a379d23c17ffd2b2e1af0613b252d1677d0a51fb9e5082cb32",
+      "pythonRgba8Sha256": "6f4fcf1af30c309e138fbd73a595275e3a5ffbc7ae8aedcbe8ef794426f06127"
+    },
+    "filter/tetraCosine": {
+      "oraclePngSha256": "cb4269f7aed70132aad9e682a412b245b59759426fc441767356a0538979f651",
+      "oracleRgba8Sha256": "58add41839db0e9a6f57ff130990d1a1eec009ded484896e17f705c27ae3f58b",
+      "pythonPngSha256": "cb4269f7aed70132aad9e682a412b245b59759426fc441767356a0538979f651",
+      "pythonRgba8Sha256": "58add41839db0e9a6f57ff130990d1a1eec009ded484896e17f705c27ae3f58b"
+    },
+    "filter/text": {
+      "oraclePngSha256": "5c70451a0f42ab2782dfde4b9788fbf414af5db3448033f649a0c02ceea55b72",
+      "oracleRgba8Sha256": "61f073cb6102414ff1b9fb20737cf462c062dc299cf88648ce9670cf0189859a",
+      "pythonPngSha256": "c51475864ca1c44282dcbb281b3dbe84ad734c7d78287b0d9697fb044f710ff3",
+      "pythonRgba8Sha256": "61f073cb6102414ff1b9fb20737cf462c062dc299cf88648ce9670cf0189859a"
+    },
+    "filter/texture": {
+      "oraclePngSha256": "f3f79a19c03bbe0c7595c869c12402d751c551001ddb18b2035c65d5193e4cb6",
+      "oracleRgba8Sha256": "5264a6b516b8985f9e01772134af0e63b0488f868572e780d9e55f2e5ca65f7b",
+      "pythonPngSha256": "f3f79a19c03bbe0c7595c869c12402d751c551001ddb18b2035c65d5193e4cb6",
+      "pythonRgba8Sha256": "5264a6b516b8985f9e01772134af0e63b0488f868572e780d9e55f2e5ca65f7b"
+    },
+    "filter/threshold": {
+      "oraclePngSha256": "02aea643711b59b7f35a7bb1a5719fa741fc052bff92b5e78a085c327169f9f8",
+      "oracleRgba8Sha256": "eec68212ac4794baa76cf2d4520d0401aeb7156ee1ee28dabbc0bf0fdec54cb7",
+      "pythonPngSha256": "02aea643711b59b7f35a7bb1a5719fa741fc052bff92b5e78a085c327169f9f8",
+      "pythonRgba8Sha256": "eec68212ac4794baa76cf2d4520d0401aeb7156ee1ee28dabbc0bf0fdec54cb7"
+    },
+    "filter/tile": {
+      "oraclePngSha256": "02aea643711b59b7f35a7bb1a5719fa741fc052bff92b5e78a085c327169f9f8",
+      "oracleRgba8Sha256": "eec68212ac4794baa76cf2d4520d0401aeb7156ee1ee28dabbc0bf0fdec54cb7",
+      "pythonPngSha256": "02aea643711b59b7f35a7bb1a5719fa741fc052bff92b5e78a085c327169f9f8",
+      "pythonRgba8Sha256": "eec68212ac4794baa76cf2d4520d0401aeb7156ee1ee28dabbc0bf0fdec54cb7"
+    },
+    "filter/tint": {
+      "oraclePngSha256": "1e4bf511315eeb3f93cb2690633a111a4a4d086a09c5ba656620aeb0bb972391",
+      "oracleRgba8Sha256": "14b7f3b23c07b02cf9c12ff440c19da670f12c568889fc6d7d6584f4e52307bc",
+      "pythonPngSha256": "1e4bf511315eeb3f93cb2690633a111a4a4d086a09c5ba656620aeb0bb972391",
+      "pythonRgba8Sha256": "14b7f3b23c07b02cf9c12ff440c19da670f12c568889fc6d7d6584f4e52307bc"
+    },
+    "filter/translate": {
+      "oraclePngSha256": "02aea643711b59b7f35a7bb1a5719fa741fc052bff92b5e78a085c327169f9f8",
+      "oracleRgba8Sha256": "eec68212ac4794baa76cf2d4520d0401aeb7156ee1ee28dabbc0bf0fdec54cb7",
+      "pythonPngSha256": "02aea643711b59b7f35a7bb1a5719fa741fc052bff92b5e78a085c327169f9f8",
+      "pythonRgba8Sha256": "eec68212ac4794baa76cf2d4520d0401aeb7156ee1ee28dabbc0bf0fdec54cb7"
+    },
+    "filter/tunnel": {
+      "oraclePngSha256": "ac926e23243c9be137b83059ec753db249dc10239c54364de0577e4733477ddd",
+      "oracleRgba8Sha256": "3c402b2b2496ae88d503620219c2346bd9d6398cf4a8902524247dc3f7a5e038",
+      "pythonPngSha256": "ac926e23243c9be137b83059ec753db249dc10239c54364de0577e4733477ddd",
+      "pythonRgba8Sha256": "3c402b2b2496ae88d503620219c2346bd9d6398cf4a8902524247dc3f7a5e038"
+    },
+    "filter/unsharpMask": {
+      "oraclePngSha256": "02aea643711b59b7f35a7bb1a5719fa741fc052bff92b5e78a085c327169f9f8",
+      "oracleRgba8Sha256": "eec68212ac4794baa76cf2d4520d0401aeb7156ee1ee28dabbc0bf0fdec54cb7",
+      "pythonPngSha256": "02aea643711b59b7f35a7bb1a5719fa741fc052bff92b5e78a085c327169f9f8",
+      "pythonRgba8Sha256": "eec68212ac4794baa76cf2d4520d0401aeb7156ee1ee28dabbc0bf0fdec54cb7"
+    },
+    "filter/vaseline": {
+      "oraclePngSha256": "e5901480cc45567f9af563205dad87a69ea2e9ccab9e39c3e4d97270b0ae21f5",
+      "oracleRgba8Sha256": "435b0ed183212332696e5e4e8d38ed183ced843425bca3ac40e9453f942c2058",
+      "pythonPngSha256": "e5901480cc45567f9af563205dad87a69ea2e9ccab9e39c3e4d97270b0ae21f5",
+      "pythonRgba8Sha256": "435b0ed183212332696e5e4e8d38ed183ced843425bca3ac40e9453f942c2058"
+    },
+    "filter/vignette": {
+      "oraclePngSha256": "5ec0b06ee09d25ff82cd3e027e66c8f05eafbc4176c8488420581c1e34183783",
+      "oracleRgba8Sha256": "5b29c84d18120bb7932be24a5c6d031ce68d359e9293de929056dbf728f9c046",
+      "pythonPngSha256": "5ec0b06ee09d25ff82cd3e027e66c8f05eafbc4176c8488420581c1e34183783",
+      "pythonRgba8Sha256": "5b29c84d18120bb7932be24a5c6d031ce68d359e9293de929056dbf728f9c046"
+    },
+    "filter/warp": {
+      "oraclePngSha256": "02aea643711b59b7f35a7bb1a5719fa741fc052bff92b5e78a085c327169f9f8",
+      "oracleRgba8Sha256": "eec68212ac4794baa76cf2d4520d0401aeb7156ee1ee28dabbc0bf0fdec54cb7",
+      "pythonPngSha256": "02aea643711b59b7f35a7bb1a5719fa741fc052bff92b5e78a085c327169f9f8",
+      "pythonRgba8Sha256": "eec68212ac4794baa76cf2d4520d0401aeb7156ee1ee28dabbc0bf0fdec54cb7"
+    },
+    "filter/watercolor": {
+      "oraclePngSha256": "44d872baec2e39c8c9762f3f8c13418dffb79bf1a4a452ea96dbfad0fa4f2599",
+      "oracleRgba8Sha256": "a56e121a1681051bcaa8ee9c8c84d18fea68c1a3b1cc2c786566ee1188f2c628",
+      "pythonPngSha256": "2e367b544821096cee468f8bfeb264d4ec738ce3c38bb19b69f79d267881db02",
+      "pythonRgba8Sha256": "a56e121a1681051bcaa8ee9c8c84d18fea68c1a3b1cc2c786566ee1188f2c628"
+    },
+    "filter/waves": {
+      "oraclePngSha256": "02aea643711b59b7f35a7bb1a5719fa741fc052bff92b5e78a085c327169f9f8",
+      "oracleRgba8Sha256": "eec68212ac4794baa76cf2d4520d0401aeb7156ee1ee28dabbc0bf0fdec54cb7",
+      "pythonPngSha256": "02aea643711b59b7f35a7bb1a5719fa741fc052bff92b5e78a085c327169f9f8",
+      "pythonRgba8Sha256": "eec68212ac4794baa76cf2d4520d0401aeb7156ee1ee28dabbc0bf0fdec54cb7"
+    },
+    "filter/wind": {
+      "oraclePngSha256": "02aea643711b59b7f35a7bb1a5719fa741fc052bff92b5e78a085c327169f9f8",
+      "oracleRgba8Sha256": "eec68212ac4794baa76cf2d4520d0401aeb7156ee1ee28dabbc0bf0fdec54cb7",
+      "pythonPngSha256": "02aea643711b59b7f35a7bb1a5719fa741fc052bff92b5e78a085c327169f9f8",
+      "pythonRgba8Sha256": "eec68212ac4794baa76cf2d4520d0401aeb7156ee1ee28dabbc0bf0fdec54cb7"
+    },
+    "filter/wobble": {
+      "oraclePngSha256": "02aea643711b59b7f35a7bb1a5719fa741fc052bff92b5e78a085c327169f9f8",
+      "oracleRgba8Sha256": "eec68212ac4794baa76cf2d4520d0401aeb7156ee1ee28dabbc0bf0fdec54cb7",
+      "pythonPngSha256": "02aea643711b59b7f35a7bb1a5719fa741fc052bff92b5e78a085c327169f9f8",
+      "pythonRgba8Sha256": "eec68212ac4794baa76cf2d4520d0401aeb7156ee1ee28dabbc0bf0fdec54cb7"
+    },
+    "filter/wormhole": {
+      "oraclePngSha256": "02aea643711b59b7f35a7bb1a5719fa741fc052bff92b5e78a085c327169f9f8",
+      "oracleRgba8Sha256": "eec68212ac4794baa76cf2d4520d0401aeb7156ee1ee28dabbc0bf0fdec54cb7",
+      "pythonPngSha256": "02aea643711b59b7f35a7bb1a5719fa741fc052bff92b5e78a085c327169f9f8",
+      "pythonRgba8Sha256": "eec68212ac4794baa76cf2d4520d0401aeb7156ee1ee28dabbc0bf0fdec54cb7"
+    },
+    "filter/zoomBlur": {
+      "oraclePngSha256": "ed045ee7662a6a4dff4ebe3c726968812a07f2b72bd5ccb3af99475c452d0c14",
+      "oracleRgba8Sha256": "adc2fd2fa5acae08b529fbc51dd801384efcd440ec636b8e512b854f85aff318",
+      "pythonPngSha256": "ed045ee7662a6a4dff4ebe3c726968812a07f2b72bd5ccb3af99475c452d0c14",
+      "pythonRgba8Sha256": "adc2fd2fa5acae08b529fbc51dd801384efcd440ec636b8e512b854f85aff318"
+    },
+    "mixer/alphaMask": {
+      "oraclePngSha256": "3338ef9ffa82d5206b19bbc09cf2223376a0a9300aaccc7eddf56859a59856f3",
+      "oracleRgba8Sha256": "6d42d31b464113e946445d414bc111bf8ea249723dd952c8aa458ff4551ee494",
+      "pythonPngSha256": "3338ef9ffa82d5206b19bbc09cf2223376a0a9300aaccc7eddf56859a59856f3",
+      "pythonRgba8Sha256": "6d42d31b464113e946445d414bc111bf8ea249723dd952c8aa458ff4551ee494"
+    },
+    "mixer/applyMode": {
+      "oraclePngSha256": "f0e1c8ef3bdc28093427b22e79dbc84a53ff22d74eb0756bfccfb50d12282cda",
+      "oracleRgba8Sha256": "3d6876a0146de8576eb2395a858de1213d1b92c65b779df3a331cfd5a4584546",
+      "pythonPngSha256": "f0e1c8ef3bdc28093427b22e79dbc84a53ff22d74eb0756bfccfb50d12282cda",
+      "pythonRgba8Sha256": "3d6876a0146de8576eb2395a858de1213d1b92c65b779df3a331cfd5a4584546"
+    },
+    "mixer/blendMode": {
+      "oraclePngSha256": "eab174d365d334923656a973c8c8790494ec62b9bb696a2736625ac28b213ce8",
+      "oracleRgba8Sha256": "37973e1773c31e191b07a0869c424e34c9199bf3487c94b48ac3aa819f3f9070",
+      "pythonPngSha256": "eab174d365d334923656a973c8c8790494ec62b9bb696a2736625ac28b213ce8",
+      "pythonRgba8Sha256": "37973e1773c31e191b07a0869c424e34c9199bf3487c94b48ac3aa819f3f9070"
+    },
+    "mixer/cellSplit": {
+      "oraclePngSha256": "b97e10fad16098f9ea7340d28a19b58c26fa14c8f0f59956656da6a7d51994c6",
+      "oracleRgba8Sha256": "24ee8a9eefb7d5b9fb195bf50fffd3f4b09adce1cd80f608460ea1aeb254e8bb",
+      "pythonPngSha256": "b97e10fad16098f9ea7340d28a19b58c26fa14c8f0f59956656da6a7d51994c6",
+      "pythonRgba8Sha256": "24ee8a9eefb7d5b9fb195bf50fffd3f4b09adce1cd80f608460ea1aeb254e8bb"
+    },
+    "mixer/centerMask": {
+      "oraclePngSha256": "3da39b1b94e1f463d1fc66872c528edf7e2f9690f87743ee3b050b3b8c2c1436",
+      "oracleRgba8Sha256": "6e8faff7311a27f34d1508a38ba871bffbfe690fed50b94a56e8fbbe96be8929",
+      "pythonPngSha256": "3da39b1b94e1f463d1fc66872c528edf7e2f9690f87743ee3b050b3b8c2c1436",
+      "pythonRgba8Sha256": "6e8faff7311a27f34d1508a38ba871bffbfe690fed50b94a56e8fbbe96be8929"
+    },
+    "mixer/channelCombine": {
+      "oraclePngSha256": "d95c9b7ba10d8f52dda2c598cc176a57c5f0218c2ec5d4744c29379182e66306",
+      "oracleRgba8Sha256": "f75005c474726760980649be1d501ad7ceac89a818dbc0a6cf2001518bcda31c",
+      "pythonPngSha256": "d95c9b7ba10d8f52dda2c598cc176a57c5f0218c2ec5d4744c29379182e66306",
+      "pythonRgba8Sha256": "f75005c474726760980649be1d501ad7ceac89a818dbc0a6cf2001518bcda31c"
+    },
+    "mixer/distortion": {
+      "oraclePngSha256": "02aea643711b59b7f35a7bb1a5719fa741fc052bff92b5e78a085c327169f9f8",
+      "oracleRgba8Sha256": "eec68212ac4794baa76cf2d4520d0401aeb7156ee1ee28dabbc0bf0fdec54cb7",
+      "pythonPngSha256": "02aea643711b59b7f35a7bb1a5719fa741fc052bff92b5e78a085c327169f9f8",
+      "pythonRgba8Sha256": "eec68212ac4794baa76cf2d4520d0401aeb7156ee1ee28dabbc0bf0fdec54cb7"
+    },
+    "mixer/focusBlur": {
+      "oraclePngSha256": "02aea643711b59b7f35a7bb1a5719fa741fc052bff92b5e78a085c327169f9f8",
+      "oracleRgba8Sha256": "eec68212ac4794baa76cf2d4520d0401aeb7156ee1ee28dabbc0bf0fdec54cb7",
+      "pythonPngSha256": "02aea643711b59b7f35a7bb1a5719fa741fc052bff92b5e78a085c327169f9f8",
+      "pythonRgba8Sha256": "eec68212ac4794baa76cf2d4520d0401aeb7156ee1ee28dabbc0bf0fdec54cb7"
+    },
+    "mixer/mashup": {
+      "oraclePngSha256": "1df401c444ba69334feed30314b6b8f0045b505149933beb687b85327ae0ba5b",
+      "oracleRgba8Sha256": "71c590018fbdce595a24de5c5ab28d2f384395863fa5a0f7d577aef82764fe22",
+      "pythonPngSha256": "1df401c444ba69334feed30314b6b8f0045b505149933beb687b85327ae0ba5b",
+      "pythonRgba8Sha256": "71c590018fbdce595a24de5c5ab28d2f384395863fa5a0f7d577aef82764fe22"
+    },
+    "mixer/patternMix": {
+      "oraclePngSha256": "7456eaba568cb30f2a977e40c2923167ade44207688ed789dbf8922ceaba3d5e",
+      "oracleRgba8Sha256": "c6c9b0e5979ca4f84a306cde43f56d19c2856732a3ce1d5f66673f450d999ecd",
+      "pythonPngSha256": "7456eaba568cb30f2a977e40c2923167ade44207688ed789dbf8922ceaba3d5e",
+      "pythonRgba8Sha256": "c6c9b0e5979ca4f84a306cde43f56d19c2856732a3ce1d5f66673f450d999ecd"
+    },
+    "mixer/shadow": {
+      "oraclePngSha256": "02aea643711b59b7f35a7bb1a5719fa741fc052bff92b5e78a085c327169f9f8",
+      "oracleRgba8Sha256": "eec68212ac4794baa76cf2d4520d0401aeb7156ee1ee28dabbc0bf0fdec54cb7",
+      "pythonPngSha256": "02aea643711b59b7f35a7bb1a5719fa741fc052bff92b5e78a085c327169f9f8",
+      "pythonRgba8Sha256": "eec68212ac4794baa76cf2d4520d0401aeb7156ee1ee28dabbc0bf0fdec54cb7"
+    },
+    "mixer/shapeMask": {
+      "oraclePngSha256": "61130a10aa6ab53bd3c59e1c8356afbdb053962c9f94cfd774f3959631142301",
+      "oracleRgba8Sha256": "d3749499a022aee71458a92481b67e778fbf4c643a3b7a380e2f44d7586d2dc2",
+      "pythonPngSha256": "61130a10aa6ab53bd3c59e1c8356afbdb053962c9f94cfd774f3959631142301",
+      "pythonRgba8Sha256": "d3749499a022aee71458a92481b67e778fbf4c643a3b7a380e2f44d7586d2dc2"
+    },
+    "mixer/split": {
+      "oraclePngSha256": "86a1c8bb92aa6552aad900063790df82aca6d4cbb790f7d17b7875508212d02e",
+      "oracleRgba8Sha256": "c11eaa0ab6bfd61fa23157d195405ec150ed31daead444647b43ece261018325",
+      "pythonPngSha256": "86a1c8bb92aa6552aad900063790df82aca6d4cbb790f7d17b7875508212d02e",
+      "pythonRgba8Sha256": "c11eaa0ab6bfd61fa23157d195405ec150ed31daead444647b43ece261018325"
+    },
+    "mixer/thresholdMix": {
+      "oraclePngSha256": "02aea643711b59b7f35a7bb1a5719fa741fc052bff92b5e78a085c327169f9f8",
+      "oracleRgba8Sha256": "eec68212ac4794baa76cf2d4520d0401aeb7156ee1ee28dabbc0bf0fdec54cb7",
+      "pythonPngSha256": "02aea643711b59b7f35a7bb1a5719fa741fc052bff92b5e78a085c327169f9f8",
+      "pythonRgba8Sha256": "eec68212ac4794baa76cf2d4520d0401aeb7156ee1ee28dabbc0bf0fdec54cb7"
+    },
+    "mixer/uvRemap": {
+      "oraclePngSha256": "3338ef9ffa82d5206b19bbc09cf2223376a0a9300aaccc7eddf56859a59856f3",
+      "oracleRgba8Sha256": "6d42d31b464113e946445d414bc111bf8ea249723dd952c8aa458ff4551ee494",
+      "pythonPngSha256": "3338ef9ffa82d5206b19bbc09cf2223376a0a9300aaccc7eddf56859a59856f3",
+      "pythonRgba8Sha256": "6d42d31b464113e946445d414bc111bf8ea249723dd952c8aa458ff4551ee494"
+    },
+    "points/heightGrid": {
+      "oraclePngSha256": "02aea643711b59b7f35a7bb1a5719fa741fc052bff92b5e78a085c327169f9f8",
+      "oracleRgba8Sha256": "eec68212ac4794baa76cf2d4520d0401aeb7156ee1ee28dabbc0bf0fdec54cb7",
+      "pythonPngSha256": "02aea643711b59b7f35a7bb1a5719fa741fc052bff92b5e78a085c327169f9f8",
+      "pythonRgba8Sha256": "eec68212ac4794baa76cf2d4520d0401aeb7156ee1ee28dabbc0bf0fdec54cb7"
+    },
+    "synth/bitwise": {
+      "oraclePngSha256": "fa56cdeebd579644f16093445c5f3d80bac12d2a21cc6e7e51fb1e3cec98aef7",
+      "oracleRgba8Sha256": "1ab2757c207cc80758fffe6ec4b0000d694ede4c952a3b2f2523ba2591e5db12",
+      "pythonPngSha256": "fa56cdeebd579644f16093445c5f3d80bac12d2a21cc6e7e51fb1e3cec98aef7",
+      "pythonRgba8Sha256": "1ab2757c207cc80758fffe6ec4b0000d694ede4c952a3b2f2523ba2591e5db12"
+    },
+    "synth/cell": {
+      "oraclePngSha256": "5e80064f44b3e599205dad57d91c9e03e25cfcd04f86db9973e0acb33dc15f5f",
+      "oracleRgba8Sha256": "dad730b0d1ba6ff174092a5839782c5275854dcbe73875a746d4bb83a1b851f0",
+      "pythonPngSha256": "5e80064f44b3e599205dad57d91c9e03e25cfcd04f86db9973e0acb33dc15f5f",
+      "pythonRgba8Sha256": "dad730b0d1ba6ff174092a5839782c5275854dcbe73875a746d4bb83a1b851f0"
+    },
+    "synth/curl": {
+      "oraclePngSha256": "9d94a81a5c182f5cbc8d0764f9ad3bbc9bc857198af2e68f7c23f0b5dfabbd21",
+      "oracleRgba8Sha256": "34ecafb104f64eae53ca0b46a7ec5309dccaabb726611c5d64c2244e01e75a94",
+      "pythonPngSha256": "46c8064d8645295619baf974a4a77728319408f3fc66bed4c6379d0e07e7837a",
+      "pythonRgba8Sha256": "34ecafb104f64eae53ca0b46a7ec5309dccaabb726611c5d64c2244e01e75a94"
+    },
+    "synth/gabor": {
+      "oraclePngSha256": "568bc7f4688f7d55f1656f7c95aa0939f06ba1b584cc68cbb1d17b98924c147d",
+      "oracleRgba8Sha256": "cf05e710ab16a3845130bc3a9df97bdf99ab05ad1c74fc2c13251ef8a5b82b19",
+      "pythonPngSha256": "568bc7f4688f7d55f1656f7c95aa0939f06ba1b584cc68cbb1d17b98924c147d",
+      "pythonRgba8Sha256": "cf05e710ab16a3845130bc3a9df97bdf99ab05ad1c74fc2c13251ef8a5b82b19"
+    },
+    "synth/gradient": {
+      "oraclePngSha256": "243471dbdf40609e8f7610438243ac56aeb35a98b8a5403728db27b7c8655570",
+      "oracleRgba8Sha256": "0db61089289fbf832b71ced05683f7676c27e04dc494e31a9633df33f5f68b60",
+      "pythonPngSha256": "7e36a1fac45581c4e8408f750bbb32f741ce7cccb01a1987ea4b616b95d56e54",
+      "pythonRgba8Sha256": "0db61089289fbf832b71ced05683f7676c27e04dc494e31a9633df33f5f68b60"
+    },
+    "synth/julia": {
+      "oraclePngSha256": "96efa0d2acc08866e1889a701882cf35ef5a63005cadda40ced164169024b972",
+      "oracleRgba8Sha256": "55cf6cd77ec6aa0c1ffed61c7f57477e92c9ea2b7425fee5ee4c9671a94ace90",
+      "pythonPngSha256": "96efa0d2acc08866e1889a701882cf35ef5a63005cadda40ced164169024b972",
+      "pythonRgba8Sha256": "55cf6cd77ec6aa0c1ffed61c7f57477e92c9ea2b7425fee5ee4c9671a94ace90"
+    },
+    "synth/mandala": {
+      "oraclePngSha256": "5bf4567111c425576e0efb2d4e899dc799bfe8135ed77c78ecdad953c347c57b",
+      "oracleRgba8Sha256": "8e813cd7250118fc2b2b7c5d7ea7ad713f97a2b85985faa131b31b5274365ce7",
+      "pythonPngSha256": "5bf4567111c425576e0efb2d4e899dc799bfe8135ed77c78ecdad953c347c57b",
+      "pythonRgba8Sha256": "8e813cd7250118fc2b2b7c5d7ea7ad713f97a2b85985faa131b31b5274365ce7"
+    },
+    "synth/mandelbrot": {
+      "oraclePngSha256": "fc3ad4980ed07a316093e9dbea6d4a0fb2892163a19f80b06993685e5ff58254",
+      "oracleRgba8Sha256": "e177195ba045bb481908b96415107db3ce3830e85b16bb24e57be58b23b04b87",
+      "pythonPngSha256": "fc3ad4980ed07a316093e9dbea6d4a0fb2892163a19f80b06993685e5ff58254",
+      "pythonRgba8Sha256": "e177195ba045bb481908b96415107db3ce3830e85b16bb24e57be58b23b04b87"
+    },
+    "synth/media": {
+      "oraclePngSha256": "8afb26d345b42dcf048c2c0848c43de653a15dba1880a0c2d167bfe031623bf1",
+      "oracleRgba8Sha256": "ddec95bf956a98d67258db2fb514052ce213f574764c73fee5414eac7af1d931",
+      "pythonPngSha256": "cbf6a8ee9d70e140e24931fdb7721f0f6e1523e7b235d86ca2ec9979f4a51427",
+      "pythonRgba8Sha256": "ddec95bf956a98d67258db2fb514052ce213f574764c73fee5414eac7af1d931"
+    },
+    "synth/modPattern": {
+      "oraclePngSha256": "db0eef55e1e85f1359d2a9c958420557ad9e70832623fe25a977f9ac7def2f2c",
+      "oracleRgba8Sha256": "e6badfe2c4732bf61026a499477610ccb98f63a2972fa1c44bcc66f15e5487e9",
+      "pythonPngSha256": "db0eef55e1e85f1359d2a9c958420557ad9e70832623fe25a977f9ac7def2f2c",
+      "pythonRgba8Sha256": "e6badfe2c4732bf61026a499477610ccb98f63a2972fa1c44bcc66f15e5487e9"
+    },
+    "synth/newton": {
+      "oraclePngSha256": "b598fd9bc836224af6e48e84f4a7de297c725eb24466d4e33d110c730e8192da",
+      "oracleRgba8Sha256": "efdcfdad8da0ca36477aaa3414baaa20d0004191e5938e5f4085be04351e83fa",
+      "pythonPngSha256": "b598fd9bc836224af6e48e84f4a7de297c725eb24466d4e33d110c730e8192da",
+      "pythonRgba8Sha256": "efdcfdad8da0ca36477aaa3414baaa20d0004191e5938e5f4085be04351e83fa"
+    },
+    "synth/noise": {
+      "oraclePngSha256": "2a53d72986bdef366e914dac88b48cb59a42bd81d684dd1b7a02e5faacd3ecee",
+      "oracleRgba8Sha256": "e8fc34774294395a0aeb84e7955a9492c0b7292facd52ee13c01b0cb008302a2",
+      "pythonPngSha256": "2a53d72986bdef366e914dac88b48cb59a42bd81d684dd1b7a02e5faacd3ecee",
+      "pythonRgba8Sha256": "e8fc34774294395a0aeb84e7955a9492c0b7292facd52ee13c01b0cb008302a2"
+    },
+    "synth/osc2d": {
+      "oraclePngSha256": "d56bd34d392d0f2ac024694b253f522066191fc35268e62828f51f740604ed7d",
+      "oracleRgba8Sha256": "80a8b7dfe416e8a1e78aa01338f9db427a6ab23c2fe466737160eabe11fb42ea",
+      "pythonPngSha256": "d56bd34d392d0f2ac024694b253f522066191fc35268e62828f51f740604ed7d",
+      "pythonRgba8Sha256": "80a8b7dfe416e8a1e78aa01338f9db427a6ab23c2fe466737160eabe11fb42ea"
+    },
+    "synth/pattern": {
+      "oraclePngSha256": "02aea643711b59b7f35a7bb1a5719fa741fc052bff92b5e78a085c327169f9f8",
+      "oracleRgba8Sha256": "eec68212ac4794baa76cf2d4520d0401aeb7156ee1ee28dabbc0bf0fdec54cb7",
+      "pythonPngSha256": "02aea643711b59b7f35a7bb1a5719fa741fc052bff92b5e78a085c327169f9f8",
+      "pythonRgba8Sha256": "eec68212ac4794baa76cf2d4520d0401aeb7156ee1ee28dabbc0bf0fdec54cb7"
+    },
+    "synth/perlin": {
+      "oraclePngSha256": "78ccc1e988f19a8c68651df362027ebd7c20c5710401559ed8e7ce8150c479fa",
+      "oracleRgba8Sha256": "fcb719c3d4cef26f0a237e73507f168ca214cc76fb968e6ed17deafd71131667",
+      "pythonPngSha256": "420ec4e88c7bc085cc8d08df8894f9a283a991a94d18cf1f80029aff70a28ec1",
+      "pythonRgba8Sha256": "fcb719c3d4cef26f0a237e73507f168ca214cc76fb968e6ed17deafd71131667"
+    },
+    "synth/polygon": {
+      "oraclePngSha256": "43ff23e2b4be7be5d02870f0db0292d413d097bbc4def2e6913e9eb280703ba3",
+      "oracleRgba8Sha256": "4dadfea607d2300a9d6bf379c9079fbc1419b555f67a94d18d002f3ac583d4a0",
+      "pythonPngSha256": "43ff23e2b4be7be5d02870f0db0292d413d097bbc4def2e6913e9eb280703ba3",
+      "pythonRgba8Sha256": "4dadfea607d2300a9d6bf379c9079fbc1419b555f67a94d18d002f3ac583d4a0"
+    },
+    "synth/remap": {
+      "oraclePngSha256": "30160553fec73b75e7b8948d5428297344cd48e60c534725b9c7b035469e14bd",
+      "oracleRgba8Sha256": "2c893cd47b6757133987906e00c55e6dcce3c567b9df9e7f91ffecd3604cc6a6",
+      "pythonPngSha256": "30160553fec73b75e7b8948d5428297344cd48e60c534725b9c7b035469e14bd",
+      "pythonRgba8Sha256": "2c893cd47b6757133987906e00c55e6dcce3c567b9df9e7f91ffecd3604cc6a6"
+    },
+    "synth/sacredGeometry": {
+      "oraclePngSha256": "ca6a89f69b821613d943144132fff2cec356667339776941cb41684a278e6180",
+      "oracleRgba8Sha256": "f86f5c0858d0f4d77f06ab3e23b4d00d645171a9fe5482e6996c49a0e392cadb",
+      "pythonPngSha256": "ca6a89f69b821613d943144132fff2cec356667339776941cb41684a278e6180",
+      "pythonRgba8Sha256": "f86f5c0858d0f4d77f06ab3e23b4d00d645171a9fe5482e6996c49a0e392cadb"
+    },
+    "synth/shape": {
+      "oraclePngSha256": "be5d13d7ffd9242d7a5d985f2d3b46311e6765801acc09f0b78009925eedb1ad",
+      "oracleRgba8Sha256": "5920c0653c81a0334fafac989d6f12d6a5d4d7c3a08402010517faeb878cf891",
+      "pythonPngSha256": "be5d13d7ffd9242d7a5d985f2d3b46311e6765801acc09f0b78009925eedb1ad",
+      "pythonRgba8Sha256": "5920c0653c81a0334fafac989d6f12d6a5d4d7c3a08402010517faeb878cf891"
+    },
+    "synth/solid": {
+      "oraclePngSha256": "02aea643711b59b7f35a7bb1a5719fa741fc052bff92b5e78a085c327169f9f8",
+      "oracleRgba8Sha256": "eec68212ac4794baa76cf2d4520d0401aeb7156ee1ee28dabbc0bf0fdec54cb7",
+      "pythonPngSha256": "02aea643711b59b7f35a7bb1a5719fa741fc052bff92b5e78a085c327169f9f8",
+      "pythonRgba8Sha256": "eec68212ac4794baa76cf2d4520d0401aeb7156ee1ee28dabbc0bf0fdec54cb7"
+    },
+    "synth/subdivide": {
+      "oraclePngSha256": "30160553fec73b75e7b8948d5428297344cd48e60c534725b9c7b035469e14bd",
+      "oracleRgba8Sha256": "2c893cd47b6757133987906e00c55e6dcce3c567b9df9e7f91ffecd3604cc6a6",
+      "pythonPngSha256": "30160553fec73b75e7b8948d5428297344cd48e60c534725b9c7b035469e14bd",
+      "pythonRgba8Sha256": "2c893cd47b6757133987906e00c55e6dcce3c567b9df9e7f91ffecd3604cc6a6"
+    },
+    "synth/testPattern": {
+      "oraclePngSha256": "aed0e81cd2862d9fdc9d1b16c693d8b8d8dc3d3ee717864325da1103c65e5a8c",
+      "oracleRgba8Sha256": "d5975cfc9b8bdc3a771b69632496e5ec000fec52e425a03930c0fc0309b85342",
+      "pythonPngSha256": "aed0e81cd2862d9fdc9d1b16c693d8b8d8dc3d3ee717864325da1103c65e5a8c",
+      "pythonRgba8Sha256": "d5975cfc9b8bdc3a771b69632496e5ec000fec52e425a03930c0fc0309b85342"
+    }
+  },
+  "counts": {
+    "byteExact": 167,
+    "considered": 167,
+    "diffs": 0,
+    "oracleErrors": 0,
+    "runtimeErrors": 0,
+    "skipped": 38
+  },
+  "cpu": {
+    "cpuHead": "bfbe54764eee87c8f67d2b281d5f304faad04a5b",
+    "cpuTree": "27fe4152f8a29955b7b572f671fa6f00a18dcc6c",
+    "revision": "8eeb7b5ac14eb37a8d16037f607a88ce63924cd3",
+    "snapshotRevision": "8eeb7b5ac14eb37a8d16037f607a88ce63924cd3",
+    "sourceDigest": "ceeccdd13b7b625b94c58dcfa318b4a253d5dc6d124e551233522fd5f32e399b"
+  },
+  "diffs": [],
+  "errors": {},
+  "oracleErrors": [],
+  "settings": {
+    "seed": 1,
+    "size": 8,
+    "time": 0.25,
+    "tolerance": 0
+  },
+  "skipped": [
+    "filter/convolutionFeedback",
+    "filter/feedback",
+    "filter/motionBlur",
+    "filter/temporalAberration",
+    "filter3d/flow3d",
+    "filter3d/palette3d",
+    "points/attractor",
+    "points/buddhabrot",
+    "points/dla",
+    "points/flock",
+    "points/flow",
+    "points/hydraulic",
+    "points/lenia",
+    "points/life",
+    "points/physarum",
+    "points/physical",
+    "render/loopBegin",
+    "render/loopEnd",
+    "render/pointsBillboardRender",
+    "render/pointsEmit",
+    "render/pointsRender",
+    "render/render3d",
+    "render/renderCubemap3d",
+    "render/renderCubemapSurface",
+    "render/renderLandscape3d",
+    "render/renderLit3d",
+    "synth/cellularAutomata",
+    "synth/mnca",
+    "synth/navierStokes",
+    "synth/reactionDiffusion",
+    "synth3d/cell3d",
+    "synth3d/cellularAutomata3d",
+    "synth3d/flythrough3d",
+    "synth3d/fractal3d",
+    "synth3d/heightmap3d",
+    "synth3d/noise3d",
+    "synth3d/reactionDiffusion3d",
+    "synth3d/shape3d"
+  ]
+}

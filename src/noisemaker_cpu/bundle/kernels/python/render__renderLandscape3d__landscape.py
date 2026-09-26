@@ -6,6 +6,7 @@ def run_pixel(ctx, out):
         pass
     g = _G()
     _u_VIEW_MODE = U.get("VIEW_MODE", 0)
+    _u_FILTERING = U.get("FILTERING", 0)
     _u_volumeCache = T["volumeCache"]
     _u_analyticalGeo = T["analyticalGeo"]
     _u_resolution = U.get("resolution", rt.construct(2, 0.0))
@@ -44,6 +45,95 @@ def run_pixel(ctx, out):
         if rt.binary(">", rt.dot(halfVector, halfVector), rt.f(1e-06)):
             specular = rt.binary("*", rt.component_wise("pow", rt.component_wise("max", rt.dot(normal, rt.normalize(halfVector)), rt.f(0.0), width=1), rt.f(32.0), width=1), _u_specularIntensity, 1, "float")
         return rt.binary("+", rt.binary("*", color, rt.binary("+", _u_ambient, rt.binary("*", rt.component_wise("max", rt.dot(normal, light), rt.f(0.0), width=1), _u_diffuseIntensity, 1, "float"), 1, "float"), 3, "float"), specular, 3, "float")
+    def sampleAtlasTexel__sampler2D_ivec3_bool(atlas, p, material):
+        p = rt.copy(p, "int")
+        coord = rt.construct(2, rt.swizzle(p, "x"), rt.binary("+", rt.swizzle(p, "y"), rt.binary("*", rt.swizzle(p, "z"), _u_volumeSize, 1, "int"), 1, "int"), base="int")
+        value = rt.texel_fetch(atlas, coord, rt.i(0))
+        present = rt.f(0.0)
+        if material:
+            present = (rt.f(1.0) if rt.binary(">", rt.swizzle(rt.texel_fetch(_u_analyticalGeo, coord, rt.i(0)), "a"), rt.f(0.0)) else rt.f(0.0))
+            return rt.construct(4, rt.binary("*", rt.swizzle(value, "rgb"), present, 3, "float"), present)
+        return value
+    def interpolateAtlas__vec4_vec4_float(a, b, weight):
+        a = rt.copy(a, "float")
+        b = rt.copy(b, "float")
+        return rt.binary("+", a, rt.binary("*", rt.binary("-", b, a, 4, "float"), weight, 4, "float"), 4, "float")
+    def atlasCoords__vec3(p):
+        p = rt.copy(p, "float")
+        texel = rt.component_wise("clamp", rt.binary("-", p, rt.f(0.5), 3, "float"), rt.construct(3, rt.f(0.0)), rt.construct(3, rt.construct(1, rt.binary("-", _u_volumeSize, rt.i(1), 1, "int"))), width=3)
+        return [rt.construct(3, rt.component_wise("floor", texel, width=3), base="int"), rt.component_wise("fract", texel, width=3)]
+    def sampleAtlasCoords__sampler2D_struct1_bool(atlas, coords, material):
+        lo = coords[0]
+        hi = rt.component_wise("min", rt.binary("+", lo, rt.i(1), 3, "int"), rt.construct(3, rt.binary("-", _u_volumeSize, rt.i(1), 1, "int"), base="int"), width=3)
+        f = coords[1]
+        c00 = interpolateAtlas__vec4_vec4_float(sampleAtlasTexel__sampler2D_ivec3_bool(atlas, rt.construct(3, rt.swizzle(lo, "x"), rt.swizzle(lo, "y"), rt.swizzle(lo, "z"), base="int"), material), sampleAtlasTexel__sampler2D_ivec3_bool(atlas, rt.construct(3, rt.swizzle(hi, "x"), rt.swizzle(lo, "y"), rt.swizzle(lo, "z"), base="int"), material), rt.swizzle(f, "x"))
+        c10 = interpolateAtlas__vec4_vec4_float(sampleAtlasTexel__sampler2D_ivec3_bool(atlas, rt.construct(3, rt.swizzle(lo, "x"), rt.swizzle(hi, "y"), rt.swizzle(lo, "z"), base="int"), material), sampleAtlasTexel__sampler2D_ivec3_bool(atlas, rt.construct(3, rt.swizzle(hi, "x"), rt.swizzle(hi, "y"), rt.swizzle(lo, "z"), base="int"), material), rt.swizzle(f, "x"))
+        c01 = interpolateAtlas__vec4_vec4_float(sampleAtlasTexel__sampler2D_ivec3_bool(atlas, rt.construct(3, rt.swizzle(lo, "x"), rt.swizzle(lo, "y"), rt.swizzle(hi, "z"), base="int"), material), sampleAtlasTexel__sampler2D_ivec3_bool(atlas, rt.construct(3, rt.swizzle(hi, "x"), rt.swizzle(lo, "y"), rt.swizzle(hi, "z"), base="int"), material), rt.swizzle(f, "x"))
+        c11 = interpolateAtlas__vec4_vec4_float(sampleAtlasTexel__sampler2D_ivec3_bool(atlas, rt.construct(3, rt.swizzle(lo, "x"), rt.swizzle(hi, "y"), rt.swizzle(hi, "z"), base="int"), material), sampleAtlasTexel__sampler2D_ivec3_bool(atlas, rt.construct(3, rt.swizzle(hi, "x"), rt.swizzle(hi, "y"), rt.swizzle(hi, "z"), base="int"), material), rt.swizzle(f, "x"))
+        value = interpolateAtlas__vec4_vec4_float(interpolateAtlas__vec4_vec4_float(c00, c10, rt.swizzle(f, "y")), interpolateAtlas__vec4_vec4_float(c01, c11, rt.swizzle(f, "y")), rt.swizzle(f, "z"))
+        if (bool(material) and bool(rt.binary(">", rt.swizzle(value, "a"), rt.f(0.0)))):
+            value = rt.assign_swizzle(value, "rgb", rt.binary("/", rt.swizzle(value, "rgb"), rt.swizzle(value, "a"), 3, "float"))
+        return value
+    def sampleAtlas__sampler2D_vec3_bool(atlas, p, material):
+        p = rt.copy(p, "float")
+        return sampleAtlasCoords__sampler2D_struct1_bool(atlas, atlasCoords__vec3(p), material)
+    def isSolid__struct1(coords):
+        density = rt.swizzle(sampleAtlasCoords__sampler2D_struct1_bool(_u_analyticalGeo, coords, False), "a")
+        return (bool(rt.binary(">", density, rt.f(0.0))) and bool(rt.binary(">=", density, _u_threshold)))
+    def traceIsosurface__vec3_vec3_float_float(origin, direction, start, leave):
+        origin = rt.copy(origin, "float")
+        direction = rt.copy(direction, "float")
+        position = rt.binary("+", origin, rt.binary("*", direction, start, 3, "float"), 3, "float")
+        coords = atlasCoords__vec3(position)
+        if isSolid__struct1(coords):
+            return [start, position, coords]
+        stepSize = rt.binary("/", rt.f(0.5), rt.length(direction), 1, "float")
+        previous = start
+        step = rt.i(0)
+        _for0_first = True
+        for _for0 in range(1048576):
+            if not _for0_first:
+                step = rt.binary("+", step, rt.i(1), 1, "int")
+            _for0_first = False
+            if not (rt.binary("<", step, rt.binary("*", _u_volumeSize, rt.i(4), 1, "int"))):
+                break
+            distance = rt.component_wise("min", rt.binary("+", previous, stepSize, 1, "float"), leave, width=1)
+            position[:] = rt.binary("+", origin, rt.binary("*", direction, distance, 3, "float"), 3, "float")
+            coords = atlasCoords__vec3(position)
+            lo = rt.f(0.0)
+            hi = rt.f(0.0)
+            if isSolid__struct1(coords):
+                lo = previous
+                hi = distance
+                refine = rt.i(0)
+                _for1_first = True
+                for _for1 in range(1048576):
+                    if not _for1_first:
+                        refine = rt.binary("+", refine, rt.i(1), 1, "int")
+                    _for1_first = False
+                    if not (rt.binary("<", refine, rt.i(8))):
+                        break
+                    mid = rt.binary("*", rt.binary("+", lo, hi, 1, "float"), rt.f(0.5), 1, "float")
+                    candidate = rt.binary("+", origin, rt.binary("*", direction, mid, 3, "float"), 3, "float")
+                    candidateCoords = atlasCoords__vec3(candidate)
+                    if isSolid__struct1(candidateCoords):
+                        hi = mid
+                        position[:] = candidate
+                        coords = candidateCoords
+                    else:
+                        lo = mid
+                return [hi, position, coords]
+            if rt.binary(">=", distance, leave):
+                break
+            previous = distance
+        return [rt.unary("-", rt.f(1.0)), rt.construct(3, rt.f(0.0)), [rt.construct(3, rt.i(0), base="int"), rt.construct(3, rt.f(0.0))]]
+    def isosurfaceNormal__vec3_vec3(p, fallback):
+        p = rt.copy(p, "float")
+        fallback = rt.copy(fallback, "float")
+        gradient = rt.construct(3, rt.binary("-", rt.swizzle(sampleAtlas__sampler2D_vec3_bool(_u_analyticalGeo, rt.binary("-", p, rt.construct(3, rt.f(0.5), rt.f(0.0), rt.f(0.0)), 3, "float"), False), "a"), rt.swizzle(sampleAtlas__sampler2D_vec3_bool(_u_analyticalGeo, rt.binary("+", p, rt.construct(3, rt.f(0.5), rt.f(0.0), rt.f(0.0)), 3, "float"), False), "a"), 1, "float"), rt.binary("-", rt.swizzle(sampleAtlas__sampler2D_vec3_bool(_u_analyticalGeo, rt.binary("-", p, rt.construct(3, rt.f(0.0), rt.f(0.5), rt.f(0.0)), 3, "float"), False), "a"), rt.swizzle(sampleAtlas__sampler2D_vec3_bool(_u_analyticalGeo, rt.binary("+", p, rt.construct(3, rt.f(0.0), rt.f(0.5), rt.f(0.0)), 3, "float"), False), "a"), 1, "float"), rt.binary("-", rt.swizzle(sampleAtlas__sampler2D_vec3_bool(_u_analyticalGeo, rt.binary("-", p, rt.construct(3, rt.f(0.0), rt.f(0.0), rt.f(0.5)), 3, "float"), False), "a"), rt.swizzle(sampleAtlas__sampler2D_vec3_bool(_u_analyticalGeo, rt.binary("+", p, rt.construct(3, rt.f(0.0), rt.f(0.0), rt.f(0.5)), 3, "float"), False), "a"), 1, "float"))
+        if rt.binary(">", rt.dot(gradient, gradient), rt.f(1e-12)):
+            return rt.normalize(gradient)
+        return fallback
     def inverseRotation__vec3(p):
         p = rt.copy(p, "float")
         c = rt.component_wise("cos", rt.construct(3, _u_rotateX, _u_rotateY, _u_rotateZ), width=3)
@@ -71,11 +161,11 @@ def run_pixel(ctx, out):
         delta = rt.construct(3, rt.f(1e+30))
         stepDir = rt.construct(3, rt.i(0), base="int")
         axis = rt.i(0)
-        _for0_first = True
-        for _for0 in range(1048576):
-            if not _for0_first:
+        _for2_first = True
+        for _for2 in range(1048576):
+            if not _for2_first:
                 axis = rt.binary("+", axis, rt.i(1), 1, "int")
-            _for0_first = False
+            _for2_first = False
             if not (rt.binary("<", axis, rt.i(3))):
                 break
             a = rt.f(0.0)
@@ -98,11 +188,11 @@ def run_pixel(ctx, out):
         cell = rt.component_wise("clamp", rt.construct(3, rt.component_wise("floor", rt.binary("+", rt.binary("+", origin, rt.binary("*", direction, distance, 3, "float"), 3, "float"), rt.binary("*", rt.construct(3, stepDir), rt.f(0.0001), 3, "float"), 3, "float"), width=3), base="int"), rt.construct(3, rt.i(0), base="int"), rt.construct(3, rt.binary("-", _u_volumeSize, rt.i(1), 1, "int"), base="int"), width=3)
         nextT = rt.construct(3, rt.f(1e+30))
         axis = rt.i(0)
-        _for1_first = True
-        for _for1 in range(1048576):
-            if not _for1_first:
+        _for3_first = True
+        for _for3 in range(1048576):
+            if not _for3_first:
                 axis = rt.binary("+", axis, rt.i(1), 1, "int")
-            _for1_first = False
+            _for3_first = False
             if not (rt.binary("<", axis, rt.i(3))):
                 break
             boundary = rt.f(0.0)
@@ -120,19 +210,32 @@ def run_pixel(ctx, out):
                     normal = rt.assign_swizzle(normal, "x", rt.unary("-", rt.construct(1, rt.swizzle(stepDir, "x"))))
                 else:
                     normal = rt.assign_swizzle(normal, "z", rt.unary("-", rt.construct(1, rt.swizzle(stepDir, "z"))))
+        hit = [rt.f(0.0), rt.construct(3, 0.0), [rt.construct(3, 0.0, base="int"), rt.construct(3, 0.0)]]
+        p = rt.construct(3, 0.0)
+        worldNormal = rt.construct(3, 0.0)
+        if rt.binary("==", _u_FILTERING, rt.i(0)):
+            hit = traceIsosurface__vec3_vec3_float_float(origin, direction, distance, leave)
+            if rt.binary("<", hit[0], rt.f(0.0)):
+                return
+            p = hit[1]
+            if rt.binary(">", hit[0], distance):
+                normal[:] = isosurfaceNormal__vec3_vec3(p, normal)
+            worldNormal = forwardRotation__vec3(normal)
+            g.fragColor[:] = rt.construct(4, lighting__vec3_vec3_vec3(rt.swizzle(sampleAtlasCoords__sampler2D_struct1_bool(_u_volumeCache, hit[2], True), "rgb"), worldNormal, viewDirection), rt.f(1.0))
+            g.geoOut[:] = rt.construct(4, rt.binary("+", rt.binary("*", worldNormal, rt.f(0.5), 3, "float"), rt.f(0.5), 3, "float"), rt.component_wise("clamp", rt.binary("/", hit[0], rt.f(320.0), 1, "float"), rt.f(0.0), rt.f(1.0), width=1))
+            return
         step = rt.i(0)
-        _for2_first = True
-        for _for2 in range(1048576):
-            if not _for2_first:
+        _for4_first = True
+        for _for4 in range(1048576):
+            if not _for4_first:
                 step = rt.binary("+", step, rt.i(1), 1, "int")
-            _for2_first = False
+            _for4_first = False
             if not (rt.binary("<", step, rt.binary("*", _u_volumeSize, rt.i(3), 1, "int"))):
                 break
             if (bool((bool(rt.component_wise("any", rt.component_wise("lessThan", cell, rt.construct(3, rt.i(0), base="int"), width=3), width=3)) or bool(rt.component_wise("any", rt.component_wise("greaterThanEqual", cell, rt.construct(3, _u_volumeSize, base="int"), width=3), width=3)))) or bool(rt.binary(">=", distance, leave))):
                 break
             atlas = rt.construct(2, rt.swizzle(cell, "x"), rt.binary("+", rt.swizzle(cell, "y"), rt.binary("*", rt.swizzle(cell, "z"), _u_volumeSize, 1, "int"), 1, "int"), base="int")
             density = rt.swizzle(rt.texel_fetch(_u_analyticalGeo, atlas, rt.i(0)), "a")
-            worldNormal = rt.construct(3, 0.0)
             if (bool(rt.binary(">", density, rt.f(0.0))) and bool(rt.binary(">=", density, _u_threshold))):
                 worldNormal = forwardRotation__vec3(normal)
                 g.fragColor[:] = rt.construct(4, lighting__vec3_vec3_vec3(rt.swizzle(rt.texel_fetch(_u_volumeCache, atlas, rt.i(0)), "rgb"), worldNormal, viewDirection), rt.f(1.0))
@@ -191,12 +294,24 @@ def run_pixel(ctx, out):
             else:
                 if rt.binary(">=", rt.swizzle(nearT, "x"), rt.swizzle(nearT, "z")):
                     (normal.__setitem__(0, rt.f(1.0)), normal.__setitem__(1, rt.f(0.0)), normal.__setitem__(2, rt.f(0.0)), normal)[-1]
+            hit = [rt.f(0.0), rt.construct(3, 0.0), [rt.construct(3, 0.0, base="int"), rt.construct(3, 0.0)]]
+            p = rt.construct(3, 0.0)
+            if rt.binary("==", _u_FILTERING, rt.i(0)):
+                hit = traceIsosurface__vec3_vec3_float_float(origin, rt.construct(3, rt.unary("-", rt.f(1.0))), distance, leave)
+                if rt.binary("<", hit[0], rt.f(0.0)):
+                    return
+                p = hit[1]
+                if rt.binary(">", hit[0], distance):
+                    normal[:] = isosurfaceNormal__vec3_vec3(p, normal)
+                g.fragColor[:] = rt.construct(4, lighting__vec3_vec3_vec3(rt.swizzle(sampleAtlasCoords__sampler2D_struct1_bool(_u_volumeCache, hit[2], True), "rgb"), normal, rt.construct(3, rt.f(0.5773502692))), rt.f(1.0))
+                g.geoOut[:] = rt.construct(4, rt.binary("+", rt.binary("*", normal, rt.f(0.5), 3, "float"), rt.f(0.5), 3, "float"), rt.component_wise("clamp", rt.binary("/", hit[0], rt.binary("*", size, rt.f(4.0), 1, "float"), 1, "float"), rt.f(0.0), rt.f(1.0), width=1))
+                return
             step = rt.i(0)
-            _for3_first = True
-            for _for3 in range(1048576):
-                if not _for3_first:
+            _for5_first = True
+            for _for5 in range(1048576):
+                if not _for5_first:
                     step = rt.binary("+", step, rt.i(1), 1, "int")
-                _for3_first = False
+                _for5_first = False
                 if not (rt.binary("<", step, rt.binary("*", _u_volumeSize, rt.i(3), 1, "int"))):
                     break
                 if (bool(rt.component_wise("any", rt.component_wise("lessThan", cell, rt.construct(3, rt.i(0), base="int"), width=3), width=3)) or bool(rt.binary(">=", distance, leave))):

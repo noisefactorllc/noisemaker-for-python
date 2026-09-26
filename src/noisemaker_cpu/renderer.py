@@ -178,34 +178,64 @@ def _remap_uniform_data(u, width, height):
     return data
 
 
+def _round_half_up(value) -> int:
+    # JS Math.round: half away from zero, not Python banker's rounding
+    # (round(0.5) == 0 in Python but 1 in JS). Dimension specs must resolve
+    # identically to the -cpu engine.
+    return math.floor(value + 0.5)
+
+
 def _size_component(spec, params, full_size, resources=None, axis="width"):
-    if spec is None or (isinstance(spec, str) and spec in {"input", "screen", "resolution", "100%"}):
+    if spec is None or (
+        isinstance(spec, str) and spec in {"input", "screen", "auto", "resolution", "100%"}
+    ):
         return full_size
     if isinstance(spec, (int, float)):
-        return max(1, int(spec))
+        return max(1, _round_half_up(spec))
     if isinstance(spec, str) and spec.endswith("%"):
-        return max(1, round(full_size * float(spec[:-1]) / 100))
+        return max(1, _round_half_up(full_size * float(spec[:-1]) / 100))
     if isinstance(spec, dict):
         input_override = spec.get("inputOverride")
         if input_override and resources and resources.get(input_override) is not None:
             surface = resources[input_override]
             return surface.width if axis == "width" else surface.height
         if "param" in spec:
-            value = params.get(spec["param"], spec.get("paramDefault", spec.get("default", full_size)))
+            # Mirrors noisemaker-for-cpu textureDimension's `{ param }` form:
+            # multiply/power transforms apply to the param value (or its
+            # paramDefault/default fallback, which bottoms out at 64); when a
+            # transform is present and the param is absent, an explicit
+            # `default` is used verbatim instead of the transformed value.
+            has_transform = "power" in spec or "multiply" in spec
+            param_default = spec.get("paramDefault", spec.get("default", 64))
+            value = params.get(spec["param"], param_default)
+            if "multiply" in spec:
+                value *= spec["multiply"]
             if "power" in spec:
-                value **= spec["power"]
-            return max(1, round(value))
+                value = float(value) ** spec["power"]
+            if has_transform and spec["param"] not in params and "default" in spec:
+                value = spec["default"]
+            return max(1, _round_half_up(value))
         if "screenDivide" in spec:
             divisor = max(1, float(params.get(spec["screenDivide"], spec.get("default", 1))))
             return max(1, math.ceil(full_size / divisor))
+        if "scale" in spec:
+            computed = math.floor(full_size * spec["scale"])
+            clamp = spec.get("clamp")
+            if clamp:
+                if "min" in clamp:
+                    computed = max(clamp["min"], computed)
+                if "max" in clamp:
+                    computed = min(clamp["max"], computed)
+            return max(1, computed)
     return full_size
 
 
 def _texture_dimensions(texture_spec, params, width, height, resources=None):
     texture_spec = texture_spec or {}
+    # `w`/`h` are aliases of `width`/`height` (noisemaker-for-cpu canonicalDestination).
     return (
-        _size_component(texture_spec.get("width"), params, width, resources, "width"),
-        _size_component(texture_spec.get("height"), params, height, resources, "height"),
+        _size_component(texture_spec.get("w", texture_spec.get("width")), params, width, resources, "width"),
+        _size_component(texture_spec.get("h", texture_spec.get("height")), params, height, resources, "height"),
     )
 
 
