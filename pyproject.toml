@@ -27,6 +27,12 @@ noisemaker-py = "noisemaker_cpu.cli:main"
 [tool.setuptools.packages.find]
 where = ["src"]
 
+# Runtime data the engine loads from bundle_dir() at render time. Without this,
+# built wheels and sdists omit bundle/metadata.json + bundle-lock.json and the
+# transpiled kernel sources, so the first render raises FileNotFoundError (GAP-004).
+[tool.setuptools.package-data]
+noisemaker_cpu = ["bundle/*.json", "bundle/kernels/python/*.py"]
+
 [tool.pytest.ini_options]
 testpaths = ["tests"]
 
