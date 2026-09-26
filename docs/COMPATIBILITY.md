@@ -39,7 +39,7 @@ Daily review: 2026-09-25. Current inspected source: [`93b8b141d21a7c853a89131166
 Full rendered parity remains **unverified**. No release approval or new closure follows from this review.
 Current upstream discovery: `bbdeb56c4b75cf33379766c3e87b0f5a18bcbba8`. Published Noisemaker authority: `1.0.179`, source `fca611fd8f91424661d4e531d39313d24ea21134`, 210 effect IDs.
 The observations below retain their original source and authority identities. They do not qualify later updates.
-Current served kit: `0.1.7`, source `1901b267a8b8ef29efc702cc3976b70f8aae0404`. [Retrieved inventory and hashes](/Users/alex/.codex/automations/noisemaker-port-completion-audit/review-20260925-053200/current-served-inventories.json). Artifact identity does not establish host qualification.
+Current served kit: `0.1.7`, source `1901b267a8b8ef29efc702cc3976b70f8aae0404`. [Retrieved inventory and hashes](/Users/alex/.codex/automations/noisemaker-port-completion-audit/review-20260925-053200/current-served-inventories.json). Artifact identity does not establish host qualification. The served kit's local artifact paths are macOS-local and are not reproducible from the repository tree; see the evidence-availability note in §6.
 
 ### Earlier source observations
 
