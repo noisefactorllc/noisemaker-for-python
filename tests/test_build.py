@@ -288,3 +288,35 @@ def test_export_kit_config_is_valid_and_matches_catalog():
     lock = json.loads(lock_path.read_text(encoding="utf-8"))
     assert len(lock.get("hashes", {})) == 294, "expected 294 locked program hashes"
     assert set(lock.get("hashes", {}).keys()) == pass_keys
+
+
+def test_package_data_config_covers_runtime_bundle(tmp_path):
+    """GAP-004 regression guard: wheels and sdists must ship the runtime
+    bundle. ``renderer.bundle_dir()`` loads metadata.json, bundle-lock.json and
+    bundle/kernels/python/*.py from the installed package directory, so the
+    [tool.setuptools.package-data] globs must match those paths."""
+    import tomllib
+
+    pyproject = Path(__file__).resolve().parents[1] / "pyproject.toml"
+    data = tomllib.loads(pyproject.read_text(encoding="utf-8"))
+    patterns = data["tool"]["setuptools"]["package-data"]["noisemaker_cpu"]
+
+    from noisemaker_cpu.renderer import bundle_dir
+
+    bundle = Path(bundle_dir())
+    runtime_files = [bundle / "metadata.json", bundle / "bundle-lock.json"]
+    runtime_files += sorted((bundle / "kernels" / "python").glob("*.py"))
+
+    assert runtime_files, "bundle runtime files missing from source tree"
+
+    def fnmatch(python_path, pattern):
+        import fnmatch as _fnmatch
+
+        posix = python_path.relative_to(bundle.parent.parent).as_posix()
+        return _fnmatch.fnmatch(posix, f"noisemaker_cpu/{pattern}")
+
+    for runtime_file in runtime_files:
+        assert any(fnmatch(runtime_file, pattern) for pattern in patterns), (
+            f"{runtime_file.name} is not covered by package-data patterns {patterns}; "
+            "built distributions would omit a runtime-required file (GAP-004)"
+        )

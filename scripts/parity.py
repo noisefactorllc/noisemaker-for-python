@@ -13,7 +13,7 @@ import sys
 
 import numpy as np
 
-from noisemaker_cpu.png import decode_png
+from noisemaker_cpu.png import decode_png, encode_png
 from noisemaker_cpu.renderer import _meta, render_effect
 
 CPU_DIR = os.environ.get("NOISEMAKER_CPU_DIR") or os.path.normpath(
@@ -24,6 +24,43 @@ CLI = os.path.join(CPU_DIR, "bin", "noisemaker-cpu.js")
 SIZE = 8
 SEED = 1
 TIME = 0.25
+
+
+def _sha256_file(path: str) -> str:
+    import hashlib
+
+    with open(path, "rb") as f:
+        return hashlib.sha256(f.read()).hexdigest()
+
+
+def _sha256_bytes(data: bytes) -> str:
+    import hashlib
+
+    return hashlib.sha256(data).hexdigest()
+
+
+def _cpu_revision() -> dict:
+    """Binds a receipt to the exact -cpu revision it was generated against."""
+    lock = {}
+    lock_path = os.path.join(CPU_DIR, "scripts", "upstream", "source-lock.js")
+    with open(lock_path, encoding="utf-8") as f:
+        lock_text = f.read()
+    for line in lock_text.splitlines():
+        if line.startswith("export const PINNED_UPSTREAM_REVISION"):
+            lock["revision"] = line.split("'")[1]
+        elif line.startswith("export const PINNED_SOURCE_DIGEST"):
+            lock["sourceDigest"] = line.split("'")[1]
+    snapshot_path = os.path.join(CPU_DIR, "src", "effects", "generated", "upstream-snapshot.js")
+    with open(snapshot_path, encoding="utf-8") as f:
+        for line in f:
+            if line.startswith("export const UPSTREAM_REVISION"):
+                lock["snapshotRevision"] = line.split('"')[1]
+                break
+    head = subprocess.run(["git", "rev-parse", "HEAD"], cwd=CPU_DIR, capture_output=True, text=True)
+    lock["cpuHead"] = head.stdout.strip() if head.returncode == 0 else None
+    tree = subprocess.run(["git", "rev-parse", "HEAD^{tree}"], cwd=CPU_DIR, capture_output=True, text=True)
+    lock["cpuTree"] = tree.stdout.strip() if tree.returncode == 0 else None
+    return lock
 
 
 EXT_PNG = "/tmp/ph_ext.png"
@@ -109,8 +146,11 @@ def py_render(effect_id: str, kind: str, ext: str | None = None):
 
 def main():
     only = None
+    json_out = None
     if "--only" in sys.argv:
         only = set(sys.argv[sys.argv.index("--only") + 1].split(","))
+    if "--json" in sys.argv:
+        json_out = sys.argv[sys.argv.index("--json") + 1]
     effects = _meta()["effects"]
     unknown = sorted(only - effects.keys()) if only is not None else []
     candidates = [i for i in effects if only is None or i in only]
@@ -118,12 +158,14 @@ def main():
     ids = [i for i in candidates if i not in skipped]
 
     ok, diffs, errors, oracle_err = [], [], {}, []
+    receipt = {}
     for eid in ids:
         kind = effects[eid]["kind"]
         ext = effects[eid].get("externalTexture")
         input_png = _ext_texture() and EXT_PNG if ext else None
         try:
             js = js_effect(eid, "/tmp/ph_js.png", input_png)
+            js_png_sha = _sha256_file("/tmp/ph_js.png")
         except Exception:
             oracle_err.append(eid)
             continue
@@ -139,7 +181,19 @@ def main():
             errors.setdefault("shape-mismatch", []).append(eid)
             continue
         d = int(np.max(np.abs(ja - pa)))
-        (ok if d == 0 else diffs).append(eid if d == 0 else (eid, d))
+        py_png_sha = _sha256_bytes(encode_png(py))
+        py_rgba8_sha = _sha256_bytes(py.to_rgba8())
+        js_rgba8_sha = _sha256_bytes(js.to_rgba8())
+        if d == 0:
+            ok.append(eid)
+            receipt[eid] = {
+                "oraclePngSha256": js_png_sha,
+                "oracleRgba8Sha256": js_rgba8_sha,
+                "pythonPngSha256": py_png_sha,
+                "pythonRgba8Sha256": py_rgba8_sha,
+            }
+        else:
+            diffs.append((eid, d))
 
     print(
         f"\n=== PARITY: {len(ok)}/{len(ids)} pass (byte-exact)  |  {len(diffs)} diff  |  "
@@ -161,6 +215,29 @@ def main():
     print(f"\nPASS: {len(ok)}")
     if unknown:
         print(f"UNKNOWN EFFECTS: {unknown}")
+    if json_out:
+        import json
+
+        doc = {
+            "settings": {"size": SIZE, "seed": SEED, "time": TIME, "tolerance": 0},
+            "cpu": _cpu_revision(),
+            "counts": {
+                "byteExact": len(ok),
+                "diffs": len(diffs),
+                "runtimeErrors": sum(len(v) for v in errors.values()),
+                "oracleErrors": len(oracle_err),
+                "skipped": len(skipped),
+                "considered": len(ids),
+            },
+            "diffs": [{"id": i, "maxDiff": d} for i, d in diffs],
+            "errors": {k: v for k, v in errors.items()},
+            "oracleErrors": oracle_err,
+            "skipped": skipped,
+            "byteExact": receipt,
+        }
+        with open(json_out, "w", encoding="utf-8") as f:
+            json.dump(doc, f, indent=2, sort_keys=True)
+            f.write("\n")
     return 1 if not ids or diffs or errors or oracle_err or unknown else 0
 
 

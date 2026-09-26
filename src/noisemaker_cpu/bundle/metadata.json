@@ -1,7 +1,7 @@
 {
   "provenance": {
     "source": "shaders.noisedeck.app CDN",
-    "version": "1.0",
+    "version": "1.0.183",
     "base": "https://shaders.noisedeck.app"
   },
   "effects": {
@@ -22275,6 +22275,19 @@
               "param": "viewMode",
               "eq": 2
             }
+          }
+        },
+        "filtering": {
+          "type": "int",
+          "default": 1,
+          "define": "FILTERING",
+          "choices": {
+            "isosurface": 0,
+            "voxel": 1
+          },
+          "ui": {
+            "label": "filtering",
+            "control": "dropdown"
           }
         }
       },
