@@ -1012,11 +1012,11 @@
     "skipped": 38
   },
   "cpu": {
-    "cpuHead": "bfbe54764eee87c8f67d2b281d5f304faad04a5b",
-    "cpuTree": "27fe4152f8a29955b7b572f671fa6f00a18dcc6c",
-    "revision": "8eeb7b5ac14eb37a8d16037f607a88ce63924cd3",
-    "snapshotRevision": "8eeb7b5ac14eb37a8d16037f607a88ce63924cd3",
-    "sourceDigest": "ceeccdd13b7b625b94c58dcfa318b4a253d5dc6d124e551233522fd5f32e399b"
+    "cpuHead": "4b590d2f7f607a2788a5bc7675288ec166d0b633",
+    "cpuTree": "3cc6f65be52ac09cc868eb1656c188f0693952f8",
+    "revision": "6a0af04d3c4f345ffab5e9f8e54e532216b4cdaa",
+    "snapshotRevision": "6a0af04d3c4f345ffab5e9f8e54e532216b4cdaa",
+    "sourceDigest": "6315004fe71950c4d687906ed81243bd85b3c3d2c2d171cd06675ac23ac2820a"
   },
   "diffs": [],
   "errors": {},
