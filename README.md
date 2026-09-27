@@ -26,7 +26,7 @@ Effect kernels are **transpiled directly from the upstream GLSL** served by the
 - Screen-space derivatives.
 - Bit-exact uint32/PCG hashing.
 
-**The current bundle contains 205 CPU catalog effects.** For the current 205-effect bundle, an image harness at worker source `912e6a9` compared the 167 single-frame effects runnable at the harness's fixed context with zero byte tolerance (all passing; the remaining 38 effects were excluded from that harness's context, and the 38 exclusions remain under review in `docs/COMPLETION_GAPS.md` GAP-001). The image harness's 167-effect result is recorded in `docs/COMPATIBILITY.md` §6. These 167 comparisons do not establish parity for the full 205-effect catalog, and no current full-catalog parity statement is made here.
+**The current bundle contains 205 CPU catalog effects.** For the current 205-effect bundle, the default image harness (8×8, seed 1, time 0.25) compares the 167 single-frame effects runnable at the harness's fixed context with zero byte tolerance (all passing; the remaining 38 effects are outside that harness's context and are each covered instead by a committed DSL chain that matches the same pinned oracle with zero byte tolerance — see `docs/COMPLETION_GAPS.md` §3, "Parity and authority reconciliation, 2026-09-27"). The image harness's 167-effect result is recorded in `docs/COMPATIBILITY.md` §6. The 5 authority-manifest effect IDs the catalog does not target (`render/meshLoader`, `render/meshRender`, `synth/roll`, `synth/scope`, `synth/spectrum`) are documented exclusions, and the tested contexts do not constitute the complete parameter matrix; no claim is made beyond the recorded cases.
 Iterated effects default to `iterationCount: 60`. Particle pipelines share state from `pointsEmit()` through their point and render steps.
 
 ## Install
@@ -80,15 +80,14 @@ pytest
 
 Cross-language parity against the JS engine (`scripts/parity.py`) needs a sibling
 `noisemaker-for-cpu` checkout and Node. The image harness's most recent
-source-bound result (worker at `912e6a9`, see `docs/COMPATIBILITY.md` §6)
-compared 167 effects with zero byte tolerance and reported 38 exclusions (see
-`docs/COMPATIBILITY.md` §6). No DSL-harness result is on record for this
-source. One independent numerical failure area (GAP-001 authority drift) and two
-landscape rejections remain open (see `docs/COMPLETION_GAPS.md` GAP-001;
-GAP-005 nondefault color/feedback parity closed 2026-09-26),
-and the 38 image-harness exclusions were not run in that harness's context, so
-full-catalog parity is unqualified. No parity result currently on record
-qualifies the 205-effect bundle as a whole.
+source-bound result (2026-09-27, see `docs/COMPATIBILITY.md` §6) compared 167
+effects with zero byte tolerance and reported 38 exclusions, each covered by a
+committed DSL byte-parity case against the same oracle; both valid
+`renderLandscape3d` filtering choices (`isosurface`, `voxel`) also match the
+oracle exactly, and authority reconciliation against immutable CDN build
+`1.0.190` finds 294/294 program GLSL hashes matching the bundle lock (GAP-001
+closed 2026-09-27; see `docs/COMPLETION_GAPS.md`). The tested contexts do not
+constitute the complete parameter matrix.
 
 ## License
 

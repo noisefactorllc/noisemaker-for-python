@@ -206,6 +206,7 @@ def test_loop_region_keeps_step_resources_isolated_byte_parity(tmp_path):
         ("fractal3d", "volumeSize: 4"),
         ("noise3d", "volumeSize: 4, seed: 0"),
         ("shape3d", "volumeSize: 4"),
+        ("heightmap3d", "volumeSize: 4"),
     ],
 )
 def test_volume_generator_render3d_byte_parity(tmp_path, generator, generator_params):
@@ -230,6 +231,29 @@ def test_volume_renderer_byte_parity(tmp_path, renderer_name):
 
     js = _js_render_dsl(program, str(tmp_path / f"{renderer_name}.png"), width=2, height=2, seed=1, time=0.25)
     py = render_dsl(program, width=2, height=2, seed=1, time=0.25)
+
+    assert _max_diff(js, py) == 0
+
+
+@pytest.mark.parametrize("filtering", [0, 1], ids=["isosurface", "voxel"])
+def test_landscape3d_filtering_byte_parity(tmp_path, filtering):
+    """Both valid renderLandscape3d `filtering` choices (the GAP-001 landscape
+    rejections) must render byte-identically to the oracle."""
+    program = (
+        "search synth3d, render\n"
+        f"noise3d(volumeSize: 4, seed: 0).renderLandscape3d(volumeSize: 4, filtering: {filtering}).write(o0)\n"
+        "render(o0)\n"
+    )
+
+    js = _js_render_dsl(
+        program,
+        str(tmp_path / f"landscape3d-{filtering}.png"),
+        width=8,
+        height=8,
+        seed=1,
+        time=0.25,
+    )
+    py = render_dsl(program, width=8, height=8, seed=1, time=0.25)
 
     assert _max_diff(js, py) == 0
 

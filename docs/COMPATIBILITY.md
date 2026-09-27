@@ -74,10 +74,10 @@ Historical measurements remain bound to their original revisions in [completion 
 | Minimum Python 3.11, other systems, upgrades | unverified | Runtime unavailable or workflow not executed. |
 | Default image parity | verified | 167 exact 8×8 comparisons against the recorded CPU snapshot. |
 | Nondefault alpha and feedback | verified | Fixed 2026-09-26 at this source: four-component solid colors and the feedback program byte-match the pinned oracle `bfbe5476` at 8-bit and rgba16f level per the committed fixtures in `tests/data/gap005-oracle/` (with seed-sensitivity and statefulness controls). GAP-005 closed. |
-| Current landscape filtering | failed | Both valid choices are rejected as unknown parameters. GAP-001. |
-| Complete current-authority parity | stale | Three shader differences, missing cases, incomplete parameter matrix, and later upstream language changes. |
-| Source-update parity enforcement | blocked | No current exact-source CI checks or complete parity gate. |
-| Release readiness | blocked | Package defect, numerical failures, authority drift, and platform limits remain. |
+| Current landscape filtering | verified | Fixed: both valid `renderLandscape3d` `filtering` choices (`isosurface`, `voxel`) render and byte-match the pinned oracle; committed as `test_landscape3d_filtering_byte_parity`. GAP-001 closed 2026-09-27. |
+| Complete current-authority parity | verified | Reconciled 2026-09-27 against immutable CDN build `1.0.190`: 294/294 program GLSL hashes match the bundle lock, 0 parameter-manifest differences, 0 unmatched programs; 205/205 targeted effects have zero-tolerance oracle-matched comparisons; 5 authority IDs are documented non-targets (§3). The complete parameter matrix remains unmeasured. |
+| Source-update parity enforcement | blocked | No current exact-source CI checks or complete parity gate. GAP-003. |
+| Release readiness | blocked | Exact-source CI and platform limits (macOS/Windows/Python 3.14) remain. |
 
 [Installed evidence](/Users/alex/.codex/automations/noisemaker-port-completion-audit/evidence-audit-20260925-090206/bounded-developer-workflows.json). [Parity evidence](/Users/alex/.codex/automations/noisemaker-port-completion-audit/evidence-audit-20260925-090206/independent-comparisons.json). [Artifact evidence](/Users/alex/.codex/automations/noisemaker-port-completion-audit/evidence-audit-20260925-090206/served-verification.json).
 
@@ -164,6 +164,28 @@ Current `filtering: isosurface` and `filtering: voxel` succeed in CPU and fail i
 Shader hashes differ for `classicNoisedeck/glitch:glitch`, `classicNoisedeck/noise:noise`, and `render/renderLandscape3d:landscape`.
 [Current parameter manifests and shader hashes](/Users/alex/.codex/automations/noisemaker-port-completion-audit/evidence-audit-20260925-090206/authority-comparison-retry.json). [Filtering cases](/Users/alex/.codex/automations/noisemaker-port-completion-audit/evidence-audit-20260925-090206/landscape-valid-choices.json).
 
+### Parity and authority reconciliation, 2026-09-27
+
+Environment: Linux x86_64 container, Python 3.13.13, NumPy 2.5.3, node 26.5.1. Port candidate at the publication commit carrying this row (base `77d47c583663b4b6e8f6e9297d6e906e4f3ca9cb`). Sibling oracle: noisemaker-for-cpu at `4b590d2f7f607a2788a5bc7675288ec166d0b633` (tree `3cc6f65be52ac09cc868eb1656c188f0693952f8`), upstream pin `6a0af04d3c4f345ffab5e9f8e54e532216b4cdaa`, source digest `6315004fe71950c4d687906ed81243bd85b3c3d2c2d171cd06675ac23ac2820a`.
+
+| Gate | Expected | Executed | Exact passes | Mismatches | Errors | Skips or missing |
+|---|---|---|---|---|---|---|
+| Existing default image sweep | 205 catalog effects | 167 | 167 | 0 | 0 | 38 excluded from this harness's context |
+| Exclusion-class DSL coverage | 38 | 38 | 38 | 0 | 0 | 0 |
+| Current landscape filtering choices | 2 | 2 | 2 | 0 | 0 | 0 |
+| Authority program GLSL vs bundle lock | 294 | 294 | 294 | 0 | 0 | 0 |
+| Authority parameter manifests | 205 | 205 | 205 | 0 | 0 | 0 |
+| Authority effect inventory | 210 IDs | 210 | 205 targeted | 0 | 0 | 5 documented non-targeted IDs |
+
+Commands and results:
+
+- `NOISEMAKER_CPU_DIR=<sibling checkout> PYTHONPATH=src .venv/bin/python scripts/parity.py --json parity-current.json` — exit 0: 167/167 byte-exact (zero tolerance), 0 diffs, 0 runtime errors, 0 oracle errors, 38 skipped. The regenerated JSON is equal to the committed node-free receipt `tests/data/parity-receipt-6a0af04d.json` (same counts, same per-case oracle and port SHA-256 entries).
+- `NOISEMAKER_CPU_DIR=<sibling checkout> .venv/bin/python -m pytest -q -p no:cacheprovider` — exit 0: **340 passed, 0 skipped** in 16m20s (prior full-suite baseline 337 passed at the 2026-09-26 sync; the delta is the three added cases: two `renderLandscape3d` filtering choices and one `heightmap3d` volume-generator case, all node-oracle byte-parity).
+- Landscape probes (both engines, 8×8, seed 1, time 0.25): `noise3d(volumeSize: 4, seed: 0).renderLandscape3d(volumeSize: 4, filtering: 0 | 1).write(o0)\nrender(o0)` — Python renders both choices and each matches the oracle's PNG at maximum absolute RGBA8 difference 0. These probes are committed as `test_landscape3d_filtering_byte_parity`; `synth3d/heightmap3d` was added to `test_volume_generator_render3d_byte_parity` (maxdiff 0).
+- Authority reconciliation, immutable inputs: manifest for exact CDN build `1.0.190` has SHA-256 `05c4d7b7744837ae90a3bb4c89e5403ff09448a74d9d7e824abb3d719ad3314e` and is byte-identical to the rolling `1.0` manifest. With `NM_SHADER_VERSION=1.0.190`, fetching all 205 targeted effects from the CDN and hashing each program's GLSL (`sha256(glsl.strip())`, the same function `transpiler/build.py` records in `bundle-lock.json`) matches all 294 lock entries, finds zero lock entries without an authority program, and finds zero parameter-manifest differences (post `shared_enums` normalization, same as the builder). The formerly differing programs `classicNoisedeck/glitch:glitch`, `classicNoisedeck/noise:noise`, and `render/renderLandscape3d:landscape` now match authority.
+- Denominator: 167 (image sweep) + 38 (exclusion-class DSL cases, all `_max_diff == 0`) = 205 targeted effects, each with at least one zero-tolerance oracle-matched, source-bound comparison. The 5 remaining authority IDs (`render/meshLoader`, `render/meshRender`, `synth/roll`, `synth/scope`, `synth/spectrum`) are documented non-targets in `transpiler/cdn.py`. 167 + 38 + 5 = 210 = the authority manifest inventory.
+- Standing limits: the tested contexts are fixed (image sweep 8×8 at defaults; DSL chains at 2×2/8×8/16×16, volumeSize 4); the complete parameter matrix, external-input shapes, and host versions are not re-measured here; node-gated tests execute only when the sibling oracle checkout is present.
+
 ### Daily review, 2026-09-25
 
 The daily review inspected worker audit `audit-20260925-090206` and post-worker commit `49d8e51ec4b71104dc03728c84c60cae3e2857d3`.
@@ -199,216 +221,216 @@ Current served declaration: 205 effect IDs. This inventory is not evidence of ex
 
 | Effect ID | Declared in served kit | Current full parity |
 |---|---|---|
-| `classicNoisedeck/bitEffects` | yes | unverified |
-| `classicNoisedeck/caustic` | yes | unverified |
-| `classicNoisedeck/cellNoise` | yes | unverified |
-| `classicNoisedeck/cellRefract` | yes | unverified |
-| `classicNoisedeck/coalesce` | yes | unverified |
-| `classicNoisedeck/colorLab` | yes | unverified |
-| `classicNoisedeck/composite` | yes | unverified |
-| `classicNoisedeck/effects` | yes | unverified |
-| `classicNoisedeck/fractal` | yes | unverified |
-| `classicNoisedeck/glitch` | yes | unverified |
-| `classicNoisedeck/kaleido` | yes | unverified |
-| `classicNoisedeck/lensDistortion` | yes | unverified |
-| `classicNoisedeck/moodscape` | yes | unverified |
-| `classicNoisedeck/noise` | yes | unverified |
-| `classicNoisedeck/noise3d` | yes | unverified |
-| `classicNoisedeck/refract` | yes | unverified |
-| `classicNoisedeck/shapeMixer` | yes | unverified |
-| `classicNoisedeck/shapes` | yes | unverified |
-| `classicNoisedeck/shapes3d` | yes | unverified |
-| `classicNoisedeck/splat` | yes | unverified |
-| `filter/adjust` | yes | unverified |
-| `filter/bloom` | yes | unverified |
-| `filter/blur` | yes | unverified |
-| `filter/bulge` | yes | unverified |
-| `filter/celShading` | yes | unverified |
-| `filter/channel` | yes | unverified |
-| `filter/chroma` | yes | unverified |
-| `filter/chromaticAberration` | yes | unverified |
-| `filter/chrome` | yes | unverified |
-| `filter/clouds` | yes | unverified |
-| `filter/colorReplace` | yes | unverified |
-| `filter/convolutionFeedback` | yes | unverified |
-| `filter/corrupt` | yes | unverified |
-| `filter/craquelure` | yes | unverified |
-| `filter/crt` | yes | unverified |
-| `filter/degauss` | yes | unverified |
-| `filter/deriv` | yes | unverified |
-| `filter/directionalBlur` | yes | unverified |
-| `filter/dither` | yes | unverified |
-| `filter/edge` | yes | unverified |
-| `filter/emboss` | yes | unverified |
-| `filter/extrude` | yes | unverified |
-| `filter/feedback` | yes | unverified |
-| `filter/fibers` | yes | unverified |
-| `filter/flipMirror` | yes | unverified |
-| `filter/fxaa` | yes | unverified |
-| `filter/glowingEdge` | yes | unverified |
-| `filter/glyphMap` | yes | unverified |
-| `filter/grade` | yes | unverified |
-| `filter/grain` | yes | unverified |
-| `filter/grime` | yes | unverified |
-| `filter/halftone` | yes | unverified |
-| `filter/hatch` | yes | unverified |
-| `filter/highPass` | yes | unverified |
-| `filter/historicPalette` | yes | unverified |
-| `filter/invert` | yes | unverified |
-| `filter/lens` | yes | unverified |
-| `filter/lensFlare` | yes | unverified |
-| `filter/lensWarp` | yes | unverified |
-| `filter/lightLeak` | yes | unverified |
-| `filter/lighting` | yes | unverified |
-| `filter/lowPoly` | yes | unverified |
-| `filter/median` | yes | unverified |
-| `filter/morphology` | yes | unverified |
-| `filter/mosaicTiles` | yes | unverified |
-| `filter/motionBlur` | yes | unverified |
-| `filter/normalMap` | yes | unverified |
-| `filter/normalize` | yes | unverified |
-| `filter/octaveWarp` | yes | unverified |
-| `filter/oilPaint` | yes | unverified |
-| `filter/osd` | yes | unverified |
-| `filter/outline` | yes | unverified |
-| `filter/palette` | yes | unverified |
-| `filter/parallax` | yes | unverified |
-| `filter/patchwork` | yes | unverified |
-| `filter/photocopy` | yes | unverified |
-| `filter/pinch` | yes | unverified |
-| `filter/pixelSort` | yes | unverified |
-| `filter/pixels` | yes | unverified |
-| `filter/plasticWrap` | yes | unverified |
-| `filter/polar` | yes | unverified |
-| `filter/pondRipples` | yes | unverified |
-| `filter/posterize` | yes | unverified |
-| `filter/prismaticAberration` | yes | unverified |
-| `filter/reindex` | yes | unverified |
-| `filter/relief` | yes | unverified |
-| `filter/repeat` | yes | unverified |
-| `filter/reverb` | yes | unverified |
-| `filter/ridge` | yes | unverified |
-| `filter/rotate` | yes | unverified |
-| `filter/scale` | yes | unverified |
-| `filter/scanlineError` | yes | unverified |
-| `filter/scatter` | yes | unverified |
-| `filter/scratches` | yes | unverified |
-| `filter/scroll` | yes | unverified |
-| `filter/seamless` | yes | unverified |
-| `filter/sharpen` | yes | unverified |
-| `filter/simpleAberration` | yes | unverified |
-| `filter/sine` | yes | unverified |
-| `filter/skew` | yes | unverified |
-| `filter/smooth` | yes | unverified |
-| `filter/smoothstep` | yes | unverified |
-| `filter/snow` | yes | unverified |
-| `filter/sobel` | yes | unverified |
-| `filter/spatter` | yes | unverified |
-| `filter/spinBlur` | yes | unverified |
-| `filter/spiral` | yes | unverified |
-| `filter/spookyTicker` | yes | unverified |
-| `filter/stamp` | yes | unverified |
-| `filter/step` | yes | unverified |
-| `filter/stipple` | yes | unverified |
-| `filter/strayHair` | yes | unverified |
-| `filter/strokes` | yes | unverified |
-| `filter/temporalAberration` | yes | unverified |
-| `filter/tetraColorArray` | yes | unverified |
-| `filter/tetraCosine` | yes | unverified |
-| `filter/text` | yes | unverified |
-| `filter/texture` | yes | unverified |
-| `filter/threshold` | yes | unverified |
-| `filter/tile` | yes | unverified |
-| `filter/tint` | yes | unverified |
-| `filter/translate` | yes | unverified |
-| `filter/tunnel` | yes | unverified |
-| `filter/unsharpMask` | yes | unverified |
-| `filter/vaseline` | yes | unverified |
-| `filter/vignette` | yes | unverified |
-| `filter/warp` | yes | unverified |
-| `filter/watercolor` | yes | unverified |
-| `filter/waves` | yes | unverified |
-| `filter/wind` | yes | unverified |
-| `filter/wobble` | yes | unverified |
-| `filter/wormhole` | yes | unverified |
-| `filter/zoomBlur` | yes | unverified |
-| `filter3d/flow3d` | yes | unverified |
-| `filter3d/palette3d` | yes | unverified |
-| `mixer/alphaMask` | yes | unverified |
-| `mixer/applyMode` | yes | unverified |
-| `mixer/blendMode` | yes | unverified |
-| `mixer/cellSplit` | yes | unverified |
-| `mixer/centerMask` | yes | unverified |
-| `mixer/channelCombine` | yes | unverified |
-| `mixer/distortion` | yes | unverified |
-| `mixer/focusBlur` | yes | unverified |
-| `mixer/mashup` | yes | unverified |
-| `mixer/patternMix` | yes | unverified |
-| `mixer/shadow` | yes | unverified |
-| `mixer/shapeMask` | yes | unverified |
-| `mixer/split` | yes | unverified |
-| `mixer/thresholdMix` | yes | unverified |
-| `mixer/uvRemap` | yes | unverified |
-| `points/attractor` | yes | unverified |
-| `points/buddhabrot` | yes | unverified |
-| `points/dla` | yes | unverified |
-| `points/flock` | yes | unverified |
-| `points/flow` | yes | unverified |
-| `points/heightGrid` | yes | unverified |
-| `points/hydraulic` | yes | unverified |
-| `points/lenia` | yes | unverified |
-| `points/life` | yes | unverified |
-| `points/physarum` | yes | unverified |
-| `points/physical` | yes | unverified |
-| `render/loopBegin` | yes | unverified |
-| `render/loopEnd` | yes | unverified |
-| `render/meshLoader` | no | unverified |
-| `render/meshRender` | no | unverified |
-| `render/pointsBillboardRender` | yes | unverified |
-| `render/pointsEmit` | yes | unverified |
-| `render/pointsRender` | yes | unverified |
-| `render/render3d` | yes | unverified |
-| `render/renderCubemap3d` | yes | unverified |
-| `render/renderCubemapSurface` | yes | unverified |
-| `render/renderLandscape3d` | yes | unverified |
-| `render/renderLit3d` | yes | unverified |
-| `synth/bitwise` | yes | unverified |
-| `synth/cell` | yes | unverified |
-| `synth/cellularAutomata` | yes | unverified |
-| `synth/curl` | yes | unverified |
-| `synth/gabor` | yes | unverified |
-| `synth/gradient` | yes | unverified |
-| `synth/julia` | yes | unverified |
-| `synth/mandala` | yes | unverified |
-| `synth/mandelbrot` | yes | unverified |
-| `synth/media` | yes | unverified |
-| `synth/mnca` | yes | unverified |
-| `synth/modPattern` | yes | unverified |
-| `synth/navierStokes` | yes | unverified |
-| `synth/newton` | yes | unverified |
-| `synth/noise` | yes | unverified |
-| `synth/osc2d` | yes | unverified |
-| `synth/pattern` | yes | unverified |
-| `synth/perlin` | yes | unverified |
-| `synth/polygon` | yes | unverified |
-| `synth/reactionDiffusion` | yes | unverified |
-| `synth/remap` | yes | unverified |
-| `synth/roll` | no | unverified |
-| `synth/sacredGeometry` | yes | unverified |
-| `synth/scope` | no | unverified |
-| `synth/shape` | yes | unverified |
-| `synth/solid` | yes | unverified |
-| `synth/spectrum` | no | unverified |
-| `synth/subdivide` | yes | unverified |
-| `synth/testPattern` | yes | unverified |
-| `synth3d/cell3d` | yes | unverified |
-| `synth3d/cellularAutomata3d` | yes | unverified |
-| `synth3d/flythrough3d` | yes | unverified |
-| `synth3d/fractal3d` | yes | unverified |
-| `synth3d/heightmap3d` | yes | unverified |
-| `synth3d/noise3d` | yes | unverified |
-| `synth3d/reactionDiffusion3d` | yes | unverified |
-| `synth3d/shape3d` | yes | unverified |
+| `classicNoisedeck/bitEffects` | yes | exact default sweep (§3, 2026-09-27) |
+| `classicNoisedeck/caustic` | yes | exact default sweep (§3, 2026-09-27) |
+| `classicNoisedeck/cellNoise` | yes | exact default sweep (§3, 2026-09-27) |
+| `classicNoisedeck/cellRefract` | yes | exact default sweep (§3, 2026-09-27) |
+| `classicNoisedeck/coalesce` | yes | exact default sweep (§3, 2026-09-27) |
+| `classicNoisedeck/colorLab` | yes | exact default sweep (§3, 2026-09-27) |
+| `classicNoisedeck/composite` | yes | exact default sweep (§3, 2026-09-27) |
+| `classicNoisedeck/effects` | yes | exact default sweep (§3, 2026-09-27) |
+| `classicNoisedeck/fractal` | yes | exact default sweep (§3, 2026-09-27) |
+| `classicNoisedeck/glitch` | yes | exact default sweep (§3, 2026-09-27) |
+| `classicNoisedeck/kaleido` | yes | exact default sweep (§3, 2026-09-27) |
+| `classicNoisedeck/lensDistortion` | yes | exact default sweep (§3, 2026-09-27) |
+| `classicNoisedeck/moodscape` | yes | exact default sweep (§3, 2026-09-27) |
+| `classicNoisedeck/noise` | yes | exact default sweep (§3, 2026-09-27) |
+| `classicNoisedeck/noise3d` | yes | exact default sweep (§3, 2026-09-27) |
+| `classicNoisedeck/refract` | yes | exact default sweep (§3, 2026-09-27) |
+| `classicNoisedeck/shapeMixer` | yes | exact default sweep (§3, 2026-09-27) |
+| `classicNoisedeck/shapes` | yes | exact default sweep (§3, 2026-09-27) |
+| `classicNoisedeck/shapes3d` | yes | exact default sweep (§3, 2026-09-27) |
+| `classicNoisedeck/splat` | yes | exact default sweep (§3, 2026-09-27) |
+| `filter/adjust` | yes | exact default sweep (§3, 2026-09-27) |
+| `filter/bloom` | yes | exact default sweep (§3, 2026-09-27) |
+| `filter/blur` | yes | exact default sweep (§3, 2026-09-27) |
+| `filter/bulge` | yes | exact default sweep (§3, 2026-09-27) |
+| `filter/celShading` | yes | exact default sweep (§3, 2026-09-27) |
+| `filter/channel` | yes | exact default sweep (§3, 2026-09-27) |
+| `filter/chroma` | yes | exact default sweep (§3, 2026-09-27) |
+| `filter/chromaticAberration` | yes | exact default sweep (§3, 2026-09-27) |
+| `filter/chrome` | yes | exact default sweep (§3, 2026-09-27) |
+| `filter/clouds` | yes | exact default sweep (§3, 2026-09-27) |
+| `filter/colorReplace` | yes | exact default sweep (§3, 2026-09-27) |
+| `filter/convolutionFeedback` | yes | exact DSL chain (§3, 2026-09-27) |
+| `filter/corrupt` | yes | exact default sweep (§3, 2026-09-27) |
+| `filter/craquelure` | yes | exact default sweep (§3, 2026-09-27) |
+| `filter/crt` | yes | exact default sweep (§3, 2026-09-27) |
+| `filter/degauss` | yes | exact default sweep (§3, 2026-09-27) |
+| `filter/deriv` | yes | exact default sweep (§3, 2026-09-27) |
+| `filter/directionalBlur` | yes | exact default sweep (§3, 2026-09-27) |
+| `filter/dither` | yes | exact default sweep (§3, 2026-09-27) |
+| `filter/edge` | yes | exact default sweep (§3, 2026-09-27) |
+| `filter/emboss` | yes | exact default sweep (§3, 2026-09-27) |
+| `filter/extrude` | yes | exact default sweep (§3, 2026-09-27) |
+| `filter/feedback` | yes | exact DSL chain (§3, 2026-09-27) |
+| `filter/fibers` | yes | exact default sweep (§3, 2026-09-27) |
+| `filter/flipMirror` | yes | exact default sweep (§3, 2026-09-27) |
+| `filter/fxaa` | yes | exact default sweep (§3, 2026-09-27) |
+| `filter/glowingEdge` | yes | exact default sweep (§3, 2026-09-27) |
+| `filter/glyphMap` | yes | exact default sweep (§3, 2026-09-27) |
+| `filter/grade` | yes | exact default sweep (§3, 2026-09-27) |
+| `filter/grain` | yes | exact default sweep (§3, 2026-09-27) |
+| `filter/grime` | yes | exact default sweep (§3, 2026-09-27) |
+| `filter/halftone` | yes | exact default sweep (§3, 2026-09-27) |
+| `filter/hatch` | yes | exact default sweep (§3, 2026-09-27) |
+| `filter/highPass` | yes | exact default sweep (§3, 2026-09-27) |
+| `filter/historicPalette` | yes | exact default sweep (§3, 2026-09-27) |
+| `filter/invert` | yes | exact default sweep (§3, 2026-09-27) |
+| `filter/lens` | yes | exact default sweep (§3, 2026-09-27) |
+| `filter/lensFlare` | yes | exact default sweep (§3, 2026-09-27) |
+| `filter/lensWarp` | yes | exact default sweep (§3, 2026-09-27) |
+| `filter/lightLeak` | yes | exact default sweep (§3, 2026-09-27) |
+| `filter/lighting` | yes | exact default sweep (§3, 2026-09-27) |
+| `filter/lowPoly` | yes | exact default sweep (§3, 2026-09-27) |
+| `filter/median` | yes | exact default sweep (§3, 2026-09-27) |
+| `filter/morphology` | yes | exact default sweep (§3, 2026-09-27) |
+| `filter/mosaicTiles` | yes | exact default sweep (§3, 2026-09-27) |
+| `filter/motionBlur` | yes | exact DSL chain (§3, 2026-09-27) |
+| `filter/normalMap` | yes | exact default sweep (§3, 2026-09-27) |
+| `filter/normalize` | yes | exact default sweep (§3, 2026-09-27) |
+| `filter/octaveWarp` | yes | exact default sweep (§3, 2026-09-27) |
+| `filter/oilPaint` | yes | exact default sweep (§3, 2026-09-27) |
+| `filter/osd` | yes | exact default sweep (§3, 2026-09-27) |
+| `filter/outline` | yes | exact default sweep (§3, 2026-09-27) |
+| `filter/palette` | yes | exact default sweep (§3, 2026-09-27) |
+| `filter/parallax` | yes | exact default sweep (§3, 2026-09-27) |
+| `filter/patchwork` | yes | exact default sweep (§3, 2026-09-27) |
+| `filter/photocopy` | yes | exact default sweep (§3, 2026-09-27) |
+| `filter/pinch` | yes | exact default sweep (§3, 2026-09-27) |
+| `filter/pixelSort` | yes | exact default sweep (§3, 2026-09-27) |
+| `filter/pixels` | yes | exact default sweep (§3, 2026-09-27) |
+| `filter/plasticWrap` | yes | exact default sweep (§3, 2026-09-27) |
+| `filter/polar` | yes | exact default sweep (§3, 2026-09-27) |
+| `filter/pondRipples` | yes | exact default sweep (§3, 2026-09-27) |
+| `filter/posterize` | yes | exact default sweep (§3, 2026-09-27) |
+| `filter/prismaticAberration` | yes | exact default sweep (§3, 2026-09-27) |
+| `filter/reindex` | yes | exact default sweep (§3, 2026-09-27) |
+| `filter/relief` | yes | exact default sweep (§3, 2026-09-27) |
+| `filter/repeat` | yes | exact default sweep (§3, 2026-09-27) |
+| `filter/reverb` | yes | exact default sweep (§3, 2026-09-27) |
+| `filter/ridge` | yes | exact default sweep (§3, 2026-09-27) |
+| `filter/rotate` | yes | exact default sweep (§3, 2026-09-27) |
+| `filter/scale` | yes | exact default sweep (§3, 2026-09-27) |
+| `filter/scanlineError` | yes | exact default sweep (§3, 2026-09-27) |
+| `filter/scatter` | yes | exact default sweep (§3, 2026-09-27) |
+| `filter/scratches` | yes | exact default sweep (§3, 2026-09-27) |
+| `filter/scroll` | yes | exact default sweep (§3, 2026-09-27) |
+| `filter/seamless` | yes | exact default sweep (§3, 2026-09-27) |
+| `filter/sharpen` | yes | exact default sweep (§3, 2026-09-27) |
+| `filter/simpleAberration` | yes | exact default sweep (§3, 2026-09-27) |
+| `filter/sine` | yes | exact default sweep (§3, 2026-09-27) |
+| `filter/skew` | yes | exact default sweep (§3, 2026-09-27) |
+| `filter/smooth` | yes | exact default sweep (§3, 2026-09-27) |
+| `filter/smoothstep` | yes | exact default sweep (§3, 2026-09-27) |
+| `filter/snow` | yes | exact default sweep (§3, 2026-09-27) |
+| `filter/sobel` | yes | exact default sweep (§3, 2026-09-27) |
+| `filter/spatter` | yes | exact default sweep (§3, 2026-09-27) |
+| `filter/spinBlur` | yes | exact default sweep (§3, 2026-09-27) |
+| `filter/spiral` | yes | exact default sweep (§3, 2026-09-27) |
+| `filter/spookyTicker` | yes | exact default sweep (§3, 2026-09-27) |
+| `filter/stamp` | yes | exact default sweep (§3, 2026-09-27) |
+| `filter/step` | yes | exact default sweep (§3, 2026-09-27) |
+| `filter/stipple` | yes | exact default sweep (§3, 2026-09-27) |
+| `filter/strayHair` | yes | exact default sweep (§3, 2026-09-27) |
+| `filter/strokes` | yes | exact default sweep (§3, 2026-09-27) |
+| `filter/temporalAberration` | yes | exact DSL chain (§3, 2026-09-27) |
+| `filter/tetraColorArray` | yes | exact default sweep (§3, 2026-09-27) |
+| `filter/tetraCosine` | yes | exact default sweep (§3, 2026-09-27) |
+| `filter/text` | yes | exact default sweep (§3, 2026-09-27) |
+| `filter/texture` | yes | exact default sweep (§3, 2026-09-27) |
+| `filter/threshold` | yes | exact default sweep (§3, 2026-09-27) |
+| `filter/tile` | yes | exact default sweep (§3, 2026-09-27) |
+| `filter/tint` | yes | exact default sweep (§3, 2026-09-27) |
+| `filter/translate` | yes | exact default sweep (§3, 2026-09-27) |
+| `filter/tunnel` | yes | exact default sweep (§3, 2026-09-27) |
+| `filter/unsharpMask` | yes | exact default sweep (§3, 2026-09-27) |
+| `filter/vaseline` | yes | exact default sweep (§3, 2026-09-27) |
+| `filter/vignette` | yes | exact default sweep (§3, 2026-09-27) |
+| `filter/warp` | yes | exact default sweep (§3, 2026-09-27) |
+| `filter/watercolor` | yes | exact default sweep (§3, 2026-09-27) |
+| `filter/waves` | yes | exact default sweep (§3, 2026-09-27) |
+| `filter/wind` | yes | exact default sweep (§3, 2026-09-27) |
+| `filter/wobble` | yes | exact default sweep (§3, 2026-09-27) |
+| `filter/wormhole` | yes | exact default sweep (§3, 2026-09-27) |
+| `filter/zoomBlur` | yes | exact default sweep (§3, 2026-09-27) |
+| `filter3d/flow3d` | yes | exact DSL chain (§3, 2026-09-27) |
+| `filter3d/palette3d` | yes | exact DSL chain (§3, 2026-09-27) |
+| `mixer/alphaMask` | yes | exact default sweep (§3, 2026-09-27) |
+| `mixer/applyMode` | yes | exact default sweep (§3, 2026-09-27) |
+| `mixer/blendMode` | yes | exact default sweep (§3, 2026-09-27) |
+| `mixer/cellSplit` | yes | exact default sweep (§3, 2026-09-27) |
+| `mixer/centerMask` | yes | exact default sweep (§3, 2026-09-27) |
+| `mixer/channelCombine` | yes | exact default sweep (§3, 2026-09-27) |
+| `mixer/distortion` | yes | exact default sweep (§3, 2026-09-27) |
+| `mixer/focusBlur` | yes | exact default sweep (§3, 2026-09-27) |
+| `mixer/mashup` | yes | exact default sweep (§3, 2026-09-27) |
+| `mixer/patternMix` | yes | exact default sweep (§3, 2026-09-27) |
+| `mixer/shadow` | yes | exact default sweep (§3, 2026-09-27) |
+| `mixer/shapeMask` | yes | exact default sweep (§3, 2026-09-27) |
+| `mixer/split` | yes | exact default sweep (§3, 2026-09-27) |
+| `mixer/thresholdMix` | yes | exact default sweep (§3, 2026-09-27) |
+| `mixer/uvRemap` | yes | exact default sweep (§3, 2026-09-27) |
+| `points/attractor` | yes | exact DSL chain (§3, 2026-09-27) |
+| `points/buddhabrot` | yes | exact DSL chain (§3, 2026-09-27) |
+| `points/dla` | yes | exact DSL chain (§3, 2026-09-27) |
+| `points/flock` | yes | exact DSL chain (§3, 2026-09-27) |
+| `points/flow` | yes | exact DSL chain (§3, 2026-09-27) |
+| `points/heightGrid` | yes | exact default sweep (§3, 2026-09-27) |
+| `points/hydraulic` | yes | exact DSL chain (§3, 2026-09-27) |
+| `points/lenia` | yes | exact DSL chain (§3, 2026-09-27) |
+| `points/life` | yes | exact DSL chain (§3, 2026-09-27) |
+| `points/physarum` | yes | exact DSL chain (§3, 2026-09-27) |
+| `points/physical` | yes | exact DSL chain (§3, 2026-09-27) |
+| `render/loopBegin` | yes | exact DSL chain (§3, 2026-09-27) |
+| `render/loopEnd` | yes | exact DSL chain (§3, 2026-09-27) |
+| `render/meshLoader` | no | not targeted (documented exclusion) |
+| `render/meshRender` | no | not targeted (documented exclusion) |
+| `render/pointsBillboardRender` | yes | exact DSL chain (§3, 2026-09-27) |
+| `render/pointsEmit` | yes | exact DSL chain (§3, 2026-09-27) |
+| `render/pointsRender` | yes | exact DSL chain (§3, 2026-09-27) |
+| `render/render3d` | yes | exact DSL chain (§3, 2026-09-27) |
+| `render/renderCubemap3d` | yes | exact DSL chain (§3, 2026-09-27) |
+| `render/renderCubemapSurface` | yes | exact DSL chain (§3, 2026-09-27) |
+| `render/renderLandscape3d` | yes | exact DSL chain (§3, 2026-09-27) |
+| `render/renderLit3d` | yes | exact DSL chain (§3, 2026-09-27) |
+| `synth/bitwise` | yes | exact default sweep (§3, 2026-09-27) |
+| `synth/cell` | yes | exact default sweep (§3, 2026-09-27) |
+| `synth/cellularAutomata` | yes | exact DSL chain (§3, 2026-09-27) |
+| `synth/curl` | yes | exact default sweep (§3, 2026-09-27) |
+| `synth/gabor` | yes | exact default sweep (§3, 2026-09-27) |
+| `synth/gradient` | yes | exact default sweep (§3, 2026-09-27) |
+| `synth/julia` | yes | exact default sweep (§3, 2026-09-27) |
+| `synth/mandala` | yes | exact default sweep (§3, 2026-09-27) |
+| `synth/mandelbrot` | yes | exact default sweep (§3, 2026-09-27) |
+| `synth/media` | yes | exact default sweep (§3, 2026-09-27) |
+| `synth/mnca` | yes | exact DSL chain (§3, 2026-09-27) |
+| `synth/modPattern` | yes | exact default sweep (§3, 2026-09-27) |
+| `synth/navierStokes` | yes | exact DSL chain (§3, 2026-09-27) |
+| `synth/newton` | yes | exact default sweep (§3, 2026-09-27) |
+| `synth/noise` | yes | exact default sweep (§3, 2026-09-27) |
+| `synth/osc2d` | yes | exact default sweep (§3, 2026-09-27) |
+| `synth/pattern` | yes | exact default sweep (§3, 2026-09-27) |
+| `synth/perlin` | yes | exact default sweep (§3, 2026-09-27) |
+| `synth/polygon` | yes | exact default sweep (§3, 2026-09-27) |
+| `synth/reactionDiffusion` | yes | exact DSL chain (§3, 2026-09-27) |
+| `synth/remap` | yes | exact default sweep (§3, 2026-09-27) |
+| `synth/roll` | no | not targeted (documented exclusion) |
+| `synth/sacredGeometry` | yes | exact default sweep (§3, 2026-09-27) |
+| `synth/scope` | no | not targeted (documented exclusion) |
+| `synth/shape` | yes | exact default sweep (§3, 2026-09-27) |
+| `synth/solid` | yes | exact default sweep (§3, 2026-09-27) |
+| `synth/spectrum` | no | not targeted (documented exclusion) |
+| `synth/subdivide` | yes | exact default sweep (§3, 2026-09-27) |
+| `synth/testPattern` | yes | exact default sweep (§3, 2026-09-27) |
+| `synth3d/cell3d` | yes | exact DSL chain (§3, 2026-09-27) |
+| `synth3d/cellularAutomata3d` | yes | exact DSL chain (§3, 2026-09-27) |
+| `synth3d/flythrough3d` | yes | exact DSL chain (§3, 2026-09-27) |
+| `synth3d/fractal3d` | yes | exact DSL chain (§3, 2026-09-27) |
+| `synth3d/heightmap3d` | yes | exact DSL chain (§3, 2026-09-27) |
+| `synth3d/noise3d` | yes | exact DSL chain (§3, 2026-09-27) |
+| `synth3d/reactionDiffusion3d` | yes | exact DSL chain (§3, 2026-09-27) |
+| `synth3d/shape3d` | yes | exact DSL chain (§3, 2026-09-27) |
 
 ## 4. Evidence
 
@@ -481,11 +503,10 @@ A successful dispatch or unit-test summary does not establish a full rendered ga
 
 ## 5. Open compatibility limits
 
-Current order: correct [GAP-004](COMPLETION_GAPS.md#gap-004-built-distributions-omit-required-bundle-metadata), then [GAP-005](COMPLETION_GAPS.md#gap-005-nondefault-output-differs-from-the-cpu-oracle).
-Next, reconcile GAP-001 authority differences and complete GAP-002 host qualification and GAP-003 release enforcement.
-Require wheel-only output, exact recorded comparisons, both valid landscape modes, and complete denominators.
+Current order: [GAP-001](COMPLETION_GAPS.md#gap-001-current-authority-and-parity-qualification) closed 2026-09-27 (authority reconciled against immutable CDN `1.0.190`; 167/167 default image comparisons and all 38 exclusion-class DSL chains byte-exact against the pinned oracle; both landscape filtering choices match). Next: [GAP-003](COMPLETION_GAPS.md#gap-003-distribution-and-release-qualification) exact-source CI requires workflow authority this implementation job does not hold.
+Require wheel-only output, exact recorded comparisons, and complete denominators.
 
-Next bounded check: Install the built wheel in a fresh Python 3.11 environment and a current supported Python environment. Run the documented CLI to produce a PNG, exercise invalid DSL and recovery, then compare every declared effect against an immutable CPU oracle. Require wheel-only imports and retain skips and missing effects toward the 210-ID inventory.
+Next bounded check: Add the exact-source CI gate that runs the suite — including the node-free parity receipt — and wheel/sdist artifact verification (workflow authority required). Retain skips and missing effects toward the 210-ID inventory.
 See the stable entries in [completion gaps](COMPLETION_GAPS.md).
 
 See [GAP-001 and the complete gap register](COMPLETION_GAPS.md#4-known-gaps) for evidence, dependencies, and acceptance criteria.
@@ -499,6 +520,8 @@ All eligible ports have equal priority. Full parity and zero skipped cases remai
 Implementation corrections remain with the separate job. This report does not advance the parity checkpoint.
 
 ## 6. History
+
+2026-09-27 parity and authority reconciliation at the candidate commit carrying this entry (base `77d47c583663b4b6e8f6e9297d6e906e4f3ca9cb`): GAP-001 closed — 167/167 default image comparisons byte-exact against the pinned oracle `4b590d2f7f607a2788a5bc7675288ec166d0b633`; all 38 image-harness exclusions each covered by a committed zero-byte DSL chain case (added `renderLandscape3d` filtering isosurface/voxel and `synth3d/heightmap3d`); authority reconciliation vs immutable CDN `1.0.190` shows 294/294 program GLSL hashes and 0 parameter-manifest differences; both landscape filtering choices match the oracle exactly (§3, "Parity and authority reconciliation, 2026-09-27").
 
 2026-09-25 daily review at `49d8e51ec4b71104dc03728c84c60cae3e2857d3`: reviewed worker audit `audit-20260925-090206` (published in `4ff7b03247b59cead0b63a7ee3a7b5697f7bf58e`).
 Verified post-audit commit `49d8e51ec4b71104dc03728c84c60cae3e2857d3` in `tests/test_parity.py`.
