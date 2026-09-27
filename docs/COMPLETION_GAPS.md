@@ -279,7 +279,8 @@ These entries record missing qualification. They do not infer implementation def
 - Next check: Add the exact-source CI gate that runs the suite — including the node-free parity receipt — and wheel/sdist artifact verification. The enforcement exists in-repo (tests/test_parity_receipt.py + the full suite), but no repository workflow executes tests at this source (exact-source CI: 0 runs, 0 checks; the sole workflow `export-kit.yml` is a dispatch to the downstream kit release), and this implementation job holds no workflow authority. macOS, Windows, and Python 3.14 also remain untested on this Linux-only harness, and real version-to-version upgrade remains untestable at version 0.0.0.
 - Evidence: Current worker methods in section 3. No closure.
 
-- Status: open. Priority: P2. Category: release.
+- Status: blocked. Priority: P2. Category: release.
+- Blocked reason (2026-09-27): the sole remaining action — adding the exact-source CI workflow — requires repository workflow authority that this automation does not hold and no human operator acts on handoffs. A test workflow was previously attempted and rejected as outside an implementation job's workflow authority; the current supervisor control re-confirms workflow changes require explicit job authority. Every automation-reachable criterion is complete: wheel/sdist byte-inventory verification, installed workflows, notices, dependencies, node-free parity receipt (261 passed / 79 skipped at `165e560bad0fcdecba553ff22c0cbbdaa6d0ecdb`, node-free full suite re-run 2026-09-27; a node-free run cannot substitute for the missing exact-source CI gate), macOS/Windows/Python 3.14 unavailable on this Linux-only harness and recorded explicitly.
 - Affected scope: Actual artifact, dependencies, notices, version promises, and release evidence.
 - Expected behavior: The delivered artifact supports its documented installation and first useful result.
 - Observed behavior: Artifact reproduction, installation, upgrade, removal, notices, and dependencies are now verified at the merged source. Release qualification remains blocked on the missing exact-source test/parity CI gate.
@@ -288,7 +289,7 @@ These entries record missing qualification. They do not infer implementation def
 - Dependencies: GAP-002 complete for the candidate. Source CI is distinguished from downstream publication: the export-kit dispatch and scaffold release checks publish the served kit and do not run this repository's tests.
 - Acceptance criteria: Match artifact bytes to their inventory. Check notices and dependencies. Pass installation, examples, upgrade, and removal.
 - Required checks: Inspect exact-source CI jobs and actual render legs. Count skips and errors rather than trusting green summaries.
-- Last verification: 2026-09-26. This register does not approve a release.
+- Last verification: 2026-09-27 (blocked status; node-free suite re-run at the candidate revision; no exact-source CI run exists). This register does not approve a release.
 
 ### GAP-004: built distributions omit required bundle metadata
 
