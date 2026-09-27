@@ -101,6 +101,15 @@ The matrix below retains the earlier measured scope. A historical verified row i
 
 ## 3. Parity coverage
 
+### Source-lock sync, 2026-09-27 (noisemaker-for-cpu `4b590d2f7f60`..`7a824744cb56`)
+
+Range audit of the sibling noisemaker-for-cpu `4b590d2f7f607a2788a5bc7675288ec166d0b633..7a824744cb563f2280811f04e5a49f6792ed319d` against a fresh clone (`git clone https://github.com/noisefactorllc/noisemaker-for-cpu.git`, checkout `7a824744cb563f2280811f04e5a49f6792ed319d`): 6 commits — `7145223`/`12db707`/`901bbd9`/`64d7ea4` are audit/docs records and CPU-side test characterization; `9683091` bumps the upstream source lock to noisemaker@`7443f6e6180300a45c5b97608459e5094504659d` (digest `e1ffce78499ae9a3994f3035e0f0e1fd8ca1098a9511e013fa444a5177eb523b`) with `shaders/effects` byte-identical to the prior pin (the committed pinned-source manifest diff in that repo shows the only changed upstream files are `shaders/src/lang/*` — a `predictReplacement`/preflight layer on upstream `replaceEffect` mutation APIs that neither the -cpu port nor this port contains); `7a82474` (GAP-006) is docs/packaging only (`package.json` `files`, README, audit records). No `shaders/effects` entry changed, so the ported effect catalog is byte-identical and no -python source or bundle change applies. Port per repo convention: `tests/test_parity.py` source-lock assertions advanced to `7443f6e6...`/`e1ffce78...`; node-free parity receipt regenerated against the sibling checkout at `7a824744cb56` (tree `7c68f12928719dc4e841971ac28d3f3db7e28e73`) as `tests/data/parity-receipt-7443f6e6.json`, replacing `parity-receipt-6a0af04d.json`; its `byteExact` (167/167 effects, zero tolerance), settings, and counts are identical to the superseded receipt — only the CPU provenance fields moved. No gap closed.
+
+Environment: Linux x86_64 container, Python 3.11.2, NumPy 2.5.3, node 26.5.1; sibling oracle `NOISEMAKER_CPU_DIR` at `7a824744cb563f2280811f04e5a49f6792ed319d`, upstream pin `7443f6e6180300a45c5b97608459e5094504659d`, source digest `e1ffce78499ae9a3994f3035e0f0e1fd8ca1098a9511e013fa444a5177eb523b`, tree `7c68f12928719dc4e841971ac28d3f3db7e28e73`.
+
+- `scripts/parity.py --json` — exit 0: 167/167 byte-exact (zero tolerance), 0 diffs, 0 runtime errors, 0 oracle errors, 38 skipped; per-case SHA-256 entries identical to the superseded `parity-receipt-6a0af04d.json`, only the CPU provenance fields moved.
+- `tests/test_parity_receipt.py` at the new pin: 4 passed (including the regeneration check `test_receipt_is_current_when_the_oracle_is_available`, which now runs against the live sibling at `7a824744cb56` instead of skipping).
+
 ### Worker audit, 2026-09-25
 
 | Gate | Expected | Executed | Exact passes | Mismatches | Errors | Skips or missing |
