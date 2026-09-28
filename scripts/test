@@ -1,0 +1,18 @@
+#!/bin/sh
+# Runs this repository's test suite. Exits nonzero on any failure.
+# Needs: python3 (>=3.11), curl, network for the first dependency install.
+# Everything installs under the temp dir; no sibling checkout is required —
+# the node-oracle parity tests skip themselves when no -cpu sibling is present.
+set -eu
+cd "$(dirname "$0")/.."
+VENV="${TMPDIR:-/tmp}/noisemaker-py-test-venv"
+if [ ! -x "$VENV/bin/python" ]; then
+    # Some minimal distros ship python3 without ensurepip (no python3-venv
+    # package); create the venv without pip and bootstrap pip from the network.
+    python3 -m venv --without-pip "$VENV"
+    curl -fsSL https://bootstrap.pypa.io/get-pip.py -o "$VENV/get-pip.py"
+    "$VENV/bin/python" "$VENV/get-pip.py" >/dev/null
+    rm -f "$VENV/get-pip.py"
+fi
+"$VENV/bin/pip" install -q -e '.[dev,build]'
+exec "$VENV/bin/python" -m pytest -q
