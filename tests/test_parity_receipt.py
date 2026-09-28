@@ -93,11 +93,31 @@ def test_receipt_is_current_when_the_oracle_is_available():
     fresh = json.loads(Path(tmp_path).read_text(encoding="utf-8"))
     assert fresh["byteExact"].keys() == doc["byteExact"].keys()
     # Node's zlib output can differ across platforms while decoding to identical
-    # pixels. Keep its PNG hash as provenance; compare exact RGBA8 on both sides
-    # and the port's deterministic PNG bytes against the committed receipt.
+    # pixels. Keep its PNG hash as provenance; compare exact RGBA8 on both sides.
+    # The port's PNG bytes pass through the host zlib as well: a different zlib
+    # build may compress byte-identical scanlines differently (observed for
+    # classicNoisedeck/shapes3d on Windows where the decoded RGBA8 still matched
+    # exactly). The port's contract is pixel-identical output, so where the
+    # compressed bytes differ, require the fresh PNG hash to reproduce on this
+    # host from the same render and to decode to the committed RGBA8 bytes.
+    effects = parity_harness._meta()["effects"]
     for effect_id, expected in doc["byteExact"].items():
-        for key in ("oracleRgba8Sha256", "pythonRgba8Sha256", "pythonPngSha256"):
-            assert fresh["byteExact"][effect_id][key] == expected[key], (effect_id, key)
+        fresh_entry = fresh["byteExact"][effect_id]
+        for key in ("oracleRgba8Sha256", "pythonRgba8Sha256"):
+            assert fresh_entry[key] == expected[key], (effect_id, key)
+        if fresh_entry["pythonPngSha256"] == expected["pythonPngSha256"]:
+            continue
+        kind = effects[effect_id]["kind"]
+        ext = effects[effect_id].get("externalTexture")
+        py = parity_harness.py_render(effect_id, kind, ext)
+        png = parity_harness.encode_png(py)
+        assert hashlib.sha256(png).hexdigest() == fresh_entry["pythonPngSha256"], (
+            effect_id,
+            "fresh receipt PNG hash does not reproduce on this host",
+        )
+        assert (
+            hashlib.sha256(parity_harness.decode_png(png).to_rgba8()).hexdigest() == expected["pythonRgba8Sha256"]
+        ), (effect_id, "fresh PNG does not decode to the committed RGBA8 pixels")
     assert result.returncode == 0
 
 

@@ -50,7 +50,7 @@ def test_solid_parity(tmp_path):
 def test_new_classic_image_effect_parity(tmp_path, effect_id):
     js = _js_render(
         ["effect", effect_id, "--width", "8", "--height", "8", "--seed", "1", "--time", "0.25"],
-        str(tmp_path / f"{effect_id.replace('/', '__')}.png"),
+        str(tmp_path / f"{effect_id.replace('/', '__').replace(':', '_')}.png"),
     )
     py = render_effect(effect_id, width=8, height=8, seed=1, time=0.25)
 
@@ -160,7 +160,7 @@ ITERATED_PROGRAMS = {
 def test_iterated_effect_byte_parity(tmp_path, effect_id, program):
     js = _js_render_dsl(
         program,
-        str(tmp_path / f"{effect_id.replace('/', '__')}.png"),
+        str(tmp_path / f"{effect_id.replace('/', '__').replace(':', '_')}.png"),
         width=8,
         height=8,
         seed=1,
@@ -462,8 +462,9 @@ def test_noise_generator_is_f32_bit_exact(tmp_path):
     which is what wormhole's point-scatter floor needs. Guards against reverting to
     per-op rounding (invisible in every 8-bit test, decisive here)."""
     script = (
-        f"import {{ CpuRenderer }} from '{CPU_DIR}/src/runtime/renderer.js';"
-        f"import {{ createDefaultRegistry, kernels, kernelFactories }} from '{CPU_DIR}/src/effects/catalog.js';"
+        f"import {{ CpuRenderer }} from '{Path(CPU_DIR, 'src/runtime/renderer.js').as_uri()}';"
+        f"import {{ createDefaultRegistry, kernels, kernelFactories }} from "
+        f"'{Path(CPU_DIR, 'src/effects/catalog.js').as_uri()}';"
         "const r=new CpuRenderer({registry:createDefaultRegistry(),kernels,kernelFactories});"
         "const s=r.render('search synth\\nnoise(seed: 3, octaves: 1).write(o0)\\nrender(o0)\\n',"
         "{width:16,height:16,seed:3}).surface;"
