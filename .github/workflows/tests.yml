@@ -1,0 +1,130 @@
+name: Tests and distribution
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  qualify:
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: ubuntu-24.04
+            python: '3.11'
+          - os: ubuntu-24.04
+            python: '3.14'
+          - os: macos-15
+            python: '3.14'
+          - os: windows-2025
+            python: '3.14'
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 45
+    defaults:
+      run:
+        shell: bash
+    steps:
+      - uses: actions/checkout@93cb6efe18208431cddfb8368fd83d5badbf9bfd # v5.0.1
+      - uses: actions/setup-python@a309ff8b426b58ec0e2a45f0f869d46889d02405 # v6.2.0
+        with:
+          python-version: ${{ matrix.python }}
+      - uses: actions/setup-node@a0853c24544627f65ddf259abe73b1d18a591444 # v5.0.0
+        with:
+          node-version: '24'
+      - name: Initialize receipt and oracle paths
+        run: |
+          python - <<'PY'
+          import os
+          from pathlib import Path
+          root = Path(os.environ['RUNNER_TEMP'])
+          with open(os.environ['GITHUB_ENV'], 'a') as output:
+              output.write('NOISEMAKER_CPU_DIR=' + (root / 'cpu-oracle').as_posix() + '\n')
+              output.write('RECEIPTS=' + (root / 'python-receipts').as_posix() + '\n')
+          PY
+      - name: Load the immutable CPU oracle
+        run: |
+          python - <<'PY'
+          import io, os, tarfile, urllib.request
+          from pathlib import Path
+          revision = 'b61b658399f18b5a93abd0020c02fff3be9630f5'
+          data = urllib.request.urlopen('https://codeload.github.com/noisefactorllc/noisemaker-for-cpu/tar.gz/' + revision, timeout=120).read()
+          root = Path(os.environ['NOISEMAKER_CPU_DIR'])
+          with tarfile.open(fileobj=io.BytesIO(data)) as archive:
+              for member in archive:
+                  relative = Path(*Path(member.name).parts[1:])
+                  if relative.parts and (relative.parts[0] in ('src', 'bin') or relative.as_posix().startswith('scripts/upstream/') or relative.as_posix() == 'package.json'):
+                      assert '..' not in relative.parts and not relative.is_absolute()
+                      if member.isdir():
+                          continue
+                      assert member.isfile(), member.name
+                      target = root / relative
+                      target.parent.mkdir(parents=True, exist_ok=True)
+                      target.write_bytes(archive.extractfile(member).read())
+          receipts = Path(os.environ['RECEIPTS'])
+          receipts.mkdir(parents=True, exist_ok=True)
+          (receipts / 'cpu-source.sha').write_text(revision + '\n')
+          PY
+      - run: python -m pip install '.[dev,build]' build
+      - name: Run all tests with the oracle
+        run: python -m pytest -q -ra --junitxml="$RECEIPTS/tests.xml" 2>&1 | tee "$RECEIPTS/tests.log"
+      - name: Reject missing or skipped qualification tests
+        if: always()
+        run: |
+          python - <<'PY'
+          import os, xml.etree.ElementTree as ET
+          from pathlib import Path
+          cases = ET.parse(Path(os.environ['RECEIPTS']) / 'tests.xml').findall('.//testcase')
+          assert cases, 'No tests executed'
+          counts = {tag: sum(case.find(tag) is not None for case in cases) for tag in ('skipped', 'failure', 'error')}
+          print({'tests': len(cases), **counts})
+          assert not any(counts.values()), counts
+          PY
+      - name: Build and exercise installed distributions
+        run: |
+          python -m build --outdir "$RECEIPTS/dist"
+          python - <<'PYCODE'
+          import email, os, tarfile, zipfile
+          from pathlib import Path
+          root = Path(os.environ['RECEIPTS']) / 'dist'
+          license_bytes = Path('LICENSE').read_bytes()
+          with zipfile.ZipFile(next(root.glob('*.whl'))) as archive:
+              metadata = email.message_from_bytes(archive.read(next(n for n in archive.namelist() if n.endswith('/METADATA'))))
+              assert metadata['License'] == 'MIT'
+              assert {'numpy>=1.26', 'click>=8'} <= set(metadata.get_all('Requires-Dist'))
+              names = [n for n in archive.namelist() if n.endswith('/LICENSE')]
+              assert len(names) == 1 and archive.read(names[0]) == license_bytes
+          with tarfile.open(next(root.glob('*.tar.gz'))) as archive:
+              names = [m for m in archive if m.name.endswith('/LICENSE')]
+              assert len(names) == 1 and archive.extractfile(names[0]).read() == license_bytes
+          PYCODE
+          python -m pip uninstall -y noisemaker-for-python
+          cd "$RUNNER_TEMP"
+          python -m pip install --no-deps "$RECEIPTS"/dist/*.whl
+          python - <<'PY'
+          import os
+          from pathlib import Path
+          import noisemaker_cpu
+          source = Path(os.environ['GITHUB_WORKSPACE']) / 'src/noisemaker_cpu'
+          installed = Path(noisemaker_cpu.__file__).parent
+          expected = {p.relative_to(source): p.read_bytes() for p in source.rglob('*') if p.is_file() and '__pycache__' not in p.parts}
+          actual = {p.relative_to(installed): p.read_bytes() for p in installed.rglob('*') if p.is_file() and '__pycache__' not in p.parts}
+          assert actual == expected, 'Installed wheel differs from source inventory'
+          print('Installed inventory matches:', len(expected))
+          PY
+          noisemaker-py generate synth/curl --width 32 --height 24 --seed 1 --filename "$RECEIPTS/wheel.png"
+          noisemaker-py apply filter/chrome "$RECEIPTS/wheel.png" --filename "$RECEIPTS/filter.png"
+          python -m pip install --force-reinstall --no-deps "$RECEIPTS"/dist/*.tar.gz
+          noisemaker-py generate synth/curl --width 32 --height 24 --seed 1 --filename "$RECEIPTS/sdist.png"
+          python -c 'import os; from pathlib import Path; r=Path(os.environ["RECEIPTS"]); assert (r/"wheel.png").read_bytes()==(r/"sdist.png").read_bytes()'
+          python -m pip uninstall -y noisemaker-for-python
+          python -c 'import importlib.util; assert importlib.util.find_spec("noisemaker_cpu") is None'
+      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        if: always()
+        with:
+          name: qualification-${{ matrix.os }}-python${{ matrix.python }}-${{ github.sha }}
+          path: ${{ runner.temp }}/python-receipts/
+          if-no-files-found: error

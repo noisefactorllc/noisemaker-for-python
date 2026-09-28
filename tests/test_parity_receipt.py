@@ -91,7 +91,34 @@ def test_receipt_is_current_when_the_oracle_is_available():
         env=env,
     )
     fresh = json.loads(Path(tmp_path).read_text(encoding="utf-8"))
-    assert fresh["byteExact"] == doc["byteExact"], (
-        "regenerated receipt differs from the committed receipt; run scripts/parity.py --json and commit the refresh"
-    )
+    assert fresh["byteExact"].keys() == doc["byteExact"].keys()
+    # Node's zlib output can differ across platforms while decoding to identical
+    # pixels. Keep its PNG hash as provenance; compare exact RGBA8 on both sides
+    # and the port's deterministic PNG bytes against the committed receipt.
+    for effect_id, expected in doc["byteExact"].items():
+        for key in ("oracleRgba8Sha256", "pythonRgba8Sha256", "pythonPngSha256"):
+            assert fresh["byteExact"][effect_id][key] == expected[key], (effect_id, key)
     assert result.returncode == 0
+
+
+def test_parity_scratch_is_isolated_and_uses_platform_temp(tmp_path):
+    import subprocess
+    import sys
+
+    script = str(Path(__file__).parents[1] / 'scripts/parity.py')
+    probe = f'''import json, pathlib, runpy
+scope = runpy.run_path({script!r})
+paths = [scope['EXT_PNG'], scope['JS_PNG']]
+for name in paths:
+    pathlib.Path(name).write_bytes(b'probe')
+print(json.dumps(paths))
+'''
+    env = dict(os.environ, TMPDIR=str(tmp_path), TEMP=str(tmp_path), TMP=str(tmp_path))
+    results = []
+    for _ in range(2):
+        result = subprocess.run([sys.executable, '-c', probe], env=env, capture_output=True, text=True, check=True)
+        paths = [Path(p) for p in json.loads(result.stdout)]
+        assert all(p.is_relative_to(tmp_path) for p in paths)
+        assert all(not p.exists() for p in paths), 'Scratch files must be removed on exit'
+        results.append(paths)
+    assert set(results[0]).isdisjoint(results[1]), 'Concurrent runs must not share oracle output paths'

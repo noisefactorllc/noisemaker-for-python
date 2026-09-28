@@ -10,6 +10,7 @@ from __future__ import annotations
 import os
 import subprocess
 import sys
+import tempfile
 
 import numpy as np
 
@@ -63,7 +64,9 @@ def _cpu_revision() -> dict:
     return lock
 
 
-EXT_PNG = "/tmp/ph_ext.png"
+_SCRATCH = tempfile.TemporaryDirectory(prefix="noisemaker-python-parity-")
+EXT_PNG = os.path.join(_SCRATCH.name, "external.png")
+JS_PNG = os.path.join(_SCRATCH.name, "oracle.png")
 _EXT_TEX = None
 
 
@@ -164,8 +167,8 @@ def main():
         ext = effects[eid].get("externalTexture")
         input_png = _ext_texture() and EXT_PNG if ext else None
         try:
-            js = js_effect(eid, "/tmp/ph_js.png", input_png)
-            js_png_sha = _sha256_file("/tmp/ph_js.png")
+            js = js_effect(eid, JS_PNG, input_png)
+            js_png_sha = _sha256_file(JS_PNG)
         except Exception:
             oracle_err.append(eid)
             continue
