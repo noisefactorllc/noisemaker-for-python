@@ -1,8 +1,10 @@
 #!/bin/sh
 # Runs this repository's test suite. Exits nonzero on any failure.
-# Needs: python3 (>=3.11), curl, network for the first dependency install.
-# Everything installs under the temp dir; no sibling checkout is required —
-# the node-oracle parity tests skip themselves when no -cpu sibling is present.
+# Needs: python3 (>=3.11), curl, node, and network (dependency install and the
+# current-authority parity gate below).
+# Everything installs under the temp dir; no pre-existing sibling checkout is
+# required — the node-oracle parity tests skip themselves when no -cpu sibling
+# is present, and the whole-catalog parity gate clones the pinned authority.
 set -eu
 cd "$(dirname "$0")/.."
 VENV="${TMPDIR:-/tmp}/noisemaker-py-test-venv"
@@ -15,4 +17,28 @@ if [ ! -x "$VENV/bin/python" ]; then
     rm -f "$VENV/get-pip.py"
 fi
 "$VENV/bin/pip" install -q -e '.[dev,build]'
-exec "$VENV/bin/python" -m pytest -q
+"$VENV/bin/python" -m pytest -q
+
+# Whole-catalog parity gate against the pinned current-authority oracle.
+# When node is available, clone/refresh the pinned noisemaker-for-cpu sibling
+# and run scripts/parity-summary: every bundled effect id must render
+# byte-identically to the authority oracle (exit 0 required; the printed
+# PARITY-SUMMARY line binds the run to both revisions). Without node the gate
+# cannot run and is skipped here; the pytest suite above still covers the
+# node-free contract.
+if command -v node >/dev/null 2>&1; then
+    CPU_PINNED_REVISION=d2965d0b7880cee678de11ec797155c8a65c7b66
+    CPU_PINNED_TREE=69d2ffc4731b23fddd472b830d3458915ede2bc4
+    CPU_DIR="${TMPDIR:-/tmp}/noisemaker-py-cpu-oracle"
+    if [ ! -d "$CPU_DIR/.git" ]; then
+        git clone -q https://github.com/noisefactorllc/noisemaker-for-cpu.git "$CPU_DIR"
+    fi
+    git -C "$CPU_DIR" fetch -q origin "$CPU_PINNED_REVISION"
+    git -C "$CPU_DIR" checkout -q --detach "$CPU_PINNED_REVISION"
+    ACTUAL_TREE=$(git -C "$CPU_DIR" rev-parse 'HEAD^{tree}')
+    if [ "$ACTUAL_TREE" != "$CPU_PINNED_TREE" ]; then
+        echo "cpu oracle tree mismatch at $CPU_PINNED_REVISION: $ACTUAL_TREE" >&2
+        exit 1
+    fi
+    NOISEMAKER_CPU_DIR="$CPU_DIR" "$VENV/bin/python" scripts/parity-summary
+fi

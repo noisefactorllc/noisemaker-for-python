@@ -126,6 +126,20 @@ def main() -> int:
     defer = 0
     skip = 0
     missing = max(0, expected - executed - fail)
+    import subprocess
+
+    head = subprocess.run(["git", "rev-parse", "HEAD"], cwd=_ROOT, capture_output=True, text=True)
+    cpu = _parity._cpu_revision()
+    print(
+        "parity-summary provenance: portHead=%s cpuHead=%s cpuTree=%s upstreamPin=%s sourceDigest=%s"
+        % (
+            head.stdout.strip() if head.returncode == 0 else "unknown",
+            cpu.get("cpuHead") or "unknown",
+            cpu.get("cpuTree") or "unknown",
+            cpu.get("revision") or "unknown",
+            cpu.get("sourceDigest") or "unknown",
+        )
+    )
     print(
         'PARITY-SUMMARY {"expected":%d,"executed":%d,"exact":%d,"strict":%d,'
         '"near":%d,"defer":%d,"skip":%d,"fail":%d,"missing":%d}'
