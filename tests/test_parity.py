@@ -171,148 +171,55 @@ def test_iterated_effect_byte_parity(tmp_path, effect_id, program):
     assert _max_diff(js, py) == 0
 
 
-def test_loop_region_byte_parity(tmp_path):
-    program = (
-        "search synth, filter, render\n"
-        "solid(color: #336699).loopBegin(iterationCount: 3).invert().loopEnd().write(o0)\n"
-        "render(o0)\n"
-    )
-
-    js = _js_render_dsl(program, str(tmp_path / "loop.png"), width=2, height=2, seed=1, time=0.25)
-    py = render_dsl(program, width=2, height=2, seed=1, time=0.25)
-
-    assert _max_diff(js, py) == 0
-
-
-def test_loop_region_keeps_step_resources_isolated_byte_parity(tmp_path):
-    program = (
-        "search synth, filter, render\n"
-        "solid(color: #336699).loopBegin(iterationCount: 2).feedback(mix: 50)"
-        ".motionBlur(amount: 50).loopEnd().write(o0)\n"
-        "render(o0)\n"
-    )
-
-    js = _js_render_dsl(program, str(tmp_path / "stateful-loop.png"), width=2, height=2, seed=1, time=0.25)
-    py = render_dsl(program, width=2, height=2, seed=1, time=0.25)
-
-    assert _max_diff(js, py) == 0
-
-
-@pytest.mark.parametrize(
-    ("generator", "generator_params"),
-    [
-        ("cell3d", "volumeSize: 4, seed: 0"),
-        ("flythrough3d", "volumeSize: 4"),
-        ("fractal3d", "volumeSize: 4"),
-        ("noise3d", "volumeSize: 4, seed: 0"),
-        ("shape3d", "volumeSize: 4"),
-        ("heightmap3d", "volumeSize: 4"),
-    ],
-)
-def test_volume_generator_render3d_byte_parity(tmp_path, generator, generator_params):
-    program = f"search synth3d, render\n{generator}({generator_params}).render3d(volumeSize: 4).write(o0)\nrender(o0)\n"
-
-    js = _js_render_dsl(program, str(tmp_path / f"{generator}.png"), width=2, height=2, seed=1, time=0.25)
-    py = render_dsl(program, width=2, height=2, seed=1, time=0.25)
-
-    assert _max_diff(js, py) == 0
+# Volume/loop DSL parity cases, shared with scripts/parity-summary (which
+# executes one case per bundled effect id to count whole-catalog coverage).
+# Each row: (case_id, program, width, height); ":"-suffixed ids are additional
+# settings variants of the same effect id. All rows must render byte-exactly.
+VOLUME_DSL_CASES = [
+    # Volume generators chained through render3d.
+    ("synth3d/cell3d", "search synth3d, render\ncell3d(volumeSize: 4, seed: 0).render3d(volumeSize: 4).write(o0)\nrender(o0)\n", 2, 2),
+    ("synth3d/flythrough3d", "search synth3d, render\nflythrough3d(volumeSize: 4).render3d(volumeSize: 4).write(o0)\nrender(o0)\n", 2, 2),
+    ("synth3d/fractal3d", "search synth3d, render\nfractal3d(volumeSize: 4).render3d(volumeSize: 4).write(o0)\nrender(o0)\n", 2, 2),
+    ("synth3d/noise3d", "search synth3d, render\nnoise3d(volumeSize: 4, seed: 0).render3d(volumeSize: 4).write(o0)\nrender(o0)\n", 2, 2),
+    ("synth3d/shape3d", "search synth3d, render\nshape3d(volumeSize: 4).render3d(volumeSize: 4).write(o0)\nrender(o0)\n", 2, 2),
+    ("synth3d/heightmap3d", "search synth3d, render\nheightmap3d(volumeSize: 4).render3d(volumeSize: 4).write(o0)\nrender(o0)\n", 2, 2),
+    # Stateful volume generators.
+    ("synth3d/cellularAutomata3d", "search synth3d, render\nnoise3d(volumeSize: 4, seed: 0).cellularAutomata3d(volumeSize: 4, iterationCount: 0).render3d(volumeSize: 4).write(o0)\nrender(o0)\n", 2, 2),
+    ("synth3d/cellularAutomata3d:iter2", "search synth3d, render\nnoise3d(volumeSize: 4, seed: 0).cellularAutomata3d(volumeSize: 4, iterationCount: 2).render3d(volumeSize: 4).write(o0)\nrender(o0)\n", 2, 2),
+    ("synth3d/reactionDiffusion3d", "search synth3d, render\nnoise3d(volumeSize: 4, seed: 0).reactionDiffusion3d(volumeSize: 4, iterationCount: 0).render3d(volumeSize: 4).write(o0)\nrender(o0)\n", 2, 2),
+    ("synth3d/reactionDiffusion3d:iter2", "search synth3d, render\nnoise3d(volumeSize: 4, seed: 0).reactionDiffusion3d(volumeSize: 4, iterationCount: 2).render3d(volumeSize: 4).write(o0)\nrender(o0)\n", 2, 2),
+    # Volume renderers over noise3d.
+    ("render/render3d", "search synth3d, render\nnoise3d(volumeSize: 4, seed: 0).render3d(volumeSize: 4).write(o0)\nrender(o0)\n", 2, 2),
+    ("render/renderCubemap3d", "search synth3d, render\nnoise3d(volumeSize: 4, seed: 0).renderCubemap3d(volumeSize: 4).write(o0)\nrender(o0)\n", 2, 2),
+    ("render/renderCubemapSurface", "search synth3d, render\nnoise3d(volumeSize: 4, seed: 0).renderCubemapSurface(volumeSize: 4).write(o0)\nrender(o0)\n", 2, 2),
+    ("render/renderLit3d", "search synth3d, render\nnoise3d(volumeSize: 4, seed: 0).renderLit3d(volumeSize: 4).write(o0)\nrender(o0)\n", 2, 2),
+    # Both valid renderLandscape3d `filtering` choices (the GAP-001 landscape
+    # rejections) must render byte-identically to the oracle.
+    ("render/renderLandscape3d", "search synth3d, render\nnoise3d(volumeSize: 4, seed: 0).renderLandscape3d(volumeSize: 4, filtering: 0).write(o0)\nrender(o0)\n", 8, 8),
+    ("render/renderLandscape3d:voxel", "search synth3d, render\nnoise3d(volumeSize: 4, seed: 0).renderLandscape3d(volumeSize: 4, filtering: 1).write(o0)\nrender(o0)\n", 8, 8),
+    # filter3d filters.
+    ("filter3d/palette3d", "search synth3d, filter3d, render\nnoise3d(volumeSize: 4, seed: 0).palette3d(volumeSize: 4).render3d(volumeSize: 4).write(o0)\nrender(o0)\n", 2, 2),
+    ("filter3d/flow3d", "search synth3d, filter3d, render\nnoise3d(volumeSize: 4, seed: 0).flow3d(volumeSize: 4, density: 20, iterationCount: 0).render3d(volumeSize: 4).write(o0)\nrender(o0)\n", 2, 2),
+    ("filter3d/flow3d:iter2", "search synth3d, filter3d, render\nnoise3d(volumeSize: 4, seed: 0).flow3d(volumeSize: 4, density: 20, iterationCount: 2).render3d(volumeSize: 4).write(o0)\nrender(o0)\n", 2, 2),
+    # Loop regions: both markers of each program are exercised by one render.
+    ("render/loopBegin", "search synth, filter, render\nsolid(color: #336699).loopBegin(iterationCount: 3).invert().loopEnd().write(o0)\nrender(o0)\n", 2, 2),
+    ("render/loopEnd", "search synth, filter, render\nsolid(color: #336699).loopBegin(iterationCount: 3).invert().loopEnd().write(o0)\nrender(o0)\n", 2, 2),
+    ("render/loopBegin:stateful", "search synth, filter, render\nsolid(color: #336699).loopBegin(iterationCount: 2).feedback(mix: 50).motionBlur(amount: 50).loopEnd().write(o0)\nrender(o0)\n", 2, 2),
+    ("render/loopEnd:stateful", "search synth, filter, render\nsolid(color: #336699).loopBegin(iterationCount: 2).feedback(mix: 50).motionBlur(amount: 50).loopEnd().write(o0)\nrender(o0)\n", 2, 2),
+]
 
 
-@pytest.mark.parametrize(
-    "renderer_name",
-    ["render3d", "renderCubemap3d", "renderCubemapSurface", "renderLit3d"],
-)
-def test_volume_renderer_byte_parity(tmp_path, renderer_name):
-    program = (
-        "search synth3d, render\n"
-        f"noise3d(volumeSize: 4, seed: 0).{renderer_name}(volumeSize: 4).write(o0)\n"
-        "render(o0)\n"
-    )
-
-    js = _js_render_dsl(program, str(tmp_path / f"{renderer_name}.png"), width=2, height=2, seed=1, time=0.25)
-    py = render_dsl(program, width=2, height=2, seed=1, time=0.25)
-
-    assert _max_diff(js, py) == 0
-
-
-@pytest.mark.parametrize("filtering", [0, 1], ids=["isosurface", "voxel"])
-def test_landscape3d_filtering_byte_parity(tmp_path, filtering):
-    """Both valid renderLandscape3d `filtering` choices (the GAP-001 landscape
-    rejections) must render byte-identically to the oracle."""
-    program = (
-        "search synth3d, render\n"
-        f"noise3d(volumeSize: 4, seed: 0).renderLandscape3d(volumeSize: 4, filtering: {filtering}).write(o0)\n"
-        "render(o0)\n"
-    )
-
+@pytest.mark.parametrize(("case_id", "program", "width", "height"), VOLUME_DSL_CASES, ids=[c[0] for c in VOLUME_DSL_CASES])
+def test_volume_and_loop_dsl_byte_parity(tmp_path, case_id, program, width, height):
     js = _js_render_dsl(
         program,
-        str(tmp_path / f"landscape3d-{filtering}.png"),
-        width=8,
-        height=8,
+        str(tmp_path / f"{case_id.replace('/', '__').replace(':', '_')}.png"),
+        width=width,
+        height=height,
         seed=1,
         time=0.25,
     )
-    py = render_dsl(program, width=8, height=8, seed=1, time=0.25)
-
-    assert _max_diff(js, py) == 0
-
-
-def test_palette3d_filter_byte_parity(tmp_path):
-    program = (
-        "search synth3d, filter3d, render\n"
-        "noise3d(volumeSize: 4, seed: 0).palette3d(volumeSize: 4).render3d(volumeSize: 4).write(o0)\n"
-        "render(o0)\n"
-    )
-
-    js = _js_render_dsl(program, str(tmp_path / "palette3d.png"), width=2, height=2, seed=1, time=0.25)
-    py = render_dsl(program, width=2, height=2, seed=1, time=0.25)
-
-    assert _max_diff(js, py) == 0
-
-
-@pytest.mark.parametrize("iteration_count", [0, 2])
-def test_flow3d_filter_byte_parity(tmp_path, iteration_count):
-    program = (
-        "search synth3d, filter3d, render\n"
-        "noise3d(volumeSize: 4, seed: 0)"
-        f".flow3d(volumeSize: 4, density: 20, iterationCount: {iteration_count})"
-        ".render3d(volumeSize: 4).write(o0)\n"
-        "render(o0)\n"
-    )
-
-    js = _js_render_dsl(
-        program,
-        str(tmp_path / f"flow3d-{iteration_count}.png"),
-        width=2,
-        height=2,
-        seed=1,
-        time=0.25,
-    )
-    py = render_dsl(program, width=2, height=2, seed=1, time=0.25)
-
-    assert _max_diff(js, py) == 0
-
-
-@pytest.mark.parametrize("iteration_count", [0, 2])
-@pytest.mark.parametrize("effect", ["cellularAutomata3d", "reactionDiffusion3d"])
-def test_stateful_volume_generator_byte_parity(tmp_path, effect, iteration_count):
-    program = (
-        "search synth3d, render\n"
-        f"noise3d(volumeSize: 4, seed: 0).{effect}(volumeSize: 4, iterationCount: {iteration_count})"
-        ".render3d(volumeSize: 4).write(o0)\n"
-        "render(o0)\n"
-    )
-
-    js = _js_render_dsl(
-        program,
-        str(tmp_path / f"{effect}-{iteration_count}.png"),
-        width=2,
-        height=2,
-        seed=1,
-        time=0.25,
-    )
-    py = render_dsl(program, width=2, height=2, seed=1, time=0.25)
+    py = render_dsl(program, width=width, height=height, seed=1, time=0.25)
 
     assert _max_diff(js, py) == 0
 
