@@ -1,0 +1,102 @@
+#!/usr/bin/env python
+"""Render the bundled effect catalog with this port against the pinned
+noisemaker-for-cpu authority oracle and compare each rendered case with the
+oracle, printing a machine-readable PARITY-SUMMARY line as the last output.
+
+Usage: scripts/parity-summary [case_id ...]
+
+With no arguments every bundled effect is considered. With case-id arguments
+only those cases are rendered and counted (unknown ids are reported as
+missing). The authority oracle is the sibling noisemaker-for-cpu checkout at
+NOISEMAKER_CPU_DIR (default: ../../noisemaker-for-cpu). Categories follow the
+port's published numerical contract: byte-exact, zero tolerance — any compared
+case that is not byte-identical is a failure; iterated/typed-chain effects
+(exercised by the DSL parity tests in tests/test_dsl.py) are counted as skip.
+
+Exit code is 0 only when fail and missing are both zero.
+"""
+
+from __future__ import annotations
+
+import importlib.util
+import os
+import sys
+
+_HERE = os.path.dirname(os.path.abspath(__file__))
+
+_spec = importlib.util.spec_from_file_location("_noisemaker_parity", os.path.join(_HERE, "parity.py"))
+_parity = importlib.util.module_from_spec(_spec)
+_spec.loader.exec_module(_parity)
+
+import numpy as np  # noqa: E402  (after the harness import, matching its usage)
+
+
+def main() -> int:
+    requested = [a for a in sys.argv[1:] if not a.startswith("-")]
+    if any(a.startswith("-") for a in sys.argv[1:]):
+        print("usage: scripts/parity-summary [case_id ...]", file=sys.stderr)
+        return 2
+
+    effects = _parity._meta()["effects"]
+    if requested:
+        unknown = [i for i in requested if i not in effects]
+        if unknown:
+            print(f"UNKNOWN EFFECTS: {sorted(unknown)}")
+        candidates = [i for i in effects if i in set(requested)]
+        expected = len(requested)
+    else:
+        candidates = list(effects)
+        expected = len(effects)
+
+    skipped = [i for i in candidates if effects[i].get("iterated") or effects[i].get("domain", "image") != "image"]
+    ids = [i for i in candidates if i not in skipped]
+
+    exact: list[str] = []
+    fail = 0
+    for eid in ids:
+        kind = effects[eid]["kind"]
+        ext = effects[eid].get("externalTexture")
+        input_png = _parity._ext_texture() and _parity.EXT_PNG if ext else None
+        try:
+            js = _parity.js_effect(eid, _parity.JS_PNG, input_png)
+        except Exception:
+            fail += 1
+            print(f"FAIL oracle-error: {eid}")
+            continue
+        try:
+            py = _parity.py_render(eid, kind, ext)
+        except Exception as e:
+            fail += 1
+            print(f"FAIL runtime-error: {eid}: {type(e).__name__}: {e}".splitlines()[0][:100])
+            continue
+        ja = np.frombuffer(js.to_rgba8(), np.uint8).astype(int)
+        pa = np.frombuffer(py.to_rgba8(), np.uint8).astype(int)
+        if ja.shape != pa.shape:
+            fail += 1
+            print(f"FAIL shape-mismatch: {eid}")
+            continue
+        d = int(np.max(np.abs(ja - pa)))
+        if d == 0:
+            exact.append(eid)
+        else:
+            fail += 1
+            print(f"FAIL max-diff {d}: {eid}")
+
+    executed = len(exact)
+    strict = 0
+    near = 0
+    defer = 0
+    skip = len(skipped)
+    missing = expected - executed - skip - fail
+    if missing < 0:
+        missing = 0
+    print(
+        'PARITY-SUMMARY {"expected":%d,"executed":%d,"exact":%d,"strict":%d,'
+        '"near":%d,"defer":%d,"skip":%d,"fail":%d,"missing":%d}'
+        % (expected, executed, len(exact), strict, near, defer, skip, fail, missing)
+    )
+    return 0 if fail == 0 and missing == 0 else 1
+
+
+if __name__ == "__main__":
+    sys.exit(main())

@@ -500,19 +500,49 @@ def test_canonical_hash_filters_are_byte_exact(tmp_path, effect_id):
     assert _max_diff(js, py) == 0
 
 
+# Audited sibling noisemaker-for-cpu source locks, keyed by PINNED_UPSTREAM_REVISION.
+# An entry is added only by an audited source-lock sync recorded in
+# docs/COMPATIBILITY.md whose oracle output was proven byte-identical to the
+# previous pin across the whole rendered catalog (167/167 byte-exact, zero
+# tolerance) and whose recomputed digest was verified byte-for-byte against the
+# sibling checkout. The gate's immutable oracle tarball
+# (.github/workflows/tests.yml) is pinned at 296e0138/b61b658399f1; the current
+# sibling pin f24b5254/d2965d0b7880 was audited by the 2026-09-29 sync.
+AUDITED_SOURCE_LOCKS = {
+    "296e0138c4744ed485b2e95de3eeb466c17629ee": {
+        "digest": "e371a1650d1ace9462a20ecf4e4f0902e5135b4772e8a9abbc8d2c037beebf59",
+        "snapshot": "296e0138c4744ed485b2e95de3eeb466c17629ee",
+    },
+    "f24b52540af6a88d12daa05feba1a04ad61b22a2": {
+        "digest": "f11af18a15ec0220c5d41a17c70da637fa05f86597a4c1984838bd0e77246723",
+        "snapshot": "f24b52540af6a88d12daa05feba1a04ad61b22a2",
+    },
+}
+
+
 def test_cpu_upstream_source_lock_and_catalog_parity():
-    """Verify sibling noisemaker-for-cpu's source lock points to the audited
-    revision and that catalog effect parity is maintained."""
+    """Verify sibling noisemaker-for-cpu's source lock points to an audited
+    revision (revision, digest, and snapshot revision all matching one audited
+    source-lock sync) and that catalog effect parity is maintained."""
     source_lock_path = Path(CPU_DIR) / "scripts" / "upstream" / "source-lock.js"
     assert source_lock_path.is_file(), f"missing {source_lock_path}"
     source_lock_text = source_lock_path.read_text(encoding="utf-8")
-    assert "export const PINNED_UPSTREAM_REVISION = '296e0138c4744ed485b2e95de3eeb466c17629ee'" in source_lock_text
-    assert (
-        "export const PINNED_SOURCE_DIGEST = 'e371a1650d1ace9462a20ecf4e4f0902e5135b4772e8a9abbc8d2c037beebf59'"
-        in source_lock_text
+
+    def _locked(prefix: str) -> str:
+        for line in source_lock_text.splitlines():
+            if line.startswith(prefix):
+                return line.split("'")[1]
+        raise AssertionError(f"{prefix!r} not found in {source_lock_path}")
+
+    revision = _locked("export const PINNED_UPSTREAM_REVISION =")
+    audited = AUDITED_SOURCE_LOCKS.get(revision)
+    assert audited is not None, (
+        f"sibling source lock pins {revision}, which is not an audited "
+        f"revision (audited: {sorted(AUDITED_SOURCE_LOCKS)})"
     )
+    assert _locked("export const PINNED_SOURCE_DIGEST =") == audited["digest"]
 
     snapshot_path = Path(CPU_DIR) / "src" / "effects" / "generated" / "upstream-snapshot.js"
     assert snapshot_path.is_file(), f"missing {snapshot_path}"
     snapshot_text = snapshot_path.read_text(encoding="utf-8")
-    assert 'export const UPSTREAM_REVISION = "296e0138c4744ed485b2e95de3eeb466c17629ee"' in snapshot_text
+    assert f'export const UPSTREAM_REVISION = "{audited["snapshot"]}"' in snapshot_text
