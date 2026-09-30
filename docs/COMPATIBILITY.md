@@ -19,16 +19,16 @@ CPU oracle: `fcb576f39a2632a6d50e79ca9f6a1bfb0daa7221`, with upstream pin `4891b
 Current upstream and published `1.0.180`: `240740dd2d30cbd0984b179834ab24abe71c8fb2`.
 The current manifest contains 210 effects. The Python catalog contains 205 effects.
 Full parity is **failed** for tested nondefault cases and **unverified** for complete coverage. Release readiness remains **blocked**.
-[Source hashes](/Users/alex/.codex/automations/noisemaker-port-completion-audit/evidence-audit-20260925-090206/source-hashes.json). [Authority metadata](/Users/alex/.codex/automations/noisemaker-port-completion-audit/evidence-audit-20260925-090206/published-authority.json).
+Source hashes (audit evidence `evidence-audit-20260925-090206/source-hashes.json`). Authority metadata (audit evidence `evidence-audit-20260925-090206/published-authority.json`).
 
 Served kit `0.1.7` identifies `1901b267a8b8ef29efc702cc3976b70f8aae0404`.
 All 329 served files match their inventory hashes. All 324 engine files match the reviewed source.
 The existing builder reproduces all 329 inventoried files. Later source changes affect only tests and audit documents.
-[Served verification](/Users/alex/.codex/automations/noisemaker-port-completion-audit/evidence-audit-20260925-090206/served-verification.json). [Reproduction](/Users/alex/.codex/automations/noisemaker-port-completion-audit/evidence-audit-20260925-090206/kit-reproduction.json). [Source comparison](/Users/alex/.codex/automations/noisemaker-port-completion-audit/evidence-audit-20260925-090206/kit-source-diff.json).
+Served verification (audit evidence `evidence-audit-20260925-090206/served-verification.json`). Reproduction (audit evidence `evidence-audit-20260925-090206/kit-reproduction.json`). Source comparison (audit evidence `evidence-audit-20260925-090206/kit-source-diff.json`).
 
 The candidate wheel and source archive omit all bundle JSON files. Installation succeeds, but the first render fails with missing `bundle/metadata.json`.
 No PyPI project exists at the checked project endpoint. The GitHub API returned no releases.
-[Wheel failure](/Users/alex/.codex/automations/noisemaker-port-completion-audit/evidence-audit-20260925-090206/wheel-first-output.json). [Archive inventory](/Users/alex/.codex/automations/noisemaker-port-completion-audit/evidence-audit-20260925-090206/sdist-inventory.json). [Endpoint observations](/Users/alex/.codex/automations/noisemaker-port-completion-audit/evidence-audit-20260925-090206/endpoint-results.json).
+Wheel failure (audit evidence `evidence-audit-20260925-090206/wheel-first-output.json`). Archive inventory (audit evidence `evidence-audit-20260925-090206/sdist-inventory.json`). Endpoint observations (audit evidence `evidence-audit-20260925-090206/endpoint-results.json`).
 
 Audit publication covers only these two reports. Their paths match no existing workflow.
 No implementation, release, or parity checkpoint changes belong to this audit.
@@ -39,7 +39,7 @@ Daily review: 2026-09-25. Current inspected source: [`93b8b141d21a7c853a89131166
 Full rendered parity remains **unverified**. No release approval or new closure follows from this review.
 Current upstream discovery: `bbdeb56c4b75cf33379766c3e87b0f5a18bcbba8`. Published Noisemaker authority: `1.0.179`, source `fca611fd8f91424661d4e531d39313d24ea21134`, 210 effect IDs.
 The observations below retain their original source and authority identities. They do not qualify later updates.
-Current served kit: `0.1.7`, source `1901b267a8b8ef29efc702cc3976b70f8aae0404`. [Retrieved inventory and hashes](/Users/alex/.codex/automations/noisemaker-port-completion-audit/review-20260925-053200/current-served-inventories.json). Artifact identity does not establish host qualification. The served kit's local artifact paths are macOS-local and are not reproducible from the repository tree; see the evidence-availability note in §6.
+Current served kit: `0.1.7`, source `1901b267a8b8ef29efc702cc3976b70f8aae0404`. Retrieved inventory and hashes (audit evidence `review-20260925-053200/current-served-inventories.json`). Artifact identity does not establish host qualification. The served kit's local artifact paths are macOS-local and are not reproducible from the repository tree; see the evidence-availability note in §6.
 
 ### Earlier source observations
 
@@ -79,7 +79,7 @@ Historical measurements remain bound to their original revisions in [completion 
 | Source-update parity enforcement | blocked | No current exact-source CI checks or complete parity gate. GAP-003. |
 | Release readiness | blocked | Exact-source CI and platform limits (macOS/Windows/Python 3.14) remain. |
 
-[Installed evidence](/Users/alex/.codex/automations/noisemaker-port-completion-audit/evidence-audit-20260925-090206/bounded-developer-workflows.json). [Parity evidence](/Users/alex/.codex/automations/noisemaker-port-completion-audit/evidence-audit-20260925-090206/independent-comparisons.json). [Artifact evidence](/Users/alex/.codex/automations/noisemaker-port-completion-audit/evidence-audit-20260925-090206/served-verification.json).
+Installed evidence (audit evidence `evidence-audit-20260925-090206/bounded-developer-workflows.json`). Parity evidence (audit evidence `evidence-audit-20260925-090206/independent-comparisons.json`). Artifact evidence (audit evidence `evidence-audit-20260925-090206/served-verification.json`).
 
 ### Earlier measured scope
 
@@ -168,7 +168,7 @@ The default sweep uses zero byte tolerance at 8×8, seed 1, and time 0.25.
 DSL tests retain their original mixture of exact and ±2-byte contracts. A tolerance pass does not establish exact equality.
 Independent comparisons use 48×32, seed 17, and time 0.375. Alpha differs by 179, and feedback differs by one byte.
 The one-byte result remains a strict failure. No threshold or golden changed.
-[Full sweep results](/Users/alex/.codex/automations/noisemaker-port-completion-audit/evidence-audit-20260925-090206/parity-results.json). [Independent programs and channel counts](/Users/alex/.codex/automations/noisemaker-port-completion-audit/evidence-audit-20260925-090206/independent-comparisons.json).
+Full sweep results (audit evidence `evidence-audit-20260925-090206/parity-results.json`). Independent programs and channel counts (audit evidence `evidence-audit-20260925-090206/independent-comparisons.json`).
 
 Skipped image-gate IDs:
 
@@ -215,7 +215,7 @@ Missing current IDs: `render/meshLoader`, `render/meshRender`, `synth/roll`, `sy
 Separate DSL cases cover selected iterated and typed behavior. They do not resolve image-gate exclusions or establish the complete parameter matrix.
 Current `filtering: isosurface` and `filtering: voxel` succeed in CPU and fail in Python.
 Shader hashes differ for `classicNoisedeck/glitch:glitch`, `classicNoisedeck/noise:noise`, and `render/renderLandscape3d:landscape`.
-[Current parameter manifests and shader hashes](/Users/alex/.codex/automations/noisemaker-port-completion-audit/evidence-audit-20260925-090206/authority-comparison-retry.json). [Filtering cases](/Users/alex/.codex/automations/noisemaker-port-completion-audit/evidence-audit-20260925-090206/landscape-valid-choices.json).
+Current parameter manifests and shader hashes (audit evidence `evidence-audit-20260925-090206/authority-comparison-retry.json`). Filtering cases (audit evidence `evidence-audit-20260925-090206/landscape-valid-choices.json`).
 
 ### Parity and authority reconciliation, 2026-09-27
 
@@ -249,7 +249,7 @@ The review checked GAP-005: four-component solid color produces alpha difference
 Exact reviewed-source CI contains zero runs and zero checks.
 Full installed-host and platform qualification remains incomplete.
 GAP-001 remains open, and the suite leaves current full rendered parity unverified.
-[Earlier raw evidence](/Users/alex/.codex/automations/noisemaker-port-completion-audit/review-20260925-053200/python-current-tests.json).
+Earlier raw evidence (audit evidence `review-20260925-053200/python-current-tests.json`).
 
 The current full case denominator remains incomplete. Missing parameters, hosts, external inputs, and stateful sequences remain qualification gaps. No skip or tolerated difference counts as exact parity.
 
@@ -490,14 +490,14 @@ Current served declaration: 205 effect IDs. This inventory is not evidence of ex
 ### Worker audit, 2026-09-25
 
 The environment is Python 3.14.5 on macOS arm64. NumPy supplies the actual CPU renderer.
-[Runtime versions](/Users/alex/.codex/automations/noisemaker-port-completion-audit/evidence-audit-20260925-090206/runtime.json) records Python, NumPy, Node, and operating-system versions.
+Runtime versions (audit evidence `evidence-audit-20260925-090206/runtime.json`) records Python, NumPy, Node, and operating-system versions.
 
 The unchanged image suite returns exit 0: 167/167 exact comparisons, zero mismatches, zero runtime errors, and zero oracle errors.
 It skips 38 iterated or typed effects. These exclusions remain qualification gaps in this gate.
 The README's 169/36 counts do not match this source's 167/38 inventory.
 The suite uses 8×8 images, seed 1, time 0.25, and default parameters. Its numerical threshold is zero byte difference.
 A wrapper redirects temporary PNG paths and captures local result variables. It does not change comparisons or exclusions.
-[Literal command and source identities](/Users/alex/.codex/automations/noisemaker-port-completion-audit/evidence-audit-20260925-090206/parity-command.json). [Every executed and skipped ID](/Users/alex/.codex/automations/noisemaker-port-completion-audit/evidence-audit-20260925-090206/parity-results.json).
+Literal command and source identities (audit evidence `evidence-audit-20260925-090206/parity-command.json`). Every executed and skipped ID (audit evidence `evidence-audit-20260925-090206/parity-results.json`).
 
 Independent public DSL probes use 48×32 images, seed 17, and time 0.375.
 The noise/invert chain matches exactly across 6,144 channels.
@@ -505,23 +505,23 @@ Four-component solid color produces alpha 76 instead of CPU alpha 255 across 1,5
 A three-iteration feedback chain differs by one byte in five of 6,144 channels. It fails strict equality.
 RGB and explicit-alpha controls match. These controls isolate the solid discrepancy to four-component color interpretation.
 Both valid landscape filtering choices succeed in CPU and fail in Python with an unknown-parameter diagnostic.
-[Nondefault comparisons](/Users/alex/.codex/automations/noisemaker-port-completion-audit/evidence-audit-20260925-090206/independent-comparisons.json). [Alpha controls](/Users/alex/.codex/automations/noisemaker-port-completion-audit/evidence-audit-20260925-090206/alpha-controls.json). [Valid landscape choices](/Users/alex/.codex/automations/noisemaker-port-completion-audit/evidence-audit-20260925-090206/landscape-valid-choices.json).
+Nondefault comparisons (audit evidence `evidence-audit-20260925-090206/independent-comparisons.json`). Alpha controls (audit evidence `evidence-audit-20260925-090206/alpha-controls.json`). Valid landscape choices (audit evidence `evidence-audit-20260925-090206/landscape-valid-choices.json`).
 
 Current immutable shader comparison finds 291 matching program hashes and three differences among 294 compared programs.
 Differences: `classicNoisedeck/glitch:glitch`, `classicNoisedeck/noise:noise`, and `render/renderLandscape3d:landscape`.
 The landscape parameter manifest adds `filtering`. Palette metadata differences reflect the build-time insertion of enum choices.
 These differences do not establish equivalent behavior. The upstream language implementation also changed after the CPU pin.
-[Shader and parameter inventories](/Users/alex/.codex/automations/noisemaker-port-completion-audit/evidence-audit-20260925-090206/authority-comparison-retry.json). [Upstream source difference](/Users/alex/.codex/automations/noisemaker-port-completion-audit/evidence-audit-20260925-090206/upstream-diff.json).
+Shader and parameter inventories (audit evidence `evidence-audit-20260925-090206/authority-comparison-retry.json`). Upstream source difference (audit evidence `evidence-audit-20260925-090206/upstream-diff.json`).
 
 The complete test run collected 274 cases: 267 passed, two failed, and five skipped because Python HTTPS certificate validation failed.
 The 74 CPU parity tests passed: 50 exact-byte cases, 22 tolerance cases, one float32 equality case, and one source-lock check.
 A targeted immutable-cache retry passed all 15 CDN and affected transpiler tests. All 274 distinct cases passed across these runs.
 The initial run returned exit 1. The targeted retry returned exit 0. This is not a single clean full-suite result.
-[Full command](/Users/alex/.codex/automations/noisemaker-port-completion-audit/evidence-audit-20260925-090206/pytest-command.json). [Raw output](/Users/alex/.codex/automations/noisemaker-port-completion-audit/evidence-audit-20260925-090206/pytest.log). [Retry command and output](/Users/alex/.codex/automations/noisemaker-port-completion-audit/evidence-audit-20260925-090206/network-retry.json).
-[Per-case parity contracts](/Users/alex/.codex/automations/noisemaker-port-completion-audit/evidence-audit-20260925-090206/dsl-parity-contracts.json).
+Full command (audit evidence `evidence-audit-20260925-090206/pytest-command.json`). Raw output (audit evidence `evidence-audit-20260925-090206/pytest.log`). Retry command and output (audit evidence `evidence-audit-20260925-090206/network-retry.json`).
+Per-case parity contracts (audit evidence `evidence-audit-20260925-090206/dsl-parity-contracts.json`).
 Verified HTTPS downloads through curl supplied immutable `1.0.180` bytes to the unchanged parser. All 13 CDN tests then passed.
 The earlier malformed landscape probe used `linear`. Both renderers rejected it. It does not establish a supported-case defect.
-[Initial authority probe](/Users/alex/.codex/automations/noisemaker-port-completion-audit/evidence-audit-20260925-090206/authority-comparison.json). [Pinned CDN retry](/Users/alex/.codex/automations/noisemaker-port-completion-audit/evidence-audit-20260925-090206/cdn-cached-tests.json).
+Initial authority probe (audit evidence `evidence-audit-20260925-090206/authority-comparison.json`). Pinned CDN retry (audit evidence `evidence-audit-20260925-090206/cdn-cached-tests.json`).
 
 The editable source installation produces a 32×24 curl image, a changed 48×32 image, filtered input, and three H.264 frames.
 The public library entry point also produces a 32×24 PNG. PNG decoding and ffprobe check the outputs.
@@ -529,27 +529,27 @@ Invalid effect input returns exit 2. Corrected input returns exit 0.
 SIGINT returns `Aborted!` and preserves the existing output file. Invalid input also preserves that file.
 The literal README 512×512 example exceeded 180 seconds under concurrent test load. This is a bounded observation, not a performance benchmark.
 The audit removed both private installation targets. Upgrade behavior, Python 3.11, other operating systems, and sustained resource use remain unverified.
-[Installed commands](/Users/alex/.codex/automations/noisemaker-port-completion-audit/evidence-audit-20260925-090206/bounded-developer-workflows.json). [Output measurements](/Users/alex/.codex/automations/noisemaker-port-completion-audit/evidence-audit-20260925-090206/output-verification.json). [Animation](/Users/alex/.codex/automations/noisemaker-port-completion-audit/evidence-audit-20260925-090206/animation-verification.json).
-[Cancellation](/Users/alex/.codex/automations/noisemaker-port-completion-audit/evidence-audit-20260925-090206/cancellation.json). [README timeout](/Users/alex/.codex/automations/noisemaker-port-completion-audit/evidence-audit-20260925-090206/readme-512-timeout.json). [Private removal](/Users/alex/.codex/automations/noisemaker-port-completion-audit/evidence-audit-20260925-090206/private-removal.json).
+Installed commands (audit evidence `evidence-audit-20260925-090206/bounded-developer-workflows.json`). Output measurements (audit evidence `evidence-audit-20260925-090206/output-verification.json`). Animation (audit evidence `evidence-audit-20260925-090206/animation-verification.json`).
+Cancellation (audit evidence `evidence-audit-20260925-090206/cancellation.json`). README timeout (audit evidence `evidence-audit-20260925-090206/readme-512-timeout.json`). Private removal (audit evidence `evidence-audit-20260925-090206/private-removal.json`).
 
 The served kit produces a 48×32 solid image. Invalid DSL fails, and corrected noise/invert DSL produces another image.
 The failed wheel remains a distinct distribution defect despite successful editable and served-kit workflows.
 Headless rendering has no editor controls. The audit checked CLI diagnostics and cancellation through public entry points.
-[Served entry point](/Users/alex/.codex/automations/noisemaker-port-completion-audit/evidence-audit-20260925-090206/served-workflows.json). [Wheel build](/Users/alex/.codex/automations/noisemaker-port-completion-audit/evidence-audit-20260925-090206/build-command.json). [Wheel inventory](/Users/alex/.codex/automations/noisemaker-port-completion-audit/evidence-audit-20260925-090206/wheel-inventory.json).
+Served entry point (audit evidence `evidence-audit-20260925-090206/served-workflows.json`). Wheel build (audit evidence `evidence-audit-20260925-090206/build-command.json`). Wheel inventory (audit evidence `evidence-audit-20260925-090206/wheel-inventory.json`).
 
 Exact reviewed-source CI contains zero runs and zero checks. No existing workflow enforces source-update parity.
 The served source's export dispatch `35963990201` passed. Downstream release `35963999103` passed 83 checks without skips and identifies that served source.
 Its checks include an actual staged-kit PNG render.
 Release packaging checks do not establish full port parity or current wheel correctness.
-[Exact-source runs](/Users/alex/.codex/automations/noisemaker-port-completion-audit/evidence-audit-20260925-090206/source-ci.json). [Exact-source checks](/Users/alex/.codex/automations/noisemaker-port-completion-audit/evidence-audit-20260925-090206/source-checks.json). [Release log](/Users/alex/.codex/automations/noisemaker-port-completion-audit/evidence-audit-20260925-090206/kit-release.log).
+Exact-source runs (audit evidence `evidence-audit-20260925-090206/source-ci.json`). Exact-source checks (audit evidence `evidence-audit-20260925-090206/source-checks.json`). Release log (audit evidence `evidence-audit-20260925-090206/kit-release.log`).
 
 Official references, accessed 2026-09-25: [Python packaging guide](https://packaging.python.org/en/latest/tutorials/packaging-projects/) and [Python version status](https://devguide.python.org/versions/).
 The packaging guide distinguishes source archives from installable wheels. This audit checked both formats and retained the declared Python 3.11 minimum.
 
-Review CI boundary: No workflow run exists at the inspected source SHA. A passing export dispatch does not qualify rendered parity. Current complete-render enforcement remains an open verification requirement. [Exact-source responses and workflows](/Users/alex/.codex/automations/noisemaker-port-completion-audit/review-20260925-053200/noisemaker-for-python-remote-evidence.json).
+Review CI boundary: No workflow run exists at the inspected source SHA. A passing export dispatch does not qualify rendered parity. Current complete-render enforcement remains an open verification requirement. Exact-source responses and workflows (audit evidence `review-20260925-053200/noisemaker-for-python-remote-evidence.json`).
 
-[Bounded test evidence](/Users/alex/.codex/automations/noisemaker-port-completion-audit/evidence-20260924-remaining-gap-documents/python-tests-retry.json). [Exact-source Actions](https://github.com/noisefactorllc/noisemaker-for-python/actions?query=head_sha%3A70c03da6944be1319ccc249fd9646dd9df05e86c).
-[This run evidence](/Users/alex/.codex/automations/noisemaker-port-completion-audit/evidence-20260924-remaining-gap-documents) retains commands, exit codes, source identities, and distribution metadata.
+Bounded test evidence (audit evidence `evidence-20260924-remaining-gap-documents/python-tests-retry.json`). [Exact-source Actions](https://github.com/noisefactorllc/noisemaker-for-python/actions?query=head_sha%3A70c03da6944be1319ccc249fd9646dd9df05e86c).
+This run evidence (audit evidence `evidence-20260924-remaining-gap-documents`) retains commands, exit codes, source identities, and distribution metadata.
 Official ecosystem reference: [Current Python Packaging User Guide, accessed 2026-09-24](https://packaging.python.org/en/latest/tutorials/packaging-projects/).
 Source CI, export dispatch, artifact delivery, and rendered parity are separate evidence dimensions.
 A successful dispatch or unit-test summary does not establish a full rendered gate.
@@ -584,7 +584,7 @@ Five open gaps remain. Zero closures. Full parity and release readiness remain u
 2026-09-25 worker at `912e6a9aac32c668a5242b8d52aa4415ca3a848e`: 167 exact default comparisons, 38 image-gate exclusions, two independent numerical failures, and two landscape rejections.
 Served kit hashes and reproduction pass. Candidate wheel first render fails. No full-parity or release approval follows.
 
-2026-09-25 daily review at `93b8b141d21a7c853a89131166147c8337109144`: source freshness and bounded evidence reviewed. Open qualification limits retained. [Retained review evidence](/Users/alex/.codex/automations/noisemaker-port-completion-audit/review-20260925-053200/python-current-tests.json). No new closure claimed.
+2026-09-25 daily review at `93b8b141d21a7c853a89131166147c8337109144`: source freshness and bounded evidence reviewed. Open qualification limits retained. Retained review evidence (audit evidence `review-20260925-053200/python-current-tests.json`). No new closure claimed.
 
 | Date | Source | Result | Change |
 |---|---|---|---|
