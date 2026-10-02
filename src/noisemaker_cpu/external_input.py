@@ -128,8 +128,11 @@ class MidiState:
         if status == 0xFF:
             self.reset()
             return 0
-        key = data[1]
-        velocity = data[2]
+        # Two-byte MIDI messages (0xC0 program change, 0xD0 channel pressure)
+        # carry no velocity byte: the JS oracle reads data[2] as `undefined`
+        # there, so an absent third byte must not raise here.
+        key = data[1] if len(data) > 1 else None
+        velocity = data[2] if len(data) > 2 else None
         channel = (status & 0x0F) + 1
         message_type = status & 0xF0
         if message_type == 0xF0:
