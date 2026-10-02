@@ -188,7 +188,7 @@ def run_pixel(ctx, out):
         pixelCoord = rt.construct(2, globalPixelCoord, base="int")
         x = rt.construct(1, rt.component_wise("mod", rt.construct(1, rt.swizzle(pixelCoord, "x")), scaledVolSizeF, width=1), base="int")
         y = rt.binary("%", rt.swizzle(pixelCoord, "y"), scaledVolSize, 1, "int")
-        z = rt.binary("/", rt.swizzle(pixelCoord, "y"), scaledVolSize, 1, "int")
+        z = rt.trunc64(rt.binary("/", rt.swizzle(pixelCoord, "y"), scaledVolSize, 1, "int"))
         if (bool((bool(rt.binary(">=", x, scaledVolSize)) or bool(rt.binary(">=", y, scaledVolSize)))) or bool(rt.binary(">=", z, scaledVolSize))):
             g.fragColor[:] = rt.construct(4, rt.f(0.0))
             g.geoOut[:] = rt.construct(4, rt.f(0.5), rt.f(0.5), rt.f(0.5), rt.f(0.0))

@@ -12,6 +12,9 @@ the subset needed by the P0 effects (solid, invert) plus the structural hooks
 
 from __future__ import annotations
 
+import os
+from pathlib import Path
+
 import numpy as np
 
 from . import uintmath
@@ -37,6 +40,50 @@ def _snap32(v):
 def _s32(x) -> int:
     """Wrap a Python int to signed 32-bit (GLSL int overflow semantics)."""
     return ((int(x) + 0x80000000) & _U32) - 0x80000000
+
+
+_ORACLE_INTEGER_DIVISION: bool | None = None
+_SIBLING_DEFAULT = os.path.normpath(os.path.join(os.path.dirname(__file__), "..", "..", "..", "noisemaker-for-cpu"))
+
+
+def _oracle_integer_division_trunc() -> bool:
+    """True when the mounted sibling noisemaker-for-cpu oracle's transpiler
+    restores GLSL integer-division truncation.
+
+    ``noisemaker-for-cpu`` scripts/upstream/compile-glsl.js grew the
+    ``restoreIntegerDivision`` lowering in a146f22839dc; kernels it rewrites
+    then truncate component-indexed int divisions toward zero where pre-fix
+    oracles emit a fractional float64 division. Pre-fix oracles (the CI
+    oracle tarball b61b658399f1 and the pinned gate authority d2965d0b7880)
+    and runs with no mounted oracle keep the pre-fix fractional behavior.
+    Resolved once per process.
+    """
+    global _ORACLE_INTEGER_DIVISION
+    if _ORACLE_INTEGER_DIVISION is None:
+        cpu_dir = os.environ.get("NOISEMAKER_CPU_DIR") or _SIBLING_DEFAULT
+        transpiler = Path(cpu_dir) / "scripts" / "upstream" / "compile-glsl.js"
+        try:
+            text = transpiler.read_text(encoding="utf-8")
+        except OSError:
+            _ORACLE_INTEGER_DIVISION = False
+        else:
+            _ORACLE_INTEGER_DIVISION = "restoreIntegerDivision" in text
+    return _ORACLE_INTEGER_DIVISION
+
+
+def trunc64(x):
+    """JS ``Math.trunc`` over the unrounded float64 division result.
+
+    Applied only at the declaration sites the oracle's
+    ``restoreIntegerDivision`` lowering rewrites; a no-op (pass-through)
+    unless the mounted oracle is post-fix, so pre-fix oracle comparisons and
+    node-free runs keep the published fractional semantics.
+    """
+    if not _oracle_integer_division_trunc():
+        return x
+    if _is_scalar(x):
+        return float(np.trunc(np.float64(x)))
+    return np.trunc(np.asarray(x, dtype=np.float64))
 
 
 _SWIZZLE = {"x": 0, "y": 1, "z": 2, "w": 3, "r": 0, "g": 1, "b": 2, "a": 3, "s": 0, "t": 1, "p": 2, "q": 3}
@@ -136,6 +183,10 @@ class Runtime:
     @staticmethod
     def i(x) -> int:  # int literal
         return int(x)
+
+    def trunc64(self, x):
+        """JS ``Math.trunc`` over the unrounded float64 division result."""
+        return trunc64(x)
 
     # ---- construction ----
     def construct(self, width: int, *comps, base="float"):

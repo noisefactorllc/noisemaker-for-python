@@ -142,7 +142,7 @@ def run_pixel(ctx, out):
         pixelCoord = rt.construct(2, rt.swizzle(ctx.frag_coord, "xy"), base="int")
         x = rt.swizzle(pixelCoord, "x")
         y = rt.binary("%", rt.swizzle(pixelCoord, "y"), volSize, 1, "int")
-        z = rt.binary("/", rt.swizzle(pixelCoord, "y"), volSize, 1, "int")
+        z = rt.trunc64(rt.binary("/", rt.swizzle(pixelCoord, "y"), volSize, 1, "int"))
         voxel = rt.construct(3, x, y, z, base="int")
         if (bool((bool(rt.binary(">=", x, volSize)) or bool(rt.binary(">=", y, volSize)))) or bool(rt.binary(">=", z, volSize))):
             g.fragColor[:] = rt.construct(4, rt.f(0.0))

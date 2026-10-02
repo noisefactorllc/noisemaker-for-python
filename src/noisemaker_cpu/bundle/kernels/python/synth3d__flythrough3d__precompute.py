@@ -198,7 +198,7 @@ def run_pixel(ctx, out):
         pixelCoord = rt.construct(2, rt.swizzle(ctx.frag_coord, "xy"), base="int")
         vx = rt.swizzle(pixelCoord, "x")
         vy = rt.binary("%", rt.swizzle(pixelCoord, "y"), volSize, 1, "int")
-        vz = rt.binary("/", rt.swizzle(pixelCoord, "y"), volSize, 1, "int")
+        vz = rt.trunc64(rt.binary("/", rt.swizzle(pixelCoord, "y"), volSize, 1, "int"))
         if (bool((bool(rt.binary(">=", vx, volSize)) or bool(rt.binary(">=", vy, volSize)))) or bool(rt.binary(">=", vz, volSize))):
             g.fragColor[:] = rt.construct(4, rt.f(0.0))
             g.geoOut[:] = rt.construct(4, rt.f(0.5), rt.f(0.5), rt.f(0.5), rt.f(0.0))

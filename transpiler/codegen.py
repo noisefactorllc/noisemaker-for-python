@@ -305,7 +305,10 @@ class CodeGen:
                 t = self.type_of_name(s["type"], dc.get("array"))
                 # Resolve the initializer in the ENCLOSING scope, before the new
                 # name is defined (GLSL `float time = time;` reads the outer time).
-                init_code = self.expr(dc["init"], scope)[0] if dc.get("init") is not None else None
+                init_node = dc.get("init")
+                init_code = self.expr(init_node, scope)[0] if init_node is not None else None
+                if init_code is not None:
+                    init_code = self._restore_integer_division(init_node, init_code, scope)
                 if (
                     self.js_vector_storage
                     and init_code is not None
@@ -550,6 +553,37 @@ class CodeGen:
         if all(c == codes[0] for c in codes[1:]):
             return (codes[0], FLOAT)
         return (f"rt.array([{', '.join(codes)}])", TYPE[node["type"]])
+
+    def _restore_integer_division(self, node, code, scope):
+        """Mirror noisemaker-for-cpu compile-glsl.js ``restoreIntegerDivision``
+        (first present in a146f22839dc): GLSL int/int division truncates toward
+        zero, but the transpiler loses int typing on component-indexed
+        operands (``int z = pixelCoord.y / volSize;``) and emits a float64
+        division. The -cpu lowering rewrites ONLY scalar declarations whose
+        initializer is exactly ``VEC[<decimal>] / IDENT;`` (a single-component
+        member access transpiles to the same form) where IDENT is a provably
+        int-typed scalar (int uniform, int variable, or ivec). Larger
+        expressions, non-literal indices, multi-component swizzles, and
+        assignment statements do not match the -cpu rewrite and stay
+        fractional. ``rt.trunc64`` applies the truncation only when the
+        mounted oracle is post-fix (see runtime)."""
+        if not (node.get("k") == "binary" and node.get("op") == "/"):
+            return code
+        l, r = node["l"], node["r"]
+        if r.get("k") != "id":
+            return code
+        if l.get("k") == "index":
+            if l["obj"].get("k") != "id" or l["idx"].get("k") != "num" or not str(l["idx"]["value"]).isdigit():
+                return code
+        elif l.get("k") == "member":
+            if l["obj"].get("k") != "id" or len(l["field"]) != 1:
+                return code
+        else:
+            return code
+        entry = scope.resolve(r["name"])
+        if entry is None or base_of(entry["type"]) != "int" or width_of(entry["type"]) != 1:
+            return code
+        return f"rt.trunc64({code})"
 
     def _e_binary(self, node, scope):
         op = node["op"]
