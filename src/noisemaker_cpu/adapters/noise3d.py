@@ -6,9 +6,11 @@ rendered output followed IEEE-754 double arithmetic up to each bitwise
 coercion, and the port mirrored that with ``runtime.js_uvec_numbers``.
 noisemaker-for-cpu ef26f1c88a44 ("GAP-003: restore exact GLSL uint semantics
 in transpiled hash kernels") restored exact mod-2^32 uint arithmetic in
-those statements via ``cpu_umul`` and ``>>> 0``, so an oracle whose
-transpiled canonical kernels contain the restored lowering must be mirrored
-with the runtime's exact uint path instead.
+those statements via ``cpu_umul`` and ``>>> 0``, so the published runtime
+carries the exact uint path by default (standalone/deployed renders with no
+mounted oracle included); a mounted oracle whose transpiled canonical
+kernels predate the restored lowering must still be mirrored with the
+runtime's JS-number emulation.
 """
 
 from __future__ import annotations
@@ -26,13 +28,18 @@ _restored_uint_semantics: bool | None = None
 
 
 def _oracle_restored_uint_semantics() -> bool:
-    """True when the sibling oracle's transpiler restores exact uint semantics.
+    """True when the mounted sibling oracle's transpiler restores exact uint
+    semantics.
 
     ``noisemaker-for-cpu`` scripts/upstream/compile-glsl.js grew the
     ``restoreUnsignedIntegerArithmetic`` lowering in ef26f1c88a44; pre-fix
     oracles (including the CI oracle tarball and the pinned gate authority)
-    do not have it. Resolved once per process. When no oracle checkout is
-    mounted the pre-fix JavaScript-number behavior is preserved unchanged.
+    do not have it. Resolved once per process. The published runtime carries
+    the CURRENT (post-``ef26f1c88a44``) semantics, so this defaults to True —
+    a standalone/deployed render with no mounted oracle renders through the
+    exact uint path; a mounted sibling oracle's transpiler is probed so
+    version-mismatched comparisons still work (pre-fix oracles keep the
+    JS-number emulation).
     """
     global _restored_uint_semantics
     if _restored_uint_semantics is None:
@@ -41,7 +48,7 @@ def _oracle_restored_uint_semantics() -> bool:
         try:
             text = transpiler.read_text(encoding="utf-8")
         except OSError:
-            _restored_uint_semantics = False
+            _restored_uint_semantics = True
         else:
             _restored_uint_semantics = _RESTORED_UINT_MARKER in text
     return _restored_uint_semantics

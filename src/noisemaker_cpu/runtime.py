@@ -47,16 +47,17 @@ _SIBLING_DEFAULT = os.path.normpath(os.path.join(os.path.dirname(__file__), ".."
 
 
 def _oracle_integer_division_trunc() -> bool:
-    """True when the mounted sibling noisemaker-for-cpu oracle's transpiler
-    restores GLSL integer-division truncation.
+    """Whether component-indexed int divisions truncate toward zero.
 
     ``noisemaker-for-cpu`` scripts/upstream/compile-glsl.js grew the
     ``restoreIntegerDivision`` lowering in a146f22839dc; kernels it rewrites
-    then truncate component-indexed int divisions toward zero where pre-fix
-    oracles emit a fractional float64 division. Pre-fix oracles (the CI
-    oracle tarball b61b658399f1 and the pinned gate authority d2965d0b7880)
-    and runs with no mounted oracle keep the pre-fix fractional behavior.
-    Resolved once per process.
+    truncate there where pre-fix oracles emit a fractional float64 division.
+    The published runtime carries the CURRENT (post-``a146f22839dc``)
+    semantics, so this defaults to True — a standalone/deployed render with
+    no mounted oracle truncates. A mounted sibling oracle's transpiler is
+    probed once per process so version-mismatched comparisons still work:
+    pre-fix oracles (the CI oracle tarball b61b658399f1 and the pinned gate
+    authority d2965d0b7880) keep their published fractional behavior.
     """
     global _ORACLE_INTEGER_DIVISION
     if _ORACLE_INTEGER_DIVISION is None:
@@ -65,7 +66,7 @@ def _oracle_integer_division_trunc() -> bool:
         try:
             text = transpiler.read_text(encoding="utf-8")
         except OSError:
-            _ORACLE_INTEGER_DIVISION = False
+            _ORACLE_INTEGER_DIVISION = True
         else:
             _ORACLE_INTEGER_DIVISION = "restoreIntegerDivision" in text
     return _ORACLE_INTEGER_DIVISION
@@ -75,9 +76,11 @@ def trunc64(x):
     """JS ``Math.trunc`` over the unrounded float64 division result.
 
     Applied only at the declaration sites the oracle's
-    ``restoreIntegerDivision`` lowering rewrites; a no-op (pass-through)
-    unless the mounted oracle is post-fix, so pre-fix oracle comparisons and
-    node-free runs keep the published fractional semantics.
+    ``restoreIntegerDivision`` lowering rewrites; pass-through only when a
+    mounted oracle is pre-fix, so version-mismatched comparisons keep the
+    pre-fix oracle's published fractional semantics (see
+    ``_oracle_integer_division_trunc``: the default, including
+    standalone/deployed renders with no mounted oracle, truncates).
     """
     if not _oracle_integer_division_trunc():
         return x
