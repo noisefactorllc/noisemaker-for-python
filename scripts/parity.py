@@ -160,10 +160,16 @@ def external_inputs_for_case(case_id: str):
 
 
 def _external_case_dsl(case_id: str) -> str:
-    """The oracle checkout's parity DSL for one external-input case (the same
-    programs its own gate renders, parity/upstream-defaults/<name>.dsl)."""
+    """The oracle's parity DSL for one external-input case (the same programs its
+    own gate renders, parity/upstream-defaults/<name>.dsl). When the mounted
+    oracle predates the reactive/mesh import (the CI tarball carries only
+    src/bin/scripts/upstream), the byte-identical committed copy in
+    tests/data/reactive-mesh-oracle/ is used — the programs are part of the
+    synced sibling contract."""
     name = case_id.replace("/", "__")
     path = os.path.join(CPU_DIR, "parity", "upstream-defaults", f"{name}.dsl")
+    if not os.path.exists(path):
+        path = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "tests", "data", "reactive-mesh-oracle", f"{name}.dsl")
     with open(path, encoding="utf-8") as f:
         return f.read()
 
@@ -287,11 +293,21 @@ def main():
 
     ok, diffs, errors, oracle_err = [], [], {}, []
     receipt = {}
+    # The reactive/mesh external-input cases need an oracle that carries the
+    # sibling's reactive/mesh import (its reactive-fixtures.js + parity DSL).
+    # An oracle that predates the import (the CI tarball b61b658399f1) cannot
+    # render them at all; like the iterated effects it cannot serve, they count
+    # as skipped here — they are covered by the committed-reference pytest cases
+    # and by scripts/parity-summary at a current authority.
+    oracle_supports_external = os.path.exists(os.path.join(CPU_DIR, "scripts", "parity", "reactive-fixtures.js"))
     for eid in ids:
         kind = effects[eid]["kind"]
         ext = effects[eid].get("externalTexture")
         input_png = _ext_texture() and EXT_PNG if ext else None
         if eid in EXTERNAL_INPUT_EFFECT_IDS:
+            if not oracle_supports_external:
+                skipped.append(eid)
+                continue
             # Reactive/mesh effects need their external-input fixtures on both
             # sides; the CLI binds none, so render through the DSL fixture path
             # (same programs the oracle's own gate uses).

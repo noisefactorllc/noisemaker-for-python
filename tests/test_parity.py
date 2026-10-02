@@ -375,6 +375,33 @@ def _parity_script_module():
     return module
 
 
+def _committed_oracle_reference(case_id: str) -> Surface:
+    """The oracle-rendered reference bytes for one external-input case, captured
+    with scripts/parity-js-driver.mjs against noisemaker-for-cpu at
+    b0e6c4130ac2815145695114a475132282b266a9 (tree 31ceb86a4c030d12ef60ab9ec664
+    bd1d436df527) — the same render the live sibling produces (asserted below
+    whenever a current oracle is mounted). The exact-source CI oracle tarball
+    (b61b658399f1, pinned by .github/workflows/tests.yml, no workflow authority
+    to advance it) predates the reactive/mesh import: its catalog has none of
+    the five effects and binds no MIDI/audio/mesh fixture, so the live-oracle
+    comparison is impossible there and these committed bytes keep the
+    zero-tolerance oracle comparison executable on every host."""
+    path = Path(__file__).parent / "data" / "reactive-mesh-oracle" / f"{case_id.replace('/', '_')}.png"
+    assert path.is_file(), f"missing committed oracle reference {path}"
+    return decode_png(path.read_bytes())
+
+
+def _mounted_oracle_supports(case_id: str) -> bool:
+    """True when the mounted -cpu checkout has the reactive/mesh import (its
+    parity DSL for the case exists and its fixtures module is present). The
+    pre-import CI tarball oracle carries only src/bin/scripts/upstream, so both
+    probes fail there and the committed reference bytes are used instead."""
+    name = case_id.replace("/", "__")
+    dsl = Path(CPU_DIR) / "parity" / "upstream-defaults" / f"{name}.dsl"
+    fixtures = Path(CPU_DIR) / "scripts" / "parity" / "reactive-fixtures.js"
+    return dsl.is_file() and fixtures.is_file()
+
+
 @pytest.mark.parametrize(
     "case_id",
     ["synth/roll", "synth/scope", "synth/spectrum", "render/meshLoader", "render/meshRender"],
@@ -385,10 +412,22 @@ def test_external_input_dsl_byte_parity(tmp_path, case_id):
     own parity DSL (parity/upstream-defaults/<name>.dsl) with the deterministic
     fixtures (MIDI note grid / audio waveform+spectrum / packed cube mesh); the
     oracle side binds them via scripts/parity-js-driver.mjs because the CLI binds
-    no fixture. Zero tolerance, like the rest of the catalog contract."""
+    no fixture. Zero tolerance, like the rest of the catalog contract. When the
+    mounted oracle predates the reactive/mesh import (the CI tarball), the
+    oracle side is the committed reference captured at b0e6c4130ac2; when a
+    current oracle is mounted, it must reproduce those committed bytes
+    (provenance cross-check) and the live render is compared."""
     parity = _parity_script_module()
     program = parity._external_case_dsl(case_id)
-    js = parity.js_effect_external(case_id, str(tmp_path / f"{case_id.replace('/', '__')}.png"))
+    reference = _committed_oracle_reference(case_id)
+    if _mounted_oracle_supports(case_id):
+        js = parity.js_effect_external(case_id, str(tmp_path / f"{case_id.replace('/', '__')}.png"))
+        assert js.to_rgba8() == reference.to_rgba8(), (
+            f"{case_id}: mounted current-oracle render differs from the committed "
+            "reactive-mesh reference at b0e6c4130ac2 — regenerate the reference"
+        )
+    else:
+        js = reference
     py = render_dsl(
         program,
         width=parity.SIZE,
