@@ -40,10 +40,16 @@ def test_receipt_binds_the_pinned_cpu_revision():
 def test_receipt_covers_the_full_noniterated_image_catalog():
     doc = json.loads(RECEIPT.read_text(encoding="utf-8"))
     effects = parity_harness._meta()["effects"]
+    # The reactive/mesh external-input effects are catalog members now
+    # (noisemaker-for-cpu GAP-003 reactive/mesh import) but are covered by the
+    # DSL fixture-parity tests against the live sibling (the pinned 296e0138
+    # oracle predates them and binds no MIDI/audio/mesh fixture), not by this
+    # node-free CLI-path receipt — the same accounting as the iterated effects.
     eligible = [
         i
         for i in effects
         if not (effects[i].get("iterated") or effects[i].get("domain", "image") != "image")
+        and i not in parity_harness.EXTERNAL_INPUT_EFFECT_IDS
     ]
     assert sorted(doc["byteExact"]) == sorted(eligible), (
         "receipt must cover every eligible non-iterated image effect; regenerate with scripts/parity.py --json"

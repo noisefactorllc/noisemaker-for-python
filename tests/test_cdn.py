@@ -110,9 +110,14 @@ def test_eligible_ids():
     assert "render/loopBegin" in ids
     assert "render/loopEnd" in ids
 
-    # Reactive and mesh effects stay excluded.
-    assert "synth/scope" not in ids
-    assert "render/meshRender" not in ids
+    # Reactive and mesh effects are imported with the catalog (noisemaker-for-cpu
+    # GAP-003 reactive/mesh import, synced here): the eligible set covers the
+    # full 210-effect authority inventory.
+    assert "synth/scope" in ids
+    assert "synth/roll" in ids
+    assert "render/meshLoader" in ids
+    assert "render/meshRender" in ids
+    assert "render/environmentCubemap" not in ids
 
 
 def test_eligible_ids_includes_cpu_iterated_catalog(monkeypatch):
@@ -147,9 +152,7 @@ def test_eligible_ids_includes_cpu_iterated_catalog(monkeypatch):
         "synth3d/reactionDiffusion3d",
     }
     excluded = {
-        "render/meshRender",
         "render/environmentCubemap",
-        "synth/scope",
     }
     manifest = {effect_id: {} for effect_id in iterated | volume_and_control | excluded | {"synth/solid"}}
     monkeypatch.setattr(cdn, "fetch_manifest", lambda _version: manifest)

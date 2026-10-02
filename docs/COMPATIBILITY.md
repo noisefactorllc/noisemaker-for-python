@@ -72,10 +72,10 @@ Historical measurements remain bound to their original revisions in [completion 
 | Served kit 0.1.7 | verified | All 329 file hashes, all 324 engine source hashes, rebuilt inventory, first render, invalid DSL, and recovery. |
 | README 512×512 first result | blocked | Probe exceeded 180 seconds under concurrent load. Smaller output passes. |
 | Minimum Python 3.11, other systems, upgrades | unverified | Runtime unavailable or workflow not executed. |
-| Default image parity | verified | 167 exact 8×8 comparisons against the recorded CPU snapshot. |
+| Default image parity | verified | 172 exact 8×8 comparisons against the recorded CPU snapshot (205-effect catalog), now 210/210 including the reactive/mesh external-input cases (§3, 2026-10-02 sync). |
 | Nondefault alpha and feedback | verified | Fixed 2026-09-26 at this source: four-component solid colors and the feedback program byte-match the pinned oracle `bfbe5476` at 8-bit and rgba16f level per the committed fixtures in `tests/data/gap005-oracle/` (with seed-sensitivity and statefulness controls). GAP-005 closed. |
 | Current landscape filtering | verified | Fixed: both valid `renderLandscape3d` `filtering` choices (`isosurface`, `voxel`) render and byte-match the pinned oracle; committed as `test_landscape3d_filtering_byte_parity`. GAP-001 closed 2026-09-27. |
-| Complete current-authority parity | verified | Reconciled 2026-09-27 against immutable CDN build `1.0.190`: 294/294 program GLSL hashes match the bundle lock, 0 parameter-manifest differences, 0 unmatched programs; 205/205 targeted effects have zero-tolerance oracle-matched comparisons; 5 authority IDs are documented non-targets (§3). The complete parameter matrix remains unmeasured. |
+| Complete current-authority parity | verified | Reconciled 2026-09-27 against immutable CDN build `1.0.190` and extended by the 2026-10-02 reactive/mesh sync: the full 210-effect catalog has zero-tolerance oracle-matched comparisons (210/210 exact at `scripts/parity-summary`, §3); the five formerly documented non-targets are now catalog members with fixture-fed DSL parity cases. The complete parameter matrix remains unmeasured. |
 | Source-update parity enforcement | blocked | No current exact-source CI checks or complete parity gate. GAP-003. |
 | Release readiness | blocked | Exact-source CI and platform limits (macOS/Windows/Python 3.14) remain. |
 
@@ -100,6 +100,20 @@ The matrix below retains the earlier measured scope. A historical verified row i
 | Release readiness | blocked | Full parity, installation, host, and artifact evidence remain incomplete. |
 
 ## 3. Parity coverage
+
+### Source-lock sync, 2026-10-02 (noisemaker-for-cpu `b93980b512a2`..`b0e6c4130ac2`, reactive/mesh import)
+
+Range audit of the sibling noisemaker-for-cpu `b93980b512a24ef71ab61a959ed2ce35c1f09666..b0e6c4130ac2815145695114a475132282b266a9` against a fresh clone (checkout `b0e6c4130ac2`, tree `31ceb86a4c030d12ef60ab9ec664bd1d436df527`; `git merge-base --is-ancestor b93980b512a2 b0e6c4130ac2` exits 0, so the force-push-flagged delivery is contiguous over the whole job range; the range start `b93980b512a2` was audited by the previous sync). Exactly two commits: `796ec92f7ab8` ("GAP-003: import the reactive and mesh effect trees; CPU external-input support") and `b0e6c4130ac2` (records-only provenance `introducedIn` regeneration for the five new goldens against the published introducing commit `796ec92`). `796ec92` un-excludes the five formerly excluded upstream effects (`synth/roll`, `synth/scope`, `synth/spectrum`, `render/meshLoader`, `render/meshRender`) so the sibling's whole-port parity contract counts all 210 manifest effects: `scripts/upstream/inventory.js` imports the reactive and mesh trees (no exclusions); `upstream-snapshot`, `glsl-coverage`, and `canonical-kernels` regenerated (308 programs, 298 generated, 10 scatter adapters); `src/runtime/external-input.js` ports the rendering-relevant upstream `MidiState`/`AudioState` (24-PPQ clock counter, packed 128x16 note-grid texture) and the OBJ pipeline (`parseOBJ` fan triangulation with reversed winding, smooth-vertex-normal fallback, `packMeshDataForTextures` RGBA packing); `src/runtime/external-textures.js` flips RGBA rows for GPU data-texture semantics; `src/effects/cpu/mesh-render.js` is a hand-written CPU rasterizer for `drawMode: 'triangles'` (`render/meshRender`: GLSL-f32 vertex transform, depth-tested LESS with CCW back-face culling, Blinn-Phong/rim fragment stage, wireframe discard via analytic screen-space normal derivatives, gamma 1/2.2); the renderer binds reactive uniforms (`midiClockCount`, `audioWaveform`, `audioSpectrum`, zero-initialized like WebGL uniform arrays) and mesh/note-grid data textures via `renderOptions.externalInputs`, and initializes consumed internal scratch textures (`synth/roll`'s `_rollFb`) like the upstream pre-created feedback attachment; `scripts/parity/reactive-fixtures.js` holds the deterministic fixtures its gate feeds via `externalInputsForCase`; the CLI `--effect random` pools exclude the five (the CLI binds no MIDI/audio/mesh fixture). The sibling's committed upstream pin is unchanged at `e24c844f8dada85551ab084f41db8944fbc176c8` / `c2e0c264dc20338b19a144ee0888bd2ca39edcf325315a7d7ae1f5ced920804d` — the imported kernels come from the same pinned upstream source — so the audited source-lock set needs no addition.
+
+Port, per the sibling's own GAP-003 design: `transpiler/cdn.py` drops the three reactive id exclusions and adds `render/meshLoader`/`render/meshRender` to the render allowlist, and the committed bundle was regenerated from the pinned CDN sources (`python -m transpiler.build --all`) — the catalog grows 205 → 210 effects (331 locked programs, six new kernel files; `render/meshRender:render` is the `drawMode: 'triangles'` pass with no fragment kernel, dispatched to the hand adapter like the scatter draw ops). `src/noisemaker_cpu/external_input.py` ports `MidiState`/`AudioState`/`parseOBJ`/`packMeshDataForTextures` (float64 math, float32 stores at the JS `Float32Array` boundaries); `src/noisemaker_cpu/external_textures.py` ports the RGBA row-flip data-texture surface; `src/noisemaker_cpu/mesh_render.py` ports the triangles rasterizer with the JS source's exact fround-per-op emulation (the JS-observable barycentric edge-function divisions stay unrounded float64, as in the oracle); `src/noisemaker_cpu/renderer.py` gains `_bind_external_inputs` (reactive uniform defaults, note-grid and `global_mesh0_*` data-texture bindings, `render/meshRender` requires `external_inputs["meshData"]`), threads `external_inputs` through `render_effect`/`render_dsl`, and dispatches `drawMode: 'triangles'` passes to the mesh adapter (the cleared pre-created `_rollFb` scratch already matches the oracle's initializeCanonicalResources change on this side). `scripts/parity-js-driver.mjs` renders the oracle side of an external-input case through `CpuRenderer.render` with the sibling checkout's own `reactive-fixtures.js` (the CLI binds no fixture); `scripts/parity.py` mirrors those fixture constants and routes the five cases through the DSL fixture path on both sides; `scripts/parity-summary` maps the five to those cases; `src/noisemaker_cpu/cli.py` `random` pools exclude the five (`EXTERNAL_INPUT_EFFECT_IDS`). The node-free receipt contract is unchanged (the five are receipt-excluded like the iterated effects: the pinned 296e0138 tarball oracle predates them and binds no fixture) and the node-free receipt stays pinned at `parity-receipt-296e0138.json` because the exact-source `tests.yml` oracle tarball remains pinned at `b61b658399f1` (this job holds no workflow authority to advance it). `scripts/test`'s whole-catalog gate pin advances from the pre-import authority `d2965d0b7880`/`69d2ffc4` to `b0e6c4130ac2`/`31ceb86a`, since the 210-effect catalog now includes the five external-input cases the old authority cannot serve. Verified against the fresh sibling at `b0e6c4130ac2` (`NOISEMAKER_CPU_DIR` set):
+
+- `scripts/parity-summary` (whole-catalog gate): `PARITY-SUMMARY {"expected":210,"executed":210,"exact":210,"strict":0,"near":0,"defer":0,"skip":0,"fail":0,"missing":0}`, exit 0, provenance line binding cpuHead `b0e6c4130ac2...`, cpuTree `31ceb86a4c03...`, upstreamPin `e24c844f8da...`, sourceDigest `c2e0c264...`; with case-id arguments, `scripts/parity-summary synth/roll synth/scope synth/spectrum render/meshLoader render/meshRender` → 5/5 exact.
+- Full suite with that sibling: 348 passed, 1 skipped, 0 failed at this source (Python 3.11.2, node 26.5.1, Linux x86_64); the five external-input DSL cases are byte-exact zero-tolerance pytest cases (`test_external_input_dsl_byte_parity`), and red behavior was verified by corrupting each fixture class and the rasterizer gamma (each corruption fails exactly its case, then restored from backup).
+- The oracle's own gate at `b0e6c4130ac2` renders each new case byte-exact against its retained authority goldens (`node scripts/parity/run.js --suite defaults --only render__meshRender` / `synth__roll`: 1/1 byte-exact, provenance recorded).
+
+No gap closed. Raw evidence archived with the job as `cpu-sync-b93980b-b0e6c41-range.diff` (SHA-256 `8c59acb37336f856fd13bffa9ec068ab745f24947795624bdb5b366b4e04832d`), `cpu-sync-b93980b-b0e6c41-range.log`, and `nmpy-scripts-test.txt` in `/workspace/evidence`.
+
+Environment: Linux x86_64 container, Python 3.11.2, node 26.5.1; sibling oracle `NOISEMAKER_CPU_DIR` at `b0e6c4130ac2815145695114a475132282b266a9`.
 
 ### Source-lock sync, 2026-10-02 (noisemaker-for-cpu `ef26f1c88a44`..`b93980b512a2`)
 
@@ -513,8 +527,8 @@ Current served declaration: 205 effect IDs. This inventory is not evidence of ex
 | `points/physical` | yes | exact DSL chain (§3, 2026-09-27) |
 | `render/loopBegin` | yes | exact DSL chain (§3, 2026-09-27) |
 | `render/loopEnd` | yes | exact DSL chain (§3, 2026-09-27) |
-| `render/meshLoader` | no | not targeted (documented exclusion) |
-| `render/meshRender` | no | not targeted (documented exclusion) |
+| `render/meshLoader` | no | exact external-input DSL case (§3, 2026-10-02 reactive/mesh sync; catalog member since that sync) |
+| `render/meshRender` | no | exact external-input DSL case (§3, 2026-10-02 reactive/mesh sync; catalog member since that sync) |
 | `render/pointsBillboardRender` | yes | exact DSL chain (§3, 2026-09-27) |
 | `render/pointsEmit` | yes | exact DSL chain (§3, 2026-09-27) |
 | `render/pointsRender` | yes | exact DSL chain (§3, 2026-09-27) |
@@ -544,12 +558,12 @@ Current served declaration: 205 effect IDs. This inventory is not evidence of ex
 | `synth/polygon` | yes | exact default sweep (§3, 2026-09-27) |
 | `synth/reactionDiffusion` | yes | exact DSL chain (§3, 2026-09-27) |
 | `synth/remap` | yes | exact default sweep (§3, 2026-09-27) |
-| `synth/roll` | no | not targeted (documented exclusion) |
+| `synth/roll` | no | exact external-input DSL case (§3, 2026-10-02 reactive/mesh sync; catalog member since that sync) |
 | `synth/sacredGeometry` | yes | exact default sweep (§3, 2026-09-27) |
-| `synth/scope` | no | not targeted (documented exclusion) |
+| `synth/scope` | no | exact external-input DSL case (§3, 2026-10-02 reactive/mesh sync; catalog member since that sync) |
 | `synth/shape` | yes | exact default sweep (§3, 2026-09-27) |
 | `synth/solid` | yes | exact default sweep (§3, 2026-09-27) |
-| `synth/spectrum` | no | not targeted (documented exclusion) |
+| `synth/spectrum` | no | exact external-input DSL case (§3, 2026-10-02 reactive/mesh sync; catalog member since that sync) |
 | `synth/subdivide` | yes | exact default sweep (§3, 2026-09-27) |
 | `synth/testPattern` | yes | exact default sweep (§3, 2026-09-27) |
 | `synth3d/cell3d` | yes | exact DSL chain (§3, 2026-09-27) |

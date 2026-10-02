@@ -18,9 +18,11 @@ from .adapters import get_adapter
 from .adapters._palette_data import PALETTE_DATA
 from .draw_ops import get_draw_op
 from .dsl import compile_dsl
+from .external_textures import external_data_surface
 from .frame_export import CpuFrameExportAdapter, FrameExportQueue
 from .iteration import compute_iteration_groups, is_particle_state_name, iteration_schedule
 from .kernel_loader import KernelCache
+from .mesh_render import get_mesh_op
 from .overlay_gen import OVERLAY_EFFECTS, render_worm_overlay
 from .pass_runner import Ctx, run_pass, run_pass_deriv, run_pass_mrt
 from .runtime import F32, Runtime, f32
@@ -178,6 +180,57 @@ def _remap_uniform_data(u, width, height):
     return data
 
 
+# Reactive (MIDI/audio) uniform defaults and mesh/external data-texture bindings.
+# Port of noisemaker-cpu renderer.js bindExternalInputs (GAP-003 reactive/mesh
+# import): mirrors the upstream pipeline's global-uniform stage
+# (updateGlobalUniforms) — the 128-float audio arrays and the MIDI clock counter
+# are bound only for the effects whose kernels declare them, zero-initialized
+# when no external state is supplied, and the packed note grid uploads as a
+# 128x16 RGBA data texture. Mesh textures (`global_mesh0_*`) bind from
+# `external_inputs["meshData"]` — the same packed RGBA arrays the upstream
+# `uploadMeshData` path feeds.
+_REACTIVE_EFFECT_IDS = frozenset({"synth/roll", "synth/scope", "synth/spectrum"})
+_MESH_TEX_WIDTH = 256
+_MESH_TEX_HEIGHT = 256
+
+
+def _bind_external_inputs(effect_id, eff, uniforms, attachments, external_inputs):
+    external_inputs = external_inputs or {}
+    pass_input_names = set()
+    for render_pass in eff.get("passes") or []:
+        for resource_name in (render_pass.get("inputs") or {}).values():
+            pass_input_names.add(resource_name)
+    if effect_id in _REACTIVE_EFFECT_IDS:
+        midi_state = external_inputs.get("midiState")
+        audio_state = external_inputs.get("audioState")
+        uniforms["midiClockCount"] = midi_state.clock_count if midi_state else 0
+        # GLSL uniform arrays are zero-initialized when the upstream pipeline has
+        # no external state; the CPU kernels index them unconditionally, so
+        # always bind 128-float arrays (zeros when no audio state is supplied).
+        uniforms["audioWaveform"] = (
+            audio_state.waveform if audio_state else np.zeros(128, dtype=np.float32)
+        )
+        uniforms["audioSpectrum"] = (
+            audio_state.spectrum if audio_state else np.zeros(128, dtype=np.float32)
+        )
+        if "midiNoteGrid" in pass_input_names:
+            grid = midi_state.note_grid if midi_state else np.zeros(128 * 16 * 4, dtype=np.float32)
+            attachments["midiNoteGrid"] = external_data_surface(grid, 128, 16)
+    mesh_names = [name for name in pass_input_names if name.startswith("global_mesh0_")]
+    if mesh_names:
+        mesh_data = external_inputs.get("meshData")
+        if not mesh_data:
+            raise ValueError(f"{effect_id} requires external mesh data (external_inputs['meshData'])")
+        tex_width = mesh_data.get("texWidth") or _MESH_TEX_WIDTH
+        tex_height = mesh_data.get("texHeight") or _MESH_TEX_HEIGHT
+        if "global_mesh0_positions" in mesh_names:
+            attachments["global_mesh0_positions"] = external_data_surface(mesh_data["positionData"], tex_width, tex_height)
+        if "global_mesh0_normals" in mesh_names:
+            attachments["global_mesh0_normals"] = external_data_surface(mesh_data["normalData"], tex_width, tex_height)
+        if "global_mesh0_uvs" in mesh_names:
+            attachments["global_mesh0_uvs"] = external_data_surface(mesh_data["uvData"], tex_width, tex_height)
+
+
 def _round_half_up(value) -> int:
     # JS Math.round: half away from zero, not Python banker's rounding
     # (round(0.5) == 0 in Python but 1 in JS). Dimension specs must resolve
@@ -314,6 +367,7 @@ def _render_effect_once(
     previous_output=None,
     frame=0,
     delta_time=0,
+    external_inputs=None,
 ) -> Surface:
     params = params or {}
     inputs = inputs or {}
@@ -440,6 +494,11 @@ def _render_effect_once(
     # warp/displacement/refraction effects that sample at fractional coordinates.
     external_tex = eff.get("externalTexture")
 
+    # Reactive uniform defaults and mesh/note-grid data-texture bindings (see
+    # _bind_external_inputs). Bound like the JS buildBindings externalInputs stage,
+    # after canonical resources initialize and before any pass runs.
+    _bind_external_inputs(effect_id, eff, uniforms, attachments, external_inputs)
+
     for p in eff["passes"]:
         # Pass-level uniform aliases: the definition may expose a param under one
         # name (e.g. `color`) while this pass's GLSL declares another (`splatColor`).
@@ -508,9 +567,17 @@ def _render_effect_once(
                     "aspect": pass_aspect,
                 }
             )
-            draw_op = get_draw_op(effect_id, p["program"]) if p.get("drawMode") else None
+            mesh_op = get_mesh_op(effect_id, p["program"]) if p.get("drawMode") == "triangles" else None
+            draw_op = mesh_op or (get_draw_op(effect_id, p["program"]) if p.get("drawMode") else None)
             produced = []
-            if draw_op is not None:
+            if mesh_op is not None:
+                destination = Surface(pass_width, pass_height)
+                prior = attachments.get(out_names[0]) if out_names else None
+                if prior is not None and prior.data.shape == destination.data.shape:
+                    destination.data[:] = prior.data
+                mesh_op(textures, destination, pass_uniforms, p, external_inputs=external_inputs)
+                produced = [destination]
+            elif draw_op is not None:
                 destination = Surface(pass_width, pass_height)
                 prior = attachments.get(out_names[0]) if out_names else None
                 if prior is not None and prior.data.shape == destination.data.shape:
@@ -576,7 +643,7 @@ def _render_effect_once(
     return output_result if output_result is not None else image
 
 
-def render_effect(effect_id, params=None, inputs=None, width=256, height=256, seed=1, time=0.0):
+def render_effect(effect_id, params=None, inputs=None, width=256, height=256, seed=1, time=0.0, external_inputs=None):
     params = params or {}
     inputs = inputs or {}
     effect = _meta()["effects"][effect_id]
@@ -588,7 +655,7 @@ def render_effect(effect_id, params=None, inputs=None, width=256, height=256, se
     }
     params = _inherit_volume_size(effect, params, input_bundle)
     if not effect.get("iterated"):
-        return _render_effect_once(effect_id, params, inputs, width, height, seed, time)
+        return _render_effect_once(effect_id, params, inputs, width, height, seed, time, external_inputs=external_inputs)
 
     iteration_spec = effect["params"]["iterationCount"]
     iteration_count = _coerce(iteration_spec, params.get("iterationCount"))
@@ -673,14 +740,14 @@ def _effect_step_inputs(step, current, surfaces, external_textures):
     return inputs
 
 
-def _run_effect_step(step, current, surfaces, external_textures, width, height, seed, time):
+def _run_effect_step(step, current, surfaces, external_textures, width, height, seed, time, external_inputs=None):
     inputs = _effect_step_inputs(step, current, surfaces, external_textures)
     effect = _meta()["effects"][step["effect_id"]]
     params = _inherit_volume_size(effect, step["params"], _chain_bundle(current))
-    return render_effect(step["effect_id"], params, inputs, width=width, height=height, seed=seed, time=time)
+    return render_effect(step["effect_id"], params, inputs, width=width, height=height, seed=seed, time=time, external_inputs=external_inputs)
 
 
-def _run_iterated_group(group, current, surfaces, external_textures, effects, width, height, seed, time):
+def _run_iterated_group(group, current, surfaces, external_textures, effects, width, height, seed, time, external_inputs=None):
     first_step = group["steps"][0]
     first_effect = effects[first_step["effect_id"]]
     iteration_spec = first_effect["params"]["iterationCount"]
@@ -742,7 +809,7 @@ def _run_iterated_group(group, current, surfaces, external_textures, effects, wi
     return current
 
 
-def render_dsl(source, width=512, height=512, seed=1, time=0.0, external_textures=None, seed_surfaces=None) -> Surface:
+def render_dsl(source, width=512, height=512, seed=1, time=0.0, external_textures=None, seed_surfaces=None, external_inputs=None) -> Surface:
     """Render a Polymorphic DSL program on the CPU — the Python counterpart of
     noisemaker-cpu's CpuRenderer.render(). Compiles the program to a plan, then
     threads each chain's `current` surface through read/write/effect steps over a
@@ -765,6 +832,7 @@ def render_dsl(source, width=512, height=512, seed=1, time=0.0, external_texture
                     height,
                     seed,
                     time,
+                    external_inputs,
                 )
                 continue
             for step in group["steps"]:
@@ -776,7 +844,7 @@ def render_dsl(source, width=512, height=512, seed=1, time=0.0, external_texture
                 elif kind == "write":
                     surfaces[step["surface"]] = _chain_bundle(current)["image"]
                 else:
-                    current = _run_effect_step(step, current, surfaces, external_textures, width, height, seed, time)
+                    current = _run_effect_step(step, current, surfaces, external_textures, width, height, seed, time, external_inputs)
     rendered = surfaces.get(plan["render_surface"])
     if rendered is None:
         raise ValueError(f"Surface {plan['render_surface']} has not been written")
@@ -842,6 +910,7 @@ class CpuRenderer:
         external_textures=None,
         seed_surfaces=None,
         presentation_timestamp=None,
+        external_inputs=None,
     ) -> Surface:
         self._validate_options(width, height, seed, time)
         self._configure_sinks(width, height)
@@ -853,6 +922,7 @@ class CpuRenderer:
             time=time,
             external_textures=external_textures,
             seed_surfaces=seed_surfaces,
+            external_inputs=external_inputs,
         )
         timestamp = presentation_timestamp if presentation_timestamp is not None else _clock.perf_counter() * 1000
         self.sink_manager.submit(result, timestamp)

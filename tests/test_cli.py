@@ -67,6 +67,13 @@ def test_resolve_random_excludes_non_image_iterated_and_external_texture_effects
     assert all(effects[effect_id].get("domain", "image") == "image" for effect_id in captured)
     assert all(not effects[effect_id].get("iterated") for effect_id in captured)
     assert all(not effects[effect_id].get("externalTexture") for effect_id in captured)
+    # External-input effects (reactive synth/roll|scope|spectrum, mesh
+    # render/meshLoader|meshRender) are excluded too: the CLI binds no
+    # MIDI/audio/mesh fixture, so picking one would exit nonzero.
+    assert not (set(captured) & set(cli.EXTERNAL_INPUT_EFFECT_IDS))
+    # Catalog drift guard: the reactive/mesh effects are catalog members now
+    # (noisemaker-for-cpu GAP-003 reactive/mesh import), so the exclusion is live.
+    assert set(cli.EXTERNAL_INPUT_EFFECT_IDS) <= set(effects)
 
 
 def test_generate_writes_a_png():

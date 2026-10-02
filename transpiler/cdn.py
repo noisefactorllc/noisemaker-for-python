@@ -81,6 +81,8 @@ _RENDER_ALLOWLIST = frozenset(
     {
         "render/loopBegin",
         "render/loopEnd",
+        "render/meshLoader",
+        "render/meshRender",
         "render/pointsBillboardRender",
         "render/pointsEmit",
         "render/pointsRender",
@@ -92,11 +94,7 @@ _RENDER_ALLOWLIST = frozenset(
     }
 )
 _ID_EXCLUSIONS = frozenset(
-    {
-        "synth/roll",
-        "synth/scope",
-        "synth/spectrum",
-    }
+    set()
 )
 _ITERATED_IDS = frozenset(
     {

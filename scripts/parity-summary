@@ -48,7 +48,9 @@ def _build_cases(effects: dict) -> dict:
     """Map every bundled effect id to one executable oracle-comparison case."""
     cases: dict = {}
     for eid, spec in effects.items():
-        if not (spec.get("iterated") or spec.get("domain", "image") != "image"):
+        if eid in _parity.EXTERNAL_INPUT_EFFECT_IDS:
+            cases[eid] = ("external", eid, _parity.SIZE)
+        elif not (spec.get("iterated") or spec.get("domain", "image") != "image"):
             cases[eid] = ("effect", eid, _parity.SIZE)
     for eid, program in _tp.ITERATED_PROGRAMS.items():
         base = eid.split(":")[0]
@@ -95,6 +97,19 @@ def main() -> int:
                 input_png = _parity._ext_texture() and _parity.EXT_PNG if ext else None
                 js = _parity.js_effect(eid, _parity.JS_PNG, input_png)
                 py = _parity.py_render(eid, kind, ext)
+            elif case[0] == "external":
+                _, case_id, width = case
+                js = _parity.js_effect_external(case_id, _parity.JS_PNG, width=width)
+                from noisemaker_cpu.renderer import render_dsl
+
+                py = render_dsl(
+                    _parity._external_case_dsl(case_id),
+                    width=width,
+                    height=width,
+                    seed=_parity.SEED,
+                    time=_parity.TIME,
+                    external_inputs=_parity.external_inputs_for_case(case_id),
+                )
             else:
                 _, program, width = case
                 if effects[eid].get("externalTexture"):

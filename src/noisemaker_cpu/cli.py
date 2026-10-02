@@ -29,6 +29,13 @@ MAX_SEED_VALUE = 2**32 - 1
 # Version string - keep in sync with pyproject.toml
 __version__ = "0.0.0"
 
+# Reactive/mesh effects require external inputs the CLI binds no fixture for
+# (`--effect random` must not select them — same exclusion rationale as iterated
+# and externalTexture effects). Keep the id list in sync with the catalog imports.
+EXTERNAL_INPUT_EFFECT_IDS = frozenset(
+    {"synth/roll", "synth/scope", "synth/spectrum", "render/meshLoader", "render/meshRender"}
+)
+
 CLICK_CONTEXT_SETTINGS = {"help_option_names": ["-h", "--help"], "max_content_width": 160}
 
 # Positive-only dimension/count option type.
@@ -41,6 +48,11 @@ def _resolve_effect(effect: str, kind: str | None = None) -> str:
     an explicit id is used as-is."""
     effects = _meta()["effects"]
     if effect == "random":
+        # External-input effects (reactive synth/roll|scope|spectrum, mesh
+        # render/meshLoader|meshRender) are excluded like the iterated and
+        # external-texture pools: the CLI binds no MIDI/audio/mesh fixture, so
+        # picking one would fail on its missing external inputs (noisemaker-cpu
+        # bin/noisemaker-cpu.js EXTERNAL_INPUT_EFFECT_IDS).
         pool = [
             effect_id
             for effect_id, definition in effects.items()
@@ -48,6 +60,7 @@ def _resolve_effect(effect: str, kind: str | None = None) -> str:
             and definition.get("domain", "image") == "image"
             and not definition.get("iterated")
             and not definition.get("externalTexture")
+            and effect_id not in EXTERNAL_INPUT_EFFECT_IDS
         ]
         if not pool:
             raise click.ClickException(f"No {kind or 'catalog'} effects are available for random selection")

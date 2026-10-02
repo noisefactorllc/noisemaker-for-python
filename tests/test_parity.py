@@ -363,6 +363,61 @@ def test_run_dsl_warp_parity(tmp_path, name):
     assert _max_diff(js, py) <= 2
 
 
+def _parity_script_module():
+    """Load scripts/parity.py (the whole-catalog harness) for its external-input
+    fixture mirror and the oracle-side DSL cases."""
+    import importlib.util
+
+    path = Path(__file__).resolve().parent.parent / "scripts" / "parity.py"
+    spec = importlib.util.spec_from_file_location("_noisemaker_parity_tests", path)
+    module = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(module)
+    return module
+
+
+@pytest.mark.parametrize(
+    "case_id",
+    ["synth/roll", "synth/scope", "synth/spectrum", "render/meshLoader", "render/meshRender"],
+)
+def test_external_input_dsl_byte_parity(tmp_path, case_id):
+    """Reactive (MIDI/audio) and mesh (OBJ) parity cases — noisemaker-for-cpu
+    GAP-003's reactive/mesh import, synced here. Both sides render the oracle's
+    own parity DSL (parity/upstream-defaults/<name>.dsl) with the deterministic
+    fixtures (MIDI note grid / audio waveform+spectrum / packed cube mesh); the
+    oracle side binds them via scripts/parity-js-driver.mjs because the CLI binds
+    no fixture. Zero tolerance, like the rest of the catalog contract."""
+    parity = _parity_script_module()
+    program = parity._external_case_dsl(case_id)
+    js = parity.js_effect_external(case_id, str(tmp_path / f"{case_id.replace('/', '__')}.png"))
+    py = render_dsl(
+        program,
+        width=parity.SIZE,
+        height=parity.SIZE,
+        seed=parity.SEED,
+        time=parity.TIME,
+        external_inputs=parity.external_inputs_for_case(case_id),
+    )
+    assert _max_diff(js, py) == 0
+
+
+def test_external_input_fixtures_are_deterministic():
+    """The fixture mirror must be deterministic and shape-correct: re-running the
+    builders yields identical arrays (a nondeterministic fixture would make the
+    byte-exact comparisons above meaningless)."""
+    import numpy as np
+
+    parity = _parity_script_module()
+    midi_a = parity.midi_fixture()
+    midi_b = parity.midi_fixture()
+    assert np.array_equal(midi_a.note_grid, midi_b.note_grid)
+    assert midi_a.clock_count == 24  # 24 clock pulses — one beat at 24 PPQ
+    audio = parity.audio_fixture()
+    assert audio.waveform.shape == (128,) and audio.spectrum.shape == (128,)
+    mesh = parity.mesh_fixture()
+    assert mesh["texWidth"] == 256 and mesh["texHeight"] == 256
+    assert mesh["vertexCount"] == 36  # 12 triangles x 3 vertices
+
+
 def test_noise_generator_is_f32_bit_exact(tmp_path):
     """The deferred-rounding fix (runtime rounds f32 at consumption boundaries, not per
     binary op) made the noise generator bit-exact vs JS at full f32 — not just 8-bit —

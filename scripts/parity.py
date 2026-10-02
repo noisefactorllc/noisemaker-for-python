@@ -15,7 +15,7 @@ import tempfile
 import numpy as np
 
 from noisemaker_cpu.png import decode_png, encode_png
-from noisemaker_cpu.renderer import _meta, render_effect
+from noisemaker_cpu.renderer import _meta, render_dsl, render_effect
 
 CPU_DIR = os.environ.get("NOISEMAKER_CPU_DIR") or os.path.normpath(
     os.path.join(os.path.dirname(__file__), "..", "..", "noisemaker-for-cpu")
@@ -68,6 +68,131 @@ _SCRATCH = tempfile.TemporaryDirectory(prefix="noisemaker-python-parity-")
 EXT_PNG = os.path.join(_SCRATCH.name, "external.png")
 JS_PNG = os.path.join(_SCRATCH.name, "oracle.png")
 _EXT_TEX = None
+
+# Deterministic external-input fixtures for the reactive (MIDI/audio) and mesh
+# (OBJ) parity cases — the Python mirror of the oracle's
+# scripts/parity/reactive-fixtures.js. Keep the fixture constants byte-identical
+# across both sides: the oracle driver (scripts/parity-js-driver.mjs) feeds the
+# oracle checkout's own fixtures module, and this side constructs the equivalent
+# state through noisemaker_cpu.external_input.
+
+# MIDI: channel 1 C-major triad (60/64/67, velocities 100/80/90), channel 2 low C
+# (48, velocity 64), then 24 clock pulses — one beat at 24 PPQ.
+MIDI_MESSAGES = [
+    [0x90, 60, 100], [0x90, 64, 80], [0x90, 67, 90],
+    [0x91, 48, 64],
+] + [[0xF8]] * 24
+
+# Mesh: a 12-triangle cube (8 vertices, 6 quad faces with per-face normals).
+CUBE_OBJ = "\n".join(
+    [
+        "v -0.7 -0.7 -0.7", "v 0.7 -0.7 -0.7", "v 0.7 0.7 -0.7", "v -0.7 0.7 -0.7",
+        "v -0.7 -0.7 0.7", "v 0.7 -0.7 0.7", "v 0.7 0.7 0.7", "v -0.7 0.7 0.7",
+        "vn 0 0 -1", "vn 0 0 1", "vn 0 -1 0", "vn 0 1 0", "vn -1 0 0", "vn 1 0 0",
+        "f 1//1 2//1 3//1 4//1", "f 5//2 8//2 7//2 6//2", "f 1//3 5//3 6//3 2//3",
+        "f 2//4 6//4 7//4 3//4", "f 3//5 7//5 8//5 4//5", "f 4//6 8//6 5//6 1//6",
+        "",
+    ]
+)
+
+MESH_TEX_WIDTH = 256
+MESH_TEX_HEIGHT = 256
+
+_MIDI_FIXTURE = None
+_AUDIO_FIXTURE = None
+_MESH_FIXTURE = None
+
+
+def midi_fixture():
+    global _MIDI_FIXTURE
+    if _MIDI_FIXTURE is None:
+        from noisemaker_cpu.external_input import MidiState
+
+        midi_state = MidiState()
+        for message in MIDI_MESSAGES:
+            midi_state.handle_message(message)
+        midi_state.update_note_grid()
+        _MIDI_FIXTURE = midi_state
+    return _MIDI_FIXTURE
+
+
+def audio_fixture():
+    global _AUDIO_FIXTURE
+    if _AUDIO_FIXTURE is None:
+        import math
+
+        from noisemaker_cpu.external_input import AudioState
+
+        audio_state = AudioState()
+        waveform = [0.5 + 0.5 * math.sin((2 * math.pi * 3 * i) / 128) for i in range(128)]
+        spectrum = [(1 - i / 127) ** 2 for i in range(128)]
+        audio_state.set_waveform(waveform)
+        audio_state.set_spectrum(spectrum)
+        _AUDIO_FIXTURE = audio_state
+    return _AUDIO_FIXTURE
+
+
+def mesh_fixture():
+    global _MESH_FIXTURE
+    if _MESH_FIXTURE is None:
+        from noisemaker_cpu.external_input import pack_mesh_data_for_textures, parse_obj
+
+        parsed = parse_obj(CUBE_OBJ)
+        packed = pack_mesh_data_for_textures(parsed["positions"], parsed["normals"], parsed["uvs"], MESH_TEX_WIDTH, MESH_TEX_HEIGHT)
+        packed["texWidth"] = MESH_TEX_WIDTH
+        packed["texHeight"] = MESH_TEX_HEIGHT
+        _MESH_FIXTURE = packed
+    return _MESH_FIXTURE
+
+
+EXTERNAL_INPUT_EFFECT_IDS = ("synth/roll", "synth/scope", "synth/spectrum", "render/meshLoader", "render/meshRender")
+
+
+def external_inputs_for_case(case_id: str):
+    external_inputs = {}
+    if case_id == "synth/roll":
+        external_inputs["midiState"] = midi_fixture()
+    if case_id in ("synth/scope", "synth/spectrum"):
+        external_inputs["audioState"] = audio_fixture()
+    if case_id in ("render/meshLoader", "render/meshRender"):
+        external_inputs["meshData"] = mesh_fixture()
+    return external_inputs or None
+
+
+def _external_case_dsl(case_id: str) -> str:
+    """The oracle checkout's parity DSL for one external-input case (the same
+    programs its own gate renders, parity/upstream-defaults/<name>.dsl)."""
+    name = case_id.replace("/", "__")
+    path = os.path.join(CPU_DIR, "parity", "upstream-defaults", f"{name}.dsl")
+    with open(path, encoding="utf-8") as f:
+        return f.read()
+
+
+def js_effect_external(case_id: str, out: str, width: int = SIZE, seed: int = SEED, time: float = TIME):
+    """Render one external-input case with the oracle through
+    scripts/parity-js-driver.mjs (the CLI binds no fixture)."""
+    dsl_path = os.path.join(_SCRATCH.name, f"{case_id.replace('/', '__')}.dsl")
+    with open(dsl_path, "w", encoding="utf-8") as f:
+        f.write(_external_case_dsl(case_id))
+    driver = os.path.join(os.path.dirname(os.path.abspath(__file__)), "parity-js-driver.mjs")
+    cmd = [
+        "node",
+        driver,
+        case_id,
+        dsl_path,
+        out,
+        "--width",
+        str(width),
+        "--height",
+        str(width),
+        "--seed",
+        str(seed),
+        "--time",
+        str(time),
+    ]
+    subprocess.run(cmd, cwd=CPU_DIR, check=True, capture_output=True, timeout=120)
+    with open(out, "rb") as f:
+        return decode_png(f.read())
 
 
 def _ext_texture():
@@ -166,6 +291,49 @@ def main():
         kind = effects[eid]["kind"]
         ext = effects[eid].get("externalTexture")
         input_png = _ext_texture() and EXT_PNG if ext else None
+        if eid in EXTERNAL_INPUT_EFFECT_IDS:
+            # Reactive/mesh effects need their external-input fixtures on both
+            # sides; the CLI binds none, so render through the DSL fixture path
+            # (same programs the oracle's own gate uses).
+            try:
+                js = js_effect_external(eid, JS_PNG)
+                js_png_sha = _sha256_file(JS_PNG)
+            except Exception:
+                oracle_err.append(eid)
+                continue
+            try:
+                py = render_dsl(
+                    _external_case_dsl(eid),
+                    width=SIZE,
+                    height=SIZE,
+                    seed=SEED,
+                    time=TIME,
+                    external_inputs=external_inputs_for_case(eid),
+                )
+            except Exception as e:
+                key = f"{type(e).__name__}: {e}".splitlines()[0][:70]
+                errors.setdefault(key, []).append(eid)
+                continue
+            ja = np.frombuffer(js.to_rgba8(), np.uint8).astype(int)
+            pa = np.frombuffer(py.to_rgba8(), np.uint8).astype(int)
+            if ja.shape != pa.shape:
+                errors.setdefault("shape-mismatch", []).append(eid)
+                continue
+            d = int(np.max(np.abs(ja - pa)))
+            py_png_sha = _sha256_bytes(encode_png(py))
+            py_rgba8_sha = _sha256_bytes(py.to_rgba8())
+            js_rgba8_sha = _sha256_bytes(js.to_rgba8())
+            if d == 0:
+                ok.append(eid)
+                receipt[eid] = {
+                    "oraclePngSha256": js_png_sha,
+                    "oracleRgba8Sha256": js_rgba8_sha,
+                    "pythonPngSha256": py_png_sha,
+                    "pythonRgba8Sha256": py_rgba8_sha,
+                }
+            else:
+                diffs.append((eid, d))
+            continue
         try:
             js = js_effect(eid, JS_PNG, input_png)
             js_png_sha = _sha256_file(JS_PNG)
