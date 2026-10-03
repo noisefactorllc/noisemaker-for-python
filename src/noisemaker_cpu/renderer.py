@@ -25,7 +25,7 @@ from .kernel_loader import KernelCache
 from .mesh_render import get_mesh_op
 from .overlay_gen import OVERLAY_EFFECTS, render_worm_overlay
 from .pass_runner import Ctx, run_pass, run_pass_deriv, run_pass_mrt
-from .runtime import F32, Runtime, f32
+from .runtime import F32, Runtime, f32, _oracle_pass_repeat_clamp
 from .sink import SinkManager
 from .surface import Surface
 from .texture_format import quantize_texture
@@ -662,7 +662,7 @@ def render_effect(effect_id, params=None, inputs=None, width=256, height=256, se
     # multiplier is the pass repeat resolved from its uniform.
     iteration_spec = effect["params"]["iterationCount"]
     iteration_count = _coerce(iteration_spec, params.get("iterationCount"))
-    if any(p.get("repeat") for p in effect.get("passes", [])):
+    if _oracle_pass_repeat_clamp() and any(p.get("repeat") for p in effect.get("passes", [])):
         iteration_count = min(iteration_count, 1)
     if iteration_count <= 0:
         if input_bundle["volume"] is not None or input_bundle["geometry"] is not None:
@@ -765,7 +765,7 @@ def _run_iterated_group(group, current, surfaces, external_textures, effects, wi
     # (filter/temporalAberration requires N=60).
     iteration_spec = first_effect["params"]["iterationCount"]
     iteration_count = _coerce(iteration_spec, first_step["params"].get("iterationCount"))
-    if any(p.get("repeat") for p in first_effect.get("passes", [])):
+    if _oracle_pass_repeat_clamp() and any(p.get("repeat") for p in first_effect.get("passes", [])):
         iteration_count = min(iteration_count, 1)
     if iteration_count <= 0:
         if _is_chain_bundle(current):

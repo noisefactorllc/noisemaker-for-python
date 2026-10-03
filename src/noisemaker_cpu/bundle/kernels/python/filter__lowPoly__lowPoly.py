@@ -136,10 +136,10 @@ def run_pixel(ctx, out):
         modeResult = rt.construct(3, 0.0)
         borderMask = rt.f(0.0)
         if (bool(rt.binary(">", _u_LP_BORDER, rt.i(0))) or bool(rt.binary(">", _u_LP_LIGHT, rt.i(0)))):
-            modeResult = rt.copy(result, "float")
+            modeResult = rt.copy_decl(result, "float")
             borderMask = rt.f(0.0)
         if rt.binary(">", _u_LP_BORDER, rt.i(0)):
-            borderNearestPoint = rt.copy(nearestPoint, "float")
+            borderNearestPoint = rt.copy_decl(nearestPoint, "float")
             borderNearestCell = nearestCell
             borderNearestDist = minDist
             dy = rt.unary("-", rt.i(2))

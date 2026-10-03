@@ -291,6 +291,9 @@ def _repeat_carrying_effect():
 
 
 def test_pass_repeat_makes_the_iteration_loop_inert_above_zero(monkeypatch):
+    # The published post-ea4abf3 semantics; the probe is pinned so the assertion
+    # holds regardless of which (possibly pre-fix) sibling oracle is mounted.
+    monkeypatch.setattr(renderer, "_oracle_pass_repeat_clamp", lambda: True)
     effect = _repeat_carrying_effect()
     seen = []
 
@@ -313,6 +316,7 @@ def test_pass_repeat_makes_the_iteration_loop_inert_above_zero(monkeypatch):
 
 
 def test_pass_repeat_iterations_uniform_drives_per_frame_evolution(monkeypatch):
+    monkeypatch.setattr(renderer, "_oracle_pass_repeat_clamp", lambda: True)
     effect = _repeat_carrying_effect()
     seen = []
 
@@ -332,6 +336,7 @@ def test_pass_repeat_iterations_uniform_drives_per_frame_evolution(monkeypatch):
 
 
 def test_pass_repeat_rule_applies_to_dsl_iterated_groups(monkeypatch):
+    monkeypatch.setattr(renderer, "_oracle_pass_repeat_clamp", lambda: True)
     effect = _repeat_carrying_effect()
     seen = []
 

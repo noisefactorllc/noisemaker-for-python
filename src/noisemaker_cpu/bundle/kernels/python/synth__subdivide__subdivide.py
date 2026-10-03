@@ -219,7 +219,7 @@ def run_pixel(ctx, out):
             curTexScale = rt.binary("+", rt.f(0.3), rt.binary("*", cellRand__vec2_float_float_float(cellMin, rt.f(0.0), rt.f(5.0), curVisualTime), rt.f(0.7), 1, "float"), 1, "float")
             nextTexScale = rt.binary("+", rt.f(0.3), rt.binary("*", cellRand__vec2_float_float_float(cellMin, rt.f(0.0), rt.f(5.0), nextVisualTime), rt.f(0.7), 1, "float"), 1, "float")
             texScale = rt.component_wise("mix", curTexScale, nextTexScale, visualBlend, width=1)
-            texUv = rt.copy(cellUv, "float")
+            texUv = rt.copy_decl(cellUv, "float")
             cellAspect = rt.binary("/", rt.binary("*", rt.swizzle(cellSize, "x"), rt.swizzle(_u_fullResolution, "x"), 1, "float"), rt.binary("*", rt.swizzle(cellSize, "y"), rt.swizzle(_u_fullResolution, "y"), 1, "float"), 1, "float")
             texAspect = rt.binary("/", rt.swizzle(_u_fullResolution, "x"), rt.swizzle(_u_fullResolution, "y"), 1, "float")
             ratio = rt.binary("/", cellAspect, texAspect, 1, "float")

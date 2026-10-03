@@ -87,7 +87,7 @@ def run_pixel(ctx, out):
         balancePoint = rt.binary("+", rt.f(0.5), rt.binary("*", balance, rt.f(0.3), 1, "float"), 1, "float")
         shadowWeight = rt.binary("-", rt.f(1.0), rt.component_wise("smoothstep", rt.f(0.0), balancePoint, luma, width=1), 1, "float")
         highlightWeight = rt.component_wise("smoothstep", balancePoint, rt.f(1.0), luma, width=1)
-        tintedRgb = rt.copy(rgb, "float")
+        tintedRgb = rt.copy_decl(rgb, "float")
         tintedRgb[:] = rt.binary("+", tintedRgb, rt.binary("*", rt.binary("*", shadowShift, shadowWeight, 3, "float"), rt.f(0.3), 3, "float"), 3, "float")
         tintedRgb[:] = rt.binary("+", tintedRgb, rt.binary("*", rt.binary("*", highlightShift, highlightWeight, 3, "float"), rt.f(0.3), 3, "float"), 3, "float")
         return tintedRgb

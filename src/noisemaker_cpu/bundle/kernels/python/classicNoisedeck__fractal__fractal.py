@@ -129,10 +129,10 @@ def run_pixel(ctx, out):
         lms = rt.matrix_mult(g.fwdA, c, 3)
         return rt.matrix_mult(g.fwdB, rt.binary("*", rt.binary("*", lms, lms, 3, "float"), lms, 3, "float"), 3)
     def pal__float(t):
-        a = rt.copy(_u_paletteOffset, "float")
-        b = rt.copy(_u_paletteAmp, "float")
-        c = rt.copy(_u_paletteFreq, "float")
-        d = rt.copy(_u_palettePhase, "float")
+        a = rt.copy_decl(_u_paletteOffset, "float")
+        b = rt.copy_decl(_u_paletteAmp, "float")
+        c = rt.copy_decl(_u_paletteFreq, "float")
+        d = rt.copy_decl(_u_palettePhase, "float")
         color = rt.binary("+", a, rt.binary("*", b, rt.component_wise("cos", rt.binary("*", rt.f(6.28318), rt.binary("+", rt.binary("*", c, t, 3, "float"), d, 3, "float"), 3, "float"), width=3), 3, "float"), 3, "float")
         if rt.binary("==", _u_paletteMode, rt.i(1)):
             color[:] = hsv2rgb__vec3(color)
@@ -168,7 +168,7 @@ def run_pixel(ctx, out):
         offY = map__float_float_float_float_float(_u_offsetY, rt.unary("-", rt.f(100.0)), rt.f(100.0), rt.unary("-", rt.f(0.25)), rt.f(0.25))
         st = rt.assign_swizzle(st, "x", rt.binary("+", rt.swizzle(st, "x"), rt.binary("*", _u_centerY, rt.f(0.01), 1, "float"), 1, "float"))
         st = rt.assign_swizzle(st, "y", rt.binary("+", rt.swizzle(st, "y"), rt.binary("*", _u_centerX, rt.f(0.01), 1, "float"), 1, "float"))
-        n = rt.copy(st, "float")
+        n = rt.copy_decl(st, "float")
         iter = rt.f(0.0)
         tst = rt.construct(2, 0.0)
         i = rt.i(0)

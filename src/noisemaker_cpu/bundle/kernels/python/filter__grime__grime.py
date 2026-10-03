@@ -60,7 +60,7 @@ def run_pixel(ctx, out):
     def simple_multires__vec2_vec2_float(uv, base_freq, s):
         uv = rt.copy(uv, "float")
         base_freq = rt.copy(base_freq, "float")
-        freq = rt.copy(base_freq, "float")
+        freq = rt.copy_decl(base_freq, "float")
         amp = rt.f(0.5)
         total = rt.f(0.0)
         accum = rt.f(0.0)

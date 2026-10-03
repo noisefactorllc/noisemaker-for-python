@@ -35,7 +35,7 @@ def run_pixel(ctx, out):
     def main__void():
         uv = rt.binary("/", rt.swizzle(ctx.frag_coord, "xy"), _u_resolution, 2, "float")
         globalCoord = rt.binary("+", rt.swizzle(ctx.frag_coord, "xy"), _u_tileOffset, 2, "float")
-        hashCoord = rt.copy(globalCoord, "float")
+        hashCoord = rt.copy_decl(globalCoord, "float")
         if rt.binary("==", _u_MODE, rt.i(4)):
             hashCoord[:] = rt.binary("*", rt.component_wise("floor", rt.binary("/", globalCoord, rt.f(3.0), 2, "float"), width=2), rt.f(3.0), 2, "float")
         rnd = rt.binary("-", hash22__vec2(rt.binary("+", hashCoord, rt.binary("*", rt.construct(1, _u_seed), rt.f(101.7), 1, "float"), 2, "float")), rt.f(0.5), 2, "float")
@@ -52,7 +52,7 @@ def run_pixel(ctx, out):
         sampleUV = rt.component_wise("clamp", rt.binary("/", rt.binary("+", rt.swizzle(ctx.frag_coord, "xy"), offset, 2, "float"), _u_resolution, 2, "float"), rt.f(0.0), rt.f(1.0), width=2)
         src = rt.texture(_u_inputTex, uv)
         samp = rt.texture(_u_inputTex, sampleUV)
-        result = rt.copy(samp, "float")
+        result = rt.copy_decl(samp, "float")
         if rt.binary("==", _u_MODE, rt.i(1)):
             result[:] = rt.component_wise("min", src, samp, width=4)
         else:

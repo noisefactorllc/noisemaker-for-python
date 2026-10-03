@@ -84,7 +84,7 @@ def run_pixel(ctx, out):
         proximity = rt.component_wise("smoothstep", rt.f(0.015), rt.f(0.12), local, width=1)
         randomDir = (((_retc2 := randomDirection__float(seed)), (seed := _retc2[1]), _retc2[0])[-1])
         inputW = rt.binary("/", _u_inputWeight, rt.f(100.0), 1, "float")
-        stepDir = rt.copy(randomDir, "float")
+        stepDir = rt.copy_decl(randomDir, "float")
         inputDims = rt.construct(2, 0.0, base="int")
         inputCoord = rt.construct(2, 0.0, base="int")
         inputVal = rt.construct(4, 0.0)

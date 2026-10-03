@@ -70,7 +70,7 @@ def run_pixel(ctx, out):
         lightDir = rt.construct(2, 0.0)
         signTerm = rt.f(0.0)
         if rt.binary("<", dMin, rimPx):
-            neighborIdx = rt.copy(cellIdxF, "float")
+            neighborIdx = rt.copy_decl(cellIdxF, "float")
             edgeNormal = rt.construct(2, 0.0)
             if rt.binary("==", dMin, dLeft):
                 neighborIdx = rt.assign_swizzle(neighborIdx, "x", rt.binary("-", rt.swizzle(neighborIdx, "x"), rt.f(1.0), 1, "float"))

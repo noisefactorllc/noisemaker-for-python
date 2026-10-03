@@ -351,7 +351,7 @@ class CodeGen:
                     # reads the outer binding.
                     aliased = self._is_aliased_initializer(init_node, dc["name"], scope)
                     if width_of(t) > 1 and base_of(t) == "float" and aliased:
-                        out.append(f"{pad}{e['py']} = rt.copy({init_code}, {q(base_of(t))})")
+                        out.append(f"{pad}{e['py']} = rt.copy_decl({init_code}, {q(base_of(t))})")
                     else:
                         out.append(f"{pad}{e['py']} = {init_code}")
                 elif dc.get("array") is not None:

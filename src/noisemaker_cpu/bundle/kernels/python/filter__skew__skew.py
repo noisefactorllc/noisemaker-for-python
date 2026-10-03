@@ -20,7 +20,7 @@ def run_pixel(ctx, out):
         globalPixel = rt.binary("+", rt.swizzle(ctx.frag_coord, "xy"), _u_tileOffset, 2, "float")
         globalUV = rt.binary("/", globalPixel, _u_fullResolution, 2, "float")
         aspect = rt.binary("/", rt.swizzle(_u_fullResolution, "x"), rt.swizzle(_u_fullResolution, "y"), 1, "float")
-        st = rt.copy(globalUV, "float")
+        st = rt.copy_decl(globalUV, "float")
         st[:] = rt.binary("-", st, rt.f(0.5), 2, "float")
         st = rt.assign_swizzle(st, "x", rt.binary("*", rt.swizzle(st, "x"), aspect, 1, "float"))
         angle = rt.binary("/", rt.binary("*", _u_rotation, g.PI, 1, "float"), rt.f(180.0), 1, "float")

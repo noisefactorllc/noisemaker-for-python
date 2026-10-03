@@ -22,7 +22,7 @@ def run_pixel(ctx, out):
         zoom = (rt.binary("*", _u_lensDisplacement, rt.unary("-", rt.f(0.25)), 1, "float") if rt.binary("<", _u_lensDisplacement, rt.f(0.0)) else rt.f(0.0))
         aspect = rt.binary("/", rt.swizzle(dims, "x"), rt.swizzle(dims, "y"), 1, "float")
         dist = rt.binary("-", uv, g.HALF_FRAME, 2, "float")
-        aDist = rt.copy(dist, "float")
+        aDist = rt.copy_decl(dist, "float")
         if _u_aspectLens:
             aDist = rt.assign_swizzle(aDist, "x", rt.binary("*", rt.swizzle(aDist, "x"), aspect, 1, "float"))
         maxDist = rt.length(rt.construct(2, (rt.binary("*", aspect, rt.f(0.5), 1, "float") if _u_aspectLens else rt.f(0.5)), rt.f(0.5)))
@@ -43,7 +43,7 @@ def run_pixel(ctx, out):
                 displacement[:] = rt.binary("*", displacement, rt.binary("/", maxDispPixels, dispPixels, 1, "float"), 2, "float")
         warpedGlobalUV = (rt.binary("-", uv, displacement, 2, "float") if isTileRendering else rt.component_wise("fract", rt.binary("-", uv, displacement, 2, "float"), width=2))
         offset = rt.binary("/", rt.binary("-", rt.binary("*", warpedGlobalUV, dims, 2, "float"), _u_tileOffset, 2, "float"), tileDims, 2, "float")
-        sampledUV = rt.copy(offset, "float")
+        sampledUV = rt.copy_decl(offset, "float")
         dx = rt.construct(2, 0.0)
         dy = rt.construct(2, 0.0)
         col = rt.construct(4, 0.0)

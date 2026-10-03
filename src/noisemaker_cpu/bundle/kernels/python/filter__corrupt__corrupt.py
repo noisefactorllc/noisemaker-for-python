@@ -137,7 +137,7 @@ def run_pixel(ctx, out):
         rowHash = lineHash__float_float(row, _rt)
         prob = rt.binary("/", _u_intensity, rt.f(100.0), 1, "float")
         isCorrupt = rt.binary("<", rt.swizzle(rowHash, "x"), prob)
-        sampleUv = rt.copy(uv, "float")
+        sampleUv = rt.copy_decl(uv, "float")
         meltAmt = rt.binary("/", _u_melt, rt.f(100.0), 1, "float")
         if rt.binary(">", meltAmt, rt.f(0.0)):
             sampleUv[:] = meltDisplace__vec2_float_float_float_float(sampleUv, meltAmt, t, resX, rs)

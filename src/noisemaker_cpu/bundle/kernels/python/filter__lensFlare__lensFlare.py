@@ -62,7 +62,7 @@ def run_pixel(ctx, out):
         src = rt.texture(_u_inputTex, localUV)
         flarePos = rt.construct(2, _u_centerX, _u_centerY)
         mirrorPos = rt.binary("-", rt.construct(2, rt.f(1.0)), flarePos, 2, "float")
-        p = rt.copy(uv, "float")
+        p = rt.copy_decl(uv, "float")
         p = rt.assign_swizzle(p, "x", rt.binary("*", rt.swizzle(p, "x"), aspectRatio, 1, "float"))
         aFlare = flareAxis__vec2_vec2_float_float(flarePos, mirrorPos, rt.f(0.0), aspectRatio)
         delta0 = rt.binary("-", p, aFlare, 2, "float")

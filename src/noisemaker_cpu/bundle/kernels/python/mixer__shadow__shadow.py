@@ -67,7 +67,7 @@ def run_pixel(ctx, out):
                         maskSample = (rt.texture(_u_inputTex, localUV) if rt.binary("==", _u_maskSource, rt.i(0)) else rt.texture(_u_tex, localUV))
                         thresholded = rt.component_wise("step", _u_threshold, getChannel__vec4_int(maskSample, _u_sourceChannel), width=1)
                 else:
-                    wrappedUV = rt.copy(localUV, "float")
+                    wrappedUV = rt.copy_decl(localUV, "float")
                     if rt.binary("==", _u_wrap, rt.i(1)):
                         wrappedUV[:] = rt.component_wise("abs", rt.binary("-", rt.component_wise("mod", rt.binary("+", localUV, rt.f(1.0), 2, "float"), rt.f(2.0), width=2), rt.f(1.0), 2, "float"), width=2)
                     else:

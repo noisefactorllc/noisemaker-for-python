@@ -291,7 +291,7 @@ def run_pixel(ctx, out):
         return rt.binary("+", rt.binary("*", rt.binary("+", rt.binary("+", x, y, 1, "float"), z, 1, "float"), rt.f(0.33), 1, "float"), rt.f(0.33), 1, "float")
     def spheres__vec3(p):
         p = rt.copy(p, "float")
-        q = rt.copy(p, "float")
+        q = rt.copy_decl(p, "float")
         p[:] = rt.binary("-", p, rt.component_wise("round", p, width=3), 3, "float")
         ip = rt.component_wise("floor", q, width=3)
         fp = rt.component_wise("fract", p, width=3)

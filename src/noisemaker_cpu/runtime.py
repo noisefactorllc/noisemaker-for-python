@@ -43,7 +43,59 @@ def _s32(x) -> int:
 
 
 _ORACLE_INTEGER_DIVISION: bool | None = None
+_ORACLE_ALIASED_DECLARATION_COPY: bool | None = None
+_ORACLE_PASS_REPEAT_CLAMP: bool | None = None
 _SIBLING_DEFAULT = os.path.normpath(os.path.join(os.path.dirname(__file__), "..", "..", "..", "noisemaker-for-cpu"))
+
+
+def _mounted_oracle_text(relative_path: str) -> str | None:
+    """The mounted sibling oracle's file text, or None when unmounted/missing."""
+    cpu_dir = os.environ.get("NOISEMAKER_CPU_DIR") or _SIBLING_DEFAULT
+    try:
+        return (Path(cpu_dir) / relative_path).read_text(encoding="utf-8")
+    except OSError:
+        return None
+
+
+def _oracle_aliased_declaration_copy() -> bool:
+    """Whether transpiled ``vecN v = u;`` declarations copy their initializer.
+
+    ``noisemaker-for-cpu`` scripts/upstream/compile-glsl.js grew the
+    ``copyAliasedVectorDeclarations`` pass in 390071fa078f: aliased float-vector
+    declarations become ``instanceof Float32Array`` runtime copies, where
+    pre-fix oracles emit a bare alias that a later component write destroys.
+    The published runtime carries the CURRENT (post-``390071f``) semantics, so
+    this defaults to True — a standalone/deployed render with no mounted oracle
+    copies. A mounted sibling oracle's transpiler is probed once per process so
+    version-mismatched comparisons still work: pre-fix oracles (the CI oracle
+    tarball b61b658399f1 and every pinned gate authority before 390071f) keep
+    their published alias semantics via ``Runtime.copy_decl``.
+    """
+    global _ORACLE_ALIASED_DECLARATION_COPY
+    if _ORACLE_ALIASED_DECLARATION_COPY is None:
+        text = _mounted_oracle_text(os.path.join("scripts", "upstream", "compile-glsl.js"))
+        _ORACLE_ALIASED_DECLARATION_COPY = text is None or "copyAliasedVectorDeclarations" in text
+    return _ORACLE_ALIASED_DECLARATION_COPY
+
+
+def _oracle_pass_repeat_clamp() -> bool:
+    """Whether iterated group loops are inert above 0 for repeat-carrying passes.
+
+    ``noisemaker-for-cpu`` src/runtime/renderer.js grew the pass-repeat clamp
+    (``Math.min(requested ?? 1, 1)`` when any pass carries a ``repeat``) in
+    ea4abf3; pre-fix oracles multiply the pass repeat by the iterationCount.
+    The published runtime carries the CURRENT (post-``ea4abf3``) semantics, so
+    this defaults to True — a standalone/deployed render with no mounted oracle
+    clamps. A mounted sibling oracle's renderer is probed once per process so
+    version-mismatched comparisons still work: pre-fix oracles (the CI oracle
+    tarball b61b658399f1 and every pinned gate authority before ea4abf3) keep
+    their published multiplying behavior.
+    """
+    global _ORACLE_PASS_REPEAT_CLAMP
+    if _ORACLE_PASS_REPEAT_CLAMP is None:
+        text = _mounted_oracle_text(os.path.join("src", "runtime", "renderer.js"))
+        _ORACLE_PASS_REPEAT_CLAMP = text is None or "Math.min(requested ?? 1, 1)" in text
+    return _ORACLE_PASS_REPEAT_CLAMP
 
 
 def _oracle_integer_division_trunc() -> bool:
@@ -247,6 +299,16 @@ class Runtime:
         if base == "int":
             return np.array(vec, dtype=np.int64)
         return np.array(vec, dtype=F32)
+
+    def copy_decl(self, vec, base=None):
+        # The copyAliasedVectorDeclarations lowering's declaration copy
+        # (`vecN v = u;` — see codegen). Post-fix semantics copy; a pre-390071f
+        # mounted oracle keeps its published live-alias semantics, so the
+        # declaration binds the initializer object itself (exactly what the old
+        # `var v = u;` lowering emitted).
+        if not _oracle_aliased_declaration_copy():
+            return vec
+        return self.copy(vec, base)
 
     # ---- swizzles ----
     def swizzle(self, vec, sw: str):
