@@ -52,7 +52,7 @@ def run_pixel(ctx, out):
         return rt.component_wise("step", rt.f(0.5), rt.component_wise("fract", t, width=1), width=1)
     def main__void():
         globalCoord = rt.binary("+", rt.swizzle(ctx.frag_coord, "xy"), _u_tileOffset, 2, "float")
-        res = _u_fullResolution
+        res = rt.copy(_u_fullResolution, "float")
         if rt.binary("<", rt.swizzle(res, "x"), rt.f(1.0)):
             (res.__setitem__(0, rt.f(1024.0)), res.__setitem__(1, rt.f(1024.0)), res)[-1]
         st = rt.binary("/", rt.binary("+", rt.swizzle(ctx.frag_coord, "xy"), _u_tileOffset, 2, "float"), res, 2, "float")

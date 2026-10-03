@@ -125,7 +125,7 @@ def run_pixel(ctx, out):
         center = rt.texel_fetch(_u_inputTex, coord, rt.i(0))
         if (bool(rt.binary("<", edgeH, rt.f(0.5))) and bool(rt.binary("<", edgeV, rt.f(0.5)))):
             return center
-        blended = center
+        blended = rt.copy(center, "float")
         distLeft = rt.f(0.0)
         distRight = rt.f(0.0)
         edgeLength = rt.f(0.0)
@@ -159,7 +159,7 @@ def run_pixel(ctx, out):
         r = rt.construct(1, rt.component_wise("ceil", _u_radius, width=1), base="int")
         sigma = rt.binary("*", _u_radius, rt.f(0.5), 1, "float")
         sigma2 = rt.binary("*", rt.binary("*", rt.f(2.0), sigma, 1, "float"), sigma, 1, "float")
-        sum = center
+        sum = rt.copy(center, "float")
         totalWeight = rt.f(1.0)
         dy = rt.unary("-", rt.i(4))
         _for2_first = True

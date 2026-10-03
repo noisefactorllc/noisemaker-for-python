@@ -179,7 +179,7 @@ def run_pixel(ctx, out):
         st = rt.copy(st, "float")
         wFreq = rt.component_wise("max", rt.f(0.1), rt.binary("/", rt.f(100.0), rt.component_wise("max", wScale, rt.f(0.01), width=1), 1, "float"), width=1)
         disp = rt.binary("*", wIntensity, rt.f(0.02), 1, "float")
-        p = st
+        p = rt.copy(st, "float")
         i = rt.i(0)
         _for2_first = True
         for _for2 in range(1048576):
@@ -202,7 +202,7 @@ def run_pixel(ctx, out):
         st = rt.copy(st, "float")
         wFreq = rt.component_wise("max", rt.f(0.1), rt.binary("/", rt.f(100.0), rt.component_wise("max", wScale, rt.f(0.01), width=1), 1, "float"), width=1)
         disp = rt.binary("*", wIntensity, rt.f(0.02), 1, "float")
-        p = st
+        p = rt.copy(st, "float")
         i = rt.i(0)
         _for3_first = True
         for _for3 in range(1048576):
@@ -220,7 +220,7 @@ def run_pixel(ctx, out):
         return p
     def main__void():
         globalCoord = rt.binary("+", rt.swizzle(ctx.frag_coord, "xy"), _u_tileOffset, 2, "float")
-        res = _u_fullResolution
+        res = rt.copy(_u_fullResolution, "float")
         if rt.binary("<", rt.swizzle(res, "x"), rt.f(1.0)):
             (res.__setitem__(0, rt.f(1024.0)), res.__setitem__(1, rt.f(1024.0)), res)[-1]
         st = rt.binary("/", rt.binary("+", rt.swizzle(ctx.frag_coord, "xy"), _u_tileOffset, 2, "float"), res, 2, "float")

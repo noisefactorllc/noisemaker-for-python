@@ -55,7 +55,7 @@ def run_pixel(ctx, out):
                 if not (rt.binary("<=", i, g.MARCH_STEPS)):
                     break
                 prevF = f
-                prevUV = rayUV
+                prevUV = rt.copy(rayUV, "float")
                 t = rt.binary("-", rt.f(1.0), rt.binary("*", rt.construct(1, i), stepSize, 1, "float"), 1, "float")
                 rayUV[:] = rt.binary("+", uv, rt.binary("*", shift, rt.binary("-", t, _u_pivot, 1, "float"), 2, "float"), 2, "float")
                 f = rt.binary("-", t, getHeight__vec2(rayUV), 1, "float")

@@ -313,7 +313,7 @@ def run_pixel(ctx, out):
             g.fragColor[:] = color
             return
         rgb = srgbToLinear__vec3(rt.swizzle(color, "rgb"))
-        graded = rgb
+        graded = rt.copy(rgb, "float")
         if rt.binary("==", _u_preset, rt.i(1)):
             graded[:] = lutTealOrange__vec3(rgb)
         else:

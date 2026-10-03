@@ -657,8 +657,13 @@ def render_effect(effect_id, params=None, inputs=None, width=256, height=256, se
     if not effect.get("iterated"):
         return _render_effect_once(effect_id, params, inputs, width, height, seed, time, external_inputs=external_inputs)
 
+    # Pass-repeat rule (see _run_iterated_group): when any pass of the definition
+    # carries a `repeat`, the iteration loop is inert above 0 and the per-frame
+    # multiplier is the pass repeat resolved from its uniform.
     iteration_spec = effect["params"]["iterationCount"]
     iteration_count = _coerce(iteration_spec, params.get("iterationCount"))
+    if any(p.get("repeat") for p in effect.get("passes", [])):
+        iteration_count = min(iteration_count, 1)
     if iteration_count <= 0:
         if input_bundle["volume"] is not None or input_bundle["geometry"] is not None:
             return {
@@ -750,8 +755,18 @@ def _run_effect_step(step, current, surfaces, external_textures, width, height, 
 def _run_iterated_group(group, current, surfaces, external_textures, effects, width, height, seed, time, external_inputs=None):
     first_step = group["steps"][0]
     first_effect = effects[first_step["effect_id"]]
+    # Upstream (shaders/src/runtime/pipeline.js render()) executes each pass exactly
+    # resolveRepeatCount(pass) times per frame — there is no group-level multiplier.
+    # For effects whose passes carry a `repeat` (synth/reactionDiffusion,
+    # synth/navierStokes, synth3d/reactionDiffusion3d) the pass repeat IS the
+    # per-frame iteration count, so the group loop must not multiply it again; the
+    # documented iterationCount:0 bypass (zero passes run) is still honored. All
+    # other iterated effects keep the established `iterationCount` group loop
+    # (filter/temporalAberration requires N=60).
     iteration_spec = first_effect["params"]["iterationCount"]
     iteration_count = _coerce(iteration_spec, first_step["params"].get("iterationCount"))
+    if any(p.get("repeat") for p in first_effect.get("passes", [])):
+        iteration_count = min(iteration_count, 1)
     if iteration_count <= 0:
         if _is_chain_bundle(current):
             return {

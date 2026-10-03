@@ -19,7 +19,7 @@ def run_pixel(ctx, out):
     def main__void():
         globalCoord = rt.binary("+", rt.swizzle(ctx.frag_coord, "xy"), _u_tileOffset, 2, "float")
         globalUV = rt.binary("/", globalCoord, _u_fullResolution, 2, "float")
-        st = globalUV
+        st = rt.copy(globalUV, "float")
         st = rt.assign_swizzle(st, "x", rt.binary("*", rt.swizzle(st, "x"), _u_aspect, 1, "float"))
         st[:] = rt.binary("+", rt.binary("*", st, rt.array([_u_x, _u_y]), 2, "float"), rt.array([rt.binary("*", _u_offsetX, _u_aspect, 1, "float"), _u_offsetY]), 2, "float")
         st = rt.assign_swizzle(st, "x", rt.binary("/", rt.swizzle(st, "x"), _u_aspect, 1, "float"))

@@ -69,7 +69,7 @@ def run_pixel(ctx, out):
         return rt.binary("*", norm, limit, 1, "float")
     def main__void():
         fullRes = (_u_fullResolution if rt.binary(">", rt.swizzle(_u_fullResolution, "x"), rt.f(0.0)) else _u_resolution)
-        dims = fullRes
+        dims = rt.copy(fullRes, "float")
         width = rt.swizzle(dims, "x")
         height = rt.swizzle(dims, "y")
         baseFreq = rt.binary("-", rt.f(11.0), _u_frequency, 1, "float")

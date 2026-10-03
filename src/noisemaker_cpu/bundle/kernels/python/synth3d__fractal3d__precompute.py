@@ -21,7 +21,7 @@ def run_pixel(ctx, out):
     g.PI = rt.f(3.141592653589793)
     def mandelbulb__vec3_float_int_float(pos, n, maxIter, bail):
         pos = rt.copy(pos, "float")
-        z = pos
+        z = rt.copy(pos, "float")
         dr = rt.f(1.0)
         r = rt.f(0.0)
         trap = rt.f(10000000000.0)
@@ -52,7 +52,7 @@ def run_pixel(ctx, out):
     def juliaBulb__vec3_vec3_float_int_float(pos, c, n, maxIter, bail):
         pos = rt.copy(pos, "float")
         c = rt.copy(c, "float")
-        z = pos
+        z = rt.copy(pos, "float")
         dr = rt.f(1.0)
         r = rt.f(0.0)
         trap = rt.f(10000000000.0)
@@ -85,7 +85,7 @@ def run_pixel(ctx, out):
         return rt.binary("-", rt.binary("*", rt.component_wise("clamp", z, rt.unary("-", foldingLimit), foldingLimit, width=3), rt.f(2.0), 3, "float"), z, 3, "float")
     def mandelcube__vec3_float_int_float(pos, scale, maxIter, bail):
         pos = rt.copy(pos, "float")
-        z = pos
+        z = rt.copy(pos, "float")
         dr = rt.f(1.0)
         trap = rt.f(10000000000.0)
         iter = rt.f(0.0)
@@ -126,7 +126,7 @@ def run_pixel(ctx, out):
     def juliaCube__vec3_vec3_float_int_float(pos, c, scale, maxIter, bail):
         pos = rt.copy(pos, "float")
         c = rt.copy(c, "float")
-        z = pos
+        z = rt.copy(pos, "float")
         dr = rt.f(1.0)
         trap = rt.f(10000000000.0)
         iter = rt.f(0.0)

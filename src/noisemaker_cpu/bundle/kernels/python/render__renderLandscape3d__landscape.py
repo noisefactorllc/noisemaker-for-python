@@ -65,7 +65,7 @@ def run_pixel(ctx, out):
     def sampleAtlasCoords__sampler2D_struct1_bool(atlas, coords, material):
         lo = coords[0]
         hi = rt.component_wise("min", rt.binary("+", lo, rt.i(1), 3, "int"), rt.construct(3, rt.binary("-", _u_volumeSize, rt.i(1), 1, "int"), base="int"), width=3)
-        f = coords[1]
+        f = rt.copy(coords[1], "float")
         c00 = interpolateAtlas__vec4_vec4_float(sampleAtlasTexel__sampler2D_ivec3_bool(atlas, rt.construct(3, rt.swizzle(lo, "x"), rt.swizzle(lo, "y"), rt.swizzle(lo, "z"), base="int"), material), sampleAtlasTexel__sampler2D_ivec3_bool(atlas, rt.construct(3, rt.swizzle(hi, "x"), rt.swizzle(lo, "y"), rt.swizzle(lo, "z"), base="int"), material), rt.swizzle(f, "x"))
         c10 = interpolateAtlas__vec4_vec4_float(sampleAtlasTexel__sampler2D_ivec3_bool(atlas, rt.construct(3, rt.swizzle(lo, "x"), rt.swizzle(hi, "y"), rt.swizzle(lo, "z"), base="int"), material), sampleAtlasTexel__sampler2D_ivec3_bool(atlas, rt.construct(3, rt.swizzle(hi, "x"), rt.swizzle(hi, "y"), rt.swizzle(lo, "z"), base="int"), material), rt.swizzle(f, "x"))
         c01 = interpolateAtlas__vec4_vec4_float(sampleAtlasTexel__sampler2D_ivec3_bool(atlas, rt.construct(3, rt.swizzle(lo, "x"), rt.swizzle(lo, "y"), rt.swizzle(hi, "z"), base="int"), material), sampleAtlasTexel__sampler2D_ivec3_bool(atlas, rt.construct(3, rt.swizzle(hi, "x"), rt.swizzle(lo, "y"), rt.swizzle(hi, "z"), base="int"), material), rt.swizzle(f, "x"))
@@ -217,7 +217,7 @@ def run_pixel(ctx, out):
             hit = traceIsosurface__vec3_vec3_float_float(origin, direction, distance, leave)
             if rt.binary("<", hit[0], rt.f(0.0)):
                 return
-            p = hit[1]
+            p = rt.copy(hit[1], "float")
             if rt.binary(">", hit[0], distance):
                 normal[:] = isosurfaceNormal__vec3_vec3(p, normal)
             worldNormal = forwardRotation__vec3(normal)
@@ -300,7 +300,7 @@ def run_pixel(ctx, out):
                 hit = traceIsosurface__vec3_vec3_float_float(origin, rt.construct(3, rt.unary("-", rt.f(1.0))), distance, leave)
                 if rt.binary("<", hit[0], rt.f(0.0)):
                     return
-                p = hit[1]
+                p = rt.copy(hit[1], "float")
                 if rt.binary(">", hit[0], distance):
                     normal[:] = isosurfaceNormal__vec3_vec3(p, normal)
                 g.fragColor[:] = rt.construct(4, lighting__vec3_vec3_vec3(rt.swizzle(sampleAtlasCoords__sampler2D_struct1_bool(_u_volumeCache, hit[2], True), "rgb"), normal, rt.construct(3, rt.f(0.5773502692))), rt.f(1.0))

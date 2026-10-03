@@ -97,7 +97,7 @@ def run_pixel(ctx, out):
         value = rt.f(0.0)
         amplitude = rt.f(1.0)
         totalAmp = rt.f(0.0)
-        pOct = p
+        pOct = rt.copy(p, "float")
         i = rt.i(0)
         _for3_first = True
         for _for3 in range(1048576):

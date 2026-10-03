@@ -501,7 +501,7 @@ def run_pixel(ctx, out):
         st = rt.copy(st, "float")
         scale = rt.binary("*", map__float_float_float_float_float(scale, rt.f(0.0), rt.f(100.0), rt.f(0.0), rt.f(10.0)), _u_renderScale, 1, "float")
         orig = pixellate__vec2_float(st, rt.binary("*", rt.f(4.0), scale, 1, "float"))
-        color = orig
+        color = rt.copy(orig, "float")
         st[:] = rt.binary("*", st, _u_resolution, 2, "float")
         st[:] = rt.component_wise("floor", st, width=2)
         m = rt.component_wise("mod", rt.swizzle(st, "x"), rt.binary("*", rt.f(4.0), scale, 1, "float"), width=1)
@@ -588,7 +588,7 @@ def run_pixel(ctx, out):
         uv[:] = rt.binary("-", uv, rt.f(0.5), 2, "float")
         uv[:] = rt.binary("*", uv, scale, 2, "float")
         uv[:] = rt.binary("+", uv, rt.f(0.5), 2, "float")
-        imageSize = _u_resolution
+        imageSize = rt.copy(_u_resolution, "float")
         uv = rt.assign_swizzle(uv, "x", rt.binary("-", rt.swizzle(uv, "x"), rt.component_wise("ceil", rt.binary("-", rt.binary("*", rt.binary("*", rt.binary("/", rt.swizzle(_u_resolution, "x"), rt.swizzle(imageSize, "x"), 1, "float"), scale, 1, "float"), rt.f(0.5), 1, "float"), rt.binary("-", rt.f(0.5), rt.binary("*", rt.binary("/", rt.f(1.0), rt.swizzle(imageSize, "x"), 1, "float"), scale, 1, "float"), 1, "float"), 1, "float"), width=1), 1, "float"))
         uv = rt.assign_swizzle(uv, "y", rt.binary("+", rt.swizzle(uv, "y"), rt.component_wise("ceil", rt.binary("-", rt.binary("+", rt.binary("*", rt.binary("*", rt.binary("/", rt.swizzle(_u_resolution, "y"), rt.swizzle(imageSize, "y"), 1, "float"), scale, 1, "float"), rt.f(0.5), 1, "float"), rt.binary("-", rt.f(0.5), rt.binary("*", rt.binary("/", rt.f(1.0), rt.swizzle(imageSize, "y"), 1, "float"), scale, 1, "float"), 1, "float"), 1, "float"), scale, 1, "float"), width=1), 1, "float"))
         uv = rt.assign_swizzle(uv, "x", rt.binary("-", rt.swizzle(uv, "x"), rt.binary("*", map__float_float_float_float_float(_u_offsetX, rt.unary("-", rt.f(100.0)), rt.f(100.0), rt.binary("*", rt.binary("/", rt.unary("-", rt.swizzle(_u_resolution, "x")), rt.swizzle(imageSize, "x"), 1, "float"), scale, 1, "float"), rt.binary("*", rt.binary("/", rt.swizzle(_u_resolution, "x"), rt.swizzle(imageSize, "x"), 1, "float"), scale, 1, "float")), rt.f(1.5), 1, "float"), 1, "float"))
@@ -645,7 +645,7 @@ def run_pixel(ctx, out):
                                                         uv = rt.assign_swizzle(uv, "y", rt.binary("-", rt.f(1.0), rt.swizzle(uv, "y"), 1, "float"))
         loadKernels__void()
         blendy = periodicFunction__float(rt.binary("-", _u_time, offsets__vec2(uv), 1, "float"))
-        origUV = uv
+        origUV = rt.copy(uv, "float")
         origcolor = rt.texture(_u_inputTex, rt.binary("/", rt.swizzle(ctx.frag_coord, "xy"), rt.construct(2, rt.texture_size(_u_inputTex)), 2, "float"))
         color[:] = origcolor
         if rt.binary("!=", _u_EFFECT, rt.i(0)):

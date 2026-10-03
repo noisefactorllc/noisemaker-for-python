@@ -22,9 +22,9 @@ def run_pixel(ctx, out):
     def rotateAround__vec2_vec2_float_float(uv, center, angle, aspectRatio):
         uv = rt.copy(uv, "float")
         center = rt.copy(center, "float")
-        p = uv
+        p = rt.copy(uv, "float")
         p = rt.assign_swizzle(p, "x", rt.binary("*", rt.swizzle(p, "x"), aspectRatio, 1, "float"))
-        c = center
+        c = rt.copy(center, "float")
         c = rt.assign_swizzle(c, "x", rt.binary("*", rt.swizzle(c, "x"), aspectRatio, 1, "float"))
         p[:] = rt.binary("-", p, c, 2, "float")
         s = rt.component_wise("sin", angle, width=1)

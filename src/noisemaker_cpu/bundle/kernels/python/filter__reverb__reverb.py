@@ -31,10 +31,10 @@ def run_pixel(ctx, out):
         globalUV = rt.binary("/", globalCoord, _u_fullResolution, 2, "float")
         localUV = rt.binary("/", rt.swizzle(ctx.frag_coord, "xy"), rt.construct(2, dims), 2, "float")
         original = rt.texture(_u_inputTex, localUV)
-        current = original
+        current = rt.copy(original, "float")
         if _u_ridges:
             current[:] = ridge_transform__vec4(current)
-        accum = current
+        accum = rt.copy(current, "float")
         totalWeight = rt.f(1.0)
         weight = rt.f(0.5)
         scale = rt.f(2.0)

@@ -42,8 +42,8 @@ def run_pixel(ctx, out):
         originalColor = rt.texture(_u_originalTex, rt.binary("/", rt.swizzle(ctx.frag_coord, "xy"), _u_resolution, 2, "float"))
         wrappedUV = applyWrap__vec2_vec2(srcCoord, texSize)
         sortedColor = rt.texture(_u_inputTex, wrappedUV)
-        working_source = originalColor
-        working_sorted = sortedColor
+        working_source = rt.copy(originalColor, "float")
+        working_sorted = rt.copy(sortedColor, "float")
         if _u_darkest:
             working_source[:] = rt.construct(4, rt.binary("-", rt.construct(3, rt.f(1.0)), rt.swizzle(working_source, "rgb"), 3, "float"), rt.swizzle(working_source, "a"))
             working_sorted[:] = rt.construct(4, rt.binary("-", rt.construct(3, rt.f(1.0)), rt.swizzle(working_sorted, "rgb"), 3, "float"), rt.swizzle(working_sorted, "a"))

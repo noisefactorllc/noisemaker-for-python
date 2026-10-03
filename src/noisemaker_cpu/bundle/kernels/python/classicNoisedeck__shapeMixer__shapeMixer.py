@@ -152,10 +152,10 @@ def run_pixel(ctx, out):
         else:
             if isInf__float(t):
                 return rt.construct(3, rt.f(0.0))
-        a = _u_paletteOffset
-        b = _u_paletteAmp
-        c = _u_paletteFreq
-        d = _u_palettePhase
+        a = rt.copy(_u_paletteOffset, "float")
+        b = rt.copy(_u_paletteAmp, "float")
+        c = rt.copy(_u_paletteFreq, "float")
+        d = rt.copy(_u_palettePhase, "float")
         t = rt.binary("+", rt.binary("*", t, _u_repeatPalette, 1, "float"), rt.binary("*", _u_rotatePalette, rt.f(0.01), 1, "float"), 1, "float")
         color = rt.binary("+", a, rt.binary("*", b, rt.component_wise("cos", rt.binary("*", rt.f(6.28318), rt.binary("+", rt.binary("*", c, t, 3, "float"), d, 3, "float"), 3, "float"), width=3), 3, "float"), 3, "float")
         if rt.binary("==", _u_paletteMode, rt.i(1)):

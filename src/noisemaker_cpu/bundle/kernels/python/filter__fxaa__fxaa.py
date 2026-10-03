@@ -93,7 +93,7 @@ def run_pixel(ctx, out):
         weight_west = weight_from_luma__float_float(center_luma, west_luma)
         weight_east = weight_from_luma__float_float(center_luma, east_luma)
         weight_sum = rt.binary("+", rt.binary("+", rt.binary("+", rt.binary("+", rt.binary("+", weight_center, weight_north, 1, "float"), weight_south, 1, "float"), weight_west, 1, "float"), weight_east, 1, "float"), g.EPSILON, 1, "float")
-        result_texel = center_texel
+        result_texel = rt.copy(center_texel, "float")
         blended_luma = rt.f(0.0)
         blended_rgb = rt.construct(3, 0.0)
         if rt.binary("<=", channelCount, rt.i(2)):

@@ -137,7 +137,7 @@ def run_pixel(ctx, out):
         reflectionVec = rt.reflect(incident, normal)
         reflectionOffset = rt.binary("*", rt.swizzle(reflectionVec, "xy"), rt.binary("*", _u_intensity, rt.f(5e-05), 1, "float"), 2, "float")
         redOffset = rt.binary("*", reflectionOffset, rt.binary("+", rt.f(1.0), rt.binary("*", _u_aberration, rt.f(0.0075), 1, "float"), 1, "float"), 2, "float")
-        greenOffset = reflectionOffset
+        greenOffset = rt.copy(reflectionOffset, "float")
         blueOffset = rt.binary("*", reflectionOffset, rt.binary("-", rt.f(1.0), rt.binary("*", _u_aberration, rt.f(0.0075), 1, "float"), 1, "float"), 2, "float")
         redUV = wrapCoords__vec2(rt.binary("+", uv, redOffset, 2, "float"))
         greenUV = wrapCoords__vec2(rt.binary("+", uv, greenOffset, 2, "float"))

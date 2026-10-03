@@ -105,7 +105,7 @@ def run_pixel(ctx, out):
         rotatedSt = rotate2D__vec2_float(st, angle)
         centered = rt.binary("-", st, rt.f(0.5), 2, "float")
         centered = rt.assign_swizzle(centered, "x", rt.binary("*", rt.swizzle(centered, "x"), aspectRatio, 1, "float"))
-        rotatedCentered = centered
+        rotatedCentered = rt.copy(centered, "float")
         c = rt.component_wise("cos", angle, width=1)
         s = rt.component_wise("sin", angle, width=1)
         rotatedCentered[:] = rt.matrix_mult(rt.construct(4, c, rt.unary("-", s), s, c), centered, 2)
@@ -136,7 +136,7 @@ def run_pixel(ctx, out):
             else:
                 if rt.binary("==", _u_gradientType, rt.i(2)):
                     cornerSt = rotate2D__vec2_float(st, angle)
-                    cTL = _u_color1
+                    cTL = rt.copy(_u_color1, "float")
                     cTR = (_u_color2 if rt.binary(">=", _u_colorCount, rt.i(3)) else _u_color1)
                     cBL = (_u_color3 if rt.binary(">=", _u_colorCount, rt.i(3)) else _u_color2)
                     cBR = (_u_color4 if rt.binary(">=", _u_colorCount, rt.i(4)) else cBL)

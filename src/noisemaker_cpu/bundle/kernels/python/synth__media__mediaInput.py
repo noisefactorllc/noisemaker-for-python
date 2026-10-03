@@ -25,7 +25,7 @@ def run_pixel(ctx, out):
         st = rt.copy(st, "float")
         rot = map__float_float_float_float_float(rot, rt.unary("-", rt.f(180.0)), rt.f(180.0), rt.f(0.5), rt.unary("-", rt.f(0.5)))
         angle = rt.binary("*", rt.binary("*", rot, rt.f(6.28318530718), 1, "float"), rt.unary("-", rt.f(1.0)), 1, "float")
-        size = _u_imageSize
+        size = rt.copy(_u_imageSize, "float")
         aspect = rt.binary("/", rt.swizzle(size, "x"), rt.swizzle(size, "y"), 1, "float")
         st[:] = rt.binary("-", st, rt.construct(2, rt.binary("*", rt.f(0.5), aspect, 1, "float"), rt.f(0.5)), 2, "float")
         st[:] = rt.matrix_mult(rt.construct(4, rt.component_wise("cos", angle, width=1), rt.unary("-", rt.component_wise("sin", angle, width=1)), rt.component_wise("sin", angle, width=1), rt.component_wise("cos", angle, width=1)), st, 2)
@@ -59,7 +59,7 @@ def run_pixel(ctx, out):
         return rt.component_wise("mix", rt.component_wise("mix", mediaTexel__ivec2_ivec2(lo, size), mediaTexel__ivec2_ivec2(rt.binary("+", lo, rt.construct(2, rt.i(1), rt.i(0), base="int"), 2, "int"), size), rt.swizzle(f, "x"), width=4), rt.component_wise("mix", mediaTexel__ivec2_ivec2(rt.binary("+", lo, rt.construct(2, rt.i(0), rt.i(1), base="int"), 2, "int"), size), mediaTexel__ivec2_ivec2(rt.binary("+", lo, rt.construct(2, rt.i(1), rt.i(1), base="int"), 2, "int"), size), rt.swizzle(f, "x"), width=4), rt.swizzle(f, "y"), width=4)
     def getImage__vec2(st):
         st = rt.copy(st, "float")
-        size = _u_imageSize
+        size = rt.copy(_u_imageSize, "float")
         st[:] = rt.binary("/", rt.swizzle(ctx.frag_coord, "xy"), size, 2, "float")
         st = rt.assign_swizzle(st, "y", rt.binary("-", rt.f(1.0), rt.swizzle(st, "y"), 1, "float"))
         scale = rt.binary("/", rt.f(100.0), _u_scaleAmt, 1, "float")

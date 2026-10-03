@@ -122,7 +122,7 @@ def run_pixel(ctx, out):
             result[:] = rt.component_wise("mix", _u_paperColor, seedColor, inside, width=3)
         else:
             if (bool((bool(rt.binary("==", _u_MODE, rt.i(1))) or bool(rt.binary("==", _u_MODE, rt.i(2))))) or bool(rt.binary("==", _u_MODE, rt.i(3)))):
-                gc = globalCoord
+                gc = rt.copy(globalCoord, "float")
                 if rt.binary("==", _u_MODE, rt.i(3)):
                     gc[:] = rotate2D__vec2_float(gc, rt.f(45.0))
                 noiseP = rt.construct(2, 0.0)

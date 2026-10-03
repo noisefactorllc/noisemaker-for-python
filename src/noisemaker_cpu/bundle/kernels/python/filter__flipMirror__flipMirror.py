@@ -14,7 +14,7 @@ def run_pixel(ctx, out):
         texSize = rt.texture_size(_u_inputTex)
         globalCoord = rt.binary("+", rt.swizzle(ctx.frag_coord, "xy"), _u_tileOffset, 2, "float")
         globalUV = rt.binary("/", globalCoord, _u_fullResolution, 2, "float")
-        warpedUV = globalUV
+        warpedUV = rt.copy(globalUV, "float")
         if rt.binary("==", _u_flipMode, rt.i(1)):
             warpedUV = rt.assign_swizzle(warpedUV, "x", rt.binary("-", rt.f(1.0), rt.swizzle(warpedUV, "x"), 1, "float"))
             warpedUV = rt.assign_swizzle(warpedUV, "y", rt.binary("-", rt.f(1.0), rt.swizzle(warpedUV, "y"), 1, "float"))

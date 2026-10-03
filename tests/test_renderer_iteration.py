@@ -256,3 +256,109 @@ def test_multi_pass_effect_returns_output_texture_instead_of_last_scratch(monkey
     surface = renderer.render_effect("filter/test", width=1, height=1)
 
     assert surface.data[0] == 1.0
+
+
+# Pass-repeat rule synced from noisemaker-for-cpu ea4abf3: upstream
+# (shaders/src/runtime/pipeline.js render()) executes each pass exactly
+# resolveRepeatCount(pass) times per frame with no group-level multiplier, so
+# when any pass of the definition carries a `repeat` the iteration loop is
+# inert above 0 and the pass's repeat uniform is the per-frame multiplier
+# (synth/reactionDiffusion, synth/navierStokes, synth3d/reactionDiffusion3d).
+# The documented iterationCount:0 bypass still runs zero passes; every other
+# iterated effect keeps the established group loop (filter/temporalAberration
+# requires N=60).
+def _repeat_carrying_effect():
+    return {
+        "namespace": "synth",
+        "kind": "generator",
+        "iterated": True,
+        "params": {
+            "iterationCount": {"type": "int", "default": 60, "cpuOnly": True},
+            "iterations": {"type": "int", "default": 3, "uniform": "iterations"},
+        },
+        "textures": {"state": {"format": "rgba32f"}},
+        "passes": [
+            {
+                "name": "simulate",
+                "program": "simulate",
+                "key": "synth/test:simulate",
+                "inputs": {"previous": "state"},
+                "outputs": {"fragColor": "state"},
+                "repeat": "iterations",
+            }
+        ],
+    }
+
+
+def test_pass_repeat_makes_the_iteration_loop_inert_above_zero(monkeypatch):
+    effect = _repeat_carrying_effect()
+    seen = []
+
+    def kernel(ctx, out):
+        seen.append(1)
+        out[:] = [float(ctx.textures["previous"].data[0]) + 1.0, 0.0, 0.0, 1.0]
+
+    _install_effect(monkeypatch, effect, kernel)
+
+    renderer.render_effect("filter/test", {"iterationCount": 4}, width=1, height=1, time=0.25)
+    assert len(seen) == 3, "iterationCount 4 must not multiply the pass repeat (3 executions)"
+
+    seen.clear()
+    renderer.render_effect("filter/test", {"iterationCount": 0}, width=1, height=1, time=0.25)
+    assert seen == [], "the iterationCount:0 bypass must still run zero passes"
+
+    seen.clear()
+    renderer.render_effect("filter/test", {"iterationCount": 1}, width=1, height=1, time=0.25)
+    assert len(seen) == 3
+
+
+def test_pass_repeat_iterations_uniform_drives_per_frame_evolution(monkeypatch):
+    effect = _repeat_carrying_effect()
+    seen = []
+
+    def kernel(ctx, out):
+        seen.append(1)
+        out[:] = [float(ctx.textures["previous"].data[0]) + 1.0, 0.0, 0.0, 1.0]
+
+    _install_effect(monkeypatch, effect, kernel)
+
+    renderer.render_effect("filter/test", {"iterationCount": 4, "iterations": 4}, width=1, height=1, time=0.25)
+    four = len(seen)
+    seen.clear()
+    renderer.render_effect("filter/test", {"iterationCount": 4, "iterations": 12}, width=1, height=1, time=0.25)
+    twelve = len(seen)
+
+    assert (four, twelve) == (4, 12), "the iterations uniform must be the observable per-frame multiplier"
+
+
+def test_pass_repeat_rule_applies_to_dsl_iterated_groups(monkeypatch):
+    effect = _repeat_carrying_effect()
+    seen = []
+
+    def kernel(ctx, out):
+        seen.append(1)
+        out[:] = [float(ctx.textures["previous"].data[0]) + 1.0, 0.0, 0.0, 1.0]
+
+    plan = {
+        "chains": [
+            {
+                "steps": [
+                    {
+                        "kind": "effect",
+                        "effect_id": "synth/test",
+                        "params": {"iterationCount": 2, "iterations": 4},
+                        "surfaces": {},
+                    },
+                    {"kind": "write", "surface": "o0"},
+                ]
+            }
+        ],
+        "render_surface": "o0",
+    }
+    monkeypatch.setattr(renderer, "_meta", lambda: {"effects": {"synth/test": effect}})
+    monkeypatch.setattr(renderer, "compile_dsl", lambda _source, _effects: plan)
+    monkeypatch.setattr(renderer, "_kernel_for", lambda _key: kernel)
+
+    renderer.render_dsl("ignored", width=1, height=1, time=0.25)
+
+    assert len(seen) == 4, "the DSL group loop must not multiply the pass repeat (4, not 8)"

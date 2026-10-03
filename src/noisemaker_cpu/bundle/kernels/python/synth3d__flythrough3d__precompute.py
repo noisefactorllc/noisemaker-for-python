@@ -91,7 +91,7 @@ def run_pixel(ctx, out):
     def mandelbulb__vec3_float_int_float(pos, n, maxIter, bail):
         pos = rt.copy(pos, "float")
         result = [rt.f(0.0), rt.f(0.0), rt.f(0.0)]
-        z = pos
+        z = rt.copy(pos, "float")
         dr = rt.f(1.0)
         r = rt.f(0.0)
         trap = rt.f(10000000000.0)
@@ -127,7 +127,7 @@ def run_pixel(ctx, out):
     def mandelbox__vec3_float_int_float(pos, scale, maxIter, bail):
         pos = rt.copy(pos, "float")
         result = [rt.f(0.0), rt.f(0.0), rt.f(0.0)]
-        z = pos
+        z = rt.copy(pos, "float")
         dr = rt.f(1.0)
         trap = rt.f(10000000000.0)
         iter = rt.f(0.0)

@@ -295,6 +295,24 @@ class CodeGen:
             self.stmt(s, scope, indent, out)
         return out
 
+    def _is_aliased_initializer(self, node, name, scope):
+        """True when a declaration's initializer is a live reference the copy pass
+        must copy: a bare identifier (other than a self-reference) or a dotted
+        struct-field chain. Anything else (literals, calls, swizzle reads) is
+        already a fresh value, mirroring the JS copyAliasedVectorDeclarations
+        regex, which only rewrites `var x = ident.chain;` initializers."""
+        if node is None:
+            return False
+        k = node["k"]
+        if k == "id":
+            return node["name"] != name
+        if k == "member":
+            obj_t = self.expr(node["obj"], scope)[1]
+            if base_of(obj_t) != "struct":
+                return False  # swizzle-style member read: fresh value
+            return self._is_aliased_initializer(node["obj"], name, scope)
+        return False
+
     def stmt(self, s, scope, indent, out):
         pad = "    " * indent
         k = s["k"]
@@ -318,7 +336,24 @@ class CodeGen:
                     init_code = f"rt.construct({t['width']}, {init_code}{_construct_base(t)})"
                 e = scope.define(dc["name"], t)
                 if init_code is not None:
-                    out.append(f"{pad}{e['py']} = {init_code}")
+                    # GLSL value semantics: `vecN v = u;` copies. The canonical JS
+                    # kernels copy aliased vector declarations at codegen time
+                    # (scripts/upstream/compile-glsl.js copyAliasedVectorDeclarations):
+                    # a bare alias plus a later component write destroys the source
+                    # (mandelbulb's z[0] recurrence rendered NaN volumes in
+                    # synth3d/fractal3d). Mirrors the JS rule exactly: the initializer
+                    # must be a bare identifier or a dotted struct-field chain
+                    # (`data.repeatSpacing`, `hit.dist`) and the copy applies only to
+                    # float vectors — the JS check is `instanceof Float32Array`, so
+                    # scalar and int/uint/bool storage stays a live reference there
+                    # and passes through here; call results and swizzle reads are
+                    # already fresh values, and the self-reference (`vec2 v = v;`)
+                    # reads the outer binding.
+                    aliased = self._is_aliased_initializer(init_node, dc["name"], scope)
+                    if width_of(t) > 1 and base_of(t) == "float" and aliased:
+                        out.append(f"{pad}{e['py']} = rt.copy({init_code}, {q(base_of(t))})")
+                    else:
+                        out.append(f"{pad}{e['py']} = {init_code}")
                 elif dc.get("array") is not None:
                     n_code = self.expr(dc["array"], scope)[0] if dc["array"] not in (None, True) else "0"
                     out.append(f"{pad}{e['py']} = rt.new_array({n_code}, {t['width']})")

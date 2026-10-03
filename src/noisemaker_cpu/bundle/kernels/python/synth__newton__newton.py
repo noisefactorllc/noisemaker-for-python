@@ -173,8 +173,8 @@ def run_pixel(ctx, out):
         convergedRoot = rt.unary("-", rt.i(1))
         convergeDist = rt.f(1.0)
         bailout = rt.binary("*", rt.f(10000000000.0), effRelax, 1, "float")
-        zr_df = re_df
-        zi_df = im_df
+        zr_df = rt.copy(re_df, "float")
+        zi_df = rt.copy(im_df, "float")
         n = rt.i(0)
         _for1_first = True
         for _for1 in range(1048576):
@@ -206,7 +206,7 @@ def run_pixel(ctx, out):
             zni = rt.construct(2, 0.0)
             (((_retc2 := df64_cmul__vec2_vec2_vec2_vec2_vec2_vec2(pwr, pwi, zr_df, zi_df, znr, zni)), znr.__setitem__(slice(None), _retc2[1]), zni.__setitem__(slice(None), _retc2[2]), _retc2[0])[-1])
             fzr = df64_sub__vec2_vec2(znr, df64_from__float(rt.f(1.0)))
-            fzi = zni
+            fzi = rt.copy(zni, "float")
             fpzr = df64_mul_f__vec2_float(pwr, rt.construct(1, intDeg))
             fpzi = df64_mul_f__vec2_float(pwi, rt.construct(1, intDeg))
             fpzr_f = df64_to_float__vec2(fpzr)
