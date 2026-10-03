@@ -62,3 +62,16 @@ def test_unsigned_vector_arithmetic_defaults_to_wrapped_glsl_semantics():
     )
 
     assert np.array_equal(result, np.array([0xFFFFFFFE, 4], dtype=np.int64))
+
+
+def test_trunc_scalar_div_follows_the_oracle_probe(monkeypatch):
+    """The scalar/scalar int-division truncation (ddf8b19-era lowering, see
+    runtime) truncates by default — standalone/deployed renders with no
+    mounted oracle — and passes the raw division through when the mounted
+    oracle predates the rewrite."""
+    from noisemaker_cpu import runtime
+
+    monkeypatch.setattr(runtime, "_ORACLE_SCALAR_INT_DIVISION", True)
+    assert runtime.trunc_scalar_div(-7.5) == -7.0
+    monkeypatch.setattr(runtime, "_ORACLE_SCALAR_INT_DIVISION", False)
+    assert runtime.trunc_scalar_div(-7.5) == -7.5

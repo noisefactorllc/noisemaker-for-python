@@ -176,3 +176,77 @@ def test_indexed_vector_conditional_assignment_matches_js_true_branch_noop():
     surface = run_pass(kernel, Ctx(Runtime()), 1, 1)
 
     assert np.array_equal(surface.data, np.zeros(4, dtype=np.float32))
+
+
+def test_scalar_int_division_declarations_mirror_the_sibling_lowering():
+    """ddf8b19-era restoreIntegerDivision scalar/scalar form (see codegen):
+    both operands must be in the sibling's file-global intNames set (int
+    uniform, int scalar declaration, or ivec — never function parameters,
+    which the sibling's regexes cannot match), and filter/spookyTicker is
+    exempt entirely."""
+    from transpiler.codegen import emit_python
+    from transpiler.parser import parse
+    from transpiler.preprocess import normalize
+
+    source = """
+        out vec4 fragColor;
+        uniform int volSize;
+        int pick(int localX, int iScale) {
+            int g = localX / iScale;
+            return g;
+        }
+        void main() {
+            int yAtlas = int(gl_FragCoord.y);
+            int z = yAtlas / volSize;
+            int same = volSize / volSize;
+            fragColor = vec4(float(z + pick(3, 2) + same), 0.0, 0.0, 1.0);
+        }
+    """
+    normalized = normalize(source, {})
+
+    def emit(effect_id):
+        return emit_python(parse(normalized["source"]), normalized["outputs"], normalized["varyings"], effect_id=effect_id)
+
+    generated = emit("synth3d/shape3d")
+    assert 'trunc_scalar_div(rt.binary("/", yAtlas, _u_volSize, 1, "int"))' in generated
+    # function parameters are not in intNames; the self-division stays live
+    assert 'trunc_scalar_div(rt.binary("/", localX, iScale' not in generated
+    assert 'trunc_scalar_div(rt.binary("/", _u_volSize, _u_volSize' not in generated
+    # the sibling exempts filter/spookyTicker from the scalar/scalar rewrite
+    assert "trunc_scalar_div" not in emit("filter/spookyTicker")
+    # larger expressions, non-identifier operands, and assignments stay fractional
+    assert 'trunc_scalar_div(rt.binary("/", yAtlas, rt.i(2)' not in generated
+
+
+def test_scalar_int_division_declarations_truncate_toward_zero_at_runtime(monkeypatch):
+    from noisemaker_cpu import runtime
+    from noisemaker_cpu.kernel_loader import load_kernel
+    from noisemaker_cpu.pass_runner import Ctx, run_pass
+    from noisemaker_cpu.runtime import Runtime
+    from transpiler.codegen import emit_python
+    from transpiler.parser import parse
+    from transpiler.preprocess import normalize
+
+    # The published runtime carries the post-ddf8b19 truncating semantics; pin
+    # the probe so the value contract is asserted against any mounted oracle
+    # (a pre-ddf8b19 oracle keeps its published fractional pass-through).
+    monkeypatch.setattr(runtime, "_ORACLE_SCALAR_INT_DIVISION", True)
+
+    source = """
+        out vec4 fragColor;
+        uniform int volSize;
+        void main() {
+            int yAtlas = int(-7.0);
+            int z = yAtlas / volSize;
+            fragColor = vec4(float(z), 0.0, 0.0, 1.0);
+        }
+    """
+    normalized = normalize(source, {})
+    kernel = load_kernel(
+        emit_python(parse(normalized["source"]), normalized["outputs"], normalized["varyings"], effect_id="synth3d/shape3d")
+    )
+
+    surface = run_pass(kernel, Ctx(Runtime(), uniforms={"volSize": 2}), 1, 1)
+
+    # GLSL int/int division truncates toward zero: -7 / 2 is -3, not floor's -4
+    assert np.array_equal(surface.data, np.array([-3.0, 0.0, 0.0, 1.0], dtype=np.float32))

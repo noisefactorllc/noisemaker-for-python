@@ -134,7 +134,7 @@ def run_pixel(ctx, out):
         x = rt.construct(1, rt.swizzle(ctx.frag_coord, "x"), base="int")
         yAtlas = rt.construct(1, rt.swizzle(ctx.frag_coord, "y"), base="int")
         y = rt.binary("%", yAtlas, volSize, 1, "int")
-        z = rt.binary("/", yAtlas, volSize, 1, "int")
+        z = rt.trunc_scalar_div(rt.binary("/", yAtlas, volSize, 1, "int"))
         p = rt.binary("/", rt.construct(3, rt.construct(1, x), rt.construct(1, y), rt.construct(1, z)), rt.binary("-", volSizeF, rt.f(1.0), 1, "float"), 3, "float")
         lf1 = map__float_float_float_float_float(_u_loopAScale, rt.f(1.0), rt.f(100.0), rt.f(6.0), rt.f(1.0))
         lf2 = map__float_float_float_float_float(_u_loopBScale, rt.f(1.0), rt.f(100.0), rt.f(6.0), rt.f(1.0))

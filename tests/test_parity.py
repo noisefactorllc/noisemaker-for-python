@@ -509,7 +509,9 @@ def test_canonical_hash_filters_are_byte_exact(tmp_path, effect_id):
 # sibling checkout. The gate's immutable oracle tarball
 # (.github/workflows/tests.yml) is pinned at 296e0138/b61b658399f1; the current
 # sibling pin f24b5254/d2965d0b7880 was audited by the 2026-09-29 sync and
-# e24c844/5f12866e91 was audited by the 2026-09-30 sync.
+# e24c844/5f12866e91 was audited by the 2026-09-30 sync; the catalog is
+# unchanged under d143cb51 (no canonical-kernel change from the source-lock
+# advance itself) and d143cb51/4c18cd22 was audited by the 2026-10-03 sync.
 AUDITED_SOURCE_LOCKS = {
     "296e0138c4744ed485b2e95de3eeb466c17629ee": {
         "digest": "e371a1650d1ace9462a20ecf4e4f0902e5135b4772e8a9abbc8d2c037beebf59",
@@ -522,6 +524,10 @@ AUDITED_SOURCE_LOCKS = {
     "e24c844f8dada85551ab084f41db8944fbc176c8": {
         "digest": "c2e0c264dc20338b19a144ee0888bd2ca39edcf325315a7d7ae1f5ced920804d",
         "snapshot": "e24c844f8dada85551ab084f41db8944fbc176c8",
+    },
+    "d143cb51dbed7d99784746f3323d350400018083": {
+        "digest": "4c18cd221488e77c7c6a2055386d6f569b40659c3f9eb6c6cfdace4ec3ebac42",
+        "snapshot": "d143cb51dbed7d99784746f3323d350400018083",
     },
 }
 

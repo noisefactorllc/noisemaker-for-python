@@ -43,6 +43,7 @@ def _s32(x) -> int:
 
 
 _ORACLE_INTEGER_DIVISION: bool | None = None
+_ORACLE_SCALAR_INT_DIVISION: bool | None = None
 _ORACLE_ALIASED_DECLARATION_COPY: bool | None = None
 _ORACLE_PASS_REPEAT_CLAMP: bool | None = None
 _SIBLING_DEFAULT = os.path.normpath(os.path.join(os.path.dirname(__file__), "..", "..", "..", "noisemaker-for-cpu"))
@@ -124,6 +125,34 @@ def _oracle_integer_division_trunc() -> bool:
     return _ORACLE_INTEGER_DIVISION
 
 
+def _trunc_value(x):
+    if _is_scalar(x):
+        return float(np.trunc(np.float64(x)))
+    return np.trunc(np.asarray(x, dtype=np.float64))
+
+
+def _oracle_scalar_int_division_trunc() -> bool:
+    """Whether scalar/scalar int-division declarations truncate toward zero.
+
+    ``noisemaker-for-cpu`` scripts/upstream/compile-glsl.js grew the
+    statement-level scalar/scalar ``restoreIntegerDivision`` rewrite (both
+    operands provably int-typed GLSL identifiers, e.g. ``int z = yAtlas /
+    volumeSize;``) in ddf8b1931b3, guarded by the ``effectId !==
+    'filter/spookyTicker'`` exemption. Pre-fix oracles (the CI oracle tarball
+    b61b658399f1 and every pinned gate authority before ddf8b19, including
+    390071fa078f) keep their published fractional float64 division for this
+    form. The published runtime carries the CURRENT (post-``ddf8b19``)
+    semantics, so this defaults to True — a standalone/deployed render with no
+    mounted oracle truncates. A mounted sibling oracle's transpiler is probed
+    once per process so version-mismatched comparisons still work.
+    """
+    global _ORACLE_SCALAR_INT_DIVISION
+    if _ORACLE_SCALAR_INT_DIVISION is None:
+        text = _mounted_oracle_text(os.path.join("scripts", "upstream", "compile-glsl.js"))
+        _ORACLE_SCALAR_INT_DIVISION = text is None or "effectId !== 'filter/spookyTicker'" in text
+    return _ORACLE_SCALAR_INT_DIVISION
+
+
 def trunc64(x):
     """JS ``Math.trunc`` over the unrounded float64 division result.
 
@@ -136,9 +165,22 @@ def trunc64(x):
     """
     if not _oracle_integer_division_trunc():
         return x
-    if _is_scalar(x):
-        return float(np.trunc(np.float64(x)))
-    return np.trunc(np.asarray(x, dtype=np.float64))
+    return _trunc_value(x)
+
+
+def trunc_scalar_div(x):
+    """JS ``Math.trunc`` over the unrounded scalar/scalar int-division result.
+
+    Applied only at the declaration sites the oracle's ``restoreIntegerDivision``
+    scalar/scalar form (ddf8b19-era, both operands int-typed identifiers) rewrites
+    — see ``_oracle_scalar_int_division_trunc``: pass-through when a mounted oracle
+    predates that rewrite, so version-mismatched comparisons keep the pre-fix
+    oracle's published fractional semantics; the default, including
+    standalone/deployed renders with no mounted oracle, truncates.
+    """
+    if not _oracle_scalar_int_division_trunc():
+        return x
+    return _trunc_value(x)
 
 
 _SWIZZLE = {"x": 0, "y": 1, "z": 2, "w": 3, "r": 0, "g": 1, "b": 2, "a": 3, "s": 0, "t": 1, "p": 2, "q": 3}
@@ -242,6 +284,10 @@ class Runtime:
     def trunc64(self, x):
         """JS ``Math.trunc`` over the unrounded float64 division result."""
         return trunc64(x)
+
+    def trunc_scalar_div(self, x):
+        """JS ``Math.trunc`` over the scalar/scalar int-division result."""
+        return trunc_scalar_div(x)
 
     # ---- construction ----
     def construct(self, width: int, *comps, base="float"):

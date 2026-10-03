@@ -131,7 +131,7 @@ class Scope:
 
 
 class CodeGen:
-    def __init__(self, program, outputs, varyings, js_vector_storage=False):
+    def __init__(self, program, outputs, varyings, js_vector_storage=False, effect_id=""):
         self.program = program
         self.outputs = outputs or ["fragColor"]
         self.varyings = set(varyings or [])
@@ -146,6 +146,7 @@ class CodeGen:
         self.uses_deriv = False
         self.cur_out = []  # out/inout param pynames of the function being emitted
         self.js_vector_storage = js_vector_storage
+        self.effect_id = effect_id
 
     # ---- collect ----
     def collect(self):
@@ -163,6 +164,47 @@ class CodeGen:
                 # (e.g. `data[i]`); each is bound as a uniform value.
                 for m in d["members"]:
                     self.uniforms.append({"name": m["name"], "type": self.type_of_name(m["type"], m.get("array"))})
+        self.int_names = self._collect_int_names()
+
+    def _collect_int_names(self):
+        """The sibling lowering's ``intNames`` set: file-global names collected
+        by scanning the ORIGINAL GLSL for ``uniform int X``, ``int X =`` /
+        ``int X;`` (scalar declarations only — an array declarator does not
+        match the sibling's regex), and ``ivecN X`` (no terminator
+        requirement, arrays included). Mirrored as an AST walk over the parsed
+        program so the set matches the regex semantics exactly: function
+        parameters stay excluded (the regex requires ``=`` or ``;`` after the
+        name), while struct fields, for-init declarations, and globals stay
+        included."""
+        names = set()
+
+        def walk(node):
+            if isinstance(node, dict):
+                if node.get("k") == "decl":
+                    t = TYPE.get(node["type"])
+                    if t and t["base"] == "int":
+                        for dc in node["declarators"]:
+                            if "uniform" in (node.get("quals") or []):
+                                if t["width"] == 1 and dc.get("array") is None:
+                                    names.add(dc["name"])
+                            elif t["width"] == 1:
+                                if dc.get("array") is None:
+                                    names.add(dc["name"])
+                            else:  # ivecN X — the sibling regex has no terminator requirement
+                                names.add(dc["name"])
+                for value in node.values():
+                    walk(value)
+            elif isinstance(node, list):
+                for item in node:
+                    walk(item)
+
+        walk(self.program["decls"])
+        for fields in self.structs.values():
+            for ftype, fname in fields:
+                t = TYPE.get(ftype)
+                if t and t["base"] == "int":
+                    names.add(fname)
+        return names
 
     def type_of_name(self, tname, array=None):
         t = dict(TYPE.get(tname, {"base": "float", "width": 1}))
@@ -594,31 +636,49 @@ class CodeGen:
         (first present in a146f22839dc): GLSL int/int division truncates toward
         zero, but the transpiler loses int typing on component-indexed
         operands (``int z = pixelCoord.y / volSize;``) and emits a float64
-        division. The -cpu lowering rewrites ONLY scalar declarations whose
+        division. The -cpu lowering rewrites scalar declarations whose
         initializer is exactly ``VEC[<decimal>] / IDENT;`` (a single-component
         member access transpiles to the same form) where IDENT is a provably
-        int-typed scalar (int uniform, int variable, or ivec). Larger
+        int-typed scalar (int uniform, int variable, or ivec), and — since
+        ddf8b1931b3 — the scalar/scalar form ``IDENT / IDENT;`` where BOTH
+        operands are provably int-typed scalars and distinct (synth3d/shape3d's
+        ``int z = yAtlas / volumeSize;``), EXEMPT for filter/spookyTicker whose
+        pinned authority capture matches the untruncated lowering. Larger
         expressions, non-literal indices, multi-component swizzles, and
         assignment statements do not match the -cpu rewrite and stay
-        fractional. ``rt.trunc64`` applies the truncation only when the
-        mounted oracle is post-fix (see runtime)."""
+        fractional. ``rt.trunc64``/``rt.trunc_scalar_div`` apply the
+        truncation only when the mounted oracle carries the respective
+        rewrite (see runtime)."""
         if not (node.get("k") == "binary" and node.get("op") == "/"):
             return code
         l, r = node["l"], node["r"]
         if r.get("k") != "id":
             return code
-        if l.get("k") == "index":
-            if l["obj"].get("k") != "id" or l["idx"].get("k") != "num" or not str(l["idx"]["value"]).isdigit():
+        if l.get("k") in ("index", "member"):
+            if l.get("k") == "index":
+                if l["obj"].get("k") != "id" or l["idx"].get("k") != "num" or not str(l["idx"]["value"]).isdigit():
+                    return code
+            else:
+                if l["obj"].get("k") != "id" or len(l["field"]) != 1:
+                    return code
+            entry = scope.resolve(r["name"])
+            if entry is None or base_of(entry["type"]) != "int" or width_of(entry["type"]) != 1:
                 return code
-        elif l.get("k") == "member":
-            if l["obj"].get("k") != "id" or len(l["field"]) != 1:
+            return f"rt.trunc64({code})"
+        if l.get("k") == "id":
+            # Statement-level scalar/scalar form (ddf8b1931b3): both operands
+            # must be in the sibling's file-global intNames set (int uniform,
+            # int scalar declaration, or ivec — never function parameters), so
+            # GLSL truncates toward zero. filter/spookyTicker stays EXEMPT
+            # exactly like the sibling's lowering.
+            if self.effect_id == "filter/spookyTicker":
                 return code
-        else:
-            return code
-        entry = scope.resolve(r["name"])
-        if entry is None or base_of(entry["type"]) != "int" or width_of(entry["type"]) != 1:
-            return code
-        return f"rt.trunc64({code})"
+            if l["name"] == r["name"]:
+                return code
+            if l["name"] not in self.int_names or r["name"] not in self.int_names:
+                return code
+            return f"rt.trunc_scalar_div({code})"
+        return code
 
     def _e_binary(self, node, scope):
         op = node["op"]
@@ -858,8 +918,8 @@ _ROUTED = {
 _SKIP_FUNCS = {"cpu_umul", "cpu_ivec2", "cpu_ivec3", "cpu_ivec4", "cpu_uvec2", "cpu_uvec3", "cpu_uvec4", "cpu_float"}
 
 
-def emit_python(program, outputs=None, varyings=None, js_vector_storage=False):
-    gen = CodeGen(program, outputs, varyings, js_vector_storage=js_vector_storage)
+def emit_python(program, outputs=None, varyings=None, js_vector_storage=False, effect_id=""):
+    gen = CodeGen(program, outputs, varyings, js_vector_storage=js_vector_storage, effect_id=effect_id)
     gen.funcs_filter = _SKIP_FUNCS
     # drop overridden helper functions before emit
     program["decls"] = [d for d in program["decls"] if not (d.get("k") == "func" and d.get("name") in _SKIP_FUNCS)]

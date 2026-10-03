@@ -96,7 +96,7 @@ def run_pixel(ctx, out):
         within_glyph_x = 0
         if (bool((bool((bool(rt.binary(">=", lx, rt.i(0))) and bool(rt.binary("<", lx, overlay_w)))) and bool(rt.binary(">=", ly, rt.i(0))))) and bool(rt.binary("<", ly, overlay_h))):
             cell_stride = rt.binary("+", CELL_W, GAP, 1, "int")
-            glyph_idx = rt.binary("/", lx, cell_stride, 1, "int")
+            glyph_idx = rt.trunc_scalar_div(rt.binary("/", lx, cell_stride, 1, "int"))
             within_glyph_x = rt.binary("-", lx, rt.binary("*", glyph_idx, cell_stride, 1, "int"), 1, "int")
             local_y = 0
             time_cell = 0

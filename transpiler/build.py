@@ -256,6 +256,7 @@ def build(ids, out_dir=BUNDLE, update_lock=False):
                         norm.get("outputs"),
                         norm.get("varyings"),
                         js_vector_storage=key in _JS_VECTOR_STORAGE_KEYS,
+                        effect_id=eid,
                     )
                 except Exception as e:
                     failures.append(f"{key}: {type(e).__name__}: {str(e)[:80]}")

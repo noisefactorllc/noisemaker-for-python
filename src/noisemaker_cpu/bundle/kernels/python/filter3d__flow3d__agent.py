@@ -94,7 +94,7 @@ def run_pixel(ctx, out):
                         else:
                             if rt.binary("==", _u_BEHAVIOR, rt.i(5)):
                                 quarterSize = rt.component_wise("max", rt.i(1), rt.binary("/", totalAgents, rt.i(4), 1, "int"), width=1)
-                                band = rt.binary("/", agentIndex, quarterSize, 1, "int")
+                                band = rt.trunc_scalar_div(rt.binary("/", agentIndex, quarterSize, 1, "int"))
                                 if rt.binary("<=", band, rt.i(0)):
                                     return baseHeading
                                 else:
