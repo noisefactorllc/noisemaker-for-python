@@ -107,7 +107,45 @@ def _parse_hex(s: str):
     return [r, g, b]
 
 
-def _coerce(spec: dict, value):
+class ParameterRangeError(ValueError):
+    """A numeric parameter value falls outside its declared min/max range.
+
+    Mirrors the pinned oracle's src/effects/definition.js, which raises
+    `RangeError('Parameter "<name>" must be at most <max>')` after coercing
+    every numeric parameter value (GAP-007).
+    """
+
+
+def _bound_text(bound) -> str:
+    """Render a declared range bound the way JS Number -> String does: the
+    metadata declares some maxima as integral floats (1000.0) but the reference
+    diagnostic prints `1000`."""
+    if isinstance(bound, float) and bound.is_integer():
+        return str(int(bound))
+    return str(bound)
+
+
+def _check_param_range(spec: dict, name: str | None, value) -> None:
+    """Enforce a numeric parameter's declared min/max range. `name=None` skips
+    the check: the only unvalidated call path is the DSL renderer's implicit
+    render-seed threading, which the pinned oracle also leaves unvalidated
+    (runtime/renderer.js spreads the render seed into step params without a
+    range check, while explicit DSL assignments go through coerceWithRange)."""
+    if (
+        name is None
+        or isinstance(value, bool)
+        or not isinstance(value, (int, float, np.integer, np.floating))
+    ):
+        return
+    number = value.item() if isinstance(value, (np.integer, np.floating)) else value
+    declared_min, declared_max = spec.get("min"), spec.get("max")
+    if declared_min is not None and number < declared_min:
+        raise ParameterRangeError(f'Parameter "{name}" must be at least {_bound_text(declared_min)}')
+    if declared_max is not None and number > declared_max:
+        raise ParameterRangeError(f'Parameter "{name}" must be at most {_bound_text(declared_max)}')
+
+
+def _coerce(spec: dict, value, name: str | None = None):
     t = spec["type"]
     if value is None:
         value = spec.get("default")
@@ -120,20 +158,26 @@ def _coerce(spec: dict, value):
             value = [float(x) for x in value.split(",")]
         return np.array(value, dtype=F32)
     if t == "float":
-        return f32(float(value))
+        number = float(value)
+        _check_param_range(spec, name, number)
+        return f32(number)
     if t in ("int", "enum", "member"):
         if isinstance(value, str):
             choices = spec.get("choices") or {}
             key = value.split(".")[-1]  # "oscType.sine" -> "sine"
             if value in choices:
-                return int(choices[value])
-            if key in choices:
-                return int(choices[key])
-            try:
-                return int(float(value))
-            except ValueError:
-                return 0  # CDN member with no inline choices: defaults are the 0th member
-        return int(value)
+                number = int(choices[value])
+            elif key in choices:
+                number = int(choices[key])
+            else:
+                try:
+                    number = int(float(value))
+                except ValueError:
+                    return 0  # CDN member with no inline choices: defaults are the 0th member
+        else:
+            number = int(value)
+        _check_param_range(spec, name, number)
+        return number
     if t in ("bool", "boolean"):
         if isinstance(value, str):
             return value.strip().lower() in ("1", "true", "yes", "on")
@@ -368,6 +412,7 @@ def _render_effect_once(
     frame=0,
     delta_time=0,
     external_inputs=None,
+    validate_implicit_seed=True,
 ) -> Surface:
     params = params or {}
     inputs = inputs or {}
@@ -401,9 +446,13 @@ def _render_effect_once(
             # param, the CLI threads the render `seed` into it instead of
             # falling back to the param's own (possibly different) metadata
             # default, so `seed=` actually changes the generator's look.
-            val = _coerce(spec, seed)
+            # The CLI/effect-command path validates the threaded seed against
+            # the declared range; the DSL's implicit threading (validate_implicit_seed
+            # False) matches runtime/renderer.js, which spreads the render seed
+            # into step params without a range check.
+            val = _coerce(spec, seed, pname if validate_implicit_seed else None)
         else:
-            val = _coerce(spec, params.get(pname))
+            val = _coerce(spec, params.get(pname), pname)
         param_values[pname] = val
         if spec.get("uniform") is not None:
             effect_uniforms[spec["uniform"]] = val
@@ -418,7 +467,7 @@ def _render_effect_once(
             (pn for pn, sp in eff["params"].items() if isinstance(sp, dict) and sp.get("type") == "palette"), None
         )
         if pal is not None:
-            idx = _coerce(eff["params"][pal], params.get(pal))
+            idx = _coerce(eff["params"][pal], params.get(pal), pal)
             if isinstance(idx, int) and 0 < idx <= len(PALETTE_DATA):
                 e = PALETTE_DATA[idx - 1]
                 effect_uniforms["paletteAmp"] = np.array(e[0:3], dtype=F32)
@@ -471,7 +520,9 @@ def _render_effect_once(
                     if pn in eff["params"]:
                         gp = eff["params"][pn]
                         gen[pn] = (
-                            _coerce(gp, seed) if pn == "seed" and "seed" not in params else _coerce(gp, params.get(pn))
+                            _coerce(gp, seed, pn if validate_implicit_seed else None)
+                            if pn == "seed" and "seed" not in params
+                            else _coerce(gp, params.get(pn), pn)
                         )
                 attachments[tname] = render_worm_overlay(effect_id, width, height, gen)
 
@@ -643,7 +694,10 @@ def _render_effect_once(
     return output_result if output_result is not None else image
 
 
-def render_effect(effect_id, params=None, inputs=None, width=256, height=256, seed=1, time=0.0, external_inputs=None):
+def render_effect(
+    effect_id, params=None, inputs=None, width=256, height=256, seed=1, time=0.0, external_inputs=None,
+    *, validate_implicit_seed=True,
+):
     params = params or {}
     inputs = inputs or {}
     effect = _meta()["effects"][effect_id]
@@ -655,13 +709,16 @@ def render_effect(effect_id, params=None, inputs=None, width=256, height=256, se
     }
     params = _inherit_volume_size(effect, params, input_bundle)
     if not effect.get("iterated"):
-        return _render_effect_once(effect_id, params, inputs, width, height, seed, time, external_inputs=external_inputs)
+        return _render_effect_once(
+            effect_id, params, inputs, width, height, seed, time, external_inputs=external_inputs,
+            validate_implicit_seed=validate_implicit_seed,
+        )
 
     # Pass-repeat rule (see _run_iterated_group): when any pass of the definition
     # carries a `repeat`, the iteration loop is inert above 0 and the per-frame
     # multiplier is the pass repeat resolved from its uniform.
     iteration_spec = effect["params"]["iterationCount"]
-    iteration_count = _coerce(iteration_spec, params.get("iterationCount"))
+    iteration_count = _coerce(iteration_spec, params.get("iterationCount"), "iterationCount")
     if _oracle_pass_repeat_clamp() and any(p.get("repeat") for p in effect.get("passes", [])):
         iteration_count = min(iteration_count, 1)
     if iteration_count <= 0:
@@ -676,7 +733,7 @@ def render_effect(effect_id, params=None, inputs=None, width=256, height=256, se
         if source is not None:
             return source.clone()
         if effect.get("domain") == "volume-generator":
-            param_values = {name: _coerce(spec, params.get(name)) for name, spec in effect["params"].items()}
+            param_values = {name: _coerce(spec, params.get(name), name) for name, spec in effect["params"].items()}
             output_name = effect.get("outputTex3d")
             output_spec = (effect.get("textures") or {}).get(output_name, {})
             volume_width, volume_height = _texture_dimensions(output_spec, param_values, width, height)
@@ -709,6 +766,7 @@ def render_effect(effect_id, params=None, inputs=None, width=256, height=256, se
             previous_output=previous_output,
             frame=tick["frame"],
             delta_time=tick["delta_time"],
+            validate_implicit_seed=validate_implicit_seed,
         )
         previous_output = _chain_bundle(result)["image"]
     return result
@@ -749,7 +807,13 @@ def _run_effect_step(step, current, surfaces, external_textures, width, height, 
     inputs = _effect_step_inputs(step, current, surfaces, external_textures)
     effect = _meta()["effects"][step["effect_id"]]
     params = _inherit_volume_size(effect, step["params"], _chain_bundle(current))
-    return render_effect(step["effect_id"], params, inputs, width=width, height=height, seed=seed, time=time, external_inputs=external_inputs)
+    # The DSL's implicit render-seed threading is unvalidated, matching
+    # runtime/renderer.js (explicit DSL assignments still go through the range
+    # check inside render_effect).
+    return render_effect(
+        step["effect_id"], params, inputs, width=width, height=height, seed=seed, time=time,
+        external_inputs=external_inputs, validate_implicit_seed=False,
+    )
 
 
 def _run_iterated_group(group, current, surfaces, external_textures, effects, width, height, seed, time, external_inputs=None):
@@ -764,7 +828,7 @@ def _run_iterated_group(group, current, surfaces, external_textures, effects, wi
     # other iterated effects keep the established `iterationCount` group loop
     # (filter/temporalAberration requires N=60).
     iteration_spec = first_effect["params"]["iterationCount"]
-    iteration_count = _coerce(iteration_spec, first_step["params"].get("iterationCount"))
+    iteration_count = _coerce(iteration_spec, first_step["params"].get("iterationCount"), "iterationCount")
     if _oracle_pass_repeat_clamp() and any(p.get("repeat") for p in first_effect.get("passes", [])):
         iteration_count = min(iteration_count, 1)
     if iteration_count <= 0:
@@ -779,7 +843,7 @@ def _run_iterated_group(group, current, surfaces, external_textures, effects, wi
 
     state_size = None
     if "stateSize" in first_effect["params"]:
-        state_size = _coerce(first_effect["params"]["stateSize"], first_step["params"].get("stateSize"))
+        state_size = _coerce(first_effect["params"]["stateSize"], first_step["params"].get("stateSize"), "stateSize")
 
     group_input = current
     group_attachments = {}
@@ -806,6 +870,7 @@ def _run_iterated_group(group, current, surfaces, external_textures, effects, wi
                 previous_output=previous_outputs[index],
                 frame=tick["frame"],
                 delta_time=tick["delta_time"],
+                validate_implicit_seed=False,
             )
             step_attachments[index] = {
                 name: surface

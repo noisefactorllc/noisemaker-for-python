@@ -18,11 +18,12 @@ import shutil
 import subprocess
 import sys
 import tempfile
+from contextlib import contextmanager
 
 import click
 
 from .png import decode_png, encode_png
-from .renderer import _meta, render_dsl, render_effect
+from .renderer import ParameterRangeError, _meta, render_dsl, render_effect
 
 MAX_SEED_VALUE = 2**32 - 1
 
@@ -78,11 +79,25 @@ def _resolve_effect(effect: str, kind: str | None = None) -> str:
     return effect
 
 
+def _draw_seed(effect_id: str) -> int:
+    """Unseeded runs draw inside the selected effect's declared seed range
+    (GAP-007). The previous unbounded draw (`1` to `2**32 - 1`) exceeded the
+    declared maximum in every run where the effect declares one, and rendered
+    the all-white degenerate output for about 41 percent of the draw range;
+    the pinned oracle rejects out-of-range seeds."""
+    spec = _meta()["effects"][effect_id]["params"].get("seed")
+    if spec is not None and spec.get("max") is not None:
+        declared_min = spec.get("min")
+        low = int(declared_min) if declared_min is not None else 1
+        return random.randint(low, int(spec["max"]))
+    return random.randint(1, MAX_SEED_VALUE)
+
+
 def _prologue(effect: str, seed: int | None, kind: str | None) -> tuple[str, int]:
     """Shared command entry: resolve the effect, default the seed, echo the id."""
     effect = _resolve_effect(effect, kind)
     if seed is None:
-        seed = random.randint(1, MAX_SEED_VALUE)
+        seed = _draw_seed(effect)
     click.echo(effect)
     return effect, seed
 
@@ -95,6 +110,17 @@ def _parse_params(pairs: tuple[str, ...]) -> dict:
             raise click.BadParameter(f"Expected NAME=VALUE, received {kv!r}", param_hint="--param")
         params[key] = value
     return params
+
+
+@contextmanager
+def _clean_range_errors():
+    """Convert the renderer's ParameterRangeError into the CLI's clean nonzero
+    exit with the diagnostic that names the parameter and the bound, mirroring
+    the pinned oracle's exit-1 `Parameter "seed" must be at most N` (GAP-007)."""
+    try:
+        yield
+    except ParameterRangeError as exc:
+        raise click.ClickException(str(exc)) from exc
 
 
 def _bind_input(effect_id: str, surface) -> dict:
@@ -162,7 +188,10 @@ def main():
 @click.argument("effect")
 def generate(width, height, time_value, seed, filename, params, effect):
     effect, seed = _prologue(effect, seed, "generator")
-    surface = render_effect(effect, _parse_params(params), width=width, height=height, seed=seed, time=time_value)
+    with _clean_range_errors():
+        surface = render_effect(
+            effect, _parse_params(params), width=width, height=height, seed=seed, time=time_value
+        )
     _write_png(surface, filename)
     click.echo(f"Rendered {width}x{height} -> {filename}")
 
@@ -177,15 +206,16 @@ def generate(width, height, time_value, seed, filename, params, effect):
 def apply(time_value, seed, filename, params, effect, input_filename):
     effect, seed = _prologue(effect, seed, "filter")
     source = _load_png(input_filename)
-    surface = render_effect(
-        effect,
-        _parse_params(params),
-        _bind_input(effect, source),
-        width=source.width,
-        height=source.height,
-        seed=seed,
-        time=time_value,
-    )
+    with _clean_range_errors():
+        surface = render_effect(
+            effect,
+            _parse_params(params),
+            _bind_input(effect, source),
+            width=source.width,
+            height=source.height,
+            seed=seed,
+            time=time_value,
+        )
     _write_png(surface, filename)
     click.echo(f"Rendered {source.width}x{source.height} -> {filename}")
 
@@ -211,11 +241,13 @@ def animate(width, height, seed, filename, frame_count, fps, speed, save_frames,
 
     frames_dir = save_frames or tempfile.mkdtemp(prefix="noisemaker-py-")
     os.makedirs(frames_dir, exist_ok=True)
-    try:
+    with _clean_range_errors(), _cleanup_frames(save_frames, frames_dir):
         with click.progressbar(range(frame_count), label="Rendering frames") as frames:
             for i in frames:
                 time_value = (i / frame_count) * speed  # sweep the [0,1) phase, `speed` loops
-                surface = render_effect(effect, parsed, width=width, height=height, seed=seed, time=time_value)
+                surface = render_effect(
+                    effect, parsed, width=width, height=height, seed=seed, time=time_value
+                )
                 _write_png(surface, os.path.join(frames_dir, f"frame_{i:04d}.png"))
 
         if shutil.which("ffmpeg") is None:
@@ -249,6 +281,13 @@ def animate(width, height, seed, filename, frame_count, fps, speed, save_frames,
             tail = (exc.stderr or b"").decode(errors="replace").strip().splitlines()[-5:]
             raise click.ClickException("ffmpeg failed:\n" + "\n".join(tail)) from exc
         click.echo(f"Rendered {frame_count} frames ({width}x{height}) -> {filename}")
+
+
+@contextmanager
+def _cleanup_frames(save_frames, frames_dir):
+    """Remove the temporary frames directory unless --save-frames kept it."""
+    try:
+        yield
     finally:
         if not save_frames:
             shutil.rmtree(frames_dir, ignore_errors=True)
@@ -270,7 +309,10 @@ def animate(width, height, seed, filename, frame_count, fps, speed, save_frames,
 def run(width, height, time_value, seed, filename, input_filename, textures):
     source = sys.stdin.read()
     external = _load_external_textures(input_filename, textures)
-    surface = render_dsl(source, width=width, height=height, seed=seed, time=time_value, external_textures=external)
+    with _clean_range_errors():
+        surface = render_dsl(
+            source, width=width, height=height, seed=seed, time=time_value, external_textures=external
+        )
     _write_png(surface, filename)
     click.echo(f"Rendered {surface.width}x{surface.height} -> {filename}")
 
