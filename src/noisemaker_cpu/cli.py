@@ -23,7 +23,7 @@ from contextlib import contextmanager
 import click
 
 from .png import decode_png, encode_png
-from .renderer import ParameterRangeError, _meta, render_dsl, render_effect
+from .renderer import ParameterRangeError, _coerce, _meta, render_dsl, render_effect
 
 MAX_SEED_VALUE = 2**32 - 1
 
@@ -95,6 +95,16 @@ def _draw_seed(effect_id: str) -> int:
 
 def _prologue(effect: str, seed: int | None, kind: str | None) -> tuple[str, int]:
     """Shared command entry: resolve the effect, default the seed, echo the id."""
+    if seed is not None:
+        # An explicitly passed --seed mirrors the pinned oracle's explicit DSL
+        # seed assignment, which the DSL parser range-validates BEFORE any
+        # rendering (GAP-007). This fires even for typed-volume effects, whose
+        # domain refusal below would otherwise mask the reference's exit-1
+        # `Parameter "seed" must be at most N` for the same command.
+        spec = _meta()["effects"].get(effect, {}).get("params", {}).get("seed")
+        if spec is not None:
+            with _clean_range_errors():
+                _coerce(spec, seed, "seed")
     effect = _resolve_effect(effect, kind)
     if seed is None:
         seed = _draw_seed(effect)

@@ -34,18 +34,16 @@ def _bound_text(bound) -> str:
 
 
 def test_every_declared_seed_max_rejects_max_plus_one():
-    # Image-domain effects are reachable through `generate` (the acceptance
-    # command); typed-volume effects are refused there by a pre-existing
-    # domain diagnostic, so their declared range is asserted through the
-    # renderer API instead.
+    # The acceptance command covers EVERY bundled effect with a declared seed
+    # maximum: an explicit --seed mirrors the pinned oracle's explicit DSL
+    # assignment, which the DSL parser validates before any rendering, so the
+    # diagnostic fires even for typed-volume effects whose in-range use is
+    # refused by the domain check (matching the reference's exit-1 for
+    # `generate synth3d/noise3d --seed 101`).
     runner = CliRunner()
     for effect_id, spec in sorted(_declared_seed_specs().items()):
         maximum = spec["max"]
         expected = f'Parameter "seed" must be at most {_bound_text(maximum)}'
-        if _meta()["effects"][effect_id].get("domain", "image") != "image":
-            with pytest.raises(ParameterRangeError, match="must be at most"):
-                render_effect(effect_id, width=16, height=16, seed=int(maximum) + 1)
-            continue
         with runner.isolated_filesystem():
             result = runner.invoke(
                 cli.main,
@@ -64,6 +62,43 @@ def test_every_declared_seed_max_rejects_max_plus_one():
             )
         assert result.exit_code != 0, f"{effect_id} accepted a seed above its declared maximum"
         assert expected in result.output, f"{effect_id}: expected {expected!r}, got {result.output!r}"
+
+
+def test_typed_volume_generate_rejects_out_of_range_seed_through_the_cli():
+    # The pinned oracle's `generate synth3d/noise3d --seed 101` exits 1 with
+    # the seed diagnostic (the explicit assignment is validated before any
+    # rendering), even though the port refuses in-range volume effects in
+    # `generate` with the domain diagnostic.
+    with CliRunner().isolated_filesystem():
+        result = CliRunner().invoke(
+            cli.main,
+            ["generate", "synth3d/noise3d", "--width", "16", "--height", "16", "--seed", "101", "--filename", "out.png"],
+        )
+    assert result.exit_code == 1
+    assert 'Parameter "seed" must be at most 100' in result.output
+
+
+def test_typed_volume_generate_in_range_seed_still_gets_the_domain_refusal():
+    # In-range explicit seeds keep the pre-existing contract: `generate` is an
+    # image-domain command and volume effects go through the DSL run command.
+    with CliRunner().isolated_filesystem():
+        result = CliRunner().invoke(
+            cli.main,
+            ["generate", "synth3d/noise3d", "--width", "16", "--height", "16", "--seed", "50", "--filename", "out.png"],
+        )
+    assert result.exit_code != 0
+    assert "typed volume chain" in result.output
+
+
+def test_typed_volume_render_effect_api_rejects_out_of_range_seed():
+    # The renderer API enforces every declared seed range the same way for
+    # volume-domain effects, where the actual volume rendering happens (through
+    # the DSL run command).
+    for effect_id, spec in sorted(_declared_seed_specs().items()):
+        if _meta()["effects"][effect_id].get("domain", "image") == "image":
+            continue
+        with pytest.raises(ParameterRangeError, match="must be at most"):
+            render_effect(effect_id, width=16, height=16, seed=int(spec["max"]) + 1)
 
 
 def test_curl_rejects_1001_and_5000_like_reference():
