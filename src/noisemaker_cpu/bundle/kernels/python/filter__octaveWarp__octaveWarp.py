@@ -32,7 +32,7 @@ def run_pixel(ctx, out):
         return v
     def hash21__vec2(p):
         p = rt.copy(p, "float")
-        v = rt.construct(3, rt.construct(1, (rt.binary("*", rt.swizzle(p, "x"), rt.f(2.0), 1, "float") if rt.binary(">=", rt.swizzle(p, "x"), rt.f(0.0)) else rt.binary("+", rt.binary("*", rt.unary("-", rt.swizzle(p, "x")), rt.f(2.0), 1, "float"), rt.f(1.0), 1, "float")), base="uint"), rt.construct(1, (rt.binary("*", rt.swizzle(p, "y"), rt.f(2.0), 1, "float") if rt.binary(">=", rt.swizzle(p, "y"), rt.f(0.0)) else rt.binary("+", rt.binary("*", rt.unary("-", rt.swizzle(p, "y")), rt.f(2.0), 1, "float"), rt.f(1.0), 1, "float")), base="uint"), rt.construct(1, _u_seed, base="uint"), base="uint")
+        v = rt.construct(3, rt.binary("+", rt.construct(1, rt.binary("*", rt.component_wise("abs", rt.swizzle(p, "x"), width=1), rt.f(2.0), 1, "float"), base="uint"), rt.construct(1, rt.binary("<", rt.swizzle(p, "x"), rt.f(0.0)), base="uint"), 1, "uint"), rt.binary("+", rt.construct(1, rt.binary("*", rt.component_wise("abs", rt.swizzle(p, "y"), width=1), rt.f(2.0), 1, "float"), base="uint"), rt.construct(1, rt.binary("<", rt.swizzle(p, "y"), rt.f(0.0)), base="uint"), 1, "uint"), rt.construct(1, rt.component_wise("abs", _u_seed, width=1), base="uint"), base="uint")
         return rt.binary("/", rt.construct(1, rt.swizzle(pcg__uvec3(v), "x")), rt.construct(1, rt.i(4294967295)), 1, "float")
     def noise__vec2(p):
         p = rt.copy(p, "float")

@@ -73,6 +73,22 @@ def _adapt_source(effect_id: str, program: str, source: str) -> str:
         if source.count(offset_old) != 1 or source.count(clamp_old) != 1:
             raise ValueError("degauss canonical displacement pattern changed")
         source = source.replace(offset_old, offset_new).replace(clamp_old, clamp_new)
+    if effect_id == "filter/octaveWarp":
+        # Upstream 058d15dc hash21 sign handling: the sign-split seed conversion
+        # becomes uint(abs(...)) casts — the +1 negative flag folds into the
+        # sign split and the seed takes abs() so negative seeds no longer hash
+        # as their wrapped negative truncation. The pinned CDN snapshot predates
+        # the fix; mirror the sibling's recompiled canonical kernel so a pinned
+        # regeneration reproduces it.
+        px_old = "uint(p.x >= 0.0 ? p.x * 2.0 : -p.x * 2.0 + 1.0),"
+        px_new = "uint(abs(p.x) * 2.0) + uint(p.x < 0.0),"
+        py_old = "uint(p.y >= 0.0 ? p.y * 2.0 : -p.y * 2.0 + 1.0),"
+        py_new = "uint(abs(p.y) * 2.0) + uint(p.y < 0.0),"
+        seed_old = "uint(seed)"
+        seed_new = "uint(abs(seed))"
+        if any(source.count(pattern) != 1 for pattern in (px_old, py_old, seed_old)):
+            raise ValueError("octaveWarp canonical hash21 pattern changed")
+        source = source.replace(px_old, px_new).replace(py_old, py_new).replace(seed_old, seed_new)
     return source
 
 

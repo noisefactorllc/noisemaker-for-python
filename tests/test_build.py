@@ -175,6 +175,110 @@ def test_bundled_degauss_kernel_matches_tiled_oracle_render():
     assert surface.to_rgba8() == oracle_rgba8
 
 
+_OCTAVEWARP_PX_OLD = "uint(p.x >= 0.0 ? p.x * 2.0 : -p.x * 2.0 + 1.0),"
+_OCTAVEWARP_PX_NEW = "uint(abs(p.x) * 2.0) + uint(p.x < 0.0),"
+_OCTAVEWARP_PY_OLD = "uint(p.y >= 0.0 ? p.y * 2.0 : -p.y * 2.0 + 1.0),"
+_OCTAVEWARP_PY_NEW = "uint(abs(p.y) * 2.0) + uint(p.y < 0.0),"
+_OCTAVEWARP_SEED_OLD = "uint(seed)"
+_OCTAVEWARP_SEED_NEW = "uint(abs(seed))"
+
+
+def test_octave_warp_hash21_sign_adaptation():
+    """Upstream 058d15dc hash21 sign handling: the build must adapt the pinned
+    CDN octaveWarp GLSL from the sign-split ternary seed conversion to
+    uint(abs(...)) casts, mirroring the sibling's recompiled canonical kernel.
+    The pinned CDN 1.0.183 snapshot predates the fix, so a regeneration without
+    the adaptation silently reverts the kernel to the pre-058d15dc behavior."""
+    source = f"uvec3 v = uvec3(\n{_OCTAVEWARP_PX_OLD}\n{_OCTAVEWARP_PY_OLD}\n{_OCTAVEWARP_SEED_OLD}\n);\n"
+    adapted = build_module._adapt_source("filter/octaveWarp", "octaveWarp", source)
+    assert _OCTAVEWARP_PX_NEW in adapted and _OCTAVEWARP_PY_NEW in adapted and _OCTAVEWARP_SEED_NEW in adapted
+    assert _OCTAVEWARP_PX_OLD not in adapted and _OCTAVEWARP_PY_OLD not in adapted and _OCTAVEWARP_SEED_OLD not in adapted
+
+    # All three patterns are mandatory: a changed canonical form must fail the
+    # build loudly instead of silently keeping the stale lowering.
+    with pytest.raises(ValueError, match="octaveWarp canonical hash21 pattern changed"):
+        build_module._adapt_source(
+            "filter/octaveWarp",
+            "octaveWarp",
+            source.replace(_OCTAVEWARP_PX_OLD, _OCTAVEWARP_PX_NEW),
+        )
+
+    # Other effects pass through unmodified.
+    assert build_module._adapt_source("filter/blur", "blurH", source) == source
+
+
+def test_bundled_octave_warp_kernel_matches_negative_seed_oracle_render():
+    """Node-free regression pin for the 058d15dc hash21 sign-handling delta,
+    against committed oracle bytes. The whole-catalog parity gate renders
+    octaveWarp at seed 1, where the sign-split and abs() seed conversions agree;
+    at a negative seed the pre-058d15dc kernel's wrapped negative truncation
+    diverges from the oracle by full pixel levels. The committed kernel must
+    reproduce the oracle's rgba8 bytes exactly. Oracle surface captured from
+    noisemaker-for-cpu 21017a708983 by running
+    bindCanonicalKernel(canonicalKernelFactories['filter/octaveWarp:octaveWarp'])
+    with resolution 64x48, fullResolution 64x48, tileOffset [0,0], frequency 2,
+    octaves 1, displacement 0.25, speed 1, wrap 0, antialias false, seed -2.5,
+    time 0.25 over a procedural input texture."""
+    import numpy as np
+
+    from noisemaker_cpu.kernel_loader import load_kernel
+    from noisemaker_cpu.pass_runner import Ctx, run_pass
+    from noisemaker_cpu.runtime import Runtime
+    from noisemaker_cpu.surface import Surface
+
+    width, height = 64, 48
+    f32 = np.float32
+    fixture = Path(__file__).parent / "data" / "octave-warp-sign-oracle" / "octave-warp-negseed-64x48.f32"
+    oracle = np.fromfile(fixture, dtype=np.float32)
+    assert oracle.shape == (width * height * 4,)
+
+    input_tex = Surface(width, height)
+    xs = np.arange(width * height) % width
+    ys = np.arange(width * height) // width
+    input_tex.data[0::4] = (((xs * 3 + ys * 5) % 256) / 255).astype(np.float32)
+    input_tex.data[1::4] = (((xs * 11 + ys * 7) % 256) / 255).astype(np.float32)
+    input_tex.data[2::4] = (((xs * 17 + ys * 23) % 256) / 255).astype(np.float32)
+    input_tex.data[3::4] = 1
+
+    uniforms = {
+        "renderScale": f32(1.0),
+        "speed": f32(1),
+        "seed": f32(-2.5),
+        "centerLoX": 0,
+        "centerLoY": 0,
+        "size": np.zeros(4, dtype=f32),
+        "motion": np.zeros(4, dtype=f32),
+        "frequency": f32(2),
+        "octaves": f32(1),
+        "displacement": f32(0.25),
+        "wrap": f32(0),
+        "antialias": False,
+        "resolution": np.array([width, height], dtype=f32),
+        "fullResolution": np.array([width, height], dtype=f32),
+        "tileOffset": np.zeros(2, dtype=f32),
+        "aspectRatio": f32(width / height),
+        "aspect": f32(width / height),
+        "time": f32(0.25),
+        "globalTime": f32(0.25),
+        "deltaTime": f32(0.0),
+        "frame": 0,
+    }
+    kernel_path = Path(build_module.BUNDLE) / "kernels" / "python" / "filter__octaveWarp__octaveWarp.py"
+    kernel = load_kernel(kernel_path.read_text(encoding="utf-8"))
+    ctx = Ctx(
+        Runtime(),
+        uniforms=uniforms,
+        textures={"inputTex": input_tex},
+        resolution=np.array([width, height], dtype=f32),
+        time=0.25,
+        seed=-2.5,
+    )
+    surface = run_pass(kernel, ctx, width, height)
+
+    oracle_rgba8 = Surface(width, height, oracle).to_rgba8()
+    assert surface.to_rgba8() == oracle_rgba8
+
+
 def test_bundled_artifact_sets_match():
     bundle_dir = Path(build_module.BUNDLE)
     metadata = json.loads((bundle_dir / "metadata.json").read_text())
