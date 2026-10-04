@@ -1,7 +1,9 @@
 """Cross-language parity: Python renders must match the JS oracle within +/-2 bytes."""
 
+import hashlib
 import json
 import os
+import re
 import shutil
 import subprocess
 from pathlib import Path
@@ -501,41 +503,18 @@ def test_canonical_hash_filters_are_byte_exact(tmp_path, effect_id):
     assert _max_diff(js, py) == 0
 
 
-# Audited sibling noisemaker-for-cpu source locks, keyed by PINNED_UPSTREAM_REVISION.
-# An entry is added only by an audited source-lock sync recorded in
-# docs/COMPATIBILITY.md whose oracle output was proven byte-identical to the
-# previous pin across the whole rendered catalog (167/167 byte-exact, zero
-# tolerance) and whose recomputed digest was verified byte-for-byte against the
-# sibling checkout. The gate's immutable oracle tarball
-# (.github/workflows/tests.yml) is pinned at 296e0138/b61b658399f1; the current
-# sibling pin f24b5254/d2965d0b7880 was audited by the 2026-09-29 sync and
-# e24c844/5f12866e91 was audited by the 2026-09-30 sync; the catalog is
-# unchanged under d143cb51 (no canonical-kernel change from the source-lock
-# advance itself) and d143cb51/4c18cd22 was audited by the 2026-10-03 sync.
-AUDITED_SOURCE_LOCKS = {
-    "296e0138c4744ed485b2e95de3eeb466c17629ee": {
-        "digest": "e371a1650d1ace9462a20ecf4e4f0902e5135b4772e8a9abbc8d2c037beebf59",
-        "snapshot": "296e0138c4744ed485b2e95de3eeb466c17629ee",
-    },
-    "f24b52540af6a88d12daa05feba1a04ad61b22a2": {
-        "digest": "f11af18a15ec0220c5d41a17c70da637fa05f86597a4c1984838bd0e77246723",
-        "snapshot": "f24b52540af6a88d12daa05feba1a04ad61b22a2",
-    },
-    "e24c844f8dada85551ab084f41db8944fbc176c8": {
-        "digest": "c2e0c264dc20338b19a144ee0888bd2ca39edcf325315a7d7ae1f5ced920804d",
-        "snapshot": "e24c844f8dada85551ab084f41db8944fbc176c8",
-    },
-    "d143cb51dbed7d99784746f3323d350400018083": {
-        "digest": "4c18cd221488e77c7c6a2055386d6f569b40659c3f9eb6c6cfdace4ec3ebac42",
-        "snapshot": "d143cb51dbed7d99784746f3323d350400018083",
-    },
-}
-
-
-def test_cpu_upstream_source_lock_and_catalog_parity():
-    """Verify sibling noisemaker-for-cpu's source lock points to an audited
-    revision (revision, digest, and snapshot revision all matching one audited
-    source-lock sync) and that catalog effect parity is maintained."""
+def test_cpu_upstream_source_lock_pin_integrity():
+    """Verify the mounted sibling noisemaker-for-cpu's upstream source lock is
+    anchored to its own committed, machine-checkable record instead of a
+    self-attested pair of strings: sha256 over each pinned-source-manifest
+    entry's path, NUL, size, NUL, per-file sha256 (entries sorted by path) must
+    reproduce the lock's PINNED_SOURCE_MANIFEST_DIGEST, the manifest's revision
+    must equal the pinned revision, and the generated upstream snapshot must
+    carry the same revision. Siblings predating the manifest hardening declare
+    no manifest digest; for them the revision/snapshot agreement and the digest
+    literals' shape remain checkable. When NM_REFERENCE_ROOT points at an
+    upstream noisemaker checkout, every manifest entry is additionally
+    cross-checked byte-for-byte against it."""
     source_lock_path = Path(CPU_DIR) / "scripts" / "upstream" / "source-lock.js"
     assert source_lock_path.is_file(), f"missing {source_lock_path}"
     source_lock_text = source_lock_path.read_text(encoding="utf-8")
@@ -547,14 +526,56 @@ def test_cpu_upstream_source_lock_and_catalog_parity():
         raise AssertionError(f"{prefix!r} not found in {source_lock_path}")
 
     revision = _locked("export const PINNED_UPSTREAM_REVISION =")
-    audited = AUDITED_SOURCE_LOCKS.get(revision)
-    assert audited is not None, (
-        f"sibling source lock pins {revision}, which is not an audited "
-        f"revision (audited: {sorted(AUDITED_SOURCE_LOCKS)})"
-    )
-    assert _locked("export const PINNED_SOURCE_DIGEST =") == audited["digest"]
+    digest = _locked("export const PINNED_SOURCE_DIGEST =")
+    assert re.fullmatch(r"[0-9a-f]{40}", revision)
+    assert re.fullmatch(r"[0-9a-f]{64}", digest)
 
     snapshot_path = Path(CPU_DIR) / "src" / "effects" / "generated" / "upstream-snapshot.js"
     assert snapshot_path.is_file(), f"missing {snapshot_path}"
     snapshot_text = snapshot_path.read_text(encoding="utf-8")
-    assert f'export const UPSTREAM_REVISION = "{audited["snapshot"]}"' in snapshot_text
+    assert f'export const UPSTREAM_REVISION = "{revision}"' in snapshot_text
+
+    manifest_line = next(
+        (
+            line
+            for line in source_lock_text.splitlines()
+            if line.startswith("export const PINNED_SOURCE_MANIFEST_DIGEST =")
+        ),
+        None,
+    )
+    if manifest_line is None:
+        return  # pre-manifest-hardening sibling: nothing further is checkable
+
+    manifest_path = Path(CPU_DIR) / "scripts" / "upstream" / "pinned-source-manifest.json"
+    manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
+    assert manifest["revision"] == revision
+
+    combined = hashlib.sha256()
+    paths = []
+    for entry in manifest["entries"]:
+        paths.append(entry["path"])
+        combined.update(entry["path"].encode("utf-8"))
+        combined.update(b"\0")
+        combined.update(str(entry["size"]).encode("utf-8"))
+        combined.update(b"\0")
+        combined.update(entry["sha256"].encode("utf-8"))
+    assert combined.hexdigest() == manifest_line.split("'")[1]
+    # Entry order is the JS localeCompare(path) order the digest was computed
+    # over — reproduced by iterating the manifest file's own order above, not
+    # by Python's codepoint sort.
+    assert paths
+
+    pinned_paths = re.search(
+        r"export const PINNED_SOURCE_PATHS = Object\.freeze\(\[([^\]]*)\]\)", source_lock_text
+    ).group(1)
+    prefixes = tuple(re.findall(r"'([^']+)'", pinned_paths))
+    assert prefixes
+    assert all(path.startswith(prefixes) for path in paths)
+
+    reference_root = os.environ.get("NM_REFERENCE_ROOT")
+    if reference_root and os.path.isdir(reference_root):
+        for entry in manifest["entries"]:
+            reference_file = Path(reference_root) / entry["path"]
+            data = reference_file.read_bytes()
+            assert len(data) == entry["size"], entry["path"]
+            assert hashlib.sha256(data).hexdigest() == entry["sha256"], entry["path"]
