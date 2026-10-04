@@ -511,7 +511,10 @@ def test_canonical_hash_filters_are_byte_exact(tmp_path, effect_id):
 # sibling pin f24b5254/d2965d0b7880 was audited by the 2026-09-29 sync and
 # e24c844/5f12866e91 was audited by the 2026-09-30 sync; the catalog is
 # unchanged under d143cb51 (no canonical-kernel change from the source-lock
-# advance itself) and d143cb51/4c18cd22 was audited by the 2026-10-03 sync.
+# advance itself) and d143cb51/4c18cd22 was audited by the 2026-10-03 sync;
+# under 48d25116 the degauss tile-awareness GLSL change alters oracle output
+# and is ported through the build-time source adaptation rather than a
+# byte-identical audit.
 AUDITED_SOURCE_LOCKS = {
     "296e0138c4744ed485b2e95de3eeb466c17629ee": {
         "digest": "e371a1650d1ace9462a20ecf4e4f0902e5135b4772e8a9abbc8d2c037beebf59",
@@ -528,6 +531,10 @@ AUDITED_SOURCE_LOCKS = {
     "d143cb51dbed7d99784746f3323d350400018083": {
         "digest": "4c18cd221488e77c7c6a2055386d6f569b40659c3f9eb6c6cfdace4ec3ebac42",
         "snapshot": "d143cb51dbed7d99784746f3323d350400018083",
+    },
+    "48d25116def5e59aa729c68015aa7971bf437a1f": {
+        "digest": "b67b2fd31ff4bfa26056fbbb42a1ec9b6b9dee28e5660787f810404cc1eceddd",
+        "snapshot": "48d25116def5e59aa729c68015aa7971bf437a1f",
     },
 }
 

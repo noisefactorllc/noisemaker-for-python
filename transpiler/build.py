@@ -55,6 +55,24 @@ def _adapt_source(effect_id: str, program: str, source: str) -> str:
         if source.count(pigment) != 1:
             raise ValueError("strokes canonical pigment pattern changed")
         source = source.replace(pigment, "pigmentSum += vec3(srcSample(centerUV).rgb * mark);")
+    if effect_id == "filter/degauss":
+        # Upstream 48d25116 tile-awareness: displace in GLOBAL pixel space (the
+        # full-resolution dims main() passes as width/height) instead of the
+        # tile-local resolution, and bound the displacement by the 256px tile
+        # overlap budget measured against those same dims when tiling. The
+        # pinned CDN snapshot predates the fix; mirror the sibling's
+        # recompiled canonical kernel so a pinned regeneration reproduces it.
+        offset_old = "vec2 offset = vec2(cos(angle), sin(angle)) * displacement * vec2(resolution.x, resolution.y);"
+        offset_new = "vec2 offset = vec2(cos(angle), sin(angle)) * displacement * vec2(width, height);"
+        clamp_old = "float maxAllowedDisplacement = maxOffsetPixels / max(resolution.x, 1.0);"
+        clamp_new = (
+            "float maxAllowedDisplacement = isTiling"
+            " ? maxOffsetPixels / max(width_f, height_f)"
+            " : maxOffsetPixels / max(resolution.x, 1.0);"
+        )
+        if source.count(offset_old) != 1 or source.count(clamp_old) != 1:
+            raise ValueError("degauss canonical displacement pattern changed")
+        source = source.replace(offset_old, offset_new).replace(clamp_old, clamp_new)
     return source
 
 

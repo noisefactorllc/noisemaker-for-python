@@ -53,6 +53,128 @@ def test_bundled_catalog_has_complete_cpu_domain_partition():
     }
 
 
+_DEGAUSS_OFFSET_OLD = "vec2 offset = vec2(cos(angle), sin(angle)) * displacement * vec2(resolution.x, resolution.y);"
+_DEGAUSS_OFFSET_NEW = "vec2 offset = vec2(cos(angle), sin(angle)) * displacement * vec2(width, height);"
+_DEGAUSS_CLAMP_OLD = "float maxAllowedDisplacement = maxOffsetPixels / max(resolution.x, 1.0);"
+_DEGAUSS_CLAMP_NEW = (
+    "float maxAllowedDisplacement = isTiling"
+    " ? maxOffsetPixels / max(width_f, height_f)"
+    " : maxOffsetPixels / max(resolution.x, 1.0);"
+)
+
+
+def test_degauss_tile_awareness_source_adaptation():
+    """Upstream 48d25116 tile-awareness: the build must adapt the pinned CDN
+    degauss GLSL to displace in GLOBAL pixel space (the full-resolution dims
+    main() passes as width/height) and bound the displacement by the 256px
+    tile-overlap budget measured against those dims when tiling, mirroring the
+    sibling's recompiled canonical kernel. The pinned CDN 1.0.183 snapshot
+    predates the fix, so a regeneration without the adaptation silently
+    reverts the kernel to the pre-48d25116 behavior."""
+    source = f"float x = 1.0;\n{_DEGAUSS_OFFSET_OLD}\n{_DEGAUSS_CLAMP_OLD}\n"
+    adapted = build_module._adapt_source("filter/degauss", "degauss", source)
+    assert _DEGAUSS_OFFSET_NEW in adapted and _DEGAUSS_CLAMP_NEW in adapted
+    assert _DEGAUSS_OFFSET_OLD not in adapted and _DEGAUSS_CLAMP_OLD not in adapted
+
+    # Both patterns are mandatory: a changed canonical form must fail the
+    # build loudly instead of silently keeping the stale lowering.
+    with pytest.raises(ValueError, match="degauss canonical displacement pattern changed"):
+        build_module._adapt_source(
+            "filter/degauss", "degauss", source.replace(_DEGAUSS_OFFSET_OLD, _DEGAUSS_OFFSET_NEW)
+        )
+
+    # Other effects pass through unmodified.
+    assert build_module._adapt_source("filter/blur", "blurH", source) == source
+
+
+def test_bundled_degauss_kernel_carries_tile_awareness():
+    kernel = (
+        Path(build_module.BUNDLE) / "kernels" / "python" / "filter__degauss__degauss.py"
+    ).read_text()
+
+    # The offset scales by the full-resolution dims (width/height of
+    # warped_channel_value), not the tile-local resolution uniform...
+    assert 'displacement, 2, "float"), rt.array([width, height]), 2, "float")' in kernel
+    assert (
+        'rt.array([rt.swizzle(_u_resolution, "x"), rt.swizzle(_u_resolution, "y")]), 2, "float")'
+        not in kernel
+    )
+    # ...and the displacement clamp is tile-aware.
+    assert (
+        'maxAllowedDisplacement = (rt.binary("/", maxOffsetPixels, '
+        'rt.component_wise("max", width_f, height_f, width=1), 1, "float") if isTiling else'
+    ) in kernel
+
+
+def test_bundled_degauss_kernel_matches_tiled_oracle_render():
+    """Node-free regression pin for the 48d25116 tile-awareness delta, against
+    committed oracle bytes. With a 32x32 destination inside a 64x64 full
+    resolution (renderScale 2 > 1.01), the pre-48d25116 kernel's tile-local
+    offset diverges from the oracle by up to 238 rgba8 levels; the committed
+    kernel must reproduce the oracle's rgba8 bytes exactly. Oracle surface
+    captured from noisemaker-for-cpu 181bff8bfa74 by running
+    bindCanonicalKernel(canonicalKernelFactories['filter/degauss:degauss'])
+    with resolution 32x32, fullResolution 64x64, tileOffset [0,0],
+    displacement 0.25, direction 30, speed 1, seed 1, time 0.25 over a
+    procedural input texture."""
+    import numpy as np
+
+    from noisemaker_cpu.kernel_loader import load_kernel
+    from noisemaker_cpu.pass_runner import Ctx, run_pass
+    from noisemaker_cpu.runtime import Runtime
+    from noisemaker_cpu.surface import Surface
+
+    width = height = 32
+    full_resolution = 64
+    fixture = Path(__file__).parent / "data" / "degauss-tile-oracle" / "degauss-tile-64.f32"
+    oracle = np.fromfile(fixture, dtype=np.float32)
+    assert oracle.shape == (width * height * 4,)
+
+    input_tex = Surface(width, height)
+    xs = np.arange(width * height) % width
+    ys = np.arange(width * height) // width
+    input_tex.data[0::4] = (((xs * 3 + ys * 5) % 256) / 255).astype(np.float32)
+    input_tex.data[1::4] = (((xs * 11 + ys * 7) % 256) / 255).astype(np.float32)
+    input_tex.data[2::4] = (((xs * 17 + ys * 23) % 256) / 255).astype(np.float32)
+    input_tex.data[3::4] = 1
+
+    f32 = np.float32
+    uniforms = {
+        "renderScale": f32(1.0),
+        "speed": f32(1),
+        "seed": 1,
+        "centerLoX": 0,
+        "centerLoY": 0,
+        "size": np.zeros(4, dtype=f32),
+        "motion": np.zeros(4, dtype=f32),
+        "displacement": f32(0.25),
+        "direction": f32(30),
+        "resolution": np.array([width, height], dtype=f32),
+        "fullResolution": np.array([full_resolution, full_resolution], dtype=f32),
+        "tileOffset": np.zeros(2, dtype=f32),
+        "aspectRatio": f32(width / height),
+        "aspect": f32(width / height),
+        "time": f32(0.25),
+        "globalTime": f32(0.25),
+        "deltaTime": f32(0.0),
+        "frame": 0,
+    }
+    kernel_path = Path(build_module.BUNDLE) / "kernels" / "python" / "filter__degauss__degauss.py"
+    kernel = load_kernel(kernel_path.read_text(encoding="utf-8"))
+    ctx = Ctx(
+        Runtime(),
+        uniforms=uniforms,
+        textures={"inputTex": input_tex},
+        resolution=np.array([width, height], dtype=f32),
+        time=0.25,
+        seed=1,
+    )
+    surface = run_pass(kernel, ctx, width, height)
+
+    oracle_rgba8 = Surface(width, height, oracle).to_rgba8()
+    assert surface.to_rgba8() == oracle_rgba8
+
+
 def test_bundled_artifact_sets_match():
     bundle_dir = Path(build_module.BUNDLE)
     metadata = json.loads((bundle_dir / "metadata.json").read_text())
