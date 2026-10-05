@@ -11,6 +11,9 @@ param's own default ("inputTex"/"none") exactly as the JS engine does.
 
 from __future__ import annotations
 
+import math
+
+from ..automation import MAX_AUTOMATION_DEPTH, is_automation_value
 from .error import DslError
 from .parser import parse_dsl
 
@@ -23,14 +26,92 @@ def _is_surface(value):
     return isinstance(value, dict) and value.get("kind") == "surface"
 
 
-def _evaluate_value(value, bindings):
+# Mirrors upstream std_enums.js oscKind (sine..noise2d; noise/noise1d alias kind 5,
+# noise2d is the two-stage periodic noise).
+_OSC_KINDS = {"sine": 0, "tri": 1, "saw": 2, "sawInv": 3, "square": 4, "noise": 5, "noise1d": 5, "noise2d": 6}
+_OSC_PARAM_ORDER = ["type", "min", "max", "speed", "offset", "seed"]
+
+
+def _clamp01(value):
+    return max(0.0, min(1.0, value))
+
+
+def _compile_oscillator(call, bindings, depth):
+    """Compiles an `osc(...)` value-position call into the automation value shape
+    the runtime evaluator consumes ({type: 'Oscillator', oscType, min, max, speed,
+    offset, seed}), mirroring upstream's parser transformOscInvocation plus the
+    validator's compileAutomationDescriptor: positional args fill
+    type/min/max/speed/offset/seed in order, kwargs select by name, every field
+    defaults as upstream defaults, min/max clamp into [0,1], nested osc() fields
+    are allowed, and the oscType resolves from an integer 0..6 or an oscKind name
+    (bare or oscKind-qualified). Invalid programs throw DslError, as everywhere
+    else in this compiler."""
+    loc = call.get("loc")
+    if depth > MAX_AUTOMATION_DEPTH:
+        raise DslError(f"Automation nesting exceeds the maximum depth of {MAX_AUTOMATION_DEPTH}", loc)
+    fields = {}
+    if call["argMode"] == "named":
+        for arg in call["args"]:
+            if arg["name"] not in _OSC_PARAM_ORDER:
+                raise DslError(
+                    f"osc() unknown parameter '{arg['name']}'; valid: {', '.join(_OSC_PARAM_ORDER)}", loc
+                )
+            fields[arg["name"]] = arg["value"]
+    else:
+        for index, arg in enumerate(call["args"]):
+            if index < len(_OSC_PARAM_ORDER):
+                fields[_OSC_PARAM_ORDER[index]] = arg["value"]
+
+    raw_type = 0 if fields.get("type") is None else _evaluate_value(fields["type"], bindings, depth + 1)
+    if isinstance(raw_type, (int, float)) and not isinstance(raw_type, bool):
+        if not (isinstance(raw_type, int) or (isinstance(raw_type, float) and raw_type.is_integer())) or not 0 <= raw_type <= 6:
+            raise DslError("osc() type must resolve to a supported oscKind value (0-6)", loc)
+        osc_type = int(raw_type)
+    elif isinstance(raw_type, str):
+        kind_name = raw_type[len("oscKind."):] if raw_type.startswith("oscKind.") else raw_type
+        if kind_name not in _OSC_KINDS:
+            raise DslError(f'osc() type must resolve to a supported oscKind value; got "{raw_type}"', loc)
+        osc_type = _OSC_KINDS[kind_name]
+    else:
+        raise DslError("osc() type must resolve to a supported oscKind value", loc)
+
+    def number_field(node, name, fallback, clamp):
+        if node is None:
+            return fallback
+        value = _evaluate_value(node, bindings, depth + 1)
+        if is_automation_value(value):
+            return value
+        if value is True:
+            return 1
+        if value is False:
+            return 0
+        if not _is_number(value) or not math.isfinite(value):
+            raise DslError(f"osc() {name} must be a number or a nested osc()", loc)
+        return _clamp01(value) if clamp else value
+
+    return {
+        "type": "Oscillator",
+        "oscType": osc_type,
+        "min": number_field(fields.get("min"), "min", 0, True),
+        "max": number_field(fields.get("max"), "max", 1, True),
+        "speed": number_field(fields.get("speed"), "speed", 1, False),
+        "offset": number_field(fields.get("offset"), "offset", 0, False),
+        "seed": number_field(fields.get("seed"), "seed", 1, False),
+    }
+
+
+def _evaluate_value(value, bindings, osc_depth=0):
     if isinstance(value, list):
-        return [_evaluate_value(item, bindings) for item in value]
+        return [_evaluate_value(item, bindings, osc_depth) for item in value]
     if not isinstance(value, dict):
         return value
     kind = value.get("kind")
     if kind == "surface":
         return value
+    if kind == "Call":
+        if value["name"] == "osc":
+            return _compile_oscillator(value, bindings, osc_depth)
+        raise DslError(f'Unsupported DSL value {kind} "{value["name"]}"', value.get("loc"))
     if kind == "identifier":
         name = value["name"]
         if name in bindings:
@@ -239,7 +320,7 @@ def compile_dsl(source, effects, options=None):
         if binding["name"] in bindings:
             raise DslError(f'Duplicate binding "{binding["name"]}"', binding["loc"])
         value = binding["value"]
-        if isinstance(value, dict) and value.get("kind") == "Call":
+        if isinstance(value, dict) and value.get("kind") == "Call" and value.get("name") != "osc":
             bindings[binding["name"]] = {
                 "kind": "partial",
                 "call": {**value, "args": _resolve_args(value["args"], bindings)},

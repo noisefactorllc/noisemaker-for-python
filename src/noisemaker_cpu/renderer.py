@@ -16,6 +16,9 @@ import numpy as np
 
 from .adapters import get_adapter
 from .adapters._palette_data import PALETTE_DATA
+from .automation import is_automation_value as _is_automation_value
+from .automation import is_finite_number as _is_finite_number
+from .automation import resolve_automation_uniform as _resolve_automation_uniform
 from .draw_ops import get_draw_op
 from .dsl import compile_dsl
 from .external_textures import external_data_surface
@@ -73,6 +76,55 @@ def _inherit_volume_size(effect, params, bundle):
     return inherited
 
 
+def _automation_param_spec(param):
+    """The consumer-range spec upstream's expander builds for automation scaling
+    (shaders/src/runtime/expander.js uniformSpecs): a float/int parameter without
+    choices scales the 0..1 automation output into its declared min..max (0..100
+    when undeclared); an int parameter with choices (a conditional selector) is
+    only rounded to the selected integer, scaled into its declared range when it
+    declares one. Everything else gets no spec, so an automation value resolves
+    unscaled."""
+    if not param:
+        return None
+    param_type = param.get("type")
+    if param_type in ("float", "int") and not param.get("choices"):
+        param_min = param.get("min")
+        param_max = param.get("max")
+        return {"min": 0 if param_min is None else param_min, "max": 100 if param_max is None else param_max}
+    if param_type == "int" and param.get("choices"):
+        spec = {"type": "int"}
+        param_min = param.get("min")
+        param_max = param.get("max")
+        if _is_finite_number(param_min) and _is_finite_number(param_max):
+            spec["min"] = param_min
+            spec["max"] = param_max
+        return spec
+    return None
+
+
+def _resolve_effect_automation(effect, params, time):
+    """Resolves `osc(...)` automation values in a step's params to concrete numbers
+    for this render, using `time` (the normalized 0..1 loop time the canonical
+    kernels receive). Returns the params object unchanged when no param carries
+    automation, so every pre-existing program keeps its exact identity and
+    byte-identical render path. Only float/int params resolve (the JS engine
+    accepts automation on those types alone); other types keep the raw value so
+    coercion rejects the program."""
+    has_automation = any(_is_automation_value(value) for value in params.values())
+    if not has_automation:
+        return params
+    effect_params = (effect or {}).get("params", {})
+    resolved = {}
+    for name, value in params.items():
+        spec = effect_params.get(name) or {}
+        resolved[name] = (
+            _resolve_automation_uniform(value, time, _automation_param_spec(spec))
+            if spec.get("type") in ("float", "int")
+            else value
+        )
+    return resolved
+
+
 def bundle_dir() -> str:
     return os.environ.get("NOISEMAKER_BUNDLE") or os.path.join(os.path.dirname(__file__), "bundle")
 
@@ -127,10 +179,12 @@ def _bound_text(bound) -> str:
 
 def _check_param_range(spec: dict, name: str | None, value) -> None:
     """Enforce a numeric parameter's declared min/max range. `name=None` skips
-    the check: the only unvalidated call path is the DSL renderer's implicit
-    render-seed threading, which the pinned oracle also leaves unvalidated
-    (runtime/renderer.js spreads the render seed into step params without a
-    range check, while explicit DSL assignments go through coerceWithRange)."""
+    the check: the unvalidated call paths are the DSL renderer's implicit
+    render-seed threading (runtime/renderer.js spreads the render seed into step
+    params without a range check, while explicit DSL assignments go through
+    coerceWithRange) and per-render resolved `osc()` automation values (the JS
+    engine validates the automation object at normalization, never the number
+    resolved from it at render time)."""
     if (
         name is None
         or isinstance(value, bool)
@@ -149,6 +203,14 @@ def _coerce(spec: dict, value, name: str | None = None):
     t = spec["type"]
     if value is None:
         value = spec.get("default")
+    if _is_automation_value(value):
+        # An `osc(...)` automation value (numeric params only, matching the JS
+        # EffectDefinition.normalizeValue contract) is kept as-is here and
+        # resolved to a concrete number per render in _render_effect_once;
+        # other types keep rejecting it.
+        if t in ("float", "int"):
+            return value
+        raise TypeError(f'Parameter "{name}" does not accept an osc() automation value')
     if t == "color":
         if isinstance(value, str):
             value = _parse_hex(value)
@@ -418,6 +480,11 @@ def _render_effect_once(
     inputs = inputs or {}
     eff = _meta()["effects"][effect_id]
     domain = eff.get("domain", "image")
+    # `osc()` automation values resolve to concrete numbers against this render's
+    # normalized time (renderer.js effectParams); raw_params keeps the pre-resolution
+    # view so coercion knows which params bypass the declared-range check.
+    raw_params = params
+    params = _resolve_effect_automation(eff, raw_params, time)
     input_bundle = {
         "image": inputs.get("inputTex"),
         "volume": inputs.get("inputTex3d"),
@@ -452,7 +519,11 @@ def _render_effect_once(
             # into step params without a range check.
             val = _coerce(spec, seed, pname if validate_implicit_seed else None)
         else:
-            val = _coerce(spec, params.get(pname), pname)
+            val = _coerce(
+                spec,
+                params.get(pname),
+                None if _is_automation_value(raw_params.get(pname)) else pname,
+            )
         param_values[pname] = val
         if spec.get("uniform") is not None:
             effect_uniforms[spec["uniform"]] = val
@@ -522,7 +593,11 @@ def _render_effect_once(
                         gen[pn] = (
                             _coerce(gp, seed, pn if validate_implicit_seed else None)
                             if pn == "seed" and "seed" not in params
-                            else _coerce(gp, params.get(pn), pn)
+                            else _coerce(
+                                gp,
+                                params.get(pn),
+                                None if _is_automation_value(raw_params.get(pn)) else pn,
+                            )
                         )
                 attachments[tname] = render_worm_overlay(effect_id, width, height, gen)
 
@@ -717,8 +792,17 @@ def render_effect(
     # Pass-repeat rule (see _run_iterated_group): when any pass of the definition
     # carries a `repeat`, the iteration loop is inert above 0 and the per-frame
     # multiplier is the pass repeat resolved from its uniform.
+    # JS derives the group's iteration count (and the zero-iteration sizing below)
+    # from the init-time effectParams resolution at the render's normalized time;
+    # per-iteration re-resolution happens inside _render_effect_once against each
+    # tick's own rewound time.
+    init_params = _resolve_effect_automation(effect, params, time)
     iteration_spec = effect["params"]["iterationCount"]
-    iteration_count = _coerce(iteration_spec, params.get("iterationCount"), "iterationCount")
+    iteration_count = _coerce(
+        iteration_spec,
+        init_params.get("iterationCount"),
+        None if _is_automation_value(params.get("iterationCount")) else "iterationCount",
+    )
     if _oracle_pass_repeat_clamp() and any(p.get("repeat") for p in effect.get("passes", [])):
         iteration_count = min(iteration_count, 1)
     if iteration_count <= 0:
@@ -733,7 +817,14 @@ def render_effect(
         if source is not None:
             return source.clone()
         if effect.get("domain") == "volume-generator":
-            param_values = {name: _coerce(spec, params.get(name), name) for name, spec in effect["params"].items()}
+            param_values = {
+                name: _coerce(
+                    spec,
+                    init_params.get(name),
+                    None if _is_automation_value(params.get(name)) else name,
+                )
+                for name, spec in effect["params"].items()
+            }
             output_name = effect.get("outputTex3d")
             output_spec = (effect.get("textures") or {}).get(output_name, {})
             volume_width, volume_height = _texture_dimensions(output_spec, param_values, width, height)
@@ -827,8 +918,16 @@ def _run_iterated_group(group, current, surfaces, external_textures, effects, wi
     # documented iterationCount:0 bypass (zero passes run) is still honored. All
     # other iterated effects keep the established `iterationCount` group loop
     # (filter/temporalAberration requires N=60).
+    # JS derives the group's iteration count and owner stateSize from the owner
+    # step's init-time effectParams resolution (render-level time); per-iteration
+    # re-resolution happens inside _render_effect_once against each tick's time.
+    first_init_params = _resolve_effect_automation(first_effect, first_step["params"], time)
     iteration_spec = first_effect["params"]["iterationCount"]
-    iteration_count = _coerce(iteration_spec, first_step["params"].get("iterationCount"), "iterationCount")
+    iteration_count = _coerce(
+        iteration_spec,
+        first_init_params.get("iterationCount"),
+        None if _is_automation_value(first_step["params"].get("iterationCount")) else "iterationCount",
+    )
     if _oracle_pass_repeat_clamp() and any(p.get("repeat") for p in first_effect.get("passes", [])):
         iteration_count = min(iteration_count, 1)
     if iteration_count <= 0:
@@ -843,7 +942,11 @@ def _run_iterated_group(group, current, surfaces, external_textures, effects, wi
 
     state_size = None
     if "stateSize" in first_effect["params"]:
-        state_size = _coerce(first_effect["params"]["stateSize"], first_step["params"].get("stateSize"), "stateSize")
+        state_size = _coerce(
+            first_effect["params"]["stateSize"],
+            first_init_params.get("stateSize"),
+            None if _is_automation_value(first_step["params"].get("stateSize")) else "stateSize",
+        )
 
     group_input = current
     group_attachments = {}

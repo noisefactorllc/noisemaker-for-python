@@ -228,6 +228,13 @@ class _Parser:
                             break
                 self.consume(")")
                 return {"kind": "vector", "width": int(name[-1]), "values": values, "loc": _location(token)}
+            # `osc(...)` is the one value-position call the DSL supports (oscillator
+            # automation, matching upstream's parser); it parses as a regular call and
+            # the compiler turns it into an Oscillator automation value. Every other
+            # call in a value position stays a parse error via the dangling "(".
+            if name == "osc" and self.peek()["lexeme"] == "(":
+                self.current -= 1
+                return self.parse_call()
             path = name
             while self.match("."):
                 path += f".{self.identifier('Expected enum member')['lexeme']}"
