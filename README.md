@@ -40,9 +40,17 @@ pip install -e ".[dev]"      # requires Python 3.11+, numpy, click
 CLI (modeled after the [`noisemaker`](https://github.com/noisefactorllc/noisemaker) CLI):
 
 ```bash
-# generate a single frame
+# Fast first render of the same effect: 48x48 with an explicit seed runs in
+# well under a minute on one CPU core (~20 s measured) and writes a real image.
+noisemaker-py generate synth/curl --width 48 --height 48 --seed 1 --filename curl.png
+
+# Full-size render. Expect roughly 35-40 minutes on one CPU core for 512x512:
+# the engine is single-threaded and the CLI prints nothing more until the
+# finished file lands (no progress output between the effect id and completion).
 noisemaker-py generate synth/curl --width 512 --height 512 --filename curl.png
-noisemaker-py generate random --seed 42
+
+# `generate random` picks a random non-iterated, input-free generator; like
+# every command it takes --width/--height/--seed.
 
 # apply an effect to an existing image
 noisemaker-py apply filter/chrome photo.png --filename chrome.png
