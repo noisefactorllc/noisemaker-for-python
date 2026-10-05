@@ -1,8 +1,9 @@
 """GAP-008 (issue 4) regression: the README quick start gives a practical
-first result. The first example states its expected render time and documents
-the CLI's silent wait, and a fast seeded alternative renders a nondegenerate
-PNG in under 60 s on one CPU. The fast alternative is executed exactly as the
-README writes it, pinned to a single core when the platform allows.
+first result. Every quick-start generate example states its expected one-CPU
+render time in its own comment block, the CLI's silent wait is documented,
+and a fast seeded alternative renders a nondegenerate PNG in under 60 s on
+one CPU. The fast alternative is executed exactly as the README writes it,
+pinned to a single core when the platform allows.
 """
 
 import os
@@ -26,33 +27,62 @@ def _render_section() -> str:
     return match.group(1)
 
 
-def _generate_commands(section: str) -> list[list[str]]:
-    """Every `noisemaker-py generate ...` line in the section, as argv."""
-    return [
-        shlex.split(line)
-        for line in re.findall(r"^noisemaker-py generate \S.+$", section, re.M)
-    ]
+def _command_blocks(section: str) -> list[tuple[str, list[str]]]:
+    """Each `noisemaker-py generate ...` line as (its comment block, argv). The
+    comment block directly above a command is the one describing it; comments
+    reset on any blank, prose, or non-generate command line, so a time note
+    asserted here belongs to that exact example."""
+    blocks = []
+    comments: list[str] = []
+    for raw in section.splitlines():
+        line = raw.strip()
+        if line.startswith("#"):
+            comments.append(line.lstrip("#").strip())
+        elif line.startswith("noisemaker-py generate "):
+            blocks.append((" ".join(comments), shlex.split(line)))
+            comments = []
+        else:
+            comments = []
+    return blocks
 
 
-def test_first_example_states_expected_render_time_and_silent_wait():
-    section = _render_section()
-    # The literal first example is still present ...
-    assert any(
-        "--width" in argv and "--height" in argv and "512" in argv for argv in _generate_commands(section)
-    ), "README no longer shows the 512x512 first example"
-    # ... and the quick start states its expected render time ...
-    assert re.search(r"512\s*x\s*512", section), "expected-time note does not name the first example's size"
-    assert re.search(r"\bminutes\b", section, re.I), "expected render time of the first example is not stated"
-    # ... and documents the CLI's silent wait (criterion 3 alternative: the CLI
-    # prints nothing between the effect id and the finished file).
-    assert re.search(r"nothing (?:more )?until", section, re.I), "the silent wait is not documented"
+def _fast_block(blocks: list[tuple[str, list[str]]]) -> tuple[str, list[str]]:
+    seeded = [block for block in blocks if "--seed" in block[1]]
+    assert len(seeded) == 1, f"expected exactly one explicitly seeded generate example, got {[b[1] for b in seeded]}"
+    return seeded[0]
+
+
+def _full_size_block(blocks: list[tuple[str, list[str]]]) -> tuple[str, list[str]]:
+    full = [block for block in blocks if "--width" in block[1] and "--height" in block[1] and "512" in block[1]]
+    assert len(full) == 1, f"expected the 512x512 example, got {[b[1] for b in full]}"
+    return full[0]
+
+
+def test_each_generate_example_states_its_expected_render_time_and_the_silent_wait():
+    blocks = _command_blocks(_render_section())
+    fast_comments, _ = _fast_block(blocks)
+    full_comments, _ = _full_size_block(blocks)
+
+    # Criterion 1: every quick-start generate example states its expected
+    # render time on one CPU core, bound to that example's own comment block.
+    # The full-size 512x512 example states its time in minutes ...
+    assert re.search(r"512\s*x\s*512", full_comments), "the 512x512 time note does not name the example's size"
+    assert re.search(r"\bminutes\b", full_comments, re.I), "the 512x512 example does not state its render time"
+    # ... and the fast first example states a sub-minute seconds figure.
+    match = re.search(r"~\s*(\d+)\s*s\b", fast_comments)
+    assert match, "the fast first example does not state its expected render time in seconds"
+    assert int(match.group(1)) < FAST_COMMAND_BUDGET_SECONDS, "the fast example's stated time is not sub-minute"
+    assert "one CPU core" in fast_comments and "one CPU core" in full_comments, (
+        "the stated times must be qualified as one-CPU-core times"
+    )
+
+    # Criterion 3 alternative: the README documents the CLI's silent wait (the
+    # CLI prints nothing between the effect id and the finished file).
+    assert re.search(r"nothing (?:more )?until", full_comments, re.I), "the silent wait is not documented"
 
 
 def test_fast_first_render_alternative_is_seeded_and_small():
-    commands = _generate_commands(_render_section())
-    seeded = [argv for argv in commands if "--seed" in argv]
-    assert len(seeded) == 1, f"expected exactly one explicitly seeded generate example, got {seeded}"
-    argv = seeded[0]
+    _, argv = _fast_block(_command_blocks(_render_section()))
     width = int(argv[argv.index("--width") + 1])
     height = int(argv[argv.index("--height") + 1])
     seed = int(argv[argv.index("--seed") + 1])
@@ -75,12 +105,10 @@ def _pin_to_one_cpu():
 
 
 def test_fast_first_render_produces_nondegenerate_png_under_60s(tmp_path):
-    section = _render_section()
-    seeded = [argv for argv in _generate_commands(section) if "--seed" in argv]
-    assert len(seeded) == 1, f"expected exactly one explicitly seeded generate example, got {seeded}"
-    argv = seeded[0]
-    # Run the README line exactly as written, through the same entry point the
-    # console script installs. Redirect --filename into the test's tmp dir.
+    _, argv = _fast_block(_command_blocks(_render_section()))
+    # Run the README line exactly as written, through the same entry point a
+    # plain source checkout can execute (`python -m`). --filename goes into
+    # the test's tmp dir.
     assert argv[0] == "noisemaker-py"
     assert "--filename" in argv, "the fast alternative must name its output file"
     out_name = argv[argv.index("--filename") + 1]
