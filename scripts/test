@@ -27,8 +27,8 @@ fi
 # cannot run and is skipped here; the pytest suite above still covers the
 # node-free contract.
 if command -v node >/dev/null 2>&1; then
-    CPU_PINNED_REVISION=83231e4ce925cc3fdc4e64518d3f9a8fa5beb90e
-    CPU_PINNED_TREE=02b7737e25f2bbb12d0efe3cd33d8588f57e9e26
+    CPU_PINNED_REVISION=34a753592c4260e0b3cc642f2a9fd368a78c6e46
+    CPU_PINNED_TREE=281ffe1d03c599cee3b5a1a91446739eea4b1e98
     CPU_DIR="${TMPDIR:-/tmp}/noisemaker-py-cpu-oracle"
     if [ ! -d "$CPU_DIR/.git" ]; then
         git clone -q https://github.com/noisefactorllc/noisemaker-for-cpu.git "$CPU_DIR"
