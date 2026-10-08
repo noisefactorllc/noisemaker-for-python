@@ -26,12 +26,12 @@ def run_pixel(ctx, out):
         word = rt.binary("*", rt.binary("^", rt.binary(">>", state, rt.binary("+", rt.binary(">>", state, rt.i(28), 1, "uint"), rt.i(4), 1, "uint"), 1, "uint"), state, 1, "uint"), rt.i(277803737), 1, "uint")
         return rt.binary("^", rt.binary(">>", word, rt.i(22), 1, "uint"), word, 1, "uint")
     def hash__uint(seed):
-        return rt.binary("/", rt.construct(1, rt.hash_uint(seed)), rt.f(4294967295.0), 1, "float")
+        return rt.binary("/", rt.construct(1, rt.hash_uint_lcg(seed)), rt.f(4294967295.0), 1, "float")
     def rand__float(seed):
         bits = rt.float_bits_to_uint(seed)
-        bits = rt.hash_uint(bits)
+        bits = rt.hash_uint_lcg(bits)
         seed = rt.binary("-", rt.uint_bits_to_float(rt.binary("|", bits, rt.i(1065353216), 1, "uint")), rt.f(1.0), 1, "float")
-        bits = rt.hash_uint(rt.binary("+", bits, rt.i(1), 1, "uint"))
+        bits = rt.hash_uint_lcg(rt.binary("+", bits, rt.i(1), 1, "uint"))
         seed = rt.binary("-", rt.uint_bits_to_float(rt.binary("|", rt.binary("&", bits, rt.i(8388607), 1, "uint"), rt.i(1065353216), 1, "uint")), rt.f(1.0), 1, "float")
         return (seed, seed)
         return (None, seed)
@@ -71,7 +71,7 @@ def run_pixel(ctx, out):
         agentId = rt.construct(1, rt.binary("+", rt.swizzle(coord, "x"), rt.binary("*", rt.swizzle(coord, "y"), rt.swizzle(stateDims, "x"), 1, "int"), 1, "int"), base="uint")
         if rt.binary("<=", seed, rt.f(0.0)):
             seed = rt.binary("+", hash__uint(agentId), rt.f(0.001), 1, "float")
-        frameSeed = rt.hash_uint(rt.binary("+", rt.binary("*", agentId, rt.i(31), 1, "uint"), rt.float_bits_to_uint(seed), 1, "uint"))
+        frameSeed = rt.hash_uint_lcg(rt.binary("+", rt.binary("*", agentId, rt.i(31), 1, "uint"), rt.float_bits_to_uint(seed), 1, "uint"))
         seed = rt.binary("-", rt.uint_bits_to_float(rt.binary("|", rt.binary("&", frameSeed, rt.i(8388607), 1, "uint"), rt.i(1065353216), 1, "uint")), rt.f(1.0), 1, "float")
         if rt.binary("<", alive, rt.f(0.5)):
             g.outXYZ[:] = xyz

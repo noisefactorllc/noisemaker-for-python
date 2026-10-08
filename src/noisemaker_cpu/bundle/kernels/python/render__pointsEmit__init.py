@@ -24,7 +24,7 @@ def run_pixel(ctx, out):
         word = rt.binary("*", rt.binary("^", rt.binary(">>", state, rt.binary("+", rt.binary(">>", state, rt.i(28), 1, "uint"), rt.i(4), 1, "uint"), 1, "uint"), state, 1, "uint"), rt.i(277803737), 1, "uint")
         return rt.binary("^", rt.binary(">>", word, rt.i(22), 1, "uint"), word, 1, "uint")
     def hash__uint(seed):
-        return rt.binary("/", rt.construct(1, rt.hash_uint(seed)), rt.f(4294967295.0), 1, "float")
+        return rt.binary("/", rt.construct(1, rt.hash_uint_lcg(seed)), rt.f(4294967295.0), 1, "float")
     def hash2__uint(seed):
         return rt.construct(2, hash__uint(seed), hash__uint(rt.binary("+", seed, rt.i(1), 1, "uint")))
     def main__void():
@@ -42,7 +42,7 @@ def run_pixel(ctx, out):
         if (bool((not (needsRespawn))) and bool(rt.binary(">", _u_attrition, rt.f(0.0)))):
             timeBits = rt.float_bits_to_uint(_u_time)
             check_seed = rt.binary("+", rt.binary("*", agentSeed, rt.i(1664525), 1, "uint"), timeBits, 1, "uint")
-            check_seed = rt.hash_uint(check_seed)
+            check_seed = rt.hash_uint_lcg(check_seed)
             respawnRand = rt.binary("/", rt.construct(1, check_seed), rt.f(4294967295.0), 1, "float")
             attritionRate = rt.binary("*", _u_attrition, rt.f(0.01), 1, "float")
             if rt.binary("<", respawnRand, attritionRate):

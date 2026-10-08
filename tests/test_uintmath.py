@@ -15,6 +15,7 @@ from noisemaker_cpu.uintmath import (
     glsl_mod,
     hash_uint,
     hash_uint32,
+    hash_uint_lcg,
     pack_half_2x16,
     pcg3d,
     u32,
@@ -303,3 +304,23 @@ def test_pack_half_2x16_nan():
     a, b = unpack_half_2x16(packed)
     assert math.isnan(a)
     assert b == 0.0
+
+
+# ---------------------------------------------------------------------------
+# hash_uint_lcg (glsl-runtime.js `hashUintLcg`)
+# ---------------------------------------------------------------------------
+
+
+def test_hash_uint_lcg_matches_the_oracle_values():
+    # Values from noisemaker-for-cpu 5b686a4's hashUintLcg (and hashUint32 for
+    # contrast): the two pinned `hash_uint` bodies disagree on every input.
+    cases = {
+        0: (129708002, 0),
+        1: (2831084092, 1753845952),
+        7: (2120684060, 2492178918),
+        123456789: (4272394698, 2834422664),
+        4294967295: (3861530882, 1734902346),
+    }
+    for value, (lcg, murmur) in cases.items():
+        assert hash_uint_lcg(value) == lcg
+        assert hash_uint32(value) == murmur

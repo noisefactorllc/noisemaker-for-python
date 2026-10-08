@@ -557,6 +557,9 @@ class Runtime:
     def hash_uint(self, x):
         return uintmath.hash_uint32(int(x) & _U32)
 
+    def hash_uint_lcg(self, x):
+        return uintmath.hash_uint_lcg(int(x) & _U32)
+
     def float_bits_to_uint(self, f):
         return uintmath.float_bits_to_uint(float(f))
 

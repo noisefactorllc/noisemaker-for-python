@@ -79,6 +79,43 @@ def test_vector_storage_boundaries_are_preserved_before_uint_conversion():
     assert 'rt.construct(4, rt.construct(4, rt.binary("*", ps' in generated
 
 
+def test_hash_uint_routes_by_its_glsl_body_not_its_name():
+    from transpiler.codegen import emit_python
+    from transpiler.parser import parse
+    from transpiler.preprocess import normalize
+
+    def generate(body):
+        source = f"""
+            out vec4 fragColor;
+            uint hash_uint(uint seed) {{
+                {body}
+            }}
+            void main() {{
+                fragColor = vec4(float(hash_uint(7u)) / 4294967295.0);
+            }}
+        """
+        normalized = normalize(source, {})
+        return emit_python(parse(normalized["source"]), normalized["outputs"], normalized["varyings"])
+
+    murmur = generate(
+        "uint x = seed; x ^= x >> 16u; x *= 0x7feb352du; x ^= x >> 15u; x *= 0x846ca68bu; x ^= x >> 16u; return x;"
+    )
+    lcg = generate(
+        "uint state = seed * 747796405u + 2891336453u;"
+        " uint word = ((state >> ((state >> 28u) + 4u)) ^ state) * 277803737u;"
+        " return (word >> 22u) ^ word;"
+    )
+    other = generate("return seed * 3u + 1u;")
+
+    assert "rt.hash_uint(" in murmur
+    assert "rt.hash_uint_lcg(" not in murmur
+    assert "rt.hash_uint_lcg(" in lcg
+    assert "rt.hash_uint(" not in lcg
+    # Neither pinned body: the shader's own function runs.
+    assert "rt.hash_uint" not in other
+    assert "hash_uint__uint(" in other
+
+
 def test_nested_inout_call_is_an_expression_and_updates_caller():
     from noisemaker_cpu.kernel_loader import load_kernel
     from noisemaker_cpu.pass_runner import Ctx, run_pass

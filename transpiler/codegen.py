@@ -832,8 +832,13 @@ class CodeGen:
         if name in ("dFdx", "dFdy", "fwidth"):
             self.uses_deriv = True
             return (f"rt.{name}({codes[0]})", args[0][1])
-        r = _ROUTED.get(name)
-        if r:
+        if name == "hash_uint" and name in self.overloads:
+            kind = self._hash_uint_kind()
+            if kind == "murmur":
+                return (f"rt.hash_uint({codes[0]})", TYPE["uint"])
+            if kind == "lcg":
+                return (f"rt.hash_uint_lcg({codes[0]})", TYPE["uint"])
+        elif r := _ROUTED.get(name):
             return r(self, codes, args)
         if name in self.overloads:
             fn = self._resolve_overload(name, [a[1] for a in args])
@@ -857,6 +862,39 @@ class CodeGen:
         width = max((width_of(a[1]) for a in args), default=1)
         base = "int" if all(base_of(a[1]) in ("int", "uint") for a in args) and args else "float"
         return (f"rt.component_wise({q(name)}, {', '.join(codes)}, width={width})", {"base": base, "width": width})
+
+    def _hash_uint_kind(self):
+        """Which pinned ``uint hash_uint(uint)`` body this shader declares.
+
+        Two different authority bodies share the name: the murmur-style
+        finalizer (filter/texture, filter/spookyTicker) and the LCG-seeded mix
+        (render/pointsEmit init, the points/* agents, filter3d/flow3d). The
+        sibling routes by body, not name: murmur to ``hashUint``, LCG to
+        ``hashUintLcg``. Any other body runs as the shader's own function."""
+        literals = set()
+
+        def walk(node):
+            if isinstance(node, dict):
+                if node.get("k") == "num":
+                    text = str(node["value"]).rstrip("uU")
+                    try:
+                        literals.add(int(text, 0))
+                    except ValueError:
+                        pass
+                for value in node.values():
+                    walk(value)
+            elif isinstance(node, list):
+                for item in node:
+                    walk(item)
+
+        for fn in self.overloads["hash_uint"]:
+            if [base_of(t) for t in fn["ptypes"]] == ["uint"]:
+                walk(fn["node"])
+        if literals & {0x7FEB352D, 0x846CA68B}:
+            return "murmur"
+        if 747796405 in literals:
+            return "lcg"
+        return None
 
     def _resolve_overload(self, name, argtypes):
         cands = self.overloads[name]

@@ -46,7 +46,7 @@ def test_receipt_binds_the_pinned_cpu_revision():
     doc = json.loads(RECEIPT.read_text(encoding="utf-8"))
     assert doc["cpu"]["revision"] == "5976b7a6b77f69c47c41f4ee296a54d5318e1f9d"
     assert doc["cpu"]["sourceDigest"] == "dfb565a24c33bd0e3dfaddc3f719d0f252b4c6f8df7059198a5f9e07b6a895d0"
-    assert doc["cpu"]["cpuHead"] == "8ae8e2ae97812952db49246a87b04d7e5a480494"
+    assert doc["cpu"]["cpuHead"] == "5b686a45b5c56329adf0c63cbcf572eb6f23fad1"
     assert doc["settings"] == {"size": 8, "seed": 1, "time": 0.25, "tolerance": 0}
     assert doc["counts"]["diffs"] == 0
     assert doc["counts"]["runtimeErrors"] == 0

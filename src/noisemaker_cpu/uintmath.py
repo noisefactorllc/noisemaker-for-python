@@ -152,6 +152,18 @@ def hash_uint32(x) -> int:
     return result
 
 
+def hash_uint_lcg(x) -> int:
+    """LCG-seeded xor-shift-multiply mix. Faithful port of `hashUintLcg` in
+    glsl-runtime.js: the `uint hash_uint(uint seed)` body of the pinned
+    authority's agent GLSL (render/pointsEmit init, the points/* agents,
+    filter3d/flow3d), which shares its name with the murmur-style finalizer
+    above.
+    """
+    state = uadd(umul(x, 747796405), 2891336453)
+    word = umul(uxor(ushr(state, uadd(ushr(state, 28), 4)), state), 277803737)
+    return uxor(ushr(word, 22), word)
+
+
 # `stdlib.hashUint` in glsl-runtime.js is a bare alias for `hashUint32`
 # (`hashUint: hashUint32`) — kept here under both names for parity.
 hash_uint = hash_uint32

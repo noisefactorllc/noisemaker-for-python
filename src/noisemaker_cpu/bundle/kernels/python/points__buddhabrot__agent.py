@@ -24,7 +24,7 @@ def run_pixel(ctx, out):
         word = rt.binary("*", rt.binary("^", rt.binary(">>", state, rt.binary("+", rt.binary(">>", state, rt.i(28), 1, "uint"), rt.i(4), 1, "uint"), 1, "uint"), state, 1, "uint"), rt.i(277803737), 1, "uint")
         return rt.binary("^", rt.binary(">>", word, rt.i(22), 1, "uint"), word, 1, "uint")
     def hash__uint(s):
-        return rt.binary("/", rt.construct(1, rt.hash_uint(s)), rt.f(4294967295.0), 1, "float")
+        return rt.binary("/", rt.construct(1, rt.hash_uint_lcg(s)), rt.f(4294967295.0), 1, "float")
     def complexToScreen__vec2(z):
         z = rt.copy(z, "float")
         return rt.construct(2, rt.binary("+", rt.binary("*", rt.binary("*", rt.binary("*", rt.binary("-", rt.swizzle(z, "y"), _u_centerY, 1, "float"), _u_zoom, 1, "float"), _u_zoom, 1, "float"), rt.f(0.2), 1, "float"), rt.f(0.5), 1, "float"), rt.binary("+", rt.binary("*", rt.binary("*", rt.binary("*", rt.binary("-", _u_centerX, rt.swizzle(z, "x"), 1, "float"), _u_zoom, 1, "float"), _u_zoom, 1, "float"), rt.f(0.2), 1, "float"), rt.f(0.5), 1, "float"))
@@ -47,7 +47,7 @@ def run_pixel(ctx, out):
             g.outVel[:] = vel
             g.outRGBA[:] = col
             return
-        agentSeed = rt.binary("^", rt.binary("^", rt.hash_uint(rt.construct(1, rt.binary("+", rt.swizzle(coord, "x"), rt.binary("*", rt.swizzle(coord, "y"), stateSize, 1, "int"), 1, "int"), base="uint")), rt.construct(1, rt.binary("*", _u_time, rt.f(65536.0), 1, "float"), base="uint"), 1, "uint"), rt.construct(1, rt.binary("*", rt.swizzle(vel, "z"), rt.f(137.0), 1, "float"), base="uint"), 1, "uint")
+        agentSeed = rt.binary("^", rt.binary("^", rt.hash_uint_lcg(rt.construct(1, rt.binary("+", rt.swizzle(coord, "x"), rt.binary("*", rt.swizzle(coord, "y"), stateSize, 1, "int"), 1, "int"), base="uint")), rt.construct(1, rt.binary("*", _u_time, rt.f(65536.0), 1, "float"), base="uint"), 1, "uint"), rt.construct(1, rt.binary("*", rt.swizzle(vel, "z"), rt.f(137.0), 1, "float"), base="uint"), 1, "uint")
         needsInit = rt.binary("<", rt.swizzle(pos, "z"), rt.f(0.25))
         cRe = rt.f(0.0)
         cIm = rt.f(0.0)

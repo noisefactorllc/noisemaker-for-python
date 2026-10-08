@@ -34,7 +34,7 @@ def run_pixel(ctx, out):
         word = rt.binary("*", rt.binary("^", rt.binary(">>", state, rt.binary("+", rt.binary(">>", state, rt.i(28), 1, "uint"), rt.i(4), 1, "uint"), 1, "uint"), state, 1, "uint"), rt.i(277803737), 1, "uint")
         return rt.binary("^", rt.binary(">>", word, rt.i(22), 1, "uint"), word, 1, "uint")
     def hash__uint(seed):
-        return rt.binary("/", rt.construct(1, rt.hash_uint(seed)), rt.f(4294967295.0), 1, "float")
+        return rt.binary("/", rt.construct(1, rt.hash_uint_lcg(seed)), rt.f(4294967295.0), 1, "float")
     def hash2__uint(seed):
         return rt.construct(2, hash__uint(seed), hash__uint(rt.binary("+", seed, rt.i(1), 1, "uint")))
     def typeColor__int_int(typeId, totalTypes):
@@ -160,7 +160,7 @@ def run_pixel(ctx, out):
                     if not (rt.binary("<", s, rt.i(12))):
                         break
                     sampleSeed = rt.binary("+", rt.binary("+", rt.binary("*", cellSeed, rt.i(31), 1, "uint"), rt.construct(1, s, base="uint"), 1, "uint"), rt.construct(1, rt.binary("*", _u_time, rt.f(7.0), 1, "float"), base="uint"), 1, "uint")
-                    sampleIdx = rt.construct(1, rt.binary("%", rt.hash_uint(sampleSeed), rt.construct(1, totalParticles, base="uint"), 1, "uint"), base="int")
+                    sampleIdx = rt.construct(1, rt.binary("%", rt.hash_uint_lcg(sampleSeed), rt.construct(1, totalParticles, base="uint"), 1, "uint"), base="int")
                     sx = rt.binary("%", sampleIdx, rt.swizzle(stateSize, "x"), 1, "int")
                     sy = rt.binary("/", sampleIdx, rt.swizzle(stateSize, "x"), 1, "int")
                     if (bool(rt.binary("==", sx, rt.swizzle(coord, "x"))) and bool(rt.binary("==", sy, rt.swizzle(coord, "y")))):

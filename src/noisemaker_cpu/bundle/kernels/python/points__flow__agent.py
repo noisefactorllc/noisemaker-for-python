@@ -27,7 +27,7 @@ def run_pixel(ctx, out):
         word = rt.binary("*", rt.binary("^", rt.binary(">>", state, rt.binary("+", rt.binary(">>", state, rt.i(28), 1, "uint"), rt.i(4), 1, "uint"), 1, "uint"), state, 1, "uint"), rt.i(277803737), 1, "uint")
         return rt.binary("^", rt.binary(">>", word, rt.i(22), 1, "uint"), word, 1, "uint")
     def hash__uint(seed):
-        return rt.binary("/", rt.construct(1, rt.hash_uint(seed)), rt.f(4294967295.0), 1, "float")
+        return rt.binary("/", rt.construct(1, rt.hash_uint_lcg(seed)), rt.f(4294967295.0), 1, "float")
     def srgb_to_linear__float(value):
         if rt.binary("<=", value, rt.f(0.04045)):
             return rt.binary("/", value, rt.f(12.92), 1, "float")
