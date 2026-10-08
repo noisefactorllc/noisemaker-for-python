@@ -89,8 +89,13 @@ pytest
 `pytest -m "not slow and not oracle"` is the quick, node-free subset that CI runs
 on every push. `scripts/test` is the full gate, which CI runs weekly: it clones
 `noisemaker-for-cpu` at the pinned revision, runs every test against it with
-Node, and then runs `scripts/parity-summary`. A kit is released only after that
-full gate passes. `tests/data/parity-receipt-<revision>.json` records the
+Node, and then runs `scripts/parity-summary` and audits the logged run with
+`scripts/parity/release_gate.py` — the release gate (mirroring the oracle's
+`scripts/parity/release-gate.js`) requires every authority case reported exactly
+once, zero missing, skipped, near, deferred or failed cases, and a
+`PARITY-SUMMARY` line that agrees with the per-case verdicts. A kit is released
+only after that full gate passes. `tests/data/parity-receipt-<revision>.json`
+records the
 oracle's output hashes for the single-frame and reactive/mesh effects, so the
 `slow` receipt test checks byte parity without Node.
 

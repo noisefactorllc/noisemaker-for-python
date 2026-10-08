@@ -3,6 +3,11 @@
 compare each with the pinned noisemaker-for-cpu authority oracle, and print a
 machine-readable PARITY-SUMMARY line as the last output.
 
+Every case is reported on its own verdict line — `EXACT <id>` or
+`FAIL <id> (reason)` — in the same grammar as the oracle's parity summary, so
+scripts/parity/release_gate.py can audit the logged run against the release
+declarations.
+
 Usage: scripts/parity-summary [case_id ...]
 
 Coverage contract: every bundled effect id (the authority catalog) must be
@@ -88,7 +93,7 @@ def main() -> int:
         case = cases.get(eid)
         if case is None:
             fail += 1
-            print(f"FAIL no-parity-case: {eid}")
+            print(f"FAIL {eid} (no-parity-case)")
             continue
         try:
             if case[0] == "effect":
@@ -120,20 +125,21 @@ def main() -> int:
                 py = render_dsl(program, width=width, height=width, seed=_parity.SEED, time=_parity.TIME)
         except Exception as e:
             fail += 1
-            print(f"FAIL {type(e).__name__}: {eid}: {str(e).splitlines()[0][:90]}")
+            print(f"FAIL {eid} ({type(e).__name__}: {str(e).splitlines()[0][:90]})")
             continue
         ja = np.frombuffer(js.to_rgba8(), np.uint8).astype(int)
         pa = np.frombuffer(py.to_rgba8(), np.uint8).astype(int)
         if ja.shape != pa.shape:
             fail += 1
-            print(f"FAIL shape-mismatch: {eid}")
+            print(f"FAIL {eid} (shape-mismatch)")
             continue
         d = int(np.max(np.abs(ja - pa)))
         if d == 0:
             exact.append(eid)
+            print(f"EXACT {eid}")
         else:
             fail += 1
-            print(f"FAIL max-diff {d}: {eid}")
+            print(f"FAIL {eid} (max-diff {d})")
 
     executed = len(exact)
     strict = 0

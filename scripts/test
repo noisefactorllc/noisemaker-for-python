@@ -24,8 +24,8 @@ fi
 # PARITY-SUMMARY line binds the run to both revisions). Without node the oracle
 # cannot run, so only the node-free tests run.
 if command -v node >/dev/null 2>&1; then
-    CPU_PINNED_REVISION=5b686a45b5c56329adf0c63cbcf572eb6f23fad1
-    CPU_PINNED_TREE=bc16f6aeb79d284b40f2e98032470f253d813c4b
+    CPU_PINNED_REVISION=0413fd8152b60ff60f1b2acd8b38b49cd84ce973
+    CPU_PINNED_TREE=ed505c1e6907e23e8ba386ecc5bcc2c91fba77aa
     CPU_DIR="${TMPDIR:-/tmp}/noisemaker-py-cpu-oracle"
     if [ ! -d "$CPU_DIR/.git" ]; then
         git clone -q https://github.com/noisefactorllc/noisemaker-for-cpu.git "$CPU_DIR"
@@ -38,7 +38,16 @@ if command -v node >/dev/null 2>&1; then
         exit 1
     fi
     NOISEMAKER_CPU_DIR="$CPU_DIR" "$VENV/bin/python" -m pytest -q
-    NOISEMAKER_CPU_DIR="$CPU_DIR" "$VENV/bin/python" scripts/parity-summary
+    # The parity summary's log is the release evidence: run the summary, keep
+    # its output, and audit the log with the release gate (the port declares no
+    # skips and no accepted failures, so both declarations are empty).
+    PARITY_LOG="${TMPDIR:-/tmp}/noisemaker-py-parity-summary.log"
+    if ! NOISEMAKER_CPU_DIR="$CPU_DIR" "$VENV/bin/python" scripts/parity-summary >"$PARITY_LOG"; then
+        cat "$PARITY_LOG"
+        exit 1
+    fi
+    cat "$PARITY_LOG"
+    "$VENV/bin/python" scripts/parity/release_gate.py "$PARITY_LOG" --declared-skips '' --accepted-failures ''
 else
     "$VENV/bin/python" -m pytest -q -m "not oracle"
 fi
