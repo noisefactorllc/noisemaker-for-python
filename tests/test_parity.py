@@ -176,6 +176,30 @@ def test_iterated_effect_byte_parity(tmp_path, effect_id, program):
     assert _max_diff(js, py) == 0
 
 
+# The 8x8 case above is too small to see the agent sequences: a points
+# pipeline seeded from the wrong hash_uint body, or an anchor grid one
+# rounding away, still matches there. At 32 and 64 the agents spread far
+# enough that either shows.
+POINTS_PROGRAMS = {eid: program for eid, program in ITERATED_PROGRAMS.items() if eid.startswith(("points/", "render/pointsEmit"))}
+
+
+@pytest.mark.slow
+@pytest.mark.parametrize("size", [32, 64])
+@pytest.mark.parametrize(("effect_id", "program"), POINTS_PROGRAMS.items(), ids=POINTS_PROGRAMS)
+def test_points_effect_byte_parity_at_larger_sizes(tmp_path, effect_id, program, size):
+    js = _js_render_dsl(
+        program,
+        str(tmp_path / f"{effect_id.replace('/', '__').replace(':', '_')}-{size}.png"),
+        width=size,
+        height=size,
+        seed=1,
+        time=0.25,
+    )
+    py = render_dsl(program, width=size, height=size, seed=1, time=0.25)
+
+    assert _max_diff(js, py) == 0
+
+
 # Volume/loop DSL parity cases, shared with scripts/parity-summary (which
 # executes one case per bundled effect id to count whole-catalog coverage).
 # Each row: (case_id, program, width, height); ":"-suffixed ids are additional

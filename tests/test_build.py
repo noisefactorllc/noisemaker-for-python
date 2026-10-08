@@ -213,6 +213,19 @@ def test_bundled_octave_warp_kernel_matches_negative_seed_oracle_render():
     assert surface.to_rgba8() == oracle_rgba8
 
 
+def test_hash_returns_take_the_sibling_float_casts_in_every_effect_but_scatter():
+    # The sibling's adaptCanonicalSource rounds the add and the multiply of
+    # these hash returns for every effect except filter/scatter. Without it,
+    # points/dla's anchor grid lands one half-float step off at 64x64.
+    source = "float hash21(vec2 p) {\n    return fract((p3.x + p3.y) * p3.z);\n}\nvec2 hash22(vec2 p) {\n    return fract((p3.xx + p3.yz) * p3.zy);\n}\n"
+
+    adapted = build_module._adapt_source("points/dla", "initGrid", source)
+
+    assert "return fract(float(float(p3.x + p3.y) * p3.z));" in adapted
+    assert "return fract(vec2(float(float(p3.x + p3.y) * p3.z), float(float(p3.x + p3.z) * p3.y)));" in adapted
+    assert build_module._adapt_source("filter/scatter", "scatter", source) == source
+
+
 def test_bundled_artifact_sets_match():
     bundle_dir = Path(build_module.BUNDLE)
     metadata = json.loads((bundle_dir / "metadata.json").read_text())

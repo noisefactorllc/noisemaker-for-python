@@ -15,7 +15,7 @@ def run_pixel(ctx, out):
         p = rt.copy(p, "float")
         p3 = rt.component_wise("fract", rt.binary("*", rt.construct(3, rt.swizzle(p, "xyx")), rt.f(0.1031), 3, "float"), width=3)
         p3[:] = rt.binary("+", p3, rt.dot(p3, rt.binary("+", rt.swizzle(p3, "yzx"), rt.f(33.33), 3, "float")), 3, "float")
-        return rt.component_wise("fract", rt.binary("*", rt.binary("+", rt.swizzle(p3, "x"), rt.swizzle(p3, "y"), 1, "float"), rt.swizzle(p3, "z"), 1, "float"), width=1)
+        return rt.component_wise("fract", rt.construct(1, rt.binary("*", rt.construct(1, rt.binary("+", rt.swizzle(p3, "x"), rt.swizzle(p3, "y"), 1, "float")), rt.swizzle(p3, "z"), 1, "float")), width=1)
     def main__void():
         dir = rt.construct(2, rt.component_wise("cos", rt.component_wise("radians", _u_angle, width=1), width=1), rt.component_wise("sin", rt.component_wise("radians", _u_angle, width=1), width=1))
         tapStep = rt.binary("/", _u_blurDistance, rt.construct(1, rt.binary("-", g.N, rt.i(1), 1, "int")), 1, "float")

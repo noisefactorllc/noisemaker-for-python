@@ -40,8 +40,10 @@ _JS_VECTOR_STORAGE_KEYS = frozenset({"synth3d/noise3d:precompute", "filter/strok
 
 
 def _adapt_source(effect_id: str, program: str, source: str) -> str:
-    # Match the canonical CPU hash casts without changing runtime arithmetic.
-    if effect_id in {"filter/mosaicTiles", "filter/stipple", "filter/strokes"}:
+    # Match the canonical CPU hash casts without changing runtime arithmetic:
+    # the sibling's adaptCanonicalSource rewrites these hash returns for every
+    # effect except filter/scatter, so the add and the multiply each round.
+    if effect_id != "filter/scatter":
         source = source.replace(
             "return fract((p3.x + p3.y) * p3.z);",
             "return fract(float(float(p3.x + p3.y) * p3.z));",
