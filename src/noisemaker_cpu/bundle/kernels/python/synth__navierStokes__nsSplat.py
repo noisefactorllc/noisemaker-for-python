@@ -19,7 +19,7 @@ def run_pixel(ctx, out):
     def hash22__vec2(p):
         p = rt.copy(p, "float")
         (p.__setitem__(0, rt.dot(p, rt.construct(2, rt.f(127.1), rt.f(311.7)))), p.__setitem__(1, rt.dot(p, rt.construct(2, rt.f(269.5), rt.f(183.3)))), p)[-1]
-        return rt.component_wise("fract", rt.binary("*", rt.component_wise("sin", p, width=2), rt.f(43758.5453), 2, "float"), width=2)
+        return rt.component_wise("fract", rt.copy(rt.binary("*", rt.component_wise("sin", p, width=2), rt.f(43758.5453), 2, "float"), 'float'), width=2)
     def lum__vec3(c):
         c = rt.copy(c, "float")
         return rt.binary("+", rt.binary("+", rt.binary("*", rt.f(0.2126), rt.swizzle(c, "r"), 1, "float"), rt.binary("*", rt.f(0.7152), rt.swizzle(c, "g"), 1, "float"), 1, "float"), rt.binary("*", rt.f(0.0722), rt.swizzle(c, "b"), 1, "float"), 1, "float")

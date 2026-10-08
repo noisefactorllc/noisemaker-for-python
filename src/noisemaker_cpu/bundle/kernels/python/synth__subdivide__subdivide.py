@@ -232,7 +232,7 @@ def run_pixel(ctx, out):
             texUv = rt.assign_swizzle(texUv, "y", rt.binary("+", rt.swizzle(texUv, "y"), rt.binary("*", rt.component_wise("mix", cellRand__vec2_float_float_float(cellMin, rt.f(0.0), rt.f(7.0), curVisualTime), cellRand__vec2_float_float_float(cellMin, rt.f(0.0), rt.f(7.0), nextVisualTime), visualBlend, width=1), rt.binary("-", rt.f(1.0), texScale, 1, "float"), 1, "float"), 1, "float"))
             wrapMode = rt.construct(1, _u_wrap, base="int")
             if rt.binary("==", wrapMode, rt.i(0)):
-                texUv[:] = rt.component_wise("abs", rt.binary("-", rt.component_wise("mod", rt.binary("+", texUv, rt.f(1.0), 2, "float"), rt.f(2.0), width=2), rt.f(1.0), 2, "float"), width=2)
+                texUv[:] = rt.component_wise("abs", rt.copy(rt.binary("-", rt.component_wise("mod", rt.binary("+", texUv, rt.f(1.0), 2, "float"), rt.f(2.0), width=2), rt.f(1.0), 2, "float"), 'float'), width=2)
             else:
                 if rt.binary("==", wrapMode, rt.i(1)):
                     texUv[:] = rt.component_wise("mod", texUv, rt.f(1.0), width=2)

@@ -120,7 +120,7 @@ def run_pixel(ctx, out):
                 coverage = rt.binary("-", rt.f(1.0), rt.component_wise("smoothstep", rt.f(0.0), featherPx, rt.component_wise("sqrt", t[1], width=1), width=1), 1, "float")
                 if rt.binary("<=", coverage, rt.f(0.0)):
                     continue
-            src = rt.binary("*", sampleZone__int_vec2(z, sampleUv), rt.binary("*", coverage, rt.swizzle(zoneMeta, "w"), 1, "float"), 4, "float")
+            src = rt.copy(rt.binary("*", sampleZone__int_vec2(z, sampleUv), rt.binary("*", coverage, rt.swizzle(zoneMeta, "w"), 1, "float"), 4, "float"), 'float')
             result[:] = rt.binary("+", result, rt.binary("*", src, rt.binary("-", rt.f(1.0), rt.swizzle(result, "a"), 1, "float"), 4, "float"), 4, "float")
             if rt.binary(">=", rt.swizzle(result, "a"), rt.f(0.999)):
                 break

@@ -26,7 +26,7 @@ def run_pixel(ctx, out):
         return rt.binary("*", rt.component_wise("cos", rt.binary("-", rt.binary("*", rt.component_wise("floor", rt.binary("+", rt.f(0.5), rt.binary("/", a, r, 1, "float"), 1, "float"), width=1), r, 1, "float"), a, 1, "float"), width=1), rt.length(uv), 1, "float")
     def smod__vec2_float(v, m):
         v = rt.copy(v, "float")
-        return rt.binary("*", m, rt.binary("-", rt.binary("-", rt.f(0.75), rt.component_wise("abs", rt.binary("-", rt.component_wise("fract", v, width=2), rt.f(0.5), 2, "float"), width=2), 2, "float"), rt.f(0.25), 2, "float"), 2, "float")
+        return rt.copy(rt.binary("*", m, rt.copy(rt.binary("-", rt.copy(rt.binary("-", rt.f(0.75), rt.component_wise("abs", rt.copy(rt.binary("-", rt.component_wise("fract", v, width=2), rt.f(0.5), 2, "float"), 'float'), width=2), 2, "float"), 'float'), rt.f(0.25), 2, "float"), 'float'), 2, "float"), 'float')
     def main__void():
         texSize = rt.texture_size(_u_inputTex)
         tileDims = rt.construct(2, texSize)

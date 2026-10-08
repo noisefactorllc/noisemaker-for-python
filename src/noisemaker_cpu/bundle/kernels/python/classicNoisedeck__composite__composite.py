@@ -104,7 +104,7 @@ def run_pixel(ctx, out):
                         color[:] = rt.component_wise("mix", color1, color2, rt.binary("*", _u_mixAmt, rt.f(0.01), 1, "float"), width=3)
                     else:
                         if rt.binary("==", _u_blendMode, rt.i(4)):
-                            c = rt.binary("-", rt.f(1.0), rt.component_wise("step", cut, color2, width=3), 3, "float")
+                            c = rt.copy(rt.binary("-", rt.f(1.0), rt.component_wise("step", cut, color2, width=3), 3, "float"), 'float')
                             color2[:] = rt.component_wise("mix", color1, rt.construct(3, rt.f(0.0)), c, width=3)
                             color[:] = rt.component_wise("mix", color1, color2, rt.binary("*", _u_mixAmt, rt.f(0.01), 1, "float"), width=3)
                         else:
@@ -129,7 +129,7 @@ def run_pixel(ctx, out):
                                             color[:] = rt.component_wise("mix", color2, color1, rt.binary("*", _u_mixAmt, rt.f(0.01), 1, "float"), width=3)
                                         else:
                                             if rt.binary("==", _u_blendMode, rt.i(9)):
-                                                c = rt.binary("-", rt.f(1.0), rt.component_wise("step", cut, color1, width=3), 3, "float")
+                                                c = rt.copy(rt.binary("-", rt.f(1.0), rt.component_wise("step", cut, color1, width=3), 3, "float"), 'float')
                                                 color1[:] = rt.component_wise("mix", color2, rt.construct(3, rt.f(0.0)), c, width=3)
                                                 color[:] = rt.component_wise("mix", color2, color1, rt.binary("*", _u_mixAmt, rt.f(0.01), 1, "float"), width=3)
                                             else:

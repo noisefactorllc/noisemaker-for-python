@@ -44,7 +44,7 @@ def run_pixel(ctx, out):
         return rt.binary("-", rt.f(1.0), rt.component_wise("min", lineX, lineY, width=1), 1, "float")
     def dots__vec2_float(p, t):
         p = rt.copy(p, "float")
-        f = rt.binary("-", rt.component_wise("fract", p, width=2), rt.f(0.5), 2, "float")
+        f = rt.copy(rt.binary("-", rt.component_wise("fract", p, width=2), rt.f(0.5), 2, "float"), 'float')
         d = rt.length(f)
         radius = rt.binary("*", t, rt.f(0.5), 1, "float")
         return rt.binary("-", rt.f(1.0), rt.component_wise("smoothstep", rt.binary("-", radius, _u_smoothness, 1, "float"), rt.binary("+", radius, _u_smoothness, 1, "float"), d, width=1), 1, "float")

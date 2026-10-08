@@ -19,7 +19,7 @@ def run_pixel(ctx, out):
         uv = rt.assign_swizzle(uv, "x", rt.binary("-", rt.swizzle(uv, "x"), _u_x, 1, "float"))
         uv = rt.assign_swizzle(uv, "y", rt.binary("-", rt.swizzle(uv, "y"), _u_y, 1, "float"))
         if rt.binary("==", _u_wrap, rt.i(0)):
-            uv[:] = rt.component_wise("abs", rt.binary("-", rt.component_wise("mod", rt.binary("+", uv, rt.f(1.0), 2, "float"), rt.f(2.0), width=2), rt.f(1.0), 2, "float"), width=2)
+            uv[:] = rt.component_wise("abs", rt.copy(rt.binary("-", rt.component_wise("mod", rt.binary("+", uv, rt.f(1.0), 2, "float"), rt.f(2.0), width=2), rt.f(1.0), 2, "float"), 'float'), width=2)
         else:
             if rt.binary("==", _u_wrap, rt.i(1)):
                 uv[:] = rt.component_wise("fract", uv, width=2)

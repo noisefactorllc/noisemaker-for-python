@@ -85,7 +85,7 @@ def run_pixel(ctx, out):
                 if not (rt.binary("<=", cx, rt.i(1))):
                     break
                 cell = rt.construct(2, rt.binary("+", baseCell, rt.array([rt.construct(1, cx), rt.construct(1, cy)]), 2, "float"))
-                jitter = rt.construct(2, rt.binary("-", hash22__vec2(rt.binary("+", cell, rt.f(17.3), 2, "float")), rt.f(0.5), 2, "float"))
+                jitter = rt.construct(2, rt.copy(rt.binary("-", hash22__vec2(rt.binary("+", cell, rt.f(17.3), 2, "float")), rt.f(0.5), 2, "float"), 'float'))
                 center = rt.construct(2, rt.binary("*", rt.binary("+", rt.binary("+", cell, rt.f(0.5), 2, "float"), rt.binary("*", jitter, rt.array([rt.f(0.56), rt.f(0.4)]), 2, "float"), 2, "float"), spacing, 2, "float"))
                 delta = rt.construct(2, rt.binary("-", oriented, center, 2, "float"))
                 angle = rt.binary("*", rt.binary("-", hash12__vec2(rt.binary("+", cell, rt.f(29.1), 2, "float")), rt.f(0.5), 1, "float"), rt.f(0.34), 1, "float")
@@ -148,8 +148,8 @@ def run_pixel(ctx, out):
             jp = rt.construct(2, rt.f(0.0))
             jn = rt.construct(2, rt.f(0.0))
             if rt.binary(">", jitterPx, rt.f(0.0)):
-                jp[:] = rt.binary("*", sprayJitter__vec2_float(gc, fi), jitterPx, 2, "float")
-                jn[:] = rt.binary("*", sprayJitter__vec2_float(rt.binary("+", gc, rt.f(31.7), 2, "float"), rt.unary("-", fi)), jitterPx, 2, "float")
+                jp[:] = rt.copy(rt.binary("*", sprayJitter__vec2_float(gc, fi), jitterPx, 2, "float"), 'float')
+                jn[:] = rt.copy(rt.binary("*", sprayJitter__vec2_float(rt.binary("+", gc, rt.f(31.7), 2, "float"), rt.unary("-", fi)), jitterPx, 2, "float"), 'float')
             sampP = rt.construct(2, rt.binary("+", rt.binary("+", uv, rt.binary("*", rt.binary("*", dirUnit, fi, 2, "float"), px, 2, "float"), 2, "float"), rt.binary("*", jp, px, 2, "float"), 2, "float"))
             sampN = rt.construct(2, rt.binary("+", rt.binary("-", uv, rt.binary("*", rt.binary("*", dirUnit, fi, 2, "float"), px, 2, "float"), 2, "float"), rt.binary("*", jn, px, 2, "float"), 2, "float"))
             sum[:] = rt.binary("+", sum, rt.binary("*", rt.binary("+", srcSample__vec2(sampP), srcSample__vec2(sampN), 4, "float"), w, 4, "float"), 4, "float")

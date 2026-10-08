@@ -60,7 +60,7 @@ def run_pixel(ctx, out):
         uv = rt.copy(uv, "float")
         mode = rt.construct(1, _u_wrap, base="int")
         if rt.binary("==", mode, rt.i(0)):
-            return rt.component_wise("abs", rt.binary("-", rt.component_wise("mod", rt.binary("+", uv, rt.f(1.0), 2, "float"), rt.f(2.0), width=2), rt.f(1.0), 2, "float"), width=2)
+            return rt.component_wise("abs", rt.copy(rt.binary("-", rt.component_wise("mod", rt.binary("+", uv, rt.f(1.0), 2, "float"), rt.f(2.0), width=2), rt.f(1.0), 2, "float"), 'float'), width=2)
         else:
             if rt.binary("==", mode, rt.i(1)):
                 return rt.component_wise("fract", uv, width=2)

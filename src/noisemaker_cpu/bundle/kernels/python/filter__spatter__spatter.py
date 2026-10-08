@@ -60,7 +60,7 @@ def run_pixel(ctx, out):
         pos = rt.copy(pos, "float")
         c = rt.construct(2, rt.component_wise("floor", pos, width=2), base="int")
         f = rt.component_wise("fract", pos, width=2)
-        t = rt.binary("*", rt.binary("-", rt.f(1.0), rt.component_wise("cos", rt.binary("*", f, rt.f(3.14159265), 2, "float"), width=2), 2, "float"), rt.f(0.5), 2, "float")
+        t = rt.copy(rt.binary("*", rt.copy(rt.binary("-", rt.f(1.0), rt.component_wise("cos", rt.binary("*", f, rt.f(3.14159265), 2, "float"), width=2), 2, "float"), 'float'), rt.f(0.5), 2, "float"), 'float')
         v00 = rt.component_wise("pow", gridVal__ivec2_uint(c, sd), rt.f(4.0), width=1)
         v10 = rt.component_wise("pow", gridVal__ivec2_uint(rt.binary("+", c, rt.construct(2, rt.i(1), rt.i(0), base="int"), 2, "int"), sd), rt.f(4.0), width=1)
         v01 = rt.component_wise("pow", gridVal__ivec2_uint(rt.binary("+", c, rt.construct(2, rt.i(0), rt.i(1), base="int"), 2, "int"), sd), rt.f(4.0), width=1)

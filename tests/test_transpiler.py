@@ -116,6 +116,64 @@ def test_hash_uint_routes_by_its_glsl_body_not_its_name():
     assert "hash_uint__uint(" in other
 
 
+def test_scalar_arithmetic_on_a_vector_call_rounds_like_float32array_map():
+    from noisemaker_cpu.kernel_loader import load_kernel
+    from noisemaker_cpu.pass_runner import Ctx, run_pass
+    from noisemaker_cpu.runtime import Runtime
+    from transpiler.codegen import emit_python
+    from transpiler.parser import parse
+    from transpiler.preprocess import normalize
+
+    # Simplex noise's `h = 1.0 - abs(x) - abs(y)` compiles in the sibling to
+    # vec4.subtract([], abs(x).map(_ => 1 - _), abs(y)): the map stores
+    # 1 - |x| into a Float32Array before |y| is subtracted. These lanes are
+    # classicNoisedeck/noise3d's snoise at offsetX 100; rounding once gives
+    # 0.14285710453987122, the sibling gives 0.14285707473754883.
+    source = """
+        uniform vec4 xs;
+        uniform vec4 ys;
+        out vec4 fragColor;
+        void main() {
+            vec4 h = 1.0 - abs(xs) - abs(ys);
+            vec4 h2 = vec4(0.0);
+            h2 = 1.0 - abs(xs) - abs(ys);
+            fragColor = vec4(h.x, h2.x, h.w, h2.w);
+        }
+    """
+    normalized = normalize(source, {})
+    kernel = load_kernel(emit_python(parse(normalized["source"]), normalized["outputs"], normalized["varyings"]))
+    lane = (-0.07142850756645203, 0.7857143878936768)
+    uniforms = {
+        "xs": np.array([lane[0], 0.0, 0.0, lane[0]], dtype=np.float32),
+        "ys": np.array([lane[1], 0.0, 0.0, lane[1]], dtype=np.float32),
+    }
+
+    surface = run_pass(kernel, Ctx(Runtime(), uniforms=uniforms), 1, 1)
+
+    assert [float(c) for c in surface.data] == [0.14285707473754883] * 4
+
+
+def test_vector_vector_arithmetic_on_a_call_keeps_float64_until_stored():
+    from transpiler.codegen import emit_python
+    from transpiler.parser import parse
+    from transpiler.preprocess import normalize
+
+    # vec2 * vec2 with a call operand compiles to vec2.multiply([], a, b): a
+    # plain array, so the product stays float64 into the int conversion.
+    source = """
+        uniform vec2 uv;
+        out vec4 fragColor;
+        void main() {
+            ivec2 coord = ivec2(fract(uv) * vec2(64.0, 64.0));
+            fragColor = vec4(vec2(coord), 0.0, 1.0);
+        }
+    """
+    normalized = normalize(source, {})
+    generated = emit_python(parse(normalized["source"]), normalized["outputs"], normalized["varyings"])
+
+    assert "rt.copy(rt.binary" not in generated
+
+
 def test_nested_inout_call_is_an_expression_and_updates_caller():
     from noisemaker_cpu.kernel_loader import load_kernel
     from noisemaker_cpu.pass_runner import Ctx, run_pass

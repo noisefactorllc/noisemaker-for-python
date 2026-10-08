@@ -123,7 +123,7 @@ def run_pixel(ctx, out):
                 gapWidthPx = rt.binary("*", rt.binary("/", _u_groutWidth, rt.f(100.0), 1, "float"), _u_tileSize, 1, "float")
                 gapAA = rt.f(1.25)
                 gapMask = rt.binary("-", rt.f(1.0), rt.component_wise("smoothstep", rt.binary("-", rt.binary("*", gapWidthPx, rt.f(0.5), 1, "float"), gapAA, 1, "float"), rt.binary("+", rt.binary("*", gapWidthPx, rt.f(0.5), 1, "float"), gapAA, 1, "float"), edgeDistPx, width=1), 1, "float")
-                offsetPx = rt.binary("*", rt.binary("*", rt.binary("*", rt.binary("-", hash22__vec2(rt.binary("+", cellId, rt.binary("*", seedF, rt.f(101.7), 1, "float"), 2, "float")), rt.f(0.5), 2, "float"), rt.f(2.0), 2, "float"), rt.binary("/", _u_maxOffset, rt.f(100.0), 1, "float"), 2, "float"), _u_tileSize, 2, "float")
+                offsetPx = rt.copy(rt.binary("*", rt.copy(rt.binary("*", rt.copy(rt.binary("*", rt.copy(rt.binary("-", hash22__vec2(rt.binary("+", cellId, rt.binary("*", seedF, rt.f(101.7), 1, "float"), 2, "float")), rt.f(0.5), 2, "float"), 'float'), rt.f(2.0), 2, "float"), 'float'), rt.binary("/", _u_maxOffset, rt.f(100.0), 1, "float"), 2, "float"), 'float'), _u_tileSize, 2, "float"), 'float')
                 cellCenterGc = rt.binary("*", rt.binary("+", cellId, rt.construct(2, rt.f(0.5)), 2, "float"), _u_tileSize, 2, "float")
                 shiftedGc = rt.binary("+", cellCenterGc, offsetPx, 2, "float")
                 shiftedUV = rt.component_wise("clamp", rt.binary("/", rt.binary("-", shiftedGc, _u_tileOffset, 2, "float"), _u_resolution, 2, "float"), rt.f(0.0), rt.f(1.0), width=2)

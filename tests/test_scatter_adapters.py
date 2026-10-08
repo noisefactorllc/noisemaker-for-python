@@ -44,6 +44,23 @@ def test_dla_deposit_grid_adds_stuck_agent_color_and_energy():
     assert np.array_equal(destination.data, np.array([0.25, 0.5, 0.75, 1.0], dtype=np.float32))
 
 
+def test_dla_deposit_grid_accumulates_in_float64_and_rounds_once():
+    # The sibling adds rgba * energy to a Float32Array slot in float64, with
+    # energy = deposit * 0.1 unrounded, and rounds once on store. Expected
+    # values are noisemaker-for-cpu's dlaDepositGridAdapter on these inputs;
+    # float32 arithmetic gives 1.2001065015792847.
+    inputs = {
+        "xyzTex": _surface(1, 1, [[0.5, 0.5, 0.0, 1.0]]),
+        "velTex": _surface(1, 1, [[0.0, 1.0, 0.0, 0.0]]),
+        "rgbaTex": _surface(1, 1, [[0.9956448078155518, 0.0, 0.0, 1.0]]),
+    }
+    destination = _surface(1, 1, [[0.23433096706867218, 0.0, 0.0, 0.0]])
+
+    dla_deposit_grid(inputs, destination, {"deposit": 9.7}, {})
+
+    assert [float(c) for c in destination.data] == [1.2001063823699951, 0.0, 0.0, 0.9700000286102295]
+
+
 def test_lenia_and_points_render_deposit_alive_agents():
     xyz = _surface(1, 1, [[0.5, 0.5, 0.0, 1.0]])
     rgba = _surface(1, 1, [[0.2, 0.4, 0.6, 0.8]])

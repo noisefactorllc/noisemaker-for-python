@@ -195,7 +195,7 @@ def run_pixel(ctx, out):
             hsv[:] = rgb2hsv__vec3(rt.swizzle(color, "rgb"))
             hsv[int(rt.i(0))] = rt.component_wise("fract", rt.binary("+", rt.binary("*", rt.binary("+", rt.binary("+", hsv[int(rt.i(0))], rt.f(0.125), 1, "float"), rt.binary("-", rt.f(1.0), rt.binary("/", _u_hueRotation, rt.f(360.0), 1, "float"), 1, "float"), 1, "float"), rt.binary("+", rt.f(2.0), rt.binary("*", _u_hueRange, rt.f(0.05), 1, "float"), 1, "float"), 1, "float"), t, 1, "float"), width=1)
             hsv[int(rt.i(1))] = rt.f(1.0)
-        green = rt.assign_swizzle(green, "rgb", rt.binary("*", saturate__vec3(rt.swizzle(green, "rgb")), map__float_float_float_float_float(_u_passthru, rt.f(0.0), rt.f(100.0), rt.f(0.0), rt.f(2.0)), 3, "float"))
+        green = rt.assign_swizzle(green, "rgb", rt.copy(rt.binary("*", saturate__vec3(rt.swizzle(green, "rgb")), map__float_float_float_float_float(_u_passthru, rt.f(0.0), rt.f(100.0), rt.f(0.0), rt.f(2.0)), 3, "float"), 'float'))
         if rt.binary("==", _u_blendMode, rt.i(0)):
             color = rt.assign_swizzle(color, "rgb", rt.component_wise("min", rt.binary("+", rt.swizzle(green, "rgb"), hsv2rgb__vec3(hsv), 3, "float"), rt.f(1.0), width=3))
         else:

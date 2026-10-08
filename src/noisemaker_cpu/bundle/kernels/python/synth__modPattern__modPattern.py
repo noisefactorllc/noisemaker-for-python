@@ -52,7 +52,7 @@ def run_pixel(ctx, out):
         spd = rt.component_wise("floor", _u_speed, width=1)
         anim = rt.binary("*", _u_time, spd, 1, "float")
         s1 = rt.binary("-", rt.f(20.1), _u_scale1, 1, "float")
-        p = rt.component_wise("abs", rt.binary("-", rt.component_wise("mod", rt.binary("*", uv, s1, 2, "float"), rt.f(2.0), width=2), rt.f(1.0), 2, "float"), width=2)
+        p = rt.component_wise("abs", rt.copy(rt.binary("-", rt.component_wise("mod", rt.binary("*", uv, s1, 2, "float"), rt.f(2.0), width=2), rt.f(1.0), 2, "float"), 'float'), width=2)
         osc1 = rt.f(0.0)
         if rt.binary("==", _u_animMode, rt.i(1)):
             osc1 = rt.binary("*", rt.component_wise("sin", rt.binary("*", rt.binary("*", _u_time, rt.f(6.28318530718), 1, "float"), spd, 1, "float"), width=1), rt.f(0.03), 1, "float")
@@ -62,7 +62,7 @@ def run_pixel(ctx, out):
         phase2 = (anim if rt.binary("==", _u_animMode, rt.i(2)) else rt.f(0.0))
         phase3 = (anim if rt.binary("==", _u_animMode, rt.i(2)) else rt.f(0.0))
         s2 = rt.binary("-", rt.f(10.1), _u_scale2, 1, "float")
-        p[:] = rt.component_wise("abs", rt.binary("-", rt.component_wise("mod", rt.binary("*", p, s2, 2, "float"), rt.f(2.0), width=2), rt.f(1.0), 2, "float"), width=2)
+        p[:] = rt.component_wise("abs", rt.copy(rt.binary("-", rt.component_wise("mod", rt.binary("*", p, s2, 2, "float"), rt.f(2.0), width=2), rt.f(1.0), 2, "float"), 'float'), width=2)
         osc2 = rt.f(0.0)
         if rt.binary("==", _u_animMode, rt.i(1)):
             osc2 = rt.binary("*", rt.component_wise("sin", rt.binary("*", rt.binary("*", _u_time, rt.f(6.28318530718), 1, "float"), spd, 1, "float"), width=1), rt.f(0.07), 1, "float")
@@ -74,7 +74,7 @@ def run_pixel(ctx, out):
         else:
             val = smoothFract__float(rt.binary("+", rt.binary("+", rt.binary("+", rt.binary("*", n1, _u_repeat1, 1, "float"), phase1, 1, "float"), rt.binary("*", n2, _u_repeat2, 1, "float"), 1, "float"), phase2, 1, "float"))
         s3 = rt.binary("-", rt.f(6.1), _u_scale3, 1, "float")
-        p[:] = rt.component_wise("abs", rt.binary("-", rt.component_wise("mod", rt.binary("*", p, s3, 2, "float"), rt.f(2.0), width=2), rt.f(1.0), 2, "float"), width=2)
+        p[:] = rt.component_wise("abs", rt.copy(rt.binary("-", rt.component_wise("mod", rt.binary("*", p, s3, 2, "float"), rt.f(2.0), width=2), rt.f(1.0), 2, "float"), 'float'), width=2)
         osc3 = rt.f(0.0)
         if rt.binary("==", _u_animMode, rt.i(1)):
             osc3 = rt.binary("*", rt.component_wise("sin", rt.binary("*", rt.binary("*", _u_time, rt.f(6.28318530718), 1, "float"), spd, 1, "float"), width=1), rt.f(0.15), 1, "float")

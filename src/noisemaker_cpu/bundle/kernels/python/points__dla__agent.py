@@ -98,7 +98,7 @@ def run_pixel(ctx, out):
                 inputDir[:] = rt.normalize(inputDir)
                 stepDir[:] = rt.normalize(rt.component_wise("mix", randomDir, inputDir, inputW, width=2))
         stepSize = rt.binary("*", rt.binary("*", rt.binary("/", _u_stride, rt.f(10.0), 1, "float"), texel, 1, "float"), rt.component_wise("mix", rt.f(3.0), rt.f(0.5), proximity, width=1), 1, "float")
-        stepDir[:] = rt.binary("+", stepDir, rt.binary("*", (((_retc4 := randomDirection__float(seed)), (seed := _retc4[1]), _retc4[0])[-1]), rt.f(0.3), 2, "float"), 2, "float")
+        stepDir[:] = rt.binary("+", stepDir, rt.copy(rt.binary("*", (((_retc4 := randomDirection__float(seed)), (seed := _retc4[1]), _retc4[0])[-1]), rt.f(0.3), 2, "float"), 'float'), 2, "float")
         stepDir[:] = rt.normalize(stepDir)
         candidate = wrap01__vec2(rt.binary("+", pos, rt.binary("*", stepDir, stepSize, 2, "float"), 2, "float"))
         here = sampleGrid__vec2(candidate)

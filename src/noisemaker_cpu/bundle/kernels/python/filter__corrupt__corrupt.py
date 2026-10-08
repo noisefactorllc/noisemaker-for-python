@@ -71,7 +71,7 @@ def run_pixel(ctx, out):
         uv = rt.copy(uv, "float")
         bh = lineHash__float_float(rt.binary("+", row, rt.f(400.0), 1, "float"), _rt)
         levels = rt.component_wise("mix", rt.f(256.0), rt.f(2.0), rt.binary("*", bitAmt, bitAmt, 1, "float"), width=1)
-        color[:] = rt.binary("/", rt.component_wise("floor", rt.binary("+", rt.binary("*", color, levels, 3, "float"), rt.f(0.5), 3, "float"), width=3), levels, 3, "float")
+        color[:] = rt.copy(rt.binary("/", rt.component_wise("floor", rt.binary("+", rt.binary("*", color, levels, 3, "float"), rt.f(0.5), 3, "float"), width=3), levels, 3, "float"), 'float')
         xorStrength = rt.f(0.0)
         px = rt.f(0.0)
         xorHash = rt.construct(3, 0.0)

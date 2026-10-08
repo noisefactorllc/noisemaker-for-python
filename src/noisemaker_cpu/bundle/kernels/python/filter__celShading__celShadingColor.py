@@ -60,7 +60,7 @@ def run_pixel(ctx, out):
             blend = rt.component_wise("smoothstep", rt.binary("-", rt.f(0.5), rt.binary("*", fw, rt.f(0.5), 3, "float"), 3, "float"), rt.binary("+", rt.f(0.5), rt.binary("*", fw, rt.f(0.5), 3, "float"), 3, "float"), f, width=3)
             quantized_rgb[:] = rt.binary("*", rt.binary("+", rt.component_wise("floor", scaled, width=3), blend, 3, "float"), inv_factor, 3, "float")
         else:
-            quantized_rgb[:] = rt.binary("*", rt.component_wise("floor", scaled, width=3), inv_factor, 3, "float")
+            quantized_rgb[:] = rt.copy(rt.binary("*", rt.component_wise("floor", scaled, width=3), inv_factor, 3, "float"), 'float')
         quantized_rgb[:] = pow_vec3__vec3_float(rt.component_wise("clamp", quantized_rgb, rt.construct(3, rt.f(0.0)), rt.construct(3, rt.f(1.0)), width=3), inv_gamma)
         quantized_rgb[:] = linear_to_srgb_rgb__vec3(quantized_rgb)
         g.fragColor[:] = rt.construct(4, rt.component_wise("clamp", quantized_rgb, rt.f(0.0), rt.f(1.0), width=3), rt.swizzle(origColor, "a"))

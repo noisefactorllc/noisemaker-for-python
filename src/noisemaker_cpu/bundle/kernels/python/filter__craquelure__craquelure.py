@@ -52,7 +52,7 @@ def run_pixel(ctx, out):
                 if not (rt.binary("<=", x, rt.i(1))):
                     break
                 cell = rt.construct(2, rt.construct(1, x), rt.construct(1, y))
-                pt = rt.binary("+", rt.binary("+", cell, rt.f(0.5), 2, "float"), rt.binary("*", rt.binary("-", hash22__vec2(rt.binary("+", rt.binary("+", _g, cell, 2, "float"), rt.binary("*", seedVal, rt.f(101.7), 1, "float"), 2, "float")), rt.f(0.5), 2, "float"), jitter, 2, "float"), 2, "float")
+                pt = rt.binary("+", rt.binary("+", cell, rt.f(0.5), 2, "float"), rt.copy(rt.binary("*", rt.copy(rt.binary("-", hash22__vec2(rt.binary("+", rt.binary("+", _g, cell, 2, "float"), rt.binary("*", seedVal, rt.f(101.7), 1, "float"), 2, "float")), rt.f(0.5), 2, "float"), 'float'), jitter, 2, "float"), 'float'), 2, "float")
                 d = rt.dot(rt.binary("-", pt, f, 2, "float"), rt.binary("-", pt, f, 2, "float"))
                 if rt.binary("<", d, best):
                     second = best

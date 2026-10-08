@@ -69,7 +69,7 @@ def run_pixel(ctx, out):
                 else:
                     wrappedUV = rt.copy_decl(localUV, "float")
                     if rt.binary("==", _u_wrap, rt.i(1)):
-                        wrappedUV[:] = rt.component_wise("abs", rt.binary("-", rt.component_wise("mod", rt.binary("+", localUV, rt.f(1.0), 2, "float"), rt.f(2.0), width=2), rt.f(1.0), 2, "float"), width=2)
+                        wrappedUV[:] = rt.component_wise("abs", rt.copy(rt.binary("-", rt.component_wise("mod", rt.binary("+", localUV, rt.f(1.0), 2, "float"), rt.f(2.0), width=2), rt.f(1.0), 2, "float"), 'float'), width=2)
                     else:
                         if rt.binary("==", _u_wrap, rt.i(2)):
                             wrappedUV[:] = rt.component_wise("fract", localUV, width=2)

@@ -35,12 +35,12 @@ def run_pixel(ctx, out):
             uv = rt.assign_swizzle(uv, "x", rt.binary("*", rt.swizzle(uv, "x"), aspectRatio, 1, "float"))
         r = rt.length(uv)
         effect = rt.component_wise("pow", r, rt.binary("-", rt.f(1.0), intensity, 1, "float"), width=1)
-        uv[:] = rt.binary("*", rt.normalize(uv), effect, 2, "float")
+        uv[:] = rt.copy(rt.binary("*", rt.normalize(uv), effect, 2, "float"), 'float')
         if _u_aspectLens:
             uv = rt.assign_swizzle(uv, "x", rt.binary("/", rt.swizzle(uv, "x"), aspectRatio, 1, "float"))
         uv[:] = rt.binary("+", uv, rt.f(0.5), 2, "float")
         if rt.binary("==", _u_wrap, rt.i(0)):
-            uv[:] = rt.component_wise("abs", rt.binary("-", rt.component_wise("mod", rt.binary("+", uv, rt.f(1.0), 2, "float"), rt.f(2.0), width=2), rt.f(1.0), 2, "float"), width=2)
+            uv[:] = rt.component_wise("abs", rt.copy(rt.binary("-", rt.component_wise("mod", rt.binary("+", uv, rt.f(1.0), 2, "float"), rt.f(2.0), width=2), rt.f(1.0), 2, "float"), 'float'), width=2)
         else:
             if rt.binary("==", _u_wrap, rt.i(1)):
                 uv[:] = rt.component_wise("mod", uv, rt.f(1.0), width=2)

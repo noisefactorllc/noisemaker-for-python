@@ -314,11 +314,11 @@ def run_pixel(ctx, out):
         p = rt.assign_swizzle(p, "xz", rotate2D__vec2_vec2(rt.swizzle(p, "xz"), data[0]))
         p = rt.assign_swizzle(p, "yz", rotate2D__vec2_vec2(rt.swizzle(p, "yz"), data[1]))
         if data[6]:
-            p[:] = rt.binary("-", p, rt.binary("*", data[4], rt.component_wise("round", rt.binary("/", p, data[4], 3, "float"), width=3), 3, "float"), 3, "float")
+            p[:] = rt.binary("-", p, rt.copy(rt.binary("*", data[4], rt.component_wise("round", rt.binary("/", p, data[4], 3, "float"), width=3), 3, "float"), 'float'), 3, "float")
         p = rt.assign_swizzle(p, "xz", rotate2D__vec2_vec2(rt.swizzle(p, "xz"), data[2]))
         p = rt.assign_swizzle(p, "yz", rotate2D__vec2_vec2(rt.swizzle(p, "yz"), data[3]))
         if data[7]:
-            p[:] = rt.binary("-", p, rt.binary("*", data[4], rt.component_wise("round", rt.binary("/", p, data[4], 3, "float"), width=3), 3, "float"), 3, "float")
+            p[:] = rt.binary("-", p, rt.copy(rt.binary("*", data[4], rt.component_wise("round", rt.binary("/", p, data[4], 3, "float"), width=3), 3, "float"), 'float'), 3, "float")
         return p
     def getDist__vec3_struct1_struct1(p, data, params):
         p = rt.copy(p, "float")

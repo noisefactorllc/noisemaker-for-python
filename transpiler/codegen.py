@@ -697,6 +697,7 @@ class CodeGen:
                 splat_l = self._splat_fused_code(node["l"], scope, width_of(r_probe[1]))
         l_code, l_t = self.expr(node["l"], scope)
         r_code, r_t = self.expr(node["r"], scope)
+        glsl_l_t, glsl_r_t = l_t, r_t  # operand types before any splat fold below
         # GLSL vecN(scalar[, scalar, ...]) splats inside a component-wise binary:
         # the JS oracle (glsl-transpiler) folds the splat into per-component
         # scalar arithmetic with the UNROUNDED scalars (e.g. filter/feedback
@@ -727,7 +728,24 @@ class CodeGen:
             base = "int"
         else:
             base = "float"
-        return (f"rt.binary({q(op)}, {l_code}, {r_code}, {width}, {q(base)})", {"base": base, "width": width})
+        code = f"rt.binary({q(op)}, {l_code}, {r_code}, {width}, {q(base)})"
+        # A vector-valued call returns a Float32Array in the sibling, and a
+        # scalar operation on it compiles to Float32Array#map, which stores
+        # into a new Float32Array: `randomDirection(seed) * 0.3` is
+        # randomDirection(seed).map(_ => _ * 0.3), and `1.0 - abs(x)` is
+        # abs(x).map(_ => 1 - _). Those round to f32 before the next
+        # operation. Vector-vector operations compile to vecN.op([], a, b) on a
+        # plain array and keep float64 until a store, as here; that includes a
+        # vecN(s, s) splat operand, which the transpiler does not fold into the
+        # map, so the decision reads the GLSL operand types.
+        scalar_l, scalar_r = width_of(glsl_l_t) == 1, width_of(glsl_r_t) == 1
+        if base == "float" and width > 1 and op in ("+", "-", "*", "/") and (
+            (scalar_r and _is_float32_vector_result(node["l"], glsl_l_t))
+            or (scalar_l and _is_float32_vector_result(node["r"], glsl_r_t))
+        ):
+            code = f"rt.copy({code}, 'float')"
+            node["float32_result"] = True  # operands are generated first, so parents see this
+        return (code, {"base": base, "width": width})
 
     def _e_assign(self, node, scope):
         op = node["op"]
@@ -913,6 +931,14 @@ class CodeGen:
             None,
         )
         return exact or (same[0] if same else cands[0])
+
+
+def _is_float32_vector_result(node, node_type):
+    """A float vector the sibling holds as a Float32Array: a call result, or
+    the Float32Array#map of one."""
+    if width_of(node_type) <= 1 or base_of(node_type) != "float" or node_type.get("mat"):
+        return False
+    return node["k"] == "call" or bool(node.get("float32_result"))
 
 
 def _type_name(t):

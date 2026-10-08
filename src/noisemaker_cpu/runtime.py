@@ -28,6 +28,16 @@ def f32(x) -> float:
     return float(np.float32(x))
 
 
+def _dot64(a, b) -> float:
+    """The sibling's dot before its final F32: products of f32 operands are
+    exact in float64, summed left to right (`sum += left[i] * right[i]`).
+    np.dot may associate the sum differently and round differently."""
+    total = 0.0
+    for x, y in zip(a.tolist(), b.tolist()):
+        total += x * y
+    return total
+
+
 def _snap32(v):
     """Snap a float vector to f32 at a storage/consumption boundary — JS keeps
     vectors in Float32Array, so every element read/written is f32. `binary`/`unary`
@@ -584,17 +594,20 @@ class Runtime:
 
     # ---- vector geometry (snap args to f32, accumulate float64, round once) ----
     def dot(self, a, b, width=None):
-        return f32(float(np.dot(np.asarray(_snap32(a), dtype=np.float64), np.asarray(_snap32(b), dtype=np.float64))))
+        return f32(_dot64(np.asarray(_snap32(a), dtype=np.float64), np.asarray(_snap32(b), dtype=np.float64)))
 
     def length(self, a, width=None):
         # JS length is F32(sqrt(dot)), and its dot is itself F32-rounded — so the
         # squared magnitude is rounded to f32 before the sqrt. Match that.
         v = np.asarray(_snap32(a), dtype=np.float64)
-        return f32(float(np.sqrt(f32(float(np.dot(v, v))))))
+        return f32(float(np.sqrt(f32(_dot64(v, v)))))
 
     def distance(self, a, b, width=None):
-        d = np.asarray(_snap32(a), dtype=np.float64) - np.asarray(_snap32(b), dtype=np.float64)
-        return f32(float(np.sqrt(np.dot(d, d))))
+        # JS distance is length(subtract(a, b)): the difference is stored f32 per
+        # component, then its dot is F32-rounded before the sqrt.
+        d = (np.asarray(_snap32(a), dtype=np.float64) - np.asarray(_snap32(b), dtype=np.float64)).astype(F32)
+        d = d.astype(np.float64)
+        return f32(float(np.sqrt(f32(_dot64(d, d)))))
 
     def normalize(self, a, width=None):
         v = np.asarray(_snap32(a), dtype=np.float64)
@@ -602,7 +615,8 @@ class Runtime:
         # Dividing by the full-precision float64 magnitude instead diverges ~1 ULP —
         # invisible in most chains but decisive where it feeds a branch (parallax's
         # ray-march break snaps a nearest-sampled height to a different texel).
-        mag = float(F32(np.sqrt(np.dot(v, v))))
+        # Its length() rounds the dot to f32 before the sqrt, as length() does.
+        mag = float(F32(np.sqrt(f32(_dot64(v, v)))))
         if mag == 0.0:
             return np.zeros(v.shape[0], dtype=F32)
         return (v / mag).astype(F32)

@@ -71,7 +71,7 @@ def run_pixel(ctx, out):
         noiseY = perlinNoise__vec2_vec2(rt.binary("+", noiseCoord, rt.f(97.0), 2, "float"), rt.construct(2, rt.f(2.0)))
         uv = rt.assign_swizzle(uv, "x", rt.binary("+", rt.swizzle(uv, "x"), rt.binary("*", rt.binary("*", rt.binary("-", noiseX, rt.f(0.5), 1, "float"), clampedDisplacement, 1, "float"), mask, 1, "float"), 1, "float"))
         uv = rt.assign_swizzle(uv, "y", rt.binary("+", rt.swizzle(uv, "y"), rt.binary("*", rt.binary("*", rt.binary("-", noiseY, rt.f(0.5), 1, "float"), clampedDisplacement, 1, "float"), mask, 1, "float"), 1, "float"))
-        uv[:] = rt.component_wise("abs", rt.binary("-", rt.component_wise("mod", rt.binary("+", uv, rt.f(1.0), 2, "float"), rt.f(2.0), width=2), rt.f(1.0), 2, "float"), width=2)
+        uv[:] = rt.component_wise("abs", rt.copy(rt.binary("-", rt.component_wise("mod", rt.binary("+", uv, rt.f(1.0), 2, "float"), rt.f(2.0), width=2), rt.f(1.0), 2, "float"), 'float'), width=2)
         localUV = rt.binary("/", rt.binary("-", rt.binary("*", uv, fullRes, 2, "float"), _u_tileOffset, 2, "float"), _u_resolution, 2, "float")
         localUV[:] = rt.component_wise("clamp", localUV, rt.f(0.0), rt.f(1.0), width=2)
         dx = rt.construct(2, 0.0)

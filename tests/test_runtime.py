@@ -75,3 +75,26 @@ def test_trunc_scalar_div_follows_the_oracle_probe(monkeypatch):
     assert runtime.trunc_scalar_div(-7.5) == -7.0
     monkeypatch.setattr(runtime, "_ORACLE_SCALAR_INT_DIVISION", False)
     assert runtime.trunc_scalar_div(-7.5) == -7.5
+
+
+def test_normalize_divides_by_the_f32_length():
+    # glsl-runtime normalize divides by length(), F32(sqrt(dot)), and dot is
+    # F32(sum): the squared magnitude rounds to f32 before the sqrt. Expected
+    # values are noisemaker-for-cpu's (a shapes3d getNormal vector); dividing
+    # by the unrounded magnitude is one ulp off in every component.
+    runtime = Runtime()
+    v = runtime.construct(3, -0.0015451312065124512, -0.0015643835067749023, -0.0097536444664001465)
+
+    assert [float(c) for c in runtime.normalize(v)] == [-0.1545376181602478, -0.156463161110878, -0.9755191206932068]
+
+
+def test_distance_rounds_the_difference_and_the_dot_like_the_oracle():
+    # glsl-runtime distance is length(subtract(a, b)): the difference is stored
+    # f32 per component and the dot rounds to f32 before the sqrt. Expected
+    # value is noisemaker-for-cpu's; the float64 path gives 1.523514747619629.
+    runtime = Runtime()
+    a = np.array([1.3458458185195923, -0.09458716213703156], dtype=np.float32)
+    b = np.array([0.556272566318512, -1.3975342512130737], dtype=np.float32)
+
+    assert float(runtime.distance(a, b)) == 1.5235146284103394
+

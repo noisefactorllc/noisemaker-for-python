@@ -207,10 +207,10 @@ def run_pixel(ctx, out):
         return rt.component_wise("mix", a, b, rt.component_wise("smoothstep", rt.f(0.0), rt.f(1.0), amount, width=1), width=1)
     def mod289_3__vec3(x):
         x = rt.copy(x, "float")
-        return rt.binary("-", x, rt.binary("*", rt.component_wise("floor", rt.binary("*", x, rt.binary("/", rt.f(1.0), rt.f(289.0), 1, "float"), 3, "float"), width=3), rt.f(289.0), 3, "float"), 3, "float")
+        return rt.binary("-", x, rt.copy(rt.binary("*", rt.component_wise("floor", rt.binary("*", x, rt.binary("/", rt.f(1.0), rt.f(289.0), 1, "float"), 3, "float"), width=3), rt.f(289.0), 3, "float"), 'float'), 3, "float")
     def mod289_2__vec2(x):
         x = rt.copy(x, "float")
-        return rt.binary("-", x, rt.binary("*", rt.component_wise("floor", rt.binary("*", x, rt.binary("/", rt.f(1.0), rt.f(289.0), 1, "float"), 2, "float"), width=2), rt.f(289.0), 2, "float"), 2, "float")
+        return rt.binary("-", x, rt.copy(rt.binary("*", rt.component_wise("floor", rt.binary("*", x, rt.binary("/", rt.f(1.0), rt.f(289.0), 1, "float"), 2, "float"), width=2), rt.f(289.0), 2, "float"), 'float'), 2, "float")
     def permute3__vec3(x):
         x = rt.copy(x, "float")
         return mod289_3__vec3(rt.binary("*", rt.binary("+", rt.binary("*", x, rt.f(34.0), 3, "float"), rt.f(1.0), 3, "float"), x, 3, "float"))
@@ -223,12 +223,12 @@ def run_pixel(ctx, out):
         x12 = rt.binary("+", rt.swizzle(x0, "xyxy"), rt.swizzle(C, "xxzz"), 4, "float")
         x12 = rt.assign_swizzle(x12, "xy", rt.binary("-", rt.swizzle(x12, "xy"), i1, 2, "float"))
         i[:] = mod289_2__vec2(i)
-        p = permute3__vec3(rt.binary("+", rt.binary("+", permute3__vec3(rt.binary("+", rt.swizzle(i, "y"), rt.construct(3, rt.f(0.0), rt.swizzle(i1, "y"), rt.f(1.0)), 3, "float")), rt.swizzle(i, "x"), 3, "float"), rt.array([rt.f(0.0), rt.swizzle(i1, "x"), rt.f(1.0)]), 3, "float"))
+        p = permute3__vec3(rt.binary("+", rt.copy(rt.binary("+", permute3__vec3(rt.binary("+", rt.swizzle(i, "y"), rt.construct(3, rt.f(0.0), rt.swizzle(i1, "y"), rt.f(1.0)), 3, "float")), rt.swizzle(i, "x"), 3, "float"), 'float'), rt.array([rt.f(0.0), rt.swizzle(i1, "x"), rt.f(1.0)]), 3, "float"))
         m = rt.component_wise("max", rt.binary("-", rt.f(0.5), rt.construct(3, rt.dot(x0, x0), rt.dot(rt.swizzle(x12, "xy"), rt.swizzle(x12, "xy")), rt.dot(rt.swizzle(x12, "zw"), rt.swizzle(x12, "zw"))), 3, "float"), rt.f(0.0), width=3)
         m[:] = rt.binary("*", m, m, 3, "float")
         m[:] = rt.binary("*", m, m, 3, "float")
-        x = rt.binary("-", rt.binary("*", rt.f(2.0), rt.component_wise("fract", rt.binary("*", p, rt.swizzle(C, "www"), 3, "float"), width=3), 3, "float"), rt.f(1.0), 3, "float")
-        h = rt.binary("-", rt.component_wise("abs", x, width=3), rt.f(0.5), 3, "float")
+        x = rt.copy(rt.binary("-", rt.copy(rt.binary("*", rt.f(2.0), rt.component_wise("fract", rt.binary("*", p, rt.swizzle(C, "www"), 3, "float"), width=3), 3, "float"), 'float'), rt.f(1.0), 3, "float"), 'float')
+        h = rt.copy(rt.binary("-", rt.component_wise("abs", x, width=3), rt.f(0.5), 3, "float"), 'float')
         ox = rt.component_wise("floor", rt.binary("+", x, rt.f(0.5), 3, "float"), width=3)
         a0 = rt.binary("-", x, ox, 3, "float")
         m[:] = rt.binary("*", m, rt.binary("-", rt.f(1.79284291400159), rt.binary("*", rt.f(0.85373472095314), rt.binary("+", rt.binary("*", a0, a0, 3, "float"), rt.binary("*", h, h, 3, "float"), 3, "float"), 3, "float"), 3, "float"), 3, "float")
@@ -562,7 +562,7 @@ def run_pixel(ctx, out):
                 return derivatives__vec3_vec2_bool(color, uv, True)
             else:
                 if rt.binary("==", _u_KERNEL, rt.i(120)):
-                    return rt.component_wise("clamp", rt.binary("*", derivatives__vec3_vec2_bool(color, uv, False), rt.f(2.5), 3, "float"), rt.f(0.0), rt.f(1.0), width=3)
+                    return rt.component_wise("clamp", rt.copy(rt.binary("*", derivatives__vec3_vec2_bool(color, uv, False), rt.f(2.5), 3, "float"), 'float'), rt.f(0.0), rt.f(1.0), width=3)
                 else:
                     if rt.binary("==", _u_KERNEL, rt.i(3)):
                         return rt.binary("*", color, convolve__vec2_float_bool(uv, g.edge2, True), 3, "float")
@@ -600,7 +600,7 @@ def run_pixel(ctx, out):
                 lev = rt.f(2.0)
         color[:] = rt.component_wise("clamp", color, rt.f(0.0), rt.f(0.99), width=3)
         color[:] = rt.binary("*", color, lev, 3, "float")
-        color[:] = rt.binary("+", rt.component_wise("floor", color, width=3), rt.f(0.5), 3, "float")
+        color[:] = rt.copy(rt.binary("+", rt.component_wise("floor", color, width=3), rt.f(0.5), 3, "float"), 'float')
         color[:] = rt.binary("/", color, lev, 3, "float")
         return color
     def pixellate__vec2_float(uv, size):

@@ -77,7 +77,7 @@ def run_pixel(ctx, out):
     def wrapCoords__vec2(st):
         st = rt.copy(st, "float")
         if rt.binary("==", _u_wrap, rt.i(0)):
-            st[:] = rt.component_wise("abs", rt.binary("-", rt.component_wise("mod", st, rt.f(2.0), width=2), rt.f(1.0), 2, "float"), width=2)
+            st[:] = rt.component_wise("abs", rt.copy(rt.binary("-", rt.component_wise("mod", st, rt.f(2.0), width=2), rt.f(1.0), 2, "float"), 'float'), width=2)
             st[:] = rt.binary("-", rt.f(1.0), st, 2, "float")
         else:
             if rt.binary("==", _u_wrap, rt.i(1)):

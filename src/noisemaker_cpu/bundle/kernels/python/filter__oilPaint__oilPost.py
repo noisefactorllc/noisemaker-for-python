@@ -106,7 +106,7 @@ def run_pixel(ctx, out):
             else:
                 if rt.binary("==", _u_MODE, rt.i(2)):
                     levels = rt.component_wise("floor", rt.binary("+", rt.component_wise("mix", rt.f(8.0), rt.f(3.0), rt.binary("/", _u_detail, rt.f(100.0), 1, "float"), width=1), rt.f(0.5), 1, "float"), width=1)
-                    poster = rt.binary("/", rt.component_wise("floor", rt.binary("*", c, levels, 3, "float"), width=3), levels, 3, "float")
+                    poster = rt.copy(rt.binary("/", rt.component_wise("floor", rt.binary("*", c, levels, 3, "float"), width=3), levels, 3, "float"), 'float')
                     gradMag = rt.length(lumGradientFlat__vec2(uv))
                     edgeDarken = rt.binary("*", rt.component_wise("clamp", rt.binary("*", gradMag, rt.f(1.5), 1, "float"), rt.f(0.0), rt.f(1.0), width=1), rt.f(0.15), 1, "float")
                     return rt.binary("*", poster, rt.binary("-", rt.f(1.0), edgeDarken, 1, "float"), 3, "float")

@@ -26,8 +26,8 @@ def run_pixel(ctx, out):
     def hsv2rgb__vec3(c):
         c = rt.copy(c, "float")
         K = rt.construct(4, rt.f(1.0), rt.binary("/", rt.f(2.0), rt.f(3.0), 1, "float"), rt.binary("/", rt.f(1.0), rt.f(3.0), 1, "float"), rt.f(3.0))
-        p = rt.component_wise("abs", rt.binary("-", rt.binary("*", rt.component_wise("fract", rt.binary("+", rt.swizzle(c, "xxx"), rt.swizzle(K, "xyz"), 3, "float"), width=3), rt.f(6.0), 3, "float"), rt.swizzle(K, "www"), 3, "float"), width=3)
-        return rt.binary("*", rt.swizzle(c, "z"), rt.component_wise("mix", rt.swizzle(K, "xxx"), rt.component_wise("clamp", rt.binary("-", p, rt.swizzle(K, "xxx"), 3, "float"), rt.f(0.0), rt.f(1.0), width=3), rt.swizzle(c, "y"), width=3), 3, "float")
+        p = rt.component_wise("abs", rt.binary("-", rt.copy(rt.binary("*", rt.component_wise("fract", rt.binary("+", rt.swizzle(c, "xxx"), rt.swizzle(K, "xyz"), 3, "float"), width=3), rt.f(6.0), 3, "float"), 'float'), rt.swizzle(K, "www"), 3, "float"), width=3)
+        return rt.copy(rt.binary("*", rt.swizzle(c, "z"), rt.component_wise("mix", rt.swizzle(K, "xxx"), rt.component_wise("clamp", rt.binary("-", p, rt.swizzle(K, "xxx"), 3, "float"), rt.f(0.0), rt.f(1.0), width=3), rt.swizzle(c, "y"), width=3), 3, "float"), 'float')
     def main__void():
         globalCoord = rt.binary("+", rt.swizzle(ctx.frag_coord, "xy"), _u_tileOffset, 2, "float")
         st = rt.binary("/", globalCoord, _u_fullResolution, 2, "float")

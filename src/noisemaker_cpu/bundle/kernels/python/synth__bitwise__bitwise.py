@@ -24,8 +24,8 @@ def run_pixel(ctx, out):
     g.PI = rt.f(3.14159265358979)
     def hsv2rgb__vec3(c):
         c = rt.copy(c, "float")
-        p = rt.component_wise("abs", rt.binary("-", rt.binary("*", rt.component_wise("fract", rt.binary("+", rt.swizzle(c, "xxx"), rt.array([rt.f(1.0), rt.binary("/", rt.f(2.0), rt.f(3.0), 1, "float"), rt.binary("/", rt.f(1.0), rt.f(3.0), 1, "float")]), 3, "float"), width=3), rt.f(6.0), 3, "float"), rt.f(3.0), 3, "float"), width=3)
-        return rt.binary("*", rt.swizzle(c, "z"), rt.component_wise("mix", rt.construct(3, rt.f(1.0)), rt.component_wise("clamp", rt.binary("-", p, rt.f(1.0), 3, "float"), rt.f(0.0), rt.f(1.0), width=3), rt.swizzle(c, "y"), width=3), 3, "float")
+        p = rt.component_wise("abs", rt.copy(rt.binary("-", rt.copy(rt.binary("*", rt.component_wise("fract", rt.binary("+", rt.swizzle(c, "xxx"), rt.array([rt.f(1.0), rt.binary("/", rt.f(2.0), rt.f(3.0), 1, "float"), rt.binary("/", rt.f(1.0), rt.f(3.0), 1, "float")]), 3, "float"), width=3), rt.f(6.0), 3, "float"), 'float'), rt.f(3.0), 3, "float"), 'float'), width=3)
+        return rt.copy(rt.binary("*", rt.swizzle(c, "z"), rt.component_wise("mix", rt.construct(3, rt.f(1.0)), rt.component_wise("clamp", rt.binary("-", p, rt.f(1.0), 3, "float"), rt.f(0.0), rt.f(1.0), width=3), rt.swizzle(c, "y"), width=3), 3, "float"), 'float')
     def bitOp__int_int_int_int(a, b, op, m):
         r = rt.i(0)
         if rt.binary("==", op, rt.i(0)):

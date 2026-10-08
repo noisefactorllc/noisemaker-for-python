@@ -93,7 +93,7 @@ def run_pixel(ctx, out):
                 break
             if rt.binary(">=", i, count):
                 break
-            offset = rt.binary("*", getSampleOffset__int_int(i, count), _u_radius, 2, "float")
+            offset = rt.copy(rt.binary("*", getSampleOffset__int_int(i, count), _u_radius, 2, "float"), 'float')
             sum[:] = rt.binary("+", sum, sampleBilinear__vec2_ivec2(rt.binary("+", uv, rt.binary("*", offset, texelSize, 2, "float"), 2, "float"), texSize), 4, "float")
         return rt.binary("/", sum, rt.construct(1, count), 4, "float")
     def searchEdge__ivec2_ivec2_ivec2_int(coord, dir, maxC, component):
@@ -183,7 +183,7 @@ def run_pixel(ctx, out):
                     continue
                 d = rt.construct(1, rt.binary("+", rt.binary("*", dx, dx, 1, "int"), rt.binary("*", dy, dy, 1, "int"), 1, "int"))
                 w = rt.component_wise("exp", rt.binary("/", rt.unary("-", d), sigma2, 1, "float"), width=1)
-                sum[:] = rt.binary("+", sum, rt.binary("*", rt.texel_fetch(_u_inputTex, rt.component_wise("clamp", rt.binary("+", coord, rt.construct(2, dx, dy, base="int"), 2, "int"), rt.construct(2, rt.i(0), base="int"), maxC, width=2), rt.i(0)), w, 4, "float"), 4, "float")
+                sum[:] = rt.binary("+", sum, rt.copy(rt.binary("*", rt.texel_fetch(_u_inputTex, rt.component_wise("clamp", rt.binary("+", coord, rt.construct(2, dx, dy, base="int"), 2, "int"), rt.construct(2, rt.i(0), base="int"), maxC, width=2), rt.i(0)), w, 4, "float"), 'float'), 4, "float")
                 totalWeight = rt.binary("+", totalWeight, w, 1, "float")
         return rt.binary("/", sum, totalWeight, 4, "float")
     def main__void():

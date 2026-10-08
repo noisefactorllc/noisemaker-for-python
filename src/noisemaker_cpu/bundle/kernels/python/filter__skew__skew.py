@@ -38,7 +38,7 @@ def run_pixel(ctx, out):
             localUV[:] = rt.component_wise("clamp", localUV, rt.f(0.0), rt.f(1.0), width=2)
         else:
             if rt.binary("==", wrapMode, rt.i(1)):
-                localUV[:] = rt.component_wise("abs", rt.binary("-", rt.component_wise("mod", rt.binary("+", localUV, rt.f(1.0), 2, "float"), rt.f(2.0), width=2), rt.f(1.0), 2, "float"), width=2)
+                localUV[:] = rt.component_wise("abs", rt.copy(rt.binary("-", rt.component_wise("mod", rt.binary("+", localUV, rt.f(1.0), 2, "float"), rt.f(2.0), width=2), rt.f(1.0), 2, "float"), 'float'), width=2)
             else:
                 localUV[:] = rt.component_wise("fract", localUV, width=2)
         g.fragColor[:] = rt.texture(_u_inputTex, localUV)

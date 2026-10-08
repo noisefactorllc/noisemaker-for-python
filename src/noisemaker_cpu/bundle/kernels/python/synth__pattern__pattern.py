@@ -48,7 +48,7 @@ def run_pixel(ctx, out):
         return rt.binary("-", rt.f(1.0), rt.component_wise("min", lineX, lineY, width=1), 1, "float")
     def dots__vec2_float(p, t):
         p = rt.copy(p, "float")
-        f = rt.binary("-", rt.component_wise("fract", p, width=2), rt.f(0.5), 2, "float")
+        f = rt.copy(rt.binary("-", rt.component_wise("fract", p, width=2), rt.f(0.5), 2, "float"), 'float')
         d = rt.length(f)
         radius = rt.binary("*", t, rt.f(0.5), 1, "float")
         return rt.binary("-", rt.f(1.0), rt.component_wise("smoothstep", rt.binary("-", radius, _u_smoothness, 1, "float"), rt.binary("+", radius, _u_smoothness, 1, "float"), d, width=1), 1, "float")
@@ -108,7 +108,7 @@ def run_pixel(ctx, out):
         return rt.binary("*", rt.component_wise("sqrt", rt.component_wise("min", rt.dot(rt.binary("-", p, rt.array([rt.f(0.0), rt.f(1.0)]), 2, "float"), rt.binary("-", p, rt.array([rt.f(0.0), rt.f(1.0)]), 2, "float")), rt.dot(rt.binary("-", p, rt.binary("*", rt.f(0.5), rt.component_wise("max", rt.binary("+", rt.swizzle(p, "x"), rt.swizzle(p, "y"), 1, "float"), rt.f(0.0), width=1), 1, "float"), 2, "float"), rt.binary("-", p, rt.binary("*", rt.f(0.5), rt.component_wise("max", rt.binary("+", rt.swizzle(p, "x"), rt.swizzle(p, "y"), 1, "float"), rt.f(0.0), width=1), 1, "float"), 2, "float")), width=1), width=1), rt.component_wise("sign", rt.binary("-", rt.swizzle(p, "x"), rt.swizzle(p, "y"), 1, "float"), width=1), 1, "float")
     def hearts__vec2_float(p, t):
         p = rt.copy(p, "float")
-        cell = rt.binary("-", rt.component_wise("fract", p, width=2), rt.f(0.5), 2, "float")
+        cell = rt.copy(rt.binary("-", rt.component_wise("fract", p, width=2), rt.f(0.5), 2, "float"), 'float')
         cell = rt.assign_swizzle(cell, "y", rt.binary("+", rt.swizzle(cell, "y"), rt.f(0.25), 1, "float"))
         d = heartSDF__vec2(rt.binary("*", cell, rt.f(2.4), 2, "float"))
         radius = rt.binary("-", rt.f(0.15), rt.binary("*", t, rt.f(0.15), 1, "float"), 1, "float")

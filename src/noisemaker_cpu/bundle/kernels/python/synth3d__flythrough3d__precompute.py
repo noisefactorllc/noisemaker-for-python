@@ -123,7 +123,7 @@ def run_pixel(ctx, out):
         return result
     def boxFold__vec3_float(z, foldLimit):
         z = rt.copy(z, "float")
-        return rt.binary("-", rt.binary("*", rt.component_wise("clamp", z, rt.unary("-", foldLimit), foldLimit, width=3), rt.f(2.0), 3, "float"), z, 3, "float")
+        return rt.binary("-", rt.copy(rt.binary("*", rt.component_wise("clamp", z, rt.unary("-", foldLimit), foldLimit, width=3), rt.f(2.0), 3, "float"), 'float'), z, 3, "float")
     def mandelbox__vec3_float_int_float(pos, scale, maxIter, bail):
         pos = rt.copy(pos, "float")
         result = [rt.f(0.0), rt.f(0.0), rt.f(0.0)]

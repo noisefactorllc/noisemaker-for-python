@@ -140,7 +140,7 @@ def run_pixel(ctx, out):
         uv = rt.copy(uv, "float")
         base_freq = rt.copy(base_freq, "float")
         st = rt.binary("*", uv, base_freq, 2, "float")
-        cell = rt.binary("-", rt.component_wise("fract", st, width=2), rt.f(0.5), 2, "float")
+        cell = rt.copy(rt.binary("-", rt.component_wise("fract", st, width=2), rt.f(0.5), 2, "float"), 'float')
         dot = rt.binary("-", rt.f(1.0), clamp01__float(rt.binary("*", rt.length(cell), rt.f(3.0), 1, "float")), 1, "float")
         return rt.binary("*", dot, dot, 1, "float")
     def height_crosshatch__vec2_vec2(uv, base_freq):

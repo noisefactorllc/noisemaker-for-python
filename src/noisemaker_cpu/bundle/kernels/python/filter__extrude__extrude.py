@@ -177,7 +177,7 @@ def run_pixel(ctx, out):
         outColor = rt.construct(4, 0.0)
         cellC = rt.construct(2, 0.0)
         if (not (found)):
-            cellC = rt.binary("+", imgCenter, rt.binary("*", rt.binary("+", rt.component_wise("floor", rt.binary("/", rt.binary("-", P, imgCenter, 2, "float"), _u_size, 2, "float"), width=2), rt.f(0.5), 2, "float"), _u_size, 2, "float"), 2, "float")
+            cellC = rt.binary("+", imgCenter, rt.copy(rt.binary("*", rt.copy(rt.binary("+", rt.component_wise("floor", rt.binary("/", rt.binary("-", P, imgCenter, 2, "float"), _u_size, 2, "float"), width=2), rt.f(0.5), 2, "float"), 'float'), _u_size, 2, "float"), 'float'), 2, "float")
             outColor[:] = cellAvgColor3x3__vec2(cellC)
         else:
             apex = rt.construct(2, 0.0)

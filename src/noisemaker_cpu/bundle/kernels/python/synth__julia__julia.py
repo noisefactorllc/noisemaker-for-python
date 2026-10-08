@@ -156,7 +156,7 @@ def run_pixel(ctx, out):
             if rt.binary(">=", n, maxIter):
                 break
             zF = rt.construct(2, rt.swizzle(zRe, "x"), rt.swizzle(zIm, "x"))
-            dz[:] = rt.binary("*", rt.f(2.0), cmul__vec2_vec2(zF, dz), 2, "float")
+            dz[:] = rt.copy(rt.binary("*", rt.f(2.0), cmul__vec2_vec2(zF, dz), 2, "float"), 'float')
             zRe2 = df64_mul__vec2_vec2(zRe, zRe)
             zIm2 = df64_mul__vec2_vec2(zIm, zIm)
             zReIm = df64_mul__vec2_vec2(zRe, zIm)

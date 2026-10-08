@@ -197,7 +197,7 @@ def run_pixel(ctx, out):
                 return rt.component_wise("step", rt.f(0.5), color, width=3)
         gamma = rt.f(0.65)
         color[:] = rt.component_wise("pow", color, rt.construct(3, gamma), width=3)
-        color[:] = rt.binary("/", rt.component_wise("floor", rt.binary("*", color, lev, 3, "float"), width=3), lev, 3, "float")
+        color[:] = rt.copy(rt.binary("/", rt.component_wise("floor", rt.binary("*", color, lev, 3, "float"), width=3), lev, 3, "float"), 'float')
         color[:] = rt.component_wise("pow", color, rt.construct(3, rt.binary("/", rt.f(1.0), gamma, 1, "float")), width=3)
         return color
     def pixellate__vec2_float(uv, size):
@@ -373,7 +373,7 @@ def run_pixel(ctx, out):
                 return derivatives__vec3_vec2_bool(color, uv, True)
             else:
                 if rt.binary("==", _u_EFFECT, rt.i(120)):
-                    return rt.component_wise("clamp", rt.binary("*", derivatives__vec3_vec2_bool(color, uv, False), rt.f(2.5), 3, "float"), rt.f(0.0), rt.f(1.0), width=3)
+                    return rt.component_wise("clamp", rt.copy(rt.binary("*", derivatives__vec3_vec2_bool(color, uv, False), rt.f(2.5), 3, "float"), 'float'), rt.f(0.0), rt.f(1.0), width=3)
                 else:
                     if rt.binary("==", _u_EFFECT, rt.i(3)):
                         return rt.binary("*", color, convolve__vec2_float_bool(uv, g.edge2, True), 3, "float")

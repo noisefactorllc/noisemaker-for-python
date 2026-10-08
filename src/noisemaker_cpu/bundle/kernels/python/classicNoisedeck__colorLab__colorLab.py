@@ -61,7 +61,7 @@ def run_pixel(ctx, out):
                 lev = rt.f(2.0)
         gamma = rt.f(0.65)
         color[:] = rt.component_wise("pow", color, rt.construct(3, gamma), width=3)
-        color[:] = rt.binary("/", rt.component_wise("floor", rt.binary("*", color, lev, 3, "float"), width=3), lev, 3, "float")
+        color[:] = rt.copy(rt.binary("/", rt.component_wise("floor", rt.binary("*", color, lev, 3, "float"), width=3), lev, 3, "float"), 'float')
         color[:] = rt.component_wise("pow", color, rt.construct(3, rt.binary("/", rt.f(1.0), gamma, 1, "float")), width=3)
         return color
     def brightnessContrast__vec3(color):

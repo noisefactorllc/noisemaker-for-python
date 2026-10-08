@@ -25,7 +25,7 @@ def run_pixel(ctx, out):
         if rt.binary("==", m, rt.i(0)):
             return rt.component_wise("min", rt.binary("+", color1, color2, 4, "float"), rt.construct(4, rt.f(1.0)), width=4)
         if rt.binary("==", m, rt.i(1)):
-            return rt.binary("-", rt.f(1.0), rt.component_wise("min", rt.binary("/", rt.binary("-", rt.f(1.0), color1, 4, "float"), rt.component_wise("max", color2, rt.construct(4, rt.f(0.001)), width=4), 4, "float"), rt.construct(4, rt.f(1.0)), width=4), 4, "float")
+            return rt.copy(rt.binary("-", rt.f(1.0), rt.component_wise("min", rt.binary("/", rt.binary("-", rt.f(1.0), color1, 4, "float"), rt.component_wise("max", color2, rt.construct(4, rt.f(0.001)), width=4), 4, "float"), rt.construct(4, rt.f(1.0)), width=4), 4, "float"), 'float')
         if rt.binary("==", m, rt.i(2)):
             return rt.component_wise("min", color1, color2, width=4)
         if rt.binary("==", m, rt.i(3)):

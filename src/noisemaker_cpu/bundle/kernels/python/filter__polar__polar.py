@@ -21,7 +21,7 @@ def run_pixel(ctx, out):
         return rt.binary("*", m, rt.binary("-", rt.binary("-", rt.f(0.75), rt.component_wise("abs", rt.binary("-", rt.component_wise("fract", v, width=1), rt.f(0.5), 1, "float"), width=1), 1, "float"), rt.f(0.25), 1, "float"), 1, "float")
     def smod2__vec2_float(v, m):
         v = rt.copy(v, "float")
-        return rt.binary("*", m, rt.binary("-", rt.binary("-", rt.f(0.75), rt.component_wise("abs", rt.binary("-", rt.component_wise("fract", v, width=2), rt.f(0.5), 2, "float"), width=2), 2, "float"), rt.f(0.25), 2, "float"), 2, "float")
+        return rt.copy(rt.binary("*", m, rt.copy(rt.binary("-", rt.copy(rt.binary("-", rt.f(0.75), rt.component_wise("abs", rt.copy(rt.binary("-", rt.component_wise("fract", v, width=2), rt.f(0.5), 2, "float"), 'float'), width=2), 2, "float"), 'float'), rt.f(0.25), 2, "float"), 'float'), 2, "float"), 'float')
     def polarCoords__vec2_float(uv, aspect):
         uv = rt.copy(uv, "float")
         uv[:] = rt.binary("-", uv, rt.f(0.5), 2, "float")

@@ -36,7 +36,7 @@ def run_pixel(ctx, out):
             x = rt.construct(1, i)
             weight = rt.component_wise("exp", rt.binary("/", rt.unary("-", rt.binary("*", x, x, 1, "float")), rt.binary("*", rt.f(2.0), sigma2, 1, "float"), 1, "float"), width=1)
             offset = rt.construct(2, rt.binary("*", rt.construct(1, i), rt.swizzle(texelSize, "x"), 1, "float"), rt.f(0.0))
-            sum[:] = rt.binary("+", sum, rt.binary("*", rt.texture(_u_inputTex, rt.binary("+", uv, offset, 2, "float")), weight, 4, "float"), 4, "float")
+            sum[:] = rt.binary("+", sum, rt.copy(rt.binary("*", rt.texture(_u_inputTex, rt.binary("+", uv, offset, 2, "float")), weight, 4, "float"), 'float'), 4, "float")
             weightSum = rt.binary("+", weightSum, weight, 1, "float")
         g.fragColor[:] = rt.binary("/", sum, weightSum, 4, "float")
     main__void()

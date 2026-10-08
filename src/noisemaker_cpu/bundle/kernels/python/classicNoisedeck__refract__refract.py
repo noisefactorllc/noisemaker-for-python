@@ -180,7 +180,7 @@ def run_pixel(ctx, out):
                 uv = rt.assign_swizzle(uv, "y", rt.binary("+", rt.swizzle(uv, "y"), rt.binary("*", desaturate__vec3(derivX__vec3_vec2_bool(rt.swizzle(inputColor, "rgb"), uv, False)), displacement, 1, "float"), 1, "float"))
                 uv = rt.assign_swizzle(uv, "x", rt.binary("+", rt.swizzle(uv, "x"), rt.binary("*", desaturate__vec3(derivY__vec3_vec2_bool(rt.swizzle(inputColor, "rgb"), uv, False)), displacement, 1, "float"), 1, "float"))
         if rt.binary("==", _u_wrap, rt.i(0)):
-            uv[:] = rt.component_wise("abs", rt.binary("-", rt.component_wise("mod", rt.binary("+", uv, rt.f(1.0), 2, "float"), rt.f(2.0), width=2), rt.f(1.0), 2, "float"), width=2)
+            uv[:] = rt.component_wise("abs", rt.copy(rt.binary("-", rt.component_wise("mod", rt.binary("+", uv, rt.f(1.0), 2, "float"), rt.f(2.0), width=2), rt.f(1.0), 2, "float"), 'float'), width=2)
         else:
             if rt.binary("==", _u_wrap, rt.i(1)):
                 uv[:] = rt.component_wise("mod", uv, rt.f(1.0), width=2)

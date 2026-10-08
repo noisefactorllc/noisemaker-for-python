@@ -70,7 +70,7 @@ def run_pixel(ctx, out):
     def cellSampleFromRuv__vec2_float_vec2(ruv, angleDeg, texel):
         ruv = rt.copy(ruv, "float")
         texel = rt.copy(texel, "float")
-        cellId = rt.binary("+", rt.component_wise("floor", ruv, width=2), rt.f(0.5), 2, "float")
+        cellId = rt.copy(rt.binary("+", rt.component_wise("floor", ruv, width=2), rt.f(0.5), 2, "float"), 'float')
         cellCenterGc = rotate2D__vec2_float(rt.binary("*", cellId, _u_frequency, 2, "float"), rt.unary("-", angleDeg))
         cellUV = rt.component_wise("clamp", rt.binary("/", rt.binary("-", cellCenterGc, _u_tileOffset, 2, "float"), _u_resolution, 2, "float"), rt.f(0.0), rt.f(1.0), width=2)
         return boxBlur3__vec2_vec2(cellUV, texel)
@@ -112,18 +112,18 @@ def run_pixel(ctx, out):
         d = rt.f(0.0)
         dotOffset = rt.construct(2, 0.0)
         if rt.binary("==", _u_MODE, rt.i(0)):
-            ruvC = rt.binary("/", rotate2D__vec2_float(globalCoord, _u_cyanAngle), _u_frequency, 2, "float")
-            ruvM = rt.binary("/", rotate2D__vec2_float(globalCoord, _u_magentaAngle), _u_frequency, 2, "float")
-            ruvY = rt.binary("/", rotate2D__vec2_float(globalCoord, _u_yellowAngle), _u_frequency, 2, "float")
-            ruvK = rt.binary("/", rotate2D__vec2_float(globalCoord, _u_blackAngle), _u_frequency, 2, "float")
+            ruvC = rt.copy(rt.binary("/", rotate2D__vec2_float(globalCoord, _u_cyanAngle), _u_frequency, 2, "float"), 'float')
+            ruvM = rt.copy(rt.binary("/", rotate2D__vec2_float(globalCoord, _u_magentaAngle), _u_frequency, 2, "float"), 'float')
+            ruvY = rt.copy(rt.binary("/", rotate2D__vec2_float(globalCoord, _u_yellowAngle), _u_frequency, 2, "float"), 'float')
+            ruvK = rt.copy(rt.binary("/", rotate2D__vec2_float(globalCoord, _u_blackAngle), _u_frequency, 2, "float"), 'float')
             valC = rt.swizzle(rgbToCmyk__vec3(cellSampleFromRuv__vec2_float_vec2(ruvC, _u_cyanAngle, texel)), "r")
             valM = rt.swizzle(rgbToCmyk__vec3(cellSampleFromRuv__vec2_float_vec2(ruvM, _u_magentaAngle, texel)), "g")
             valY = rt.swizzle(rgbToCmyk__vec3(cellSampleFromRuv__vec2_float_vec2(ruvY, _u_yellowAngle, texel)), "b")
             valK = rt.swizzle(rgbToCmyk__vec3(cellSampleFromRuv__vec2_float_vec2(ruvK, _u_blackAngle, texel)), "a")
-            inkC = roundDotCoverage__vec2_float_float(rt.binary("-", rt.component_wise("fract", ruvC, width=2), rt.f(0.5), 2, "float"), valC, _u_sharpness)
-            inkM = roundDotCoverage__vec2_float_float(rt.binary("-", rt.component_wise("fract", ruvM, width=2), rt.f(0.5), 2, "float"), valM, _u_sharpness)
-            inkY = roundDotCoverage__vec2_float_float(rt.binary("-", rt.component_wise("fract", ruvY, width=2), rt.f(0.5), 2, "float"), valY, _u_sharpness)
-            inkK = roundDotCoverage__vec2_float_float(rt.binary("-", rt.component_wise("fract", ruvK, width=2), rt.f(0.5), 2, "float"), valK, _u_sharpness)
+            inkC = roundDotCoverage__vec2_float_float(rt.copy(rt.binary("-", rt.component_wise("fract", ruvC, width=2), rt.f(0.5), 2, "float"), 'float'), valC, _u_sharpness)
+            inkM = roundDotCoverage__vec2_float_float(rt.copy(rt.binary("-", rt.component_wise("fract", ruvM, width=2), rt.f(0.5), 2, "float"), 'float'), valM, _u_sharpness)
+            inkY = roundDotCoverage__vec2_float_float(rt.copy(rt.binary("-", rt.component_wise("fract", ruvY, width=2), rt.f(0.5), 2, "float"), 'float'), valY, _u_sharpness)
+            inkK = roundDotCoverage__vec2_float_float(rt.copy(rt.binary("-", rt.component_wise("fract", ruvK, width=2), rt.f(0.5), 2, "float"), 'float'), valK, _u_sharpness)
             screened = rt.binary("*", rt.binary("-", rt.construct(3, rt.f(1.0)), rt.array([inkC, inkM, inkY]), 3, "float"), rt.binary("-", rt.f(1.0), inkK, 1, "float"), 3, "float")
             g.fragColor[:] = rt.construct(4, screened, alpha)
             return
@@ -141,9 +141,9 @@ def run_pixel(ctx, out):
                 rd = rt.binary("/", rt.length(rt.binary("-", globalCoord, center, 2, "float")), _u_frequency, 1, "float")
                 d = rt.component_wise("abs", rt.binary("-", rt.component_wise("fract", rd, width=1), rt.f(0.5), 1, "float"), width=1)
             else:
-                ruv = rt.binary("/", rotate2D__vec2_float(globalCoord, _u_monoAngle), _u_frequency, 2, "float")
+                ruv = rt.copy(rt.binary("/", rotate2D__vec2_float(globalCoord, _u_monoAngle), _u_frequency, 2, "float"), 'float')
                 value = rt.binary("-", rt.f(1.0), lum__vec3(cellSampleFromRuv__vec2_float_vec2(ruv, _u_monoAngle, texel)), 1, "float")
-                off = rt.binary("-", rt.component_wise("fract", ruv, width=2), rt.f(0.5), 2, "float")
+                off = rt.copy(rt.binary("-", rt.component_wise("fract", ruv, width=2), rt.f(0.5), 2, "float"), 'float')
                 dotOffset[:] = off
                 if rt.binary("==", _u_PATTERN, rt.i(1)):
                     d = rt.component_wise("abs", rt.swizzle(off, "y"), width=1)

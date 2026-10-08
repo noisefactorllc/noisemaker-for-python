@@ -27,7 +27,7 @@ def run_pixel(ctx, out):
         globalUV = rt.assign_swizzle(globalUV, "x", rt.binary("/", rt.swizzle(globalUV, "x"), _u_aspect, 1, "float"))
         localUV = rt.binary("/", rt.binary("-", rt.binary("*", globalUV, _u_fullResolution, 2, "float"), _u_tileOffset, 2, "float"), rt.construct(2, rt.texture_size(_u_inputTex)), 2, "float")
         if rt.binary("==", _u_wrap, rt.i(0)):
-            localUV[:] = rt.component_wise("abs", rt.binary("-", rt.component_wise("mod", rt.binary("+", localUV, rt.f(1.0), 2, "float"), rt.f(2.0), width=2), rt.f(1.0), 2, "float"), width=2)
+            localUV[:] = rt.component_wise("abs", rt.copy(rt.binary("-", rt.component_wise("mod", rt.binary("+", localUV, rt.f(1.0), 2, "float"), rt.f(2.0), width=2), rt.f(1.0), 2, "float"), 'float'), width=2)
         else:
             if rt.binary("==", _u_wrap, rt.i(1)):
                 localUV[:] = rt.component_wise("fract", localUV, width=2)

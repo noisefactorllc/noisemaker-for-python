@@ -31,7 +31,7 @@ def run_pixel(ctx, out):
         phi = rt.component_wise("atan", rt.swizzle(delta, "y"), rt.swizzle(delta, "x"), width=1)
         return rt.binary("*", rt.binary("*", rt.component_wise("pow", rt.component_wise("max", rt.f(0.0), rt.component_wise("cos", rt.binary("*", rt.f(6.0), phi, 1, "float"), width=1), width=1), rt.f(40.0), width=1), rt.component_wise("exp", rt.binary("*", rt.unary("-", d), rt.f(5.0), 1, "float"), width=1), 1, "float"), rt.f(0.5), 1, "float")
     def haloRainbow__float(dc):
-        return rt.binary("+", rt.f(0.5), rt.binary("*", rt.f(0.5), rt.component_wise("cos", rt.binary("*", rt.f(6.283185307179586), rt.binary("+", rt.binary("*", dc, rt.f(10.0), 1, "float"), rt.construct(3, rt.f(0.0), rt.f(0.3333333), rt.f(0.6666667)), 3, "float"), 3, "float"), width=3), 3, "float"), 3, "float")
+        return rt.copy(rt.binary("+", rt.f(0.5), rt.copy(rt.binary("*", rt.f(0.5), rt.component_wise("cos", rt.binary("*", rt.f(6.283185307179586), rt.binary("+", rt.binary("*", dc, rt.f(10.0), 1, "float"), rt.construct(3, rt.f(0.0), rt.f(0.3333333), rt.f(0.6666667)), 3, "float"), 3, "float"), width=3), 3, "float"), 'float'), 3, "float"), 'float')
     def haloBand__float(dc):
         return rt.binary("*", rt.component_wise("exp", rt.binary("*", rt.unary("-", rt.component_wise("abs", rt.binary("-", dc, rt.f(0.28), 1, "float"), width=1)), rt.f(60.0), 1, "float"), width=1), rt.f(0.25), 1, "float")
     def circleGhost__float_float(dist, size):
@@ -77,7 +77,7 @@ def run_pixel(ctx, out):
             flare[:] = rt.binary("+", flare, rt.construct(3, sixPointStar__vec2_float(delta0, d0)), 3, "float")
         aMirror = flareAxis__vec2_vec2_float_float(flarePos, mirrorPos, rt.f(1.0), aspectRatio)
         dc = rt.length(rt.binary("-", p, aMirror, 2, "float"))
-        flare[:] = rt.binary("+", flare, rt.binary("*", haloRainbow__float(dc), haloBand__float(dc), 3, "float"), 3, "float")
+        flare[:] = rt.binary("+", flare, rt.copy(rt.binary("*", haloRainbow__float(dc), haloBand__float(dc), 3, "float"), 'float'), 3, "float")
         _g = rt.construct(2, rt.f(0.0))
         if (bool(rt.binary("==", _u_LENS_TYPE, rt.i(0))) or bool(rt.binary("==", _u_LENS_TYPE, rt.i(3)))):
             _g[:] = flareAxis__vec2_vec2_float_float(flarePos, mirrorPos, rt.f(0.25), aspectRatio)

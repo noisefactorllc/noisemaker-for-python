@@ -72,7 +72,7 @@ def run_pixel(ctx, out):
                 neighbor = rt.construct(2, rt.construct(1, x), rt.construct(1, y))
                 cellId = rt.binary("+", cellCoord, neighbor, 2, "float")
                 rnd = prng__vec3(rt.construct(3, cellId, rt.construct(1, _u_seed)))
-                wobble = rt.binary("*", rt.binary("*", rt.component_wise("sin", rt.binary("+", rt.binary("*", rt.binary("*", g.TAU, _u_time, 1, "float"), spd, 1, "float"), rt.binary("*", rt.swizzle(rnd, "xy"), g.TAU, 2, "float"), 2, "float"), width=2), rt.f(0.15), 2, "float"), rt.component_wise("min", spd, rt.f(1.0), width=1), 2, "float")
+                wobble = rt.copy(rt.binary("*", rt.copy(rt.binary("*", rt.component_wise("sin", rt.binary("+", rt.binary("*", rt.binary("*", g.TAU, _u_time, 1, "float"), spd, 1, "float"), rt.binary("*", rt.swizzle(rnd, "xy"), g.TAU, 2, "float"), 2, "float"), width=2), rt.f(0.15), 2, "float"), 'float'), rt.component_wise("min", spd, rt.f(1.0), width=1), 2, "float"), 'float')
                 point = rt.binary("-", rt.binary("+", rt.binary("+", neighbor, rt.swizzle(rnd, "xy"), 2, "float"), wobble, 2, "float"), cellFract, 2, "float")
                 dist = rt.dot(point, point)
                 if rt.binary("<", dist, d1):
@@ -102,7 +102,7 @@ def run_pixel(ctx, out):
                 if rt.binary("==", cellId, nearestCell):
                     continue
                 rnd = prng__vec3(rt.construct(3, cellId, rt.construct(1, _u_seed)))
-                wobble = rt.binary("*", rt.binary("*", rt.component_wise("sin", rt.binary("+", rt.binary("*", rt.binary("*", g.TAU, _u_time, 1, "float"), spd, 1, "float"), rt.binary("*", rt.swizzle(rnd, "xy"), g.TAU, 2, "float"), 2, "float"), width=2), rt.f(0.15), 2, "float"), rt.component_wise("min", spd, rt.f(1.0), width=1), 2, "float")
+                wobble = rt.copy(rt.binary("*", rt.copy(rt.binary("*", rt.component_wise("sin", rt.binary("+", rt.binary("*", rt.binary("*", g.TAU, _u_time, 1, "float"), spd, 1, "float"), rt.binary("*", rt.swizzle(rnd, "xy"), g.TAU, 2, "float"), 2, "float"), width=2), rt.f(0.15), 2, "float"), 'float'), rt.component_wise("min", spd, rt.f(1.0), width=1), 2, "float"), 'float')
                 point = rt.binary("-", rt.binary("+", rt.binary("+", neighbor, rt.swizzle(rnd, "xy"), 2, "float"), wobble, 2, "float"), cellFract, 2, "float")
                 mid = rt.binary("*", rt.binary("+", nearestPoint, point, 2, "float"), rt.f(0.5), 2, "float")
                 edge = rt.normalize(rt.binary("-", point, nearestPoint, 2, "float"))

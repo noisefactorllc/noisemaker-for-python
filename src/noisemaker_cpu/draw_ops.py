@@ -113,6 +113,15 @@ def _fract(value):
     return value - math.floor(value)
 
 
+def _accumulate(data, offset, values):
+    """``data[offset + i] += values[i]`` as the sibling's adapters compute it:
+    the destination is a Float32Array, so each sum runs in float64 with the
+    addend unrounded and rounds to f32 once on store. numpy's f32 arithmetic
+    would round a Python-float addend (and any product) to f32 first."""
+    for index, value in enumerate(values):
+        data[offset + index] = F32(float(data[offset + index]) + value)
+
+
 def texel_fetch_agent(surface, sx, sy):
     x = min(max(sx, 0), surface.width - 1)
     shader_y = min(max(sy, 0), surface.height - 1)
@@ -216,8 +225,8 @@ def dla_deposit_grid(inputs, destination, uniforms, _render_pass):
         if offset is None:
             continue
         rgba = texel_fetch_agent(rgba_tex, sx, sy)
-        destination.data[offset : offset + 3] += np.asarray(rgba[:3], dtype=F32) * energy
-        destination.data[offset + 3] += energy
+        # fragColor = vec4(v_color * energy, energy): alpha is energy alone.
+        _accumulate(destination.data, offset, [float(c) * energy for c in rgba[:3]] + [energy])
 
 
 def lenia_deposit(inputs, destination, uniforms, _render_pass):
@@ -237,8 +246,7 @@ def lenia_deposit(inputs, destination, uniforms, _render_pass):
         )
         if offset is None:
             continue
-        destination.data[offset] += uniforms["depositAmount"]
-        destination.data[offset + 3] += 1
+        _accumulate(destination.data, offset, (float(uniforms["depositAmount"]), 0.0, 0.0, 1.0))
 
 
 def physarum_deposit(inputs, destination, uniforms, _render_pass):
@@ -260,7 +268,8 @@ def physarum_deposit(inputs, destination, uniforms, _render_pass):
         if offset is None:
             continue
         rgba = np.asarray(texel_fetch_agent(rgba_tex, sx, sy), dtype=F32)
-        destination.data[offset : offset + 4] += rgba * uniforms["deposit"]
+        deposit = float(uniforms["deposit"])
+        _accumulate(destination.data, offset, [float(c) * deposit for c in rgba])
 
 
 def points_render_deposit(inputs, destination, uniforms, _render_pass):

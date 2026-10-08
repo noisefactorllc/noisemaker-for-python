@@ -198,8 +198,8 @@ def run_pixel(ctx, out):
     def dotPattern__vec2_float(uv, scale):
         uv = rt.copy(uv, "float")
         p = rt.binary("*", uv, scale, 2, "float")
-        c = rt.binary("+", rt.component_wise("floor", p, width=2), rt.f(0.5), 2, "float")
-        d = rt.length(rt.binary("-", rt.component_wise("fract", p, width=2), rt.f(0.5), 2, "float"))
+        c = rt.copy(rt.binary("+", rt.component_wise("floor", p, width=2), rt.f(0.5), 2, "float"), 'float')
+        d = rt.length(rt.copy(rt.binary("-", rt.component_wise("fract", p, width=2), rt.f(0.5), 2, "float"), 'float'))
         return rt.component_wise("smoothstep", rt.f(0.5), rt.f(0.0), d, width=1)
     def linePattern__vec2_float(uv, scale):
         uv = rt.copy(uv, "float")
@@ -241,7 +241,7 @@ def run_pixel(ctx, out):
         color = rt.copy(color, "float")
         adjustedDither = rt.binary("+", rt.binary("-", ditherValue, rt.f(0.5), 1, "float"), thresh, 1, "float")
         dithered = rt.binary("+", color, rt.binary("/", adjustedDither, levels, 1, "float"), 3, "float")
-        return rt.binary("/", rt.component_wise("floor", rt.binary("*", dithered, levels, 3, "float"), width=3), rt.binary("-", levels, rt.f(1.0), 1, "float"), 3, "float")
+        return rt.copy(rt.binary("/", rt.component_wise("floor", rt.binary("*", dithered, levels, 3, "float"), width=3), rt.binary("-", levels, rt.f(1.0), 1, "float"), 3, "float"), 'float')
     def colorDistance__vec3_vec3(a, b):
         a = rt.copy(a, "float")
         b = rt.copy(b, "float")
@@ -342,7 +342,7 @@ def run_pixel(ctx, out):
         maxLevel = rt.f(0.0)
         if rt.binary("==", _u_palette, g.PALETTE_INPUT):
             maxLevel = rt.binary("-", rt.construct(1, _u_levels), rt.f(1.0), 1, "float")
-            return rt.binary("/", rt.component_wise("floor", rt.binary("+", rt.binary("*", v, maxLevel, 3, "float"), rt.f(0.5), 3, "float"), width=3), maxLevel, 3, "float")
+            return rt.copy(rt.binary("/", rt.component_wise("floor", rt.binary("+", rt.binary("*", v, maxLevel, 3, "float"), rt.f(0.5), 3, "float"), width=3), maxLevel, 3, "float"), 'float')
         return findClosestPaletteColor__vec3_int(v, _u_palette)
     def fsScale__void():
         if rt.binary("==", _u_palette, g.PALETTE_INPUT):
@@ -380,7 +380,7 @@ def run_pixel(ctx, out):
             _for3_first = False
             if not (rt.binary("<", i, g.FS_ERR_W)):
                 break
-            errRow[int(i)] = rt.binary("*", fsSeedNoise__ivec2_int(blockOrigin, i), stepScale, 3, "float")
+            errRow[int(i)] = rt.copy(rt.binary("*", fsSeedNoise__ivec2_int(blockOrigin, i), stepScale, 3, "float"), 'float')
         carried = rt.construct(3, rt.f(0.0))
         r = rt.unary("-", g.FS_APRON_MAX)
         _for4_first = True
@@ -393,7 +393,7 @@ def run_pixel(ctx, out):
             if rt.binary("<", r, rt.unary("-", apronY)):
                 continue
             lastRow = rt.binary("==", r, ly)
-            rightErr = rt.binary("*", fsSeedNoise__ivec2_int(blockOrigin, rt.binary("+", rt.binary("+", g.FS_ERR_W, g.FS_APRON_MAX, 1, "int"), r, 1, "int")), stepScale, 3, "float")
+            rightErr = rt.copy(rt.binary("*", fsSeedNoise__ivec2_int(blockOrigin, rt.binary("+", rt.binary("+", g.FS_ERR_W, g.FS_APRON_MAX, 1, "int"), r, 1, "int")), stepScale, 3, "float"), 'float')
             diag = rt.construct(3, rt.f(0.0))
             c = rt.unary("-", g.FS_APRON_MAX)
             _for5_first = True

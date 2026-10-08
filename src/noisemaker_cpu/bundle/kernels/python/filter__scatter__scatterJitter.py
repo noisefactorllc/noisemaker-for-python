@@ -37,8 +37,8 @@ def run_pixel(ctx, out):
         globalCoord = rt.binary("+", rt.swizzle(ctx.frag_coord, "xy"), _u_tileOffset, 2, "float")
         hashCoord = rt.copy_decl(globalCoord, "float")
         if rt.binary("==", _u_MODE, rt.i(4)):
-            hashCoord[:] = rt.binary("*", rt.component_wise("floor", rt.binary("/", globalCoord, rt.f(3.0), 2, "float"), width=2), rt.f(3.0), 2, "float")
-        rnd = rt.binary("-", hash22__vec2(rt.binary("+", hashCoord, rt.binary("*", rt.construct(1, _u_seed), rt.f(101.7), 1, "float"), 2, "float")), rt.f(0.5), 2, "float")
+            hashCoord[:] = rt.copy(rt.binary("*", rt.component_wise("floor", rt.binary("/", globalCoord, rt.f(3.0), 2, "float"), width=2), rt.f(3.0), 2, "float"), 'float')
+        rnd = rt.copy(rt.binary("-", hash22__vec2(rt.binary("+", hashCoord, rt.binary("*", rt.construct(1, _u_seed), rt.f(101.7), 1, "float"), 2, "float")), rt.f(0.5), 2, "float"), 'float')
         offset = rt.binary("*", rt.binary("*", rnd, rt.f(2.0), 2, "float"), _u_radius, 2, "float")
         grad = rt.construct(2, 0.0)
         gradLen = rt.f(0.0)

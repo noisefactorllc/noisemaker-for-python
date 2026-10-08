@@ -82,7 +82,7 @@ def run_pixel(ctx, out):
         return rt.construct(3, dist, trap, rt.binary("/", iter, rt.construct(1, maxIter), 1, "float"))
     def boxFold__vec3_float(z, foldingLimit):
         z = rt.copy(z, "float")
-        return rt.binary("-", rt.binary("*", rt.component_wise("clamp", z, rt.unary("-", foldingLimit), foldingLimit, width=3), rt.f(2.0), 3, "float"), z, 3, "float")
+        return rt.binary("-", rt.copy(rt.binary("*", rt.component_wise("clamp", z, rt.unary("-", foldingLimit), foldingLimit, width=3), rt.f(2.0), 3, "float"), 'float'), z, 3, "float")
     def mandelcube__vec3_float_int_float(pos, scale, maxIter, bail):
         pos = rt.copy(pos, "float")
         z = rt.copy_decl(pos, "float")

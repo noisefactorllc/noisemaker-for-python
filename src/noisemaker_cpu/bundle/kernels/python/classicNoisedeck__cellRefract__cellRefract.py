@@ -302,7 +302,7 @@ def run_pixel(ctx, out):
                 return derivatives__vec3_vec2_bool(color, localUV, True)
             else:
                 if rt.binary("==", _u_KERNEL, rt.i(120)):
-                    return rt.component_wise("clamp", rt.binary("*", derivatives__vec3_vec2_bool(color, localUV, False), rt.f(2.5), 3, "float"), rt.f(0.0), rt.f(1.0), width=3)
+                    return rt.component_wise("clamp", rt.copy(rt.binary("*", derivatives__vec3_vec2_bool(color, localUV, False), rt.f(2.5), 3, "float"), 'float'), rt.f(0.0), rt.f(1.0), width=3)
                 else:
                     if rt.binary("==", _u_KERNEL, rt.i(3)):
                         return rt.binary("*", color, convolve__vec2_float_bool(localUV, g.edge2, True), 3, "float")
@@ -396,8 +396,8 @@ def run_pixel(ctx, out):
                 n = rt.construct(2, rt.construct(1, x), rt.construct(1, y))
                 wrap = rt.binary("+", i, n, 2, "float")
                 point = rt.swizzle(prng__vec3(rt.construct(3, wrap, rt.construct(1, _u_seed))), "xy")
-                r1 = rt.binary("-", rt.binary("*", prng__vec3(rt.construct(3, rt.construct(1, _u_seed), wrap)), rt.f(0.5), 3, "float"), rt.f(0.25), 3, "float")
-                r2 = rt.binary("-", rt.binary("*", prng__vec3(rt.construct(3, wrap, rt.construct(1, _u_seed))), rt.f(2.0), 3, "float"), rt.f(1.0), 3, "float")
+                r1 = rt.copy(rt.binary("-", rt.copy(rt.binary("*", prng__vec3(rt.construct(3, rt.construct(1, _u_seed), wrap)), rt.f(0.5), 3, "float"), 'float'), rt.f(0.25), 3, "float"), 'float')
+                r2 = rt.copy(rt.binary("-", rt.copy(rt.binary("*", prng__vec3(rt.construct(3, wrap, rt.construct(1, _u_seed))), rt.f(2.0), 3, "float"), 'float'), rt.f(1.0), 3, "float"), 'float')
                 spd = rt.component_wise("floor", _u_speed, width=1)
                 point[:] = rt.binary("+", point, rt.construct(2, rt.binary("*", rt.component_wise("sin", rt.binary("+", rt.binary("*", rt.binary("*", _u_time, rt.f(6.28318530718), 1, "float"), spd, 1, "float"), rt.swizzle(r2, "x"), 1, "float"), width=1), rt.swizzle(r1, "x"), 1, "float"), rt.binary("*", rt.component_wise("cos", rt.binary("+", rt.binary("*", rt.binary("*", _u_time, rt.f(6.28318530718), 1, "float"), spd, 1, "float"), rt.swizzle(r2, "y"), 1, "float"), width=1), rt.swizzle(r1, "y"), 1, "float")), 2, "float")
                 diff = rt.binary("-", rt.binary("+", n, point, 2, "float"), f, 2, "float")
@@ -418,7 +418,7 @@ def run_pixel(ctx, out):
                 lev = rt.f(2.0)
         color[:] = rt.component_wise("clamp", color, rt.f(0.0), rt.f(0.99), width=3)
         color[:] = rt.binary("*", color, lev, 3, "float")
-        color[:] = rt.binary("+", rt.component_wise("floor", color, width=3), rt.f(0.5), 3, "float")
+        color[:] = rt.copy(rt.binary("+", rt.component_wise("floor", color, width=3), rt.f(0.5), 3, "float"), 'float')
         color[:] = rt.binary("/", color, lev, 3, "float")
         return color
     def pixellate__vec2_float(localUV, size):
@@ -444,7 +444,7 @@ def run_pixel(ctx, out):
         st = rt.assign_swizzle(st, "x", rt.binary("+", rt.swizzle(st, "x"), rt.binary("*", rt.component_wise("cos", rt.binary("*", refLen, rt.f(6.28318530718), 1, "float"), width=1), ref, 1, "float"), 1, "float"))
         st = rt.assign_swizzle(st, "y", rt.binary("+", rt.swizzle(st, "y"), rt.binary("*", rt.component_wise("sin", rt.binary("*", refLen, rt.f(6.28318530718), 1, "float"), width=1), ref, 1, "float"), 1, "float"))
         if rt.binary("==", _u_wrap, rt.i(0)):
-            st[:] = rt.component_wise("abs", rt.binary("-", rt.component_wise("mod", rt.binary("+", st, rt.f(1.0), 2, "float"), rt.f(2.0), width=2), rt.f(1.0), 2, "float"), width=2)
+            st[:] = rt.component_wise("abs", rt.copy(rt.binary("-", rt.component_wise("mod", rt.binary("+", st, rt.f(1.0), 2, "float"), rt.f(2.0), width=2), rt.f(1.0), 2, "float"), 'float'), width=2)
         else:
             if rt.binary("==", _u_wrap, rt.i(1)):
                 st[:] = rt.component_wise("fract", st, width=2)
