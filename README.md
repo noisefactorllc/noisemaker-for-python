@@ -22,7 +22,7 @@ Effect kernels are **transpiled directly from the upstream GLSL** served by the
 - Screen-space derivatives.
 - Bit-exact uint32/PCG hashing.
 
-**The bundle contains all 210 catalog effects**, transpiled from published engine `1.0.266` (Noisemaker `15c9114e`). `scripts/parity-summary` renders every one of them and compares it with the pinned `noisemaker-for-cpu` oracle at zero byte tolerance: 210 of 210 are byte-identical (8×8, seed 1, time 0.25). Single-frame effects render through the `effect` CLI path; iterated, typed-chain, volume and loop effects through DSL programs; and the five reactive/mesh effects (`synth/roll`, `synth/scope`, `synth/spectrum`, `render/meshLoader`, `render/meshRender`) through deterministic MIDI, audio and mesh fixtures synced from the oracle's own parity fixtures. These cases cover the catalog, not every parameter, resolution or animation.
+**The bundle contains all 210 catalog effects**, transpiled from published engine `1.0.271` (Noisemaker `5976b7a6`). `scripts/parity-summary` renders every one of them and compares it with the pinned `noisemaker-for-cpu` oracle at zero byte tolerance: 210 of 210 are byte-identical (8×8, seed 1, time 0.25). Single-frame effects render through the `effect` CLI path; iterated, typed-chain, volume and loop effects through DSL programs; and the five reactive/mesh effects (`synth/roll`, `synth/scope`, `synth/spectrum`, `render/meshLoader`, `render/meshRender`) through deterministic MIDI, audio and mesh fixtures synced from the oracle's own parity fixtures. These cases cover the catalog, not every parameter, resolution or animation.
 Iterated effects default to `iterationCount: 60`. Particle pipelines share state from `pointsEmit()` through their point and render steps.
 
 ## Install
@@ -78,7 +78,7 @@ python -m transpiler.build --all
 ```
 
 To move the bundle to a newer engine release, name it and update the lock:
-`NM_SHADER_VERSION=1.0.266 python -m transpiler.build --all --update-lock`.
+`NM_SHADER_VERSION=1.0.271 python -m transpiler.build --all --update-lock`.
 
 ## Tests
 
