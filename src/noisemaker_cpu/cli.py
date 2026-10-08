@@ -80,8 +80,8 @@ def _resolve_effect(effect: str, kind: str | None = None) -> str:
 
 
 def _draw_seed(effect_id: str) -> int:
-    """Unseeded runs draw inside the selected effect's declared seed range
-    (GAP-007). The previous unbounded draw (`1` to `2**32 - 1`) exceeded the
+    """Unseeded runs draw inside the selected effect's declared seed range.
+    The previous unbounded draw (`1` to `2**32 - 1`) exceeded the
     declared maximum in every run where the effect declares one, and rendered
     the all-white degenerate output for about 41 percent of the draw range;
     the pinned oracle rejects out-of-range seeds."""
@@ -98,7 +98,7 @@ def _prologue(effect: str, seed: int | None, kind: str | None) -> tuple[str, int
     if seed is not None:
         # An explicitly passed --seed mirrors the pinned oracle's explicit DSL
         # seed assignment, which the DSL parser range-validates BEFORE any
-        # rendering (GAP-007). This fires even for typed-volume effects, whose
+        # rendering. This fires even for typed-volume effects, whose
         # domain refusal below would otherwise mask the reference's exit-1
         # `Parameter "seed" must be at most N` for the same command.
         spec = _meta()["effects"].get(effect, {}).get("params", {}).get("seed")
@@ -126,7 +126,7 @@ def _parse_params(pairs: tuple[str, ...]) -> dict:
 def _clean_range_errors():
     """Convert the renderer's ParameterRangeError into the CLI's clean nonzero
     exit with the diagnostic that names the parameter and the bound, mirroring
-    the pinned oracle's exit-1 `Parameter "seed" must be at most N` (GAP-007)."""
+    the pinned oracle's exit-1 `Parameter "seed" must be at most N`."""
     try:
         yield
     except ParameterRangeError as exc:

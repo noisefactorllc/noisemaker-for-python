@@ -1,7 +1,7 @@
 {
   "provenance": {
     "source": "shaders.noisedeck.app CDN",
-    "version": "1.0.183",
+    "version": "1.0.266",
     "base": "https://shaders.noisedeck.app"
   },
   "effects": {
@@ -1007,7 +1007,19 @@
           "ui": {
             "label": "refract dir a",
             "control": "slider",
-            "category": "refract"
+            "category": "refract",
+            "enabledBy": {
+              "and": [
+                {
+                  "param": "refractAAmt",
+                  "gt": 0
+                },
+                {
+                  "param": "blendMode",
+                  "neq": 100
+                }
+              ]
+            }
           }
         },
         "refractBDir": {
@@ -1019,7 +1031,19 @@
           "ui": {
             "label": "refract dir b",
             "control": "slider",
-            "category": "refract"
+            "category": "refract",
+            "enabledBy": {
+              "and": [
+                {
+                  "param": "refractBAmt",
+                  "gt": 0
+                },
+                {
+                  "param": "blendMode",
+                  "neq": 100
+                }
+              ]
+            }
           }
         }
       },
@@ -1450,7 +1474,11 @@
           "max": 20,
           "ui": {
             "label": "effect amt",
-            "control": "slider"
+            "control": "slider",
+            "enabledBy": {
+              "param": "effect",
+              "neq": 0
+            }
           }
         },
         "scaleAmt": {
@@ -1968,7 +1996,11 @@
           "max": 100,
           "ui": {
             "label": "width",
-            "control": "slider"
+            "control": "slider",
+            "enabledBy": {
+              "param": "glitchiness",
+              "gt": 0
+            }
           }
         },
         "yChonk": {
@@ -1979,7 +2011,11 @@
           "max": 100,
           "ui": {
             "label": "height",
-            "control": "slider"
+            "control": "slider",
+            "enabledBy": {
+              "param": "glitchiness",
+              "gt": 0
+            }
           }
         },
         "seed": {
@@ -6783,7 +6819,19 @@
           "ui": {
             "label": "refract dir a",
             "control": "slider",
-            "category": "refract"
+            "category": "refract",
+            "enabledBy": {
+              "and": [
+                {
+                  "param": "refractAAmt",
+                  "gt": 0
+                },
+                {
+                  "param": "blendMode",
+                  "neq": 100
+                }
+              ]
+            }
           }
         },
         "refractBDir": {
@@ -6795,7 +6843,19 @@
           "ui": {
             "label": "refract dir b",
             "control": "slider",
-            "category": "refract"
+            "category": "refract",
+            "enabledBy": {
+              "and": [
+                {
+                  "param": "refractBAmt",
+                  "gt": 0
+                },
+                {
+                  "param": "blendMode",
+                  "neq": 100
+                }
+              ]
+            }
           }
         },
         "hueRotation": {
@@ -17119,7 +17179,14 @@
           "max": 180,
           "ui": {
             "label": "rotation",
-            "control": "slider"
+            "control": "slider",
+            "enabledBy": {
+              "param": "shape",
+              "notIn": [
+                0,
+                6
+              ]
+            }
           }
         },
         "posX": {
@@ -21630,7 +21697,8 @@
           "uniform": "layout",
           "ui": {
             "label": "layout",
-            "control": "dropdown"
+            "control": "dropdown",
+            "resetOnChange": true
           },
           "choices": {
             "random": 0,
@@ -21649,7 +21717,8 @@
           "uniform": "seed",
           "ui": {
             "label": "seed",
-            "control": "slider"
+            "control": "slider",
+            "resetOnChange": true
           }
         },
         "attrition": {
@@ -24073,7 +24142,11 @@
           "ui": {
             "label": "zoom speed",
             "control": "slider",
-            "category": "animation"
+            "category": "animation",
+            "enabledBy": {
+              "param": "zoomDepth",
+              "gt": 0
+            }
           }
         },
         "zoomDepth": {
@@ -24515,7 +24588,11 @@
           "ui": {
             "label": "zoom speed",
             "control": "slider",
-            "category": "animation"
+            "category": "animation",
+            "enabledBy": {
+              "param": "zoomDepth",
+              "gt": 0
+            }
           }
         },
         "zoomDepth": {
@@ -25645,7 +25722,11 @@
           "ui": {
             "label": "degree",
             "control": "slider",
-            "category": "fractal"
+            "category": "fractal",
+            "enabledBy": {
+              "param": "poi",
+              "eq": 0
+            }
           }
         },
         "relaxation": {
@@ -25728,7 +25809,11 @@
           "ui": {
             "label": "zoom speed",
             "control": "slider",
-            "category": "animation"
+            "category": "animation",
+            "enabledBy": {
+              "param": "zoomDepth",
+              "gt": 0
+            }
           }
         },
         "zoomDepth": {
@@ -25756,7 +25841,11 @@
           "ui": {
             "label": "degree speed",
             "control": "slider",
-            "category": "animation"
+            "category": "animation",
+            "enabledBy": {
+              "param": "poi",
+              "eq": 0
+            }
           }
         },
         "degreeRange": {
@@ -25770,7 +25859,11 @@
           "ui": {
             "label": "degree range",
             "control": "slider",
-            "category": "animation"
+            "category": "animation",
+            "enabledBy": {
+              "param": "poi",
+              "eq": 0
+            }
           }
         },
         "relaxSpeed": {
@@ -28021,7 +28114,8 @@
           "uniform": "density",
           "ui": {
             "label": "density",
-            "control": "slider"
+            "control": "slider",
+            "resetOnChange": true
           }
         },
         "colorMode": {
@@ -29038,14 +29132,13 @@
         "colorMode": {
           "type": "int",
           "default": 0,
-          "uniform": "colorMode",
           "choices": {
             "mono": 0,
             "rgb": 1
           },
           "ui": {
             "label": "color mode",
-            "control": "dropdown"
+            "control": false
           }
         },
         "loopAOffset": {

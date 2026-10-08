@@ -1,14 +1,14 @@
-"""Node-free GAP-005 acceptance: byte-compares the Python port against the
+"""Node-free acceptance: byte-compares the Python port against the
 committed oracle fixtures.
 
-tests/data/gap005-oracle/ holds fixtures rendered by the pinned CPU oracle
+tests/data/feedback-oracle/ holds fixtures rendered by the pinned CPU oracle
 (noisemaker-for-cpu checkout at HEAD bfbe54764eee87c8f67d2b281d5f304faad04a5b,
 bundle CDN 1.0.183): for every recorded case the oracle CLI's PNG artifact
 (provenance), its decoded RGBA8 bytes, and the raw output-surface float32 bytes
 (rgba16f leg, which catches sub-8-bit divergences), plus manifest.json binding
 each file's sha256, the exact program/size/seed/time of every case, and the
 oracle revision. Coverage: 8 four-component alpha controls × sizes
-16×16/24×13/33×17/7×64; the gap's originally recorded feedback program
+16×16/24×13/33×17/7×64; the originally reported feedback program
 (noise(seed: 1, ridges: true).feedback(iterationCount: 1)); a feedback matrix
 with mix 40 over iterationCount 1–5, seeds 1–3, times 0.0–0.75, sizes
 8×8–32×16; and two control pairs asserting the oracle output is
@@ -29,7 +29,7 @@ import pytest
 from noisemaker_cpu.png import decode_png
 from noisemaker_cpu.renderer import render_dsl
 
-FIXTURES = Path(__file__).parent / "data" / "gap005-oracle"
+FIXTURES = Path(__file__).parent / "data" / "feedback-oracle"
 MANIFEST = FIXTURES / "manifest.json"
 ORACLE_HEAD = "bfbe54764eee87c8f67d2b281d5f304faad04a5b"
 

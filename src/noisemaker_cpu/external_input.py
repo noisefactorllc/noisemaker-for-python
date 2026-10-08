@@ -1,6 +1,6 @@
 """CPU external-input state for the reactive (MIDI/audio) and mesh (OBJ) effects.
 
-Port of noisemaker-cpu ``src/runtime/external-input.js`` (GAP-003 reactive/mesh
+Port of noisemaker-cpu ``src/runtime/external-input.js`` (the reactive/mesh
 import). It mirrors the rendering-relevant subset of the upstream
 ``MidiState``/``AudioState``: per-channel key velocities and gate,
 CC/pitch-bend/pressure storage, the 24-PPQ clock counter, and the packed

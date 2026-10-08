@@ -5,10 +5,6 @@
 
 # noisemaker-for-python
 
-Current measured support: [compatibility report](docs/COMPATIBILITY.md).
-
-Current qualification limits: [completion gaps](docs/COMPLETION_GAPS.md).
-
 > This package supports the "Export Shader Pipeline" feature in Noisedeck.app. The feature runs shader compositions on other platforms. Noise Factor derives this package from the upstream Noisemaker Engine project and tests it for pixel-level parity.
 
 This is not the classic Python Noisemaker (Composer) library. This is a new
@@ -26,7 +22,7 @@ Effect kernels are **transpiled directly from the upstream GLSL** served by the
 - Screen-space derivatives.
 - Bit-exact uint32/PCG hashing.
 
-**The current bundle contains 210 CPU catalog effects.** For the current 210-effect bundle, the default image harness (8×8, seed 1, time 0.25) compares the 172 single-frame effects runnable at the harness's fixed context with zero byte tolerance (all passing; the remaining 38 effects are outside that harness's context and are each covered instead by a committed DSL chain that matches the same pinned oracle with zero byte tolerance — see `docs/COMPLETION_GAPS.md` §3, "Parity and authority reconciliation, 2026-09-27"). The image harness's 172-effect result is recorded in `docs/COMPATIBILITY.md` §6. The five reactive/mesh effects (`synth/roll`, `synth/scope`, `synth/spectrum`, `render/meshLoader`, `render/meshRender`) require external inputs (deterministic MIDI/audio/mesh fixtures, synced from the oracle's own parity fixtures) and are compared byte-exactly through their DSL parity cases rather than the bare `effect` CLI path. The tested contexts do not constitute the complete parameter matrix; no claim is made beyond the recorded cases.
+**The bundle contains all 210 catalog effects**, transpiled from published engine `1.0.266` (Noisemaker `15c9114e`). `scripts/parity-summary` renders every one of them and compares it with the pinned `noisemaker-for-cpu` oracle at zero byte tolerance: 210 of 210 are byte-identical (8×8, seed 1, time 0.25). Single-frame effects render through the `effect` CLI path; iterated, typed-chain, volume and loop effects through DSL programs; and the five reactive/mesh effects (`synth/roll`, `synth/scope`, `synth/spectrum`, `render/meshLoader`, `render/meshRender`) through deterministic MIDI, audio and mesh fixtures synced from the oracle's own parity fixtures. These cases cover the catalog, not every parameter, resolution or animation.
 Iterated effects default to `iterationCount: 60`. Particle pipelines share state from `pointsEmit()` through their point and render steps.
 
 ## Install
@@ -73,12 +69,16 @@ with open("curl.png", "wb") as f:
 ## Regenerating the bundle
 
 The vendored kernels + metadata under `src/noisemaker_cpu/bundle/` are generated
-from the CDN. To rebuild (requires `json5`):
+from the CDN at the exact engine version recorded in `bundle-lock.json`. To rebuild
+them (requires `json5`):
 
 ```bash
 pip install -e ".[build]"
 python -m transpiler.build --all
 ```
+
+To move the bundle to a newer engine release, name it and update the lock:
+`NM_SHADER_VERSION=1.0.266 python -m transpiler.build --all --update-lock`.
 
 ## Tests
 
@@ -86,16 +86,13 @@ python -m transpiler.build --all
 pytest
 ```
 
-Cross-language parity against the JS engine (`scripts/parity.py`) needs a sibling
-`noisemaker-for-cpu` checkout and Node. The image harness's most recent
-source-bound result (2026-09-27, see `docs/COMPATIBILITY.md` §6) compared 167
-effects with zero byte tolerance and reported 38 exclusions, each covered by a
-committed DSL byte-parity case against the same oracle; both valid
-`renderLandscape3d` filtering choices (`isosurface`, `voxel`) also match the
-oracle exactly, and authority reconciliation against immutable CDN build
-`1.0.190` finds 294/294 program GLSL hashes matching the bundle lock (GAP-001
-closed 2026-09-27; see `docs/COMPLETION_GAPS.md`). The tested contexts do not
-constitute the complete parameter matrix.
+`pytest -m "not slow and not oracle"` is the quick, node-free subset that CI runs
+on every push. `scripts/test` is the full gate, which CI runs weekly: it clones
+`noisemaker-for-cpu` at the pinned revision, runs every test against it with
+Node, and then runs `scripts/parity-summary`. A kit is released only after that
+full gate passes. `tests/data/parity-receipt-<revision>.json` records the
+oracle's output hashes for the single-frame and reactive/mesh effects, so the
+`slow` receipt test checks byte parity without Node.
 
 ## License
 

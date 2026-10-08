@@ -4,8 +4,8 @@ The upstream noisemaker-for-cpu transpiler lowered the hash3/hash4 LCG
 kernels to raw JavaScript operators over plain-number uvec arrays, so their
 rendered output followed IEEE-754 double arithmetic up to each bitwise
 coercion, and the port mirrored that with ``runtime.js_uvec_numbers``.
-noisemaker-for-cpu ef26f1c88a44 ("GAP-003: restore exact GLSL uint semantics
-in transpiled hash kernels") restored exact mod-2^32 uint arithmetic in
+noisemaker-for-cpu ef26f1c88a44 (exact GLSL uint semantics in transpiled
+hash kernels) restored exact mod-2^32 uint arithmetic in
 those statements via ``cpu_umul`` and ``>>> 0``, so the published runtime
 carries the exact uint path by default (standalone/deployed renders with no
 mounted oracle included); a mounted oracle whose transpiled canonical

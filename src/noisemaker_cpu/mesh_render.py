@@ -1,7 +1,7 @@
 """CPU triangle-mesh rasterizer for ``drawMode: 'triangles'`` passes
 (``render/meshRender``).
 
-Port of noisemaker-cpu ``src/effects/cpu/mesh-render.js`` (GAP-003 reactive/mesh
+Port of noisemaker-cpu ``src/effects/cpu/mesh-render.js`` (the reactive/mesh
 import). The canonical pass executor cannot run these through the per-pixel
 fragment-kernel machinery (they rasterize a variable number of triangles rather
 than filling every destination pixel exactly once), so — like the scatter draw

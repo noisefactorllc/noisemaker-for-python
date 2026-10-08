@@ -33,8 +33,9 @@ need directly from the bundle *text*:
     introduced it -- so we search for both conventions and read whichever
     matches.
 
-Pin an exact version with NM_SHADER_VERSION (default: the "1.0" rolling
-minor channel -- see CDN_VERSION below). Fetches are cached to disk under
+The default version is the one recorded in the committed bundle lock, so a
+plain rebuild reproduces the committed bundle; set NM_SHADER_VERSION to an
+exact build to move to it (see CDN_VERSION below). Fetches are cached to disk under
 transpiler/.cdn-cache/<version>/ so repeat runs (and CI) are offline after
 the first hit.
 
@@ -65,13 +66,19 @@ import json5
 from .computed_defs import COMPUTED_DEFS
 
 CDN_BASE = os.environ.get("NM_SHADER_CDN", "https://shaders.noisedeck.app").rstrip("/")
-# The "1.0" minor channel is the current release. It's a rolling tag, not an
-# immutable snapshot -- pin an exact build with NM_SHADER_VERSION if byte-
-# for-byte reproducibility matters. Immutable dot releases like "1.0.1" are
-# stale; "1.0" always resolves to the latest 1.x build.
-CDN_VERSION = os.environ.get("NM_SHADER_VERSION", "1.0")
-
 _HERE = Path(__file__).resolve().parent
+_BUNDLE_LOCK = _HERE.parent / "src" / "noisemaker_cpu" / "bundle" / "bundle-lock.json"
+
+
+def _locked_version() -> str:
+    """The exact CDN build the committed bundle was transpiled from."""
+    return json.loads(_BUNDLE_LOCK.read_text(encoding="utf-8"))["version"]
+
+
+# Default to the locked exact build: every dot release is immutable, so a
+# rebuild is byte-for-byte reproducible. To move the bundle to a newer engine,
+# run with NM_SHADER_VERSION=<exact version> and --update-lock.
+CDN_VERSION = os.environ.get("NM_SHADER_VERSION") or _locked_version()
 _CACHE_ROOT = _HERE / ".cdn-cache"
 _USER_AGENT = "noisemaker-python-transpiler (+https://noisedeck.app)"
 

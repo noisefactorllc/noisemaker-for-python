@@ -1,4 +1,4 @@
-"""GAP-007 (issue 3) regression: seed-range enforcement mirrors the pinned
+"""Regression: seed-range enforcement mirrors the pinned
 oracle. Out-of-range seeds are rejected with a diagnostic naming the parameter
 and the bound, unseeded CLI runs draw inside the declared range of the selected
 effect, and the DSL's implicit render-seed threading stays unvalidated exactly
@@ -19,7 +19,7 @@ CURL_MAX = 1000
 
 def _declared_seed_specs():
     """Every bundled effect whose metadata declares a `seed` parameter with a
-    maximum (GAP-007 acceptance scope)."""
+    maximum."""
     return {
         effect_id: effect["params"]["seed"]
         for effect_id, effect in _meta()["effects"].items()

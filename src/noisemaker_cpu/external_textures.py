@@ -1,6 +1,6 @@
 """External data-texture surfaces for the reactive (MIDI) and mesh (OBJ) effects.
 
-Port of noisemaker-cpu ``src/runtime/external-textures.js`` (GAP-003 reactive/mesh
+Port of noisemaker-cpu ``src/runtime/external-textures.js`` (the reactive/mesh
 import). Data textures uploaded from JS arrays on WebGL2 place array row 0 at GL
 texture coordinate y = 0 (bottom-left origin). This port's CPU surfaces store
 rows top-down and the GLSL samplers (``sampleNearestBottomLeft``,

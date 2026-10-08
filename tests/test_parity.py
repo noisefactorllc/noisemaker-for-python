@@ -20,10 +20,13 @@ CPU_DIR = os.environ.get("NOISEMAKER_CPU_DIR") or os.path.normpath(
 )
 CLI = os.path.join(CPU_DIR, "bin", "noisemaker-cpu.js")
 
-pytestmark = pytest.mark.skipif(
-    not (shutil.which("node") and os.path.exists(CLI)),
-    reason="JS oracle (node + noisemaker-cpu) not available",
-)
+pytestmark = [
+    pytest.mark.oracle,
+    pytest.mark.skipif(
+        not (shutil.which("node") and os.path.exists(CLI)),
+        reason="JS oracle (node + noisemaker-cpu) not available",
+    ),
+]
 
 
 def _js_render(args, out) -> Surface:
@@ -195,8 +198,8 @@ VOLUME_DSL_CASES = [
     ("render/renderCubemap3d", "search synth3d, render\nnoise3d(volumeSize: 4, seed: 0).renderCubemap3d(volumeSize: 4).write(o0)\nrender(o0)\n", 2, 2),
     ("render/renderCubemapSurface", "search synth3d, render\nnoise3d(volumeSize: 4, seed: 0).renderCubemapSurface(volumeSize: 4).write(o0)\nrender(o0)\n", 2, 2),
     ("render/renderLit3d", "search synth3d, render\nnoise3d(volumeSize: 4, seed: 0).renderLit3d(volumeSize: 4).write(o0)\nrender(o0)\n", 2, 2),
-    # Both valid renderLandscape3d `filtering` choices (the GAP-001 landscape
-    # rejections) must render byte-identically to the oracle.
+    # Both valid renderLandscape3d `filtering` choices (once rejected by the
+    # landscape import) must render byte-identically to the oracle.
     ("render/renderLandscape3d", "search synth3d, render\nnoise3d(volumeSize: 4, seed: 0).renderLandscape3d(volumeSize: 4, filtering: 0).write(o0)\nrender(o0)\n", 8, 8),
     ("render/renderLandscape3d:voxel", "search synth3d, render\nnoise3d(volumeSize: 4, seed: 0).renderLandscape3d(volumeSize: 4, filtering: 1).write(o0)\nrender(o0)\n", 8, 8),
     # filter3d filters.
@@ -409,8 +412,8 @@ def _mounted_oracle_supports(case_id: str) -> bool:
     ["synth/roll", "synth/scope", "synth/spectrum", "render/meshLoader", "render/meshRender"],
 )
 def test_external_input_dsl_byte_parity(tmp_path, case_id):
-    """Reactive (MIDI/audio) and mesh (OBJ) parity cases — noisemaker-for-cpu
-    GAP-003's reactive/mesh import, synced here. Both sides render the oracle's
+    """Reactive (MIDI/audio) and mesh (OBJ) parity cases — noisemaker-for-cpu's
+    reactive/mesh import, synced here. Both sides render the oracle's
     own parity DSL (parity/upstream-defaults/<name>.dsl) with the deterministic
     fixtures (MIDI note grid / audio waveform+spectrum / packed cube mesh); the
     oracle side binds them via scripts/parity-js-driver.mjs because the CLI binds

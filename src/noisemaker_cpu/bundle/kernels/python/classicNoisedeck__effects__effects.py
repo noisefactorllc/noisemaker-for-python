@@ -203,7 +203,7 @@ def run_pixel(ctx, out):
     def pixellate__vec2_float(uv, size):
         uv = rt.copy(uv, "float")
         if rt.binary("<", size, rt.f(1.0)):
-            return rt.swizzle(rt.texture(_u_inputTex, rt.binary("/", rt.swizzle(ctx.frag_coord, "xy"), rt.construct(2, rt.texture_size(_u_inputTex)), 2, "float")), "rgb")
+            return rt.swizzle(rt.texture(_u_inputTex, rt.binary("/", rt.binary("-", rt.binary("*", uv, _u_fullResolution, 2, "float"), _u_tileOffset, 2, "float"), rt.construct(2, rt.texture_size(_u_inputTex)), 2, "float")), "rgb")
         size = rt.binary("*", size, rt.f(4.0), 1, "float")
         dx = rt.binary("*", size, rt.binary("/", rt.f(1.0), rt.swizzle(_u_resolution, "x"), 1, "float"), 1, "float")
         dy = rt.binary("*", size, rt.binary("/", rt.f(1.0), rt.swizzle(_u_resolution, "y"), 1, "float"), 1, "float")
@@ -646,7 +646,7 @@ def run_pixel(ctx, out):
         loadKernels__void()
         blendy = periodicFunction__float(rt.binary("-", _u_time, offsets__vec2(uv), 1, "float"))
         origUV = rt.copy_decl(uv, "float")
-        origcolor = rt.texture(_u_inputTex, rt.binary("/", rt.swizzle(ctx.frag_coord, "xy"), rt.construct(2, rt.texture_size(_u_inputTex)), 2, "float"))
+        origcolor = rt.texture(_u_inputTex, rt.binary("/", rt.binary("-", rt.binary("*", uv, _u_fullResolution, 2, "float"), _u_tileOffset, 2, "float"), rt.construct(2, rt.texture_size(_u_inputTex)), 2, "float"))
         color[:] = origcolor
         if rt.binary("!=", _u_EFFECT, rt.i(0)):
             if rt.binary("!=", _u_effectAmt, rt.f(0.0)):

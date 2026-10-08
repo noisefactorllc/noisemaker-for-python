@@ -262,6 +262,7 @@ def test_round_trip_3x2_surface():
     assert decoded.to_rgba8() == surface.to_rgba8()
 
 
+@pytest.mark.oracle
 def test_cross_check_against_js_encoder(tmp_path):
     if shutil.which("node") is None or not os.path.isdir(CPU_DIR):
         pytest.skip("needs node + a sibling noisemaker-for-cpu checkout")

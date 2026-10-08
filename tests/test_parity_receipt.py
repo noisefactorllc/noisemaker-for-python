@@ -19,18 +19,34 @@ from pathlib import Path
 
 import pytest
 
-RECEIPT = Path(__file__).parent / "data" / "parity-receipt-296e0138.json"
+RECEIPT = Path(__file__).parent / "data" / "parity-receipt-15c9114e.json"
 
 spec = importlib.util.spec_from_file_location("parity_harness", Path(__file__).parents[1] / "scripts" / "parity.py")
 parity_harness = importlib.util.module_from_spec(spec)
 spec.loader.exec_module(parity_harness)
 
 
+def _python_render(effect_id, effects):
+    """Render one receipt entry the way scripts/parity.py rendered it: the
+    external-input effects through their DSL fixture case, the rest through the
+    `effect` CLI path."""
+    if effect_id in parity_harness.EXTERNAL_INPUT_EFFECT_IDS:
+        return parity_harness.render_dsl(
+            parity_harness._external_case_dsl(effect_id),
+            width=parity_harness.SIZE,
+            height=parity_harness.SIZE,
+            seed=parity_harness.SEED,
+            time=parity_harness.TIME,
+            external_inputs=parity_harness.external_inputs_for_case(effect_id),
+        )
+    return parity_harness.py_render(effect_id, effects[effect_id]["kind"], effects[effect_id].get("externalTexture"))
+
+
 def test_receipt_binds_the_pinned_cpu_revision():
     doc = json.loads(RECEIPT.read_text(encoding="utf-8"))
-    assert doc["cpu"]["revision"] == "296e0138c4744ed485b2e95de3eeb466c17629ee"
-    assert doc["cpu"]["sourceDigest"] == "e371a1650d1ace9462a20ecf4e4f0902e5135b4772e8a9abbc8d2c037beebf59"
-    assert doc["cpu"]["cpuHead"] == "b61b658399f18b5a93abd0020c02fff3be9630f5"
+    assert doc["cpu"]["revision"] == "15c9114e864fcc8cd2557669f2ac6d36f0ea080f"
+    assert doc["cpu"]["sourceDigest"] == "73a7112f5e846b9dcee1a01d33cb921e5645a29c001606bd2d59445fe3c38037"
+    assert doc["cpu"]["cpuHead"] == "deb7dd8af4801d6d299dee268aaef2ddd30a18ad"
     assert doc["settings"] == {"size": 8, "seed": 1, "time": 0.25, "tolerance": 0}
     assert doc["counts"]["diffs"] == 0
     assert doc["counts"]["runtimeErrors"] == 0
@@ -40,35 +56,30 @@ def test_receipt_binds_the_pinned_cpu_revision():
 def test_receipt_covers_the_full_noniterated_image_catalog():
     doc = json.loads(RECEIPT.read_text(encoding="utf-8"))
     effects = parity_harness._meta()["effects"]
-    # The reactive/mesh external-input effects are catalog members now
-    # (noisemaker-for-cpu GAP-003 reactive/mesh import) but are covered by the
-    # DSL fixture-parity tests against the live sibling (the pinned 296e0138
-    # oracle predates them and binds no MIDI/audio/mesh fixture), not by this
-    # node-free CLI-path receipt — the same accounting as the iterated effects.
     eligible = [
         i
         for i in effects
         if not (effects[i].get("iterated") or effects[i].get("domain", "image") != "image")
-        and i not in parity_harness.EXTERNAL_INPUT_EFFECT_IDS
     ]
     assert sorted(doc["byteExact"]) == sorted(eligible), (
         "receipt must cover every eligible non-iterated image effect; regenerate with scripts/parity.py --json"
     )
 
 
+@pytest.mark.slow
 def test_python_renders_match_the_recorded_oracle_hashes():
     doc = json.loads(RECEIPT.read_text(encoding="utf-8"))
     effects = parity_harness._meta()["effects"]
     for eid, entry in sorted(doc["byteExact"].items()):
-        kind = effects[eid]["kind"]
-        ext = effects[eid].get("externalTexture")
-        py = parity_harness.py_render(eid, kind, ext)
+        py = _python_render(eid, effects)
         sha = hashlib.sha256(py.to_rgba8()).hexdigest()
         assert sha == entry["pythonRgba8Sha256"] == entry["oracleRgba8Sha256"], (
             f"{eid} no longer matches the pinned -cpu oracle output recorded in {RECEIPT.name}"
         )
 
 
+@pytest.mark.oracle
+@pytest.mark.slow
 def test_receipt_is_current_when_the_oracle_is_available():
     """If the sibling -cpu checkout at the pinned revision and node are present,
     regenerate the receipt and require it to be unchanged. Otherwise skip."""
@@ -113,9 +124,7 @@ def test_receipt_is_current_when_the_oracle_is_available():
             assert fresh_entry[key] == expected[key], (effect_id, key)
         if fresh_entry["pythonPngSha256"] == expected["pythonPngSha256"]:
             continue
-        kind = effects[effect_id]["kind"]
-        ext = effects[effect_id].get("externalTexture")
-        py = parity_harness.py_render(effect_id, kind, ext)
+        py = _python_render(effect_id, effects)
         png = parity_harness.encode_png(py)
         assert hashlib.sha256(png).hexdigest() == fresh_entry["pythonPngSha256"], (
             effect_id,

@@ -53,40 +53,6 @@ def test_bundled_catalog_has_complete_cpu_domain_partition():
     }
 
 
-_DEGAUSS_OFFSET_OLD = "vec2 offset = vec2(cos(angle), sin(angle)) * displacement * vec2(resolution.x, resolution.y);"
-_DEGAUSS_OFFSET_NEW = "vec2 offset = vec2(cos(angle), sin(angle)) * displacement * vec2(width, height);"
-_DEGAUSS_CLAMP_OLD = "float maxAllowedDisplacement = maxOffsetPixels / max(resolution.x, 1.0);"
-_DEGAUSS_CLAMP_NEW = (
-    "float maxAllowedDisplacement = isTiling"
-    " ? maxOffsetPixels / max(width_f, height_f)"
-    " : maxOffsetPixels / max(resolution.x, 1.0);"
-)
-
-
-def test_degauss_tile_awareness_source_adaptation():
-    """Upstream 48d25116 tile-awareness: the build must adapt the pinned CDN
-    degauss GLSL to displace in GLOBAL pixel space (the full-resolution dims
-    main() passes as width/height) and bound the displacement by the 256px
-    tile-overlap budget measured against those dims when tiling, mirroring the
-    sibling's recompiled canonical kernel. The pinned CDN 1.0.183 snapshot
-    predates the fix, so a regeneration without the adaptation silently
-    reverts the kernel to the pre-48d25116 behavior."""
-    source = f"float x = 1.0;\n{_DEGAUSS_OFFSET_OLD}\n{_DEGAUSS_CLAMP_OLD}\n"
-    adapted = build_module._adapt_source("filter/degauss", "degauss", source)
-    assert _DEGAUSS_OFFSET_NEW in adapted and _DEGAUSS_CLAMP_NEW in adapted
-    assert _DEGAUSS_OFFSET_OLD not in adapted and _DEGAUSS_CLAMP_OLD not in adapted
-
-    # Both patterns are mandatory: a changed canonical form must fail the
-    # build loudly instead of silently keeping the stale lowering.
-    with pytest.raises(ValueError, match="degauss canonical displacement pattern changed"):
-        build_module._adapt_source(
-            "filter/degauss", "degauss", source.replace(_DEGAUSS_OFFSET_OLD, _DEGAUSS_OFFSET_NEW)
-        )
-
-    # Other effects pass through unmodified.
-    assert build_module._adapt_source("filter/blur", "blurH", source) == source
-
-
 def test_bundled_degauss_kernel_carries_tile_awareness():
     kernel = (
         Path(build_module.BUNDLE) / "kernels" / "python" / "filter__degauss__degauss.py"
@@ -173,38 +139,6 @@ def test_bundled_degauss_kernel_matches_tiled_oracle_render():
 
     oracle_rgba8 = Surface(width, height, oracle).to_rgba8()
     assert surface.to_rgba8() == oracle_rgba8
-
-
-_OCTAVEWARP_PX_OLD = "uint(p.x >= 0.0 ? p.x * 2.0 : -p.x * 2.0 + 1.0),"
-_OCTAVEWARP_PX_NEW = "uint(abs(p.x) * 2.0) + uint(p.x < 0.0),"
-_OCTAVEWARP_PY_OLD = "uint(p.y >= 0.0 ? p.y * 2.0 : -p.y * 2.0 + 1.0),"
-_OCTAVEWARP_PY_NEW = "uint(abs(p.y) * 2.0) + uint(p.y < 0.0),"
-_OCTAVEWARP_SEED_OLD = "uint(seed)"
-_OCTAVEWARP_SEED_NEW = "uint(abs(seed))"
-
-
-def test_octave_warp_hash21_sign_adaptation():
-    """Upstream 058d15dc hash21 sign handling: the build must adapt the pinned
-    CDN octaveWarp GLSL from the sign-split ternary seed conversion to
-    uint(abs(...)) casts, mirroring the sibling's recompiled canonical kernel.
-    The pinned CDN 1.0.183 snapshot predates the fix, so a regeneration without
-    the adaptation silently reverts the kernel to the pre-058d15dc behavior."""
-    source = f"uvec3 v = uvec3(\n{_OCTAVEWARP_PX_OLD}\n{_OCTAVEWARP_PY_OLD}\n{_OCTAVEWARP_SEED_OLD}\n);\n"
-    adapted = build_module._adapt_source("filter/octaveWarp", "octaveWarp", source)
-    assert _OCTAVEWARP_PX_NEW in adapted and _OCTAVEWARP_PY_NEW in adapted and _OCTAVEWARP_SEED_NEW in adapted
-    assert _OCTAVEWARP_PX_OLD not in adapted and _OCTAVEWARP_PY_OLD not in adapted and _OCTAVEWARP_SEED_OLD not in adapted
-
-    # All three patterns are mandatory: a changed canonical form must fail the
-    # build loudly instead of silently keeping the stale lowering.
-    with pytest.raises(ValueError, match="octaveWarp canonical hash21 pattern changed"):
-        build_module._adapt_source(
-            "filter/octaveWarp",
-            "octaveWarp",
-            source.replace(_OCTAVEWARP_PX_OLD, _OCTAVEWARP_PX_NEW),
-        )
-
-    # Other effects pass through unmodified.
-    assert build_module._adapt_source("filter/blur", "blurH", source) == source
 
 
 def test_bundled_octave_warp_kernel_matches_negative_seed_oracle_render():
@@ -517,7 +451,7 @@ def test_export_kit_config_is_valid_and_matches_catalog():
 
 
 def test_package_data_config_covers_runtime_bundle(tmp_path):
-    """GAP-004 regression guard: wheels and sdists must ship the runtime
+    """Regression guard: wheels and sdists must ship the runtime
     bundle. ``renderer.bundle_dir()`` loads metadata.json, bundle-lock.json and
     bundle/kernels/python/*.py from the installed package directory, so the
     [tool.setuptools.package-data] globs must match those paths."""
@@ -544,5 +478,5 @@ def test_package_data_config_covers_runtime_bundle(tmp_path):
     for runtime_file in runtime_files:
         assert any(fnmatch(runtime_file, pattern) for pattern in patterns), (
             f"{runtime_file.name} is not covered by package-data patterns {patterns}; "
-            "built distributions would omit a runtime-required file (GAP-004)"
+            "built distributions would omit a runtime-required file"
         )

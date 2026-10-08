@@ -164,7 +164,7 @@ class ParameterRangeError(ValueError):
 
     Mirrors the pinned oracle's src/effects/definition.js, which raises
     `RangeError('Parameter "<name>" must be at most <max>')` after coercing
-    every numeric parameter value (GAP-007).
+    every numeric parameter value.
     """
 
 
@@ -287,7 +287,7 @@ def _remap_uniform_data(u, width, height):
 
 
 # Reactive (MIDI/audio) uniform defaults and mesh/external data-texture bindings.
-# Port of noisemaker-cpu renderer.js bindExternalInputs (GAP-003 reactive/mesh
+# Port of noisemaker-cpu renderer.js bindExternalInputs (the reactive/mesh
 # import): mirrors the upstream pipeline's global-uniform stage
 # (updateGlobalUniforms) — the 128-float audio arrays and the MIDI clock counter
 # are bound only for the effects whose kernels declare them, zero-initialized

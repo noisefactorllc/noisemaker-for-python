@@ -1,4 +1,4 @@
-"""GAP-008 (issue 4) regression: the README quick start gives a practical
+"""Regression: the README quick start gives a practical
 first result. Every quick-start generate example states its expected one-CPU
 render time in its own comment block, the CLI's silent wait is documented,
 and a fast seeded alternative renders a nondegenerate PNG in under 60 s on
@@ -13,6 +13,8 @@ import subprocess
 import sys
 import time
 from pathlib import Path
+
+import pytest
 
 from noisemaker_cpu.png import decode_png
 
@@ -104,6 +106,7 @@ def _pin_to_one_cpu():
     return _pin
 
 
+@pytest.mark.slow
 def test_fast_first_render_produces_nondegenerate_png_under_60s(tmp_path):
     _, argv = _fast_block(_command_blocks(_render_section()))
     # Run the README line exactly as written, through the same entry point a
@@ -133,6 +136,6 @@ def test_fast_first_render_produces_nondegenerate_png_under_60s(tmp_path):
     assert out_path.is_file(), f"no PNG written to {out_path}"
     surface = decode_png(out_path.read_bytes())
     distinct = len(set(bytes(surface.data)))
-    # Nondegenerate: the unseeded all-white failure mode (GAP-007) rendered
+    # Nondegenerate: the unseeded all-white failure mode rendered
     # exactly one distinct pixel value; a real synth/curl render varies.
     assert distinct > 8, f"fast first render is degenerate: {distinct} distinct pixel values"

@@ -17,10 +17,19 @@ on:
       - '.github/dependabot.yml'
       - '.editorconfig'
     branches: [main]
+  # Pushes run the quick gate. The weekly run and workflow_dispatch run the full
+  # gate: every test against the pinned CPU oracle, plus the whole-catalog parity
+  # summary. Export kit releases a kit only after a successful full run.
+  schedule:
+    - cron: '41 6 * * 1'
   workflow_dispatch:
 
 permissions:
   contents: read
+
+concurrency:
+  group: tests-${{ github.ref }}-${{ github.event_name == 'push' && 'gate' || 'full' }}
+  cancel-in-progress: false
 
 jobs:
   qualify:
@@ -37,7 +46,7 @@ jobs:
           - os: windows-2025
             python: '3.14'
     runs-on: ${{ matrix.os }}
-    timeout-minutes: 45
+    timeout-minutes: ${{ github.event_name == 'push' && 20 || 60 }}
     defaults:
       run:
         shell: bash
@@ -47,6 +56,7 @@ jobs:
         with:
           python-version: ${{ matrix.python }}
       - uses: actions/setup-node@a0853c24544627f65ddf259abe73b1d18a591444 # v5.0.0
+        if: github.event_name != 'push'
         with:
           node-version: '24'
       - name: Initialize receipt and oracle paths
@@ -59,32 +69,39 @@ jobs:
               output.write('NOISEMAKER_CPU_DIR=' + (root / 'cpu-oracle').as_posix() + '\n')
               output.write('RECEIPTS=' + (root / 'python-receipts').as_posix() + '\n')
           PY
-      - name: Load the immutable CPU oracle
+      - name: Load the pinned CPU oracle
+        if: github.event_name != 'push'
+        timeout-minutes: 10
         run: |
-          python - <<'PY'
-          import io, os, tarfile, urllib.request
-          from pathlib import Path
-          revision = 'b61b658399f18b5a93abd0020c02fff3be9630f5'
-          data = urllib.request.urlopen('https://codeload.github.com/noisefactorllc/noisemaker-for-cpu/tar.gz/' + revision, timeout=120).read()
-          root = Path(os.environ['NOISEMAKER_CPU_DIR'])
-          with tarfile.open(fileobj=io.BytesIO(data)) as archive:
-              for member in archive:
-                  relative = Path(*Path(member.name).parts[1:])
-                  if relative.parts and (relative.parts[0] in ('src', 'bin') or relative.as_posix().startswith('scripts/upstream/') or relative.as_posix() == 'package.json'):
-                      assert '..' not in relative.parts and not relative.is_absolute()
-                      if member.isdir():
-                          continue
-                      assert member.isfile(), member.name
-                      target = root / relative
-                      target.parent.mkdir(parents=True, exist_ok=True)
-                      target.write_bytes(archive.extractfile(member).read())
-          receipts = Path(os.environ['RECEIPTS'])
-          receipts.mkdir(parents=True, exist_ok=True)
-          (receipts / 'cpu-source.sha').write_text(revision + '\n')
-          PY
+          revision=$(sed -n 's/^ *CPU_PINNED_REVISION=//p' scripts/test)
+          tree=$(sed -n 's/^ *CPU_PINNED_TREE=//p' scripts/test)
+          test -n "$revision" && test -n "$tree"
+          git init -q "$NOISEMAKER_CPU_DIR"
+          git -C "$NOISEMAKER_CPU_DIR" fetch -q --depth 1 https://github.com/noisefactorllc/noisemaker-for-cpu.git "$revision"
+          git -C "$NOISEMAKER_CPU_DIR" checkout -q --detach FETCH_HEAD
+          actual=$(git -C "$NOISEMAKER_CPU_DIR" rev-parse 'HEAD^{tree}')
+          test "$(git -C "$NOISEMAKER_CPU_DIR" rev-parse HEAD)" = "$revision"
+          test "$actual" = "$tree" || { echo "cpu oracle tree mismatch at $revision: $actual" >&2; exit 1; }
+          mkdir -p "$RECEIPTS"
+          echo "$revision" > "$RECEIPTS/cpu-source.sha"
       - run: python -m pip install '.[dev,build]' build
+        timeout-minutes: 15
+      - name: Run the quick tests
+        if: github.event_name == 'push'
+        run: |
+          mkdir -p "$RECEIPTS"
+          python -m pytest -q -ra -m "not slow and not oracle" --junitxml="$RECEIPTS/tests.xml" 2>&1 | tee "$RECEIPTS/tests.log"
+          exit "${PIPESTATUS[0]}"
       - name: Run all tests with the oracle
-        run: python -m pytest -q -ra --junitxml="$RECEIPTS/tests.xml" 2>&1 | tee "$RECEIPTS/tests.log"
+        if: github.event_name != 'push'
+        run: |
+          python -m pytest -q -ra --junitxml="$RECEIPTS/tests.xml" 2>&1 | tee "$RECEIPTS/tests.log"
+          exit "${PIPESTATUS[0]}"
+      - name: Whole-catalog parity summary
+        if: github.event_name != 'push' && matrix.os == 'ubuntu-24.04' && matrix.python == '3.14'
+        run: |
+          python scripts/parity-summary 2>&1 | tee "$RECEIPTS/parity-summary.log"
+          exit "${PIPESTATUS[0]}"
       - name: Reject missing or skipped qualification tests
         if: always()
         run: |

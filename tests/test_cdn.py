@@ -111,7 +111,7 @@ def test_eligible_ids():
     assert "render/loopEnd" in ids
 
     # Reactive and mesh effects are imported with the catalog (noisemaker-for-cpu
-    # GAP-003 reactive/mesh import, synced here): the eligible set covers the
+    # reactive/mesh import, synced here): the eligible set covers the
     # full 210-effect authority inventory.
     assert "synth/scope" in ids
     assert "synth/roll" in ids

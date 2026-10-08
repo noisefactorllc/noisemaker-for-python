@@ -870,6 +870,18 @@
       "pythonPngSha256": "02aea643711b59b7f35a7bb1a5719fa741fc052bff92b5e78a085c327169f9f8",
       "pythonRgba8Sha256": "eec68212ac4794baa76cf2d4520d0401aeb7156ee1ee28dabbc0bf0fdec54cb7"
     },
+    "render/meshLoader": {
+      "oraclePngSha256": "ffaf764868498300e5d22b120d1d491cd3e6170380a76fbb478068e79ff647e3",
+      "oracleRgba8Sha256": "c58783bed8dc82583f3c4201b387242ea0d88c8e1d334cb02f77cbde1873e2ac",
+      "pythonPngSha256": "66d132eab4d3f2b1f4d4dc384efefc0c39312212c721f5287ce3f50b9b6e3f05",
+      "pythonRgba8Sha256": "c58783bed8dc82583f3c4201b387242ea0d88c8e1d334cb02f77cbde1873e2ac"
+    },
+    "render/meshRender": {
+      "oraclePngSha256": "e83481ab9a87953c5850b6d816132786927f8b8c675f7ce903b4579c6d6bc49e",
+      "oracleRgba8Sha256": "a2fa9de8bb960217a38c2e9577bb8cee4ac19dcae8711521a5b05eeac20423b4",
+      "pythonPngSha256": "e83481ab9a87953c5850b6d816132786927f8b8c675f7ce903b4579c6d6bc49e",
+      "pythonRgba8Sha256": "a2fa9de8bb960217a38c2e9577bb8cee4ac19dcae8711521a5b05eeac20423b4"
+    },
     "synth/bitwise": {
       "oraclePngSha256": "fa56cdeebd579644f16093445c5f3d80bac12d2a21cc6e7e51fb1e3cec98aef7",
       "oracleRgba8Sha256": "1ab2757c207cc80758fffe6ec4b0000d694ede4c952a3b2f2523ba2591e5db12",
@@ -972,11 +984,23 @@
       "pythonPngSha256": "30160553fec73b75e7b8948d5428297344cd48e60c534725b9c7b035469e14bd",
       "pythonRgba8Sha256": "2c893cd47b6757133987906e00c55e6dcce3c567b9df9e7f91ffecd3604cc6a6"
     },
+    "synth/roll": {
+      "oraclePngSha256": "9ea0d5e619371f0d707fc5df2e6e7a7e0ac80e5e930f7518e4cb09fd24a8b51e",
+      "oracleRgba8Sha256": "b54322252e2813574ec00913551e4f4437c937ced08351b6de9e094dcf978165",
+      "pythonPngSha256": "9ea0d5e619371f0d707fc5df2e6e7a7e0ac80e5e930f7518e4cb09fd24a8b51e",
+      "pythonRgba8Sha256": "b54322252e2813574ec00913551e4f4437c937ced08351b6de9e094dcf978165"
+    },
     "synth/sacredGeometry": {
       "oraclePngSha256": "ca6a89f69b821613d943144132fff2cec356667339776941cb41684a278e6180",
       "oracleRgba8Sha256": "f86f5c0858d0f4d77f06ab3e23b4d00d645171a9fe5482e6996c49a0e392cadb",
       "pythonPngSha256": "ca6a89f69b821613d943144132fff2cec356667339776941cb41684a278e6180",
       "pythonRgba8Sha256": "f86f5c0858d0f4d77f06ab3e23b4d00d645171a9fe5482e6996c49a0e392cadb"
+    },
+    "synth/scope": {
+      "oraclePngSha256": "72b436f2b0797755f5d1f02acc26d506a70988e8e9dcbeae12e3405e9dcb8ac6",
+      "oracleRgba8Sha256": "bece2e29a866fd450be48e7743fb78dcf70bad111313b83d00fb94a8719f2b78",
+      "pythonPngSha256": "422a699bc3259471e7da3809a158f61e7fc9fc49b9935a715ba815edc0181f76",
+      "pythonRgba8Sha256": "bece2e29a866fd450be48e7743fb78dcf70bad111313b83d00fb94a8719f2b78"
     },
     "synth/shape": {
       "oraclePngSha256": "be5d13d7ffd9242d7a5d985f2d3b46311e6765801acc09f0b78009925eedb1ad",
@@ -989,6 +1013,12 @@
       "oracleRgba8Sha256": "eec68212ac4794baa76cf2d4520d0401aeb7156ee1ee28dabbc0bf0fdec54cb7",
       "pythonPngSha256": "02aea643711b59b7f35a7bb1a5719fa741fc052bff92b5e78a085c327169f9f8",
       "pythonRgba8Sha256": "eec68212ac4794baa76cf2d4520d0401aeb7156ee1ee28dabbc0bf0fdec54cb7"
+    },
+    "synth/spectrum": {
+      "oraclePngSha256": "8bcfbd41b7608c1536c5b8111844b09643a240481f2c21480f92248ecbafb716",
+      "oracleRgba8Sha256": "836bd62b51b39bd318f565abe59ac1c83e72ecbb10de7d37fb13b8d849c0295a",
+      "pythonPngSha256": "b739ade76022b02c15e352e2905be6709abf9c15f92fe817b213ec8c5a4d62b4",
+      "pythonRgba8Sha256": "836bd62b51b39bd318f565abe59ac1c83e72ecbb10de7d37fb13b8d849c0295a"
     },
     "synth/subdivide": {
       "oraclePngSha256": "30160553fec73b75e7b8948d5428297344cd48e60c534725b9c7b035469e14bd",
@@ -1004,19 +1034,19 @@
     }
   },
   "counts": {
-    "byteExact": 167,
-    "considered": 167,
+    "byteExact": 172,
+    "considered": 172,
     "diffs": 0,
     "oracleErrors": 0,
     "runtimeErrors": 0,
     "skipped": 38
   },
   "cpu": {
-    "cpuHead": "b61b658399f18b5a93abd0020c02fff3be9630f5",
-    "cpuTree": "41988bc079140eccf082dd08f2ec5c8a4555e787",
-    "revision": "296e0138c4744ed485b2e95de3eeb466c17629ee",
-    "snapshotRevision": "296e0138c4744ed485b2e95de3eeb466c17629ee",
-    "sourceDigest": "e371a1650d1ace9462a20ecf4e4f0902e5135b4772e8a9abbc8d2c037beebf59"
+    "cpuHead": "deb7dd8af4801d6d299dee268aaef2ddd30a18ad",
+    "cpuTree": "e41f239db3efabe63ee15098c81e228f3aecc7b8",
+    "revision": "15c9114e864fcc8cd2557669f2ac6d36f0ea080f",
+    "snapshotRevision": "15c9114e864fcc8cd2557669f2ac6d36f0ea080f",
+    "sourceDigest": "73a7112f5e846b9dcee1a01d33cb921e5645a29c001606bd2d59445fe3c38037"
   },
   "diffs": [],
   "errors": {},

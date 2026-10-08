@@ -28,7 +28,7 @@ def run_pixel(ctx, out):
     g.TAU = rt.f(6.28318530718)
     g.BAILOUT = rt.f(256.0)
     g.LOG2 = rt.f(0.6931471805599453)
-    g.MAX_ITER = rt.i(500)
+    g.MAX_ITER = rt.i(2048)
     def df64_quick_two_sum__float_float(a, b):
         s = rt.binary("+", a, b, 1, "float")
         e = rt.binary("-", b, rt.binary("-", s, a, 1, "float"), 1, "float")
