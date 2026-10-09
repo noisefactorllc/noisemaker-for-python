@@ -106,6 +106,16 @@ ITERATED_PROGRAMS = {
             "physical",
         )
     },
+    # heightGrid's default top-down view ignores its agent's Z mapping (the
+    # flip is invisible there): the perspective projection is the covered case
+    # that actually reads outXYZ[2], so pin the upstream top-row-at--Z mapping
+    # through it.
+    "points/heightGrid": (
+        "search points, render, synth\n"
+        "perlin(seed: 0).pointsEmit(seed: 0, stateSize: 64, iterationCount: 2)"
+        ".heightGrid().pointsRender(viewMode: perspective, rotateX: 0.4, posZ: 10, fieldOfView: 70).write(o0)\n"
+        "render(o0)\n"
+    ),
     "render/pointsBillboardRender": (
         "search synth, points, render\n"
         "polygon(radius: 0.7, fgAlpha: 0.1, bgAlpha: 0).write(o0)\n"

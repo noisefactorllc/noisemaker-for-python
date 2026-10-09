@@ -213,6 +213,47 @@ def test_bundled_octave_warp_kernel_matches_negative_seed_oracle_render():
     assert surface.to_rgba8() == oracle_rgba8
 
 
+def test_heightgrid_top_row_negative_z_source_adaptation():
+    """Upstream 6b2d5d6d flips points/heightGrid's agent Z mapping so the
+    image's top row lies at -Z (a top-down view along -Y shows the image as
+    authored, not mirrored). The pinned CDN snapshot predates the fix, so a
+    regeneration without the adaptation silently reverts the kernel to the
+    pre-6b2d5d6d behavior."""
+    source = (
+        "    // XZ ground plane, Y elevation. These are world coordinates, not UVs.\n"
+        "    outXYZ = vec4((uv.x - 0.5) * gridScale,\n"
+        "        elevation * heightScale + heightOffset,\n"
+        "        (uv.y - 0.5) * gridScale, 1.0);\n"
+    )
+
+    adapted = build_module._adapt_source("points/heightGrid", "agent", source)
+    assert "(0.5 - uv.y) * gridScale, 1.0);" in adapted
+    assert "(uv.y - 0.5) * gridScale, 1.0);" not in adapted
+    assert "    // The image's top row lies at -Z, so a view from above along -Y with\n" in adapted
+
+    # The patterns are mandatory: a changed canonical form must fail the build
+    # loudly instead of silently keeping the stale lowering.
+    with pytest.raises(ValueError, match="heightGrid canonical Z pattern changed"):
+        build_module._adapt_source(
+            "points/heightGrid",
+            "agent",
+            source.replace("(uv.y - 0.5) * gridScale, 1.0);", "(0.5 - uv.y) * gridScale, 1.0);"),
+        )
+
+    # Other programs pass through unmodified.
+    assert build_module._adapt_source("points/heightGrid", "passthrough", source) == source
+
+
+def test_bundled_heightgrid_kernel_carries_top_row_negative_z():
+    kernel = (
+        Path(build_module.BUNDLE) / "kernels" / "python" / "points__heightGrid__agent.py"
+    ).read_text()
+
+    # outXYZ[2] maps uv.y to Z as (0.5 - uv.y) * gridScale, not (uv.y - 0.5).
+    assert 'rt.binary("*", rt.binary("-", rt.f(0.5), rt.swizzle(uv, "y"), 1, "float"), _u_gridScale, 1, "float")' in kernel
+    assert 'rt.binary("*", rt.binary("-", rt.swizzle(uv, "y"), rt.f(0.5), 1, "float"), _u_gridScale, 1, "float")' not in kernel
+
+
 def test_hash_returns_take_the_sibling_float_casts_in_every_effect_but_scatter():
     # The sibling's adaptCanonicalSource rounds the add and the multiply of
     # these hash returns for every effect except filter/scatter. Without it,

@@ -59,8 +59,12 @@ def _build_cases(effects: dict) -> dict:
             cases[eid] = ("effect", eid, _parity.SIZE)
     for eid, program in _tp.ITERATED_PROGRAMS.items():
         base = eid.split(":")[0]
-        if base in effects:
-            cases.setdefault(base, ("dsl", program, 8))
+        if base in effects and base not in _parity.EXTERNAL_INPUT_EFFECT_IDS:
+            # The declared chain is the executable case. It overrides the
+            # default single-effect case for non-iterated image effects whose
+            # default render never exercises the behavior the chain pins
+            # (points/heightGrid's passthrough never reads its agent's outXYZ).
+            cases[base] = ("dsl", program, 8)
     for case_id, program, width, _height in _tp.VOLUME_DSL_CASES:
         base = case_id.split(":")[0]
         if base in effects:

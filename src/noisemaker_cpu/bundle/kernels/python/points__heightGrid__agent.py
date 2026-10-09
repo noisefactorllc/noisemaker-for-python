@@ -21,7 +21,7 @@ def run_pixel(ctx, out):
         uv = rt.binary("/", rt.binary("+", rt.construct(2, coord), rt.f(0.5), 2, "float"), rt.construct(2, stateSize), 2, "float")
         heightColor = rt.swizzle(rt.texture(_u_heightTex, uv), "rgb")
         elevation = rt.dot(heightColor, rt.construct(3, rt.f(0.2126), rt.f(0.7152), rt.f(0.0722)))
-        g.outXYZ[:] = rt.construct(4, rt.binary("*", rt.binary("-", rt.swizzle(uv, "x"), rt.f(0.5), 1, "float"), _u_gridScale, 1, "float"), rt.binary("+", rt.binary("*", elevation, _u_heightScale, 1, "float"), _u_heightOffset, 1, "float"), rt.binary("*", rt.binary("-", rt.swizzle(uv, "y"), rt.f(0.5), 1, "float"), _u_gridScale, 1, "float"), rt.f(1.0))
+        g.outXYZ[:] = rt.construct(4, rt.binary("*", rt.binary("-", rt.swizzle(uv, "x"), rt.f(0.5), 1, "float"), _u_gridScale, 1, "float"), rt.binary("+", rt.binary("*", elevation, _u_heightScale, 1, "float"), _u_heightOffset, 1, "float"), rt.binary("*", rt.binary("-", rt.f(0.5), rt.swizzle(uv, "y"), 1, "float"), _u_gridScale, 1, "float"), rt.f(1.0))
         g.outVel[:] = rt.construct(4, rt.f(0.0), rt.f(0.0), rt.f(0.0), rt.swizzle(rt.texel_fetch(_u_velTex, coord, rt.i(0)), "w"))
         g.outRGBA[:] = rt.texture(_u_diffuseTex, uv)
     main__void()

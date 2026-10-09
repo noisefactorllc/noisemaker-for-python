@@ -57,6 +57,22 @@ def _adapt_source(effect_id: str, program: str, source: str) -> str:
         if source.count(pigment) != 1:
             raise ValueError("strokes canonical pigment pattern changed")
         source = source.replace(pigment, "pigmentSum += vec3(srcSample(centerUV).rgb * mark);")
+    if effect_id == "points/heightGrid" and program == "agent":
+        # Upstream 6b2d5d6d flips the agent's Z mapping so the image's top row
+        # lies at -Z: a top-down view along -Y with screen right on +X shows
+        # the image as authored instead of mirrored. The pinned CDN snapshot
+        # predates the change; keep the adapted program byte-identical to the
+        # upstream file so a later engine bump regenerates the same kernel.
+        comment = "    // XZ ground plane, Y elevation. These are world coordinates, not UVs.\n"
+        comment_new = (
+            "    // The image's top row lies at -Z, so a view from above along -Y with\n"
+            "    // screen right on +X shows the image as authored, not mirrored.\n"
+        )
+        z_old = "(uv.y - 0.5) * gridScale, 1.0);"
+        z_new = "(0.5 - uv.y) * gridScale, 1.0);"
+        if source.count(z_old) != 1 or source.count(comment) != 1:
+            raise ValueError("heightGrid canonical Z pattern changed")
+        source = source.replace(z_old, z_new).replace(comment, comment + comment_new)
     return source
 
 
