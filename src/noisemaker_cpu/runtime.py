@@ -28,13 +28,21 @@ def f32(x) -> float:
     return float(np.float32(x))
 
 
-def _dot64(a, b) -> float:
-    """The sibling's dot before its final F32: products of f32 operands are
-    exact in float64, summed left to right (`sum += left[i] * right[i]`).
-    np.dot may associate the sum differently and round differently."""
+def _dot64(a, b, fma=False) -> float:
+    """The sibling's dot.
+
+    Without the fold: products of f32 operands are exact in float64, summed
+    left to right (`sum += left[i] * right[i]`) — np.dot may associate the sum
+    differently and round differently; the caller rounds once.
+
+    With the fold (``2df5168abbe1``): each accumulated term rounds to f32 as
+    it adds (`sum = F32(left[i] * right[i] + sum)`), the GPU's fused-multiply-
+    add chain — the f64 product is exact, so the f32 add keeps its single
+    per-term rounding. See ``_oracle_dot_fma``.
+    """
     total = 0.0
     for x, y in zip(a.tolist(), b.tolist()):
-        total += x * y
+        total = f32(x * y + total) if fma else total + x * y
     return total
 
 
@@ -56,6 +64,7 @@ _ORACLE_INTEGER_DIVISION: bool | None = None
 _ORACLE_SCALAR_INT_DIVISION: bool | None = None
 _ORACLE_ALIASED_DECLARATION_COPY: bool | None = None
 _ORACLE_PASS_REPEAT_CLAMP: bool | None = None
+_ORACLE_DOT_FMA: bool | None = None
 _SIBLING_DEFAULT = os.path.normpath(os.path.join(os.path.dirname(__file__), "..", "..", "..", "noisemaker-for-cpu"))
 
 
@@ -133,6 +142,29 @@ def _oracle_integer_division_trunc() -> bool:
         else:
             _ORACLE_INTEGER_DIVISION = "restoreIntegerDivision" in text
     return _ORACLE_INTEGER_DIVISION
+
+
+def _oracle_dot_fma() -> bool:
+    """Whether the sibling's dot folds into a fused-multiply-add chain.
+
+    ``noisemaker-for-cpu`` src/csl/glsl-runtime.js rounds each accumulated dot
+    term to f32 in 2df5168abbe1: GPU backends (ANGLE on Metal) fold a GLSL dot
+    product into a fused-multiply-add chain with one rounding per accumulated
+    term, and the JS runtime emulates that provenance (`sum = F32(left[i] *
+    right[i] + sum)`). Pre-fix oracles accumulate the sum in float64 with a
+    single final rounding. The published runtime carries the CURRENT
+    (post-``2df5168``) semantics, so this defaults to True — a
+    standalone/deployed render with no mounted oracle folds. A mounted sibling
+    oracle's runtime is probed once per process so version-mismatched
+    comparisons still work: pre-fix oracles (the CI oracle tarball b61b658399f1
+    and every pinned gate authority before 2df5168) keep their published
+    single-rounding behavior.
+    """
+    global _ORACLE_DOT_FMA
+    if _ORACLE_DOT_FMA is None:
+        text = _mounted_oracle_text(os.path.join("src", "csl", "glsl-runtime.js"))
+        _ORACLE_DOT_FMA = text is None or "left[index] * right[index] + sum" in text
+    return _ORACLE_DOT_FMA
 
 
 def _trunc_value(x):
@@ -592,22 +624,31 @@ class Runtime:
             return int(x) & _U32
         return np.asarray(x).astype(np.int64) & _U32
 
-    # ---- vector geometry (snap args to f32, accumulate float64, round once) ----
+    # ---- vector geometry (snap args to f32; dot folds each accumulated term
+    # when the oracle carries the fma chain, else accumulates float64 and
+    # rounds once) ----
     def dot(self, a, b, width=None):
-        return f32(_dot64(np.asarray(_snap32(a), dtype=np.float64), np.asarray(_snap32(b), dtype=np.float64)))
+        return f32(
+            _dot64(
+                np.asarray(_snap32(a), dtype=np.float64),
+                np.asarray(_snap32(b), dtype=np.float64),
+                fma=_oracle_dot_fma(),
+            )
+        )
 
     def length(self, a, width=None):
-        # JS length is F32(sqrt(dot)), and its dot is itself F32-rounded — so the
-        # squared magnitude is rounded to f32 before the sqrt. Match that.
+        # JS length is F32(sqrt(dot)), and dot is itself f32 — per-term folded
+        # when the oracle carries the fma chain — so the squared magnitude is
+        # dot's f32 value before the sqrt. Match that.
         v = np.asarray(_snap32(a), dtype=np.float64)
-        return f32(float(np.sqrt(f32(_dot64(v, v)))))
+        return f32(float(np.sqrt(f32(_dot64(v, v, fma=_oracle_dot_fma())))))
 
     def distance(self, a, b, width=None):
         # JS distance is length(subtract(a, b)): the difference is stored f32 per
         # component, then its dot is F32-rounded before the sqrt.
         d = (np.asarray(_snap32(a), dtype=np.float64) - np.asarray(_snap32(b), dtype=np.float64)).astype(F32)
         d = d.astype(np.float64)
-        return f32(float(np.sqrt(f32(_dot64(d, d)))))
+        return f32(float(np.sqrt(f32(_dot64(d, d, fma=_oracle_dot_fma())))))
 
     def normalize(self, a, width=None):
         v = np.asarray(_snap32(a), dtype=np.float64)
@@ -616,7 +657,7 @@ class Runtime:
         # invisible in most chains but decisive where it feeds a branch (parallax's
         # ray-march break snaps a nearest-sampled height to a different texel).
         # Its length() rounds the dot to f32 before the sqrt, as length() does.
-        mag = float(F32(np.sqrt(f32(_dot64(v, v)))))
+        mag = float(F32(np.sqrt(f32(_dot64(v, v, fma=_oracle_dot_fma())))))
         if mag == 0.0:
             return np.zeros(v.shape[0], dtype=F32)
         return (v / mag).astype(F32)
@@ -627,13 +668,13 @@ class Runtime:
     def reflect(self, i, n):
         iv = np.asarray(i, dtype=np.float64)
         nv = np.asarray(n, dtype=np.float64)
-        return (iv - 2.0 * np.dot(nv, iv) * nv).astype(F32)
+        return (iv - 2.0 * _dot64(nv, iv, fma=_oracle_dot_fma()) * nv).astype(F32)
 
     def refract(self, i, n, eta):
         iv = np.asarray(i, dtype=np.float64)
         nv = np.asarray(n, dtype=np.float64)
         e = float(eta)
-        d = np.dot(nv, iv)
+        d = _dot64(nv, iv, fma=_oracle_dot_fma())
         k = 1.0 - e * e * (1.0 - d * d)
         if k < 0.0:
             return np.zeros(iv.shape[0], dtype=F32)

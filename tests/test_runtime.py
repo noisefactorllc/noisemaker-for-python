@@ -98,3 +98,52 @@ def test_distance_rounds_the_difference_and_the_dot_like_the_oracle():
 
     assert float(runtime.distance(a, b)) == 1.5235146284103394
 
+
+def test_dot_folds_each_accumulated_term_like_the_oracle(monkeypatch):
+    """glsl-runtime's dot folds into a fused-multiply-add chain (2df5168abbe1:
+    GPU backends round once per accumulated term, `sum = F32(left[i] *
+    right[i] + sum)`; pre-fix oracles accumulate in float64 and round once).
+    Expected values are noisemaker-for-cpu's at the folded tip; the
+    single-rounding path diverges on every example."""
+    from noisemaker_cpu import runtime
+
+    rt = Runtime()
+    a4 = np.array([0.7645993232727051, 2.686253547668457, 0.4626176953315735, -0.6199171543121338], dtype=np.float32)
+    b4 = np.array([2.8575305938720703, -2.720503807067871, 2.150810718536377, -1.262344241142273], dtype=np.float32)
+    a3 = np.array([-0.20638880133628845, 2.5406482219696045, -0.8305058479309082], dtype=np.float32)
+    b3 = np.array([-1.509440541267395, -1.921399474143982, 1.6789777278900146], dtype=np.float32)
+    a2 = np.array([-0.8672153353691101, 0.665517270565033, -0.0378420315682888], dtype=np.float32)
+    b2 = np.array([-1.6907533407211304, -1.275408387184143, 1.430180311203003], dtype=np.float32)
+
+    monkeypatch.setattr(runtime, "_ORACLE_DOT_FMA", True)
+    assert rt.dot(a4, b4) == -3.3455448150634766
+    assert rt.dot(a3, b3) == -5.964468955993652
+    assert rt.dot(a2, b2) == 0.5633199214935303
+
+    monkeypatch.setattr(runtime, "_ORACLE_DOT_FMA", False)
+    assert rt.dot(a4, b4) == -3.3455450534820557
+    assert rt.dot(a3, b3) == -5.9644694328308105
+    assert rt.dot(a2, b2) == 0.563319981098175
+
+
+def test_dot_probe_defaults_to_the_folded_tip(monkeypatch):
+    """The published runtime folds by default (standalone/deployed renders with
+    no mounted oracle); a mounted pre-fix oracle keeps its published
+    single-rounding dot."""
+    from noisemaker_cpu import runtime
+
+    monkeypatch.setattr(runtime, "_ORACLE_DOT_FMA", None)
+    pre_fix_dot = (
+        "let sum = 0\n      for (let index = 0; index < left.length; index += 1) sum += left[index] * right[index]"
+    )
+    monkeypatch.setattr(runtime, "_mounted_oracle_text", lambda path: pre_fix_dot)
+    assert runtime._oracle_dot_fma() is False
+
+    monkeypatch.setattr(runtime, "_ORACLE_DOT_FMA", None)
+    monkeypatch.setattr(runtime, "_mounted_oracle_text", lambda path: "sum = F32(left[index] * right[index] + sum)")
+    assert runtime._oracle_dot_fma() is True
+
+    monkeypatch.setattr(runtime, "_ORACLE_DOT_FMA", None)
+    monkeypatch.setattr(runtime, "_mounted_oracle_text", lambda path: None)
+    assert runtime._oracle_dot_fma() is True
+

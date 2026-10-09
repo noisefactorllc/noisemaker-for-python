@@ -2,8 +2,9 @@
 committed oracle fixtures.
 
 tests/data/feedback-oracle/ holds fixtures rendered by the pinned CPU oracle
-(noisemaker-for-cpu checkout at HEAD bfbe54764eee87c8f67d2b281d5f304faad04a5b,
-bundle CDN 1.0.183): for every recorded case the oracle CLI's PNG artifact
+(noisemaker-for-cpu checkout at HEAD 2df5168abbe197eb66e64e0404efff61342b7a2d,
+pinned upstream 700ac32e8b4f80a221754e62302e63ac76f5ecc5): for every recorded
+case the oracle CLI's PNG artifact
 (provenance), its decoded RGBA8 bytes, and the raw output-surface float32 bytes
 (rgba16f leg, which catches sub-8-bit divergences), plus manifest.json binding
 each file's sha256, the exact program/size/seed/time of every case, and the
@@ -31,7 +32,7 @@ from noisemaker_cpu.renderer import render_dsl
 
 FIXTURES = Path(__file__).parent / "data" / "feedback-oracle"
 MANIFEST = FIXTURES / "manifest.json"
-ORACLE_HEAD = "bfbe54764eee87c8f67d2b281d5f304faad04a5b"
+ORACLE_HEAD = "2df5168abbe197eb66e64e0404efff61342b7a2d"
 
 
 def _sha256(data: bytes) -> str:
@@ -57,7 +58,7 @@ def _py_render(case: dict):
 def test_manifest_binds_the_pinned_oracle_revision_and_is_internally_consistent():
     manifest = json.loads(MANIFEST.read_text(encoding="utf-8"))
     assert manifest["oracle"]["cpuHead"] == ORACLE_HEAD
-    assert manifest["oracle"]["pinnedUpstreamRevision"] == "8eeb7b5ac14eb37a8d16037f607a88ce63924cd3"
+    assert manifest["oracle"]["pinnedUpstreamRevision"] == "700ac32e8b4f80a221754e62302e63ac76f5ecc5"
     cases = manifest["cases"]
     assert len(cases) == 46
     assert sum(key.startswith("solid-") for key in cases) == 32

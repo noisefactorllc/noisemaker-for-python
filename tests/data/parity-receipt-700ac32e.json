@@ -79,10 +79,10 @@
       "pythonRgba8Sha256": "fa6ba78caaa7bf441cb681d2ebba705285db3a0e4650f919c3927515985306f6"
     },
     "classicNoisedeck/noise": {
-      "oraclePngSha256": "0bb1bb7545aa736ef452c1889efdd89a049ed9155b28e41f167cfc64b2f24352",
-      "oracleRgba8Sha256": "92143ceecc7eff5a5dc16ee9f2e885cf24822eac5617c5d3e12595f2cf1e811f",
-      "pythonPngSha256": "5edf243b69ca06bcef26f0e1b5b28e924c71e0af6658e24ae8a4d7d6df5217ab",
-      "pythonRgba8Sha256": "92143ceecc7eff5a5dc16ee9f2e885cf24822eac5617c5d3e12595f2cf1e811f"
+      "oraclePngSha256": "370dfe69c5d56d097e6b2ad582c1f82f5ed8098f6013b12801d13e4755ea09fb",
+      "oracleRgba8Sha256": "cd6c5ae890862d750b07a967a0372d2bc0d1cebccaa232cdb767fd1b64caeb21",
+      "pythonPngSha256": "370dfe69c5d56d097e6b2ad582c1f82f5ed8098f6013b12801d13e4755ea09fb",
+      "pythonRgba8Sha256": "cd6c5ae890862d750b07a967a0372d2bc0d1cebccaa232cdb767fd1b64caeb21"
     },
     "classicNoisedeck/noise3d": {
       "oraclePngSha256": "107f576a60ab7201375bf9ccd7a63c7b6bfe57d34c841633ae2c24f413c75e28",
@@ -643,10 +643,10 @@
       "pythonRgba8Sha256": "2c893cd47b6757133987906e00c55e6dcce3c567b9df9e7f91ffecd3604cc6a6"
     },
     "filter/stipple": {
-      "oraclePngSha256": "57f84e47de1b56846456e30a6034c748f4ce8321dbef5b04813e41e537192d66",
-      "oracleRgba8Sha256": "8efea2545856646161c95e6b1b8c151f6b02efaa31f6a1b365457fa3f7b5452c",
-      "pythonPngSha256": "e6e02e9710fab445d69b48af13c00ac025a1e4b9d04c69d056a7b8ccd7115cb0",
-      "pythonRgba8Sha256": "8efea2545856646161c95e6b1b8c151f6b02efaa31f6a1b365457fa3f7b5452c"
+      "oraclePngSha256": "cdb51ed0d9ca6a9ebc3d59aafcd9914263c2f5cf1731152251abaa44cd20b2f0",
+      "oracleRgba8Sha256": "45f24fe940caaeec519342190803723dbbe205cb8a2a9488b7a1abb62d7ed4aa",
+      "pythonPngSha256": "0a294ba3ab430b9aa9a703e45fb3f2eb790720acf2fcd1ec140c883eda9fa516",
+      "pythonRgba8Sha256": "45f24fe940caaeec519342190803723dbbe205cb8a2a9488b7a1abb62d7ed4aa"
     },
     "filter/strayHair": {
       "oraclePngSha256": "4d47ccb6cdb9986b93cbbcf00b46c2927e8f528c3c0ec9615a6f14803c85af52",
@@ -655,10 +655,10 @@
       "pythonRgba8Sha256": "7886e38fe2582a07ae4313745d6650f8181a48bf7433d88d415767af11dd3809"
     },
     "filter/strokes": {
-      "oraclePngSha256": "26e82e022d05a8a85a990600641955c79419de54a65e8d35239b0dfc566104d9",
-      "oracleRgba8Sha256": "5cac76a591ccb25ae8a7e60354d8303414e8dbaec4f781a80bdd01b2fb08841a",
-      "pythonPngSha256": "26e82e022d05a8a85a990600641955c79419de54a65e8d35239b0dfc566104d9",
-      "pythonRgba8Sha256": "5cac76a591ccb25ae8a7e60354d8303414e8dbaec4f781a80bdd01b2fb08841a"
+      "oraclePngSha256": "a393061a359a052ed38b0710bc90f40ece44b7c803f0d554f0e74d213db8e9f2",
+      "oracleRgba8Sha256": "1db4b44f266edaa231a269e0a1f7dde859ca047061ff793c75c4969767238860",
+      "pythonPngSha256": "a393061a359a052ed38b0710bc90f40ece44b7c803f0d554f0e74d213db8e9f2",
+      "pythonRgba8Sha256": "1db4b44f266edaa231a269e0a1f7dde859ca047061ff793c75c4969767238860"
     },
     "filter/tetraColorArray": {
       "oraclePngSha256": "5012fcd60d4f99a379d23c17ffd2b2e1af0613b252d1677d0a51fb9e5082cb32",
@@ -1042,11 +1042,11 @@
     "skipped": 38
   },
   "cpu": {
-    "cpuHead": "5b686a45b5c56329adf0c63cbcf572eb6f23fad1",
-    "cpuTree": "bc16f6aeb79d284b40f2e98032470f253d813c4b",
-    "revision": "5976b7a6b77f69c47c41f4ee296a54d5318e1f9d",
-    "snapshotRevision": "5976b7a6b77f69c47c41f4ee296a54d5318e1f9d",
-    "sourceDigest": "dfb565a24c33bd0e3dfaddc3f719d0f252b4c6f8df7059198a5f9e07b6a895d0"
+    "cpuHead": "2df5168abbe197eb66e64e0404efff61342b7a2d",
+    "cpuTree": "b6d1096ed98be9567b02cc51e1c3c10dddf25bdc",
+    "revision": "700ac32e8b4f80a221754e62302e63ac76f5ecc5",
+    "snapshotRevision": "700ac32e8b4f80a221754e62302e63ac76f5ecc5",
+    "sourceDigest": "71793f2a50f109a963439265cf466f614607df0d874a8f80cbdfb9c85ba2db20"
   },
   "diffs": [],
   "errors": {},

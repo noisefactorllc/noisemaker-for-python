@@ -78,7 +78,8 @@ def test_bundled_degauss_kernel_matches_tiled_oracle_render():
     resolution (renderScale 2 > 1.01), the pre-48d25116 kernel's tile-local
     offset diverges from the oracle by up to 238 rgba8 levels; the committed
     kernel must reproduce the oracle's rgba8 bytes exactly. Oracle surface
-    captured from noisemaker-for-cpu 181bff8bfa74 by running
+    captured from noisemaker-for-cpu 2df5168abbe197eb66e64e0404efff61342b7a2d
+    by running
     bindCanonicalKernel(canonicalKernelFactories['filter/degauss:degauss'])
     with resolution 32x32, fullResolution 64x64, tileOffset [0,0],
     displacement 0.25, direction 30, speed 1, seed 1, time 0.25 over a
