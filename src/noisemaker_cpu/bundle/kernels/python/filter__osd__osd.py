@@ -44,7 +44,7 @@ def run_pixel(ctx, out):
         PADDING = rt.construct(1, rt.binary("*", rt.construct(1, g.BASE_PADDING), _u_renderScale, 1, "float"), base="int")
         coord = rt.construct(2, rt.swizzle(ctx.frag_coord, "xy"), base="int")
         texDims = rt.texture_size(_u_inputTex)
-        fullRes = (_u_fullResolution if rt.binary(">", rt.swizzle(_u_fullResolution, "x"), rt.f(0.0)) else rt.construct(2, texDims))
+        fullRes = rt.construct(2, (_u_fullResolution if rt.binary(">", rt.swizzle(_u_fullResolution, "x"), rt.f(0.0)) else rt.construct(2, texDims)))
         width = rt.component_wise("max", rt.construct(1, rt.swizzle(fullRes, "x"), base="int"), rt.i(1), width=1)
         height = rt.component_wise("max", rt.construct(1, rt.swizzle(fullRes, "y"), base="int"), rt.i(1), width=1)
         globalCoord = rt.binary("+", coord, rt.construct(2, _u_tileOffset, base="int"), 2, "int")
@@ -52,7 +52,7 @@ def run_pixel(ctx, out):
         blend_alpha = rt.component_wise("clamp", _u_alpha, rt.f(0.0), rt.f(1.0), width=1)
         scanlineStep = rt.component_wise("max", rt.binary("/", iScale, g.BASE_SCALE, 1, "int"), rt.i(1), width=1)
         scanline = rt.binary("-", rt.f(1.0), rt.binary("*", rt.binary("*", rt.f(0.03), blend_alpha, 1, "float"), rt.construct(1, rt.binary("&", rt.binary("/", rt.swizzle(globalCoord, "y"), scanlineStep, 1, "int"), rt.i(1), 1, "int")), 1, "float"), 1, "float")
-        base_rgb = rt.binary("*", rt.swizzle(texel, "rgb"), scanline, 3, "float")
+        base_rgb = rt.construct(3, rt.binary("*", rt.swizzle(texel, "rgb"), scanline, 3, 'float'))
         if rt.binary("<=", blend_alpha, rt.f(0.0)):
             g.fragColor[:] = rt.construct(4, base_rgb, rt.swizzle(texel, "a"))
             return
@@ -108,12 +108,12 @@ def run_pixel(ctx, out):
                 digit_hash = hash3__uint_uint_uint(base_seed, rt.construct(1, glyph_idx, base="uint"), rt.construct(1, time_cell, base="uint"))
                 digit = rt.construct(1, rt.binary("%", digit_hash, rt.i(10), 1, "uint"), base="int")
                 mask = sample_glyph__int_int_int_int(digit, within_glyph_x, local_y, iScale)
-        panel_bg = rt.binary("*", base_rgb, rt.binary("-", rt.f(1.0), rt.binary("*", rt.f(0.5), blend_alpha, 1, "float"), 1, "float"), 3, "float")
+        panel_bg = rt.construct(3, rt.binary("*", base_rgb, rt.binary("-", rt.f(1.0), rt.binary("*", rt.f(0.5), blend_alpha, 1, "float"), 1, "float"), 3, 'float'))
         if rt.binary("<", mask, rt.f(0.5)):
             g.fragColor[:] = rt.construct(4, rt.component_wise("clamp", panel_bg, rt.f(0.0), rt.f(1.0), width=3), rt.swizzle(texel, "a"))
             return
         osd_color = rt.construct(3, rt.f(0.7), rt.f(1.0), rt.f(0.75))
-        highlight = rt.component_wise("max", panel_bg, rt.binary("*", osd_color, mask, 3, "float"), width=3)
+        highlight = rt.component_wise("max", panel_bg, rt.binary("*", osd_color, mask, 3, 'float'), width=3)
         blended = rt.component_wise("mix", panel_bg, highlight, blend_alpha, width=3)
         g.fragColor[:] = rt.construct(4, rt.component_wise("clamp", blended, rt.f(0.0), rt.f(1.0), width=3), rt.swizzle(texel, "a"))
     main__void()

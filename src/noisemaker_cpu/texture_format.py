@@ -62,6 +62,10 @@ def quantize_texture(surface, fmt: str = "rgba16f"):
     if fmt in ("rgba16f", "rgba16float"):
         surface.data = _float16_truncate(surface.data)
     elif fmt in ("rgba8", "rgba8unorm"):
+        # The oracle scales in float64 (JS number multiply) and rounds half up
+        # (Math.round). float32 scaling plus numpy's banker's rounding lands on
+        # the other side of the .5 boundary for values like 0.46470588.
         d = np.clip(surface.data, 0.0, 1.0)
-        surface.data = (np.round(d * 255.0) / 255.0).astype(F32)
+        scaled = d.astype(np.float64) * 255.0
+        surface.data = (np.floor(scaled + 0.5) / 255.0).astype(F32)
     return surface

@@ -60,9 +60,9 @@ def test_bundled_degauss_kernel_carries_tile_awareness():
 
     # The offset scales by the full-resolution dims (width/height of
     # warped_channel_value), not the tile-local resolution uniform...
-    assert 'displacement, 2, "float"), rt.array([width, height]), 2, "float")' in kernel
+    assert "displacement, 2, 'float'), rt.construct_raw(2, width, height), 2, 'float')" in kernel
     assert (
-        'rt.array([rt.swizzle(_u_resolution, "x"), rt.swizzle(_u_resolution, "y")]), 2, "float")'
+        'rt.construct_raw(2, rt.swizzle(_u_resolution, "x"), rt.swizzle(_u_resolution, "y"))'
         not in kernel
     )
     # ...and the displacement clamp is tile-aware.

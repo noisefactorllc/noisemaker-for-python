@@ -92,7 +92,7 @@ def run_pixel(ctx, out):
         cY_df = rt.copy(cY_df, "float")
         re_df = rt.copy(re_df, "float")
         im_df = rt.copy(im_df, "float")
-        uv = rt.binary("/", rt.binary("-", fragCoord, rt.binary("*", rt.f(0.5), _u_fullResolution, 2, "float"), 2, "float"), rt.component_wise("min", rt.swizzle(_u_fullResolution, "x"), rt.swizzle(_u_fullResolution, "y"), width=1), 2, "float")
+        uv = rt.construct(2, rt.binary("/", rt.binary("-", fragCoord, rt.binary("*", rt.f(0.5), _u_fullResolution, 2, 'float'), 2, 'float'), rt.component_wise("min", rt.swizzle(_u_fullResolution, "x"), rt.swizzle(_u_fullResolution, "y"), width=1), 2, 'float'))
         angle = rt.binary("/", rt.binary("*", rt.unary("-", rot), g.TAU, 1, "float"), rt.f(360.0), 1, "float")
         c = rt.component_wise("cos", angle, width=1)
         s = rt.component_wise("sin", angle, width=1)
@@ -118,7 +118,7 @@ def run_pixel(ctx, out):
             return [rt.construct(4, rt.f(0.0), rt.f(0.0), rt.f(0.0), rt.f(0.0)), rt.f(8.0), rt.f(7.0)]
         return [rt.construct(4, rt.f(0.0)), rt.f(3.0), rt.f(7.0)]
     def main__void():
-        globalCoord = rt.binary("+", rt.swizzle(ctx.frag_coord, "xy"), _u_tileOffset, 2, "float")
+        globalCoord = rt.construct(2, rt.binary("+", rt.swizzle(ctx.frag_coord, "xy"), _u_tileOffset, 2, 'float'))
         maxIter = rt.construct(1, _u_iterations, base="int")
         poiIdx = rt.construct(1, _u_poi, base="int")
         outMode = rt.construct(1, _u_outputMode, base="int")
@@ -137,8 +137,8 @@ def run_pixel(ctx, out):
         p = [rt.construct(4, 0.0), rt.f(0.0), rt.f(0.0)]
         if rt.binary(">", poiIdx, rt.i(0)):
             p = getPOI__int(poiIdx)
-            cHi[:] = rt.binary("+", rt.swizzle(p[0], "xy"), rt.array([_u_centerHiX, _u_centerHiY]), 2, "float")
-            cLo[:] = rt.binary("+", rt.swizzle(p[0], "zw"), rt.array([_u_centerLoX, _u_centerLoY]), 2, "float")
+            cHi[:] = rt.binary("+", rt.swizzle(p[0], "xy"), rt.construct_raw(2, _u_centerHiX, _u_centerHiY), 2, 'float')
+            cLo[:] = rt.binary("+", rt.swizzle(p[0], "zw"), rt.construct_raw(2, _u_centerLoX, _u_centerLoY), 2, 'float')
             effDegree = p[1]
             effZoomDepth = rt.component_wise("min", _u_zoomDepth, p[2], width=1)
         else:
@@ -168,7 +168,7 @@ def run_pixel(ctx, out):
             if rt.binary(">=", k, numRoots):
                 break
             angle = rt.binary("/", rt.binary("*", g.TAU, rt.construct(1, k), 1, "float"), rt.construct(1, intDeg), 1, "float")
-            roots[int(k)] = rt.construct(2, rt.component_wise("cos", angle, width=1), rt.component_wise("sin", angle, width=1))
+            roots[int(k)] = rt.construct(2, rt.construct(2, rt.component_wise("cos", angle, width=1), rt.component_wise("sin", angle, width=1)))
         iter = rt.f(0.0)
         convergedRoot = rt.unary("-", rt.i(1))
         convergeDist = rt.f(1.0)

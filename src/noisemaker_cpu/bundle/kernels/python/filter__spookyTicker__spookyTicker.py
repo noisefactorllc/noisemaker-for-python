@@ -70,8 +70,8 @@ def run_pixel(ctx, out):
         if rt.binary("<", shadowLocalY, CELL_H):
             shadow = ticker_row_mask__int_int_int_float_int_int(rt.binary("+", px, shadowOff, 1, "int"), shadowLocalY, rowSeed, t, CELL_W, iScale)
         result = rt.swizzle(src, "rgb")
-        result[:] = rt.binary("*", result, rt.binary("-", rt.f(1.0), rt.binary("*", rt.binary("*", shadow, rt.f(0.4), 1, "float"), _u_alpha, 1, "float"), 1, "float"), 3, "float")
-        result[:] = rt.component_wise("max", result, rt.binary("*", rt.construct(3, mask), _u_alpha, 3, "float"), width=3)
+        result[:] = rt.binary("*", result, rt.binary("-", rt.f(1.0), rt.binary("*", rt.binary("*", shadow, rt.f(0.4), 1, "float"), _u_alpha, 1, "float"), 1, "float"), 3, 'float')
+        result[:] = rt.component_wise("max", result, rt.binary("*", rt.construct_raw(3, mask), _u_alpha, 3, 'float'), width=3)
         g.fragColor[:] = rt.construct(4, rt.component_wise("clamp", result, rt.f(0.0), rt.f(1.0), width=3), rt.swizzle(src, "a"))
     main__void()
     _c = g.fragColor

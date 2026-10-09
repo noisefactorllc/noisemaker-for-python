@@ -31,7 +31,7 @@ def run_pixel(ctx, out):
         return rt.binary("/", rt.binary("-", rt.component_wise("max", rt.binary("-", rt.component_wise("abs", rt.binary("+", rt.swizzle(p, "x"), rt.swizzle(p, "y"), 1, "float"), width=1), rt.swizzle(p, "z"), 1, "float"), rt.binary("+", rt.component_wise("abs", rt.binary("-", rt.swizzle(p, "x"), rt.swizzle(p, "y"), 1, "float"), width=1), rt.swizzle(p, "z"), 1, "float"), width=1), s, 1, "float"), rt.component_wise("sqrt", rt.f(3.0), width=1), 1, "float")
     def cubeSDF__vec3(p):
         p = rt.copy(p, "float")
-        d = rt.binary("-", rt.component_wise("abs", p, width=3), rt.construct(3, rt.f(0.45)), 3, "float")
+        d = rt.construct(3, rt.binary("-", rt.component_wise("abs", p, width=3), rt.construct(3, rt.f(0.45)), 3, 'float'))
         return rt.binary("+", rt.length(rt.component_wise("max", d, rt.f(0.0), width=3)), rt.component_wise("min", rt.component_wise("max", rt.swizzle(d, "x"), rt.component_wise("max", rt.swizzle(d, "y"), rt.swizzle(d, "z"), width=1), width=1), rt.f(0.0), width=1), 1, "float")
     def octahedronSDF__vec3(p):
         p = rt.copy(p, "float")
@@ -76,7 +76,7 @@ def run_pixel(ctx, out):
         return rt.binary("-", rt.length(q), rt.swizzle(t, "y"), 1, "float")
     def cylinderSDF__vec3(p):
         p = rt.copy(p, "float")
-        d = rt.binary("-", rt.component_wise("abs", rt.construct(2, rt.length(rt.swizzle(p, "xz")), rt.swizzle(p, "y")), width=2), rt.array([rt.f(0.35), rt.f(0.45)]), 2, "float")
+        d = rt.construct(2, rt.binary("-", rt.component_wise("abs", rt.construct(2, rt.length(rt.swizzle(p, "xz")), rt.swizzle(p, "y")), width=2), rt.construct(2, rt.f(0.35), rt.f(0.45)), 2, 'float'))
         return rt.binary("+", rt.component_wise("min", rt.component_wise("max", rt.swizzle(d, "x"), rt.swizzle(d, "y"), width=1), rt.f(0.0), width=1), rt.length(rt.component_wise("max", d, rt.f(0.0), width=2)), 1, "float")
     def coneSDF__vec3(p):
         p = rt.copy(p, "float")
@@ -116,7 +116,7 @@ def run_pixel(ctx, out):
         return sphereSDF__vec3(p)
     def offset3D__vec3_float_int(p, freq, loopOffset):
         p = rt.copy(p, "float")
-        cp = rt.binary("-", p, rt.f(0.5), 3, "float")
+        cp = rt.construct(3, rt.binary("-", p, rt.f(0.5), 3, 'float'))
         sdf = shapeSDF__vec3_int(cp, loopOffset)
         return rt.binary("*", rt.binary("-", rt.f(0.5), sdf, 1, "float"), freq, 1, "float")
     def computeValue__vec3_float_float(p, lf1, lf2):
@@ -135,18 +135,18 @@ def run_pixel(ctx, out):
         yAtlas = rt.construct(1, rt.swizzle(ctx.frag_coord, "y"), base="int")
         y = rt.binary("%", yAtlas, volSize, 1, "int")
         z = rt.trunc_scalar_div(rt.binary("/", yAtlas, volSize, 1, "int"))
-        p = rt.binary("/", rt.construct(3, rt.construct(1, x), rt.construct(1, y), rt.construct(1, z)), rt.binary("-", volSizeF, rt.f(1.0), 1, "float"), 3, "float")
+        p = rt.construct(3, rt.binary("/", rt.construct_raw(3, rt.construct(1, x), rt.construct(1, y), rt.construct(1, z)), rt.binary("-", volSizeF, rt.f(1.0), 1, "float"), 3, 'float'))
         lf1 = map__float_float_float_float_float(_u_loopAScale, rt.f(1.0), rt.f(100.0), rt.f(6.0), rt.f(1.0))
         lf2 = map__float_float_float_float_float(_u_loopBScale, rt.f(1.0), rt.f(100.0), rt.f(6.0), rt.f(1.0))
         d = computeValue__vec3_float_float(p, lf1, lf2)
         eps = rt.binary("/", rt.f(1.0), volSizeF, 1, "float")
-        dx = computeValue__vec3_float_float(rt.binary("+", p, rt.array([eps, rt.f(0.0), rt.f(0.0)]), 3, "float"), lf1, lf2)
-        dy = computeValue__vec3_float_float(rt.binary("+", p, rt.array([rt.f(0.0), eps, rt.f(0.0)]), 3, "float"), lf1, lf2)
-        dz = computeValue__vec3_float_float(rt.binary("+", p, rt.array([rt.f(0.0), rt.f(0.0), eps]), 3, "float"), lf1, lf2)
-        gradient = rt.binary("/", rt.construct(3, rt.binary("-", dx, d, 1, "float"), rt.binary("-", dy, d, 1, "float"), rt.binary("-", dz, d, 1, "float")), eps, 3, "float")
-        normal = rt.normalize(rt.binary("+", rt.unary("-", gradient), rt.construct(3, rt.f(1e-06)), 3, "float"))
+        dx = computeValue__vec3_float_float(rt.construct(3, rt.binary("+", p, rt.construct_raw(3, eps, rt.f(0.0), rt.f(0.0)), 3, 'float')), lf1, lf2)
+        dy = computeValue__vec3_float_float(rt.construct(3, rt.binary("+", p, rt.construct_raw(3, rt.f(0.0), eps, rt.f(0.0)), 3, 'float')), lf1, lf2)
+        dz = computeValue__vec3_float_float(rt.construct(3, rt.binary("+", p, rt.construct_raw(3, rt.f(0.0), rt.f(0.0), eps), 3, 'float')), lf1, lf2)
+        gradient = rt.construct(3, rt.binary("/", rt.construct_raw(3, rt.binary("-", dx, d, 1, "float"), rt.binary("-", dy, d, 1, "float"), rt.binary("-", dz, d, 1, "float")), eps, 3, 'float'))
+        normal = rt.normalize(rt.binary("+", rt.unary('-', gradient), rt.construct_raw(3, rt.f(1e-06)), 3, 'float'))
         g.fragColor[:] = rt.construct(4, d, d, d, rt.f(1.0))
-        g.geoOut[:] = rt.construct(4, rt.binary("+", rt.binary("*", normal, rt.f(0.5), 3, "float"), rt.f(0.5), 3, "float"), d)
+        g.geoOut[:] = rt.construct(4, rt.binary("+", rt.binary("*", normal, rt.f(0.5), 3, 'float'), rt.f(0.5), 3, 'float'), d)
     main__void()
     _c = g.fragColor
     out[0][0] = rt.f32(_c[0]); out[0][1] = rt.f32(_c[1]); out[0][2] = rt.f32(_c[2]); out[0][3] = rt.f32(_c[3])

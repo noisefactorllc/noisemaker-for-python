@@ -29,10 +29,10 @@ def run_pixel(ctx, out):
             else:
                 return rt.component_wise("fract", uv, width=2)
     def main__void():
-        localUV = rt.binary("/", rt.swizzle(ctx.frag_coord, "xy"), _u_resolution, 2, "float")
+        localUV = rt.construct(2, rt.binary("/", rt.swizzle(ctx.frag_coord, "xy"), _u_resolution, 2, 'float'))
         colorA = rt.texture(_u_inputTex, localUV)
         colorB = rt.texture(_u_tex, localUV)
-        mapColor = (colorA if rt.binary("==", _u_mapSource, rt.i(0)) else colorB)
+        mapColor = rt.construct(4, (colorA if rt.binary("==", _u_mapSource, rt.i(0)) else colorB))
         sampleFromB = (rt.i(1) if rt.binary("==", _u_mapSource, rt.i(0)) else rt.i(0))
         rawUV = rt.construct(2, 0.0)
         if rt.binary("==", _u_channel, rt.i(0)):
@@ -43,9 +43,9 @@ def run_pixel(ctx, out):
             else:
                 (rawUV.__setitem__(0, rt.swizzle(mapColor, "g")), rawUV.__setitem__(1, rt.swizzle(mapColor, "b")), rawUV)[-1]
         s = rt.binary("/", _u_scale, rt.f(100.0), 1, "float")
-        remappedUV = rt.binary("+", rt.binary("*", rawUV, s, 2, "float"), _u_offset, 2, "float")
+        remappedUV = rt.construct(2, rt.binary("+", rt.binary("*", rawUV, s, 2, 'float'), _u_offset, 2, 'float'))
         remappedUV[:] = applyWrap__vec2_int(remappedUV, _u_wrap)
-        sampleUV = rt.binary("/", rt.binary("-", rt.binary("*", remappedUV, _u_fullResolution, 2, "float"), _u_tileOffset, 2, "float"), _u_resolution, 2, "float")
+        sampleUV = rt.construct(2, rt.binary("/", rt.binary("-", rt.binary("*", remappedUV, _u_fullResolution, 2, 'float'), _u_tileOffset, 2, 'float'), _u_resolution, 2, 'float'))
         sampleUV[:] = rt.component_wise("fract", sampleUV, width=2)
         result = rt.construct(4, 0.0)
         if rt.binary("==", sampleFromB, rt.i(1)):

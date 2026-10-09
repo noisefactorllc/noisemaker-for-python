@@ -14,8 +14,8 @@ def run_pixel(ctx, out):
     _u_gain = U.get("gain", rt.f(0.0))
     g.fragColor = rt.construct(4, 0.0)
     def main__void():
-        globalCoord = rt.binary("+", rt.swizzle(ctx.frag_coord, "xy"), _u_tileOffset, 2, "float")
-        uv = rt.binary("/", globalCoord, _u_fullResolution, 2, "float")
+        globalCoord = rt.construct(2, rt.binary("+", rt.swizzle(ctx.frag_coord, "xy"), _u_tileOffset, 2, 'float'))
+        uv = rt.construct(2, rt.binary("/", globalCoord, _u_fullResolution, 2, 'float'))
         fIndex = rt.binary("*", rt.swizzle(uv, "x"), rt.f(127.0), 1, "float")
         i0 = rt.construct(1, rt.component_wise("floor", fIndex, width=1), base="int")
         i1 = rt.component_wise("min", rt.binary("+", i0, rt.i(1), 1, "int"), rt.i(127), width=1)
@@ -27,7 +27,7 @@ def run_pixel(ctx, out):
         line = rt.component_wise("smoothstep", rt.binary("+", _u_lineThickness, rt.f(1.0), 1, "float"), _u_lineThickness, dist, width=1)
         fill = rt.binary("*", rt.component_wise("smoothstep", rt.binary("+", mag, rt.binary("/", rt.f(1.0), rt.swizzle(_u_fullResolution, "y"), 1, "float"), 1, "float"), mag, rt.swizzle(uv, "y"), width=1), rt.f(0.15), 1, "float")
         alpha = rt.component_wise("max", line, fill, width=1)
-        g.fragColor[:] = rt.construct(4, rt.binary("*", _u_lineColor, alpha, 3, "float"), alpha)
+        g.fragColor[:] = rt.construct(4, rt.binary("*", _u_lineColor, alpha, 3, 'float'), alpha)
     main__void()
     _c = g.fragColor
     out[0] = rt.f32(_c[0]); out[1] = rt.f32(_c[1]); out[2] = rt.f32(_c[2]); out[3] = rt.f32(_c[3])

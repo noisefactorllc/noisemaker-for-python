@@ -45,7 +45,7 @@ def run_pixel(ctx, out):
                             (rgb.__setitem__(0, x), rgb.__setitem__(1, rt.f(0.0)), rgb.__setitem__(2, c), rgb)[-1]
                         else:
                             (rgb.__setitem__(0, c), rgb.__setitem__(1, rt.f(0.0)), rgb.__setitem__(2, x), rgb)[-1]
-        return rt.binary("+", rgb, m, 3, "float")
+        return rt.construct(3, rt.binary("+", rgb, m, 3, 'float'))
     def rgb2hsv__vec3(rgb):
         rgb = rt.copy(rgb, "float")
         r = rt.swizzle(rgb, "r")
@@ -67,8 +67,8 @@ def run_pixel(ctx, out):
         return rt.construct(3, h, s, maxC)
     def linear_srgb_from_oklab__vec3(c):
         c = rt.copy(c, "float")
-        lms = rt.matrix_mult(g.fwdA, c, 3)
-        return rt.matrix_mult(g.fwdB, rt.binary("*", rt.binary("*", lms, lms, 3, "float"), lms, 3, "float"), 3)
+        lms = rt.construct(3, rt.matrix_mult(g.fwdA, c, 3))
+        return rt.construct(3, rt.matrix_mult(g.fwdB, rt.binary("*", rt.binary("*", lms, lms, 3, 'float'), lms, 3, 'float'), 3))
     def linearToSrgb__vec3(linear):
         linear = rt.copy(linear, "float")
         srgb = rt.construct(3, 0.0)
@@ -81,16 +81,16 @@ def run_pixel(ctx, out):
             if not (rt.binary("<", i, rt.i(3))):
                 break
             if rt.binary("<=", linear[int(i)], rt.f(0.0031308)):
-                srgb[int(i)] = rt.binary("*", linear[int(i)], rt.f(12.92), 1, "float")
+                srgb[int(i)] = rt.f32(rt.binary("*", linear[int(i)], rt.f(12.92), 1, "float"))
             else:
-                srgb[int(i)] = rt.binary("-", rt.binary("*", rt.f(1.055), rt.component_wise("pow", linear[int(i)], rt.binary("/", rt.f(1.0), rt.f(2.4), 1, "float"), width=1), 1, "float"), rt.f(0.055), 1, "float")
+                srgb[int(i)] = rt.f32(rt.binary("-", rt.binary("*", rt.f(1.055), rt.component_wise("pow", linear[int(i)], rt.binary("/", rt.f(1.0), rt.f(2.4), 1, "float"), width=1), 1, "float"), rt.f(0.055), 1, "float"))
         return srgb
     def main__void():
-        globalCoord = rt.binary("+", rt.swizzle(ctx.frag_coord, "xy"), _u_tileOffset, 2, "float")
+        globalCoord = rt.construct(2, rt.binary("+", rt.swizzle(ctx.frag_coord, "xy"), _u_tileOffset, 2, 'float'))
         texSize = rt.texture_size(_u_inputTex)
-        uv = rt.binary("/", rt.swizzle(ctx.frag_coord, "xy"), rt.construct(2, texSize), 2, "float")
+        uv = rt.construct(2, rt.binary("/", rt.swizzle(ctx.frag_coord, "xy"), rt.construct_raw(2, rt.construct(2, texSize)), 2, 'float'))
         color = rt.texture(_u_inputTex, uv)
-        color = rt.assign_swizzle(color, "rgb", (rt.binary("/", rt.swizzle(color, "rgb"), rt.swizzle(color, "a"), 3, "float") if rt.binary(">", rt.swizzle(color, "a"), rt.f(0.0)) else rt.construct(3, rt.f(0.0))))
+        color = rt.assign_swizzle(color, "rgb", (rt.binary("/", rt.swizzle(color, "rgb"), rt.swizzle(color, "a"), 3, 'float') if rt.binary(">", rt.swizzle(color, "a"), rt.f(0.0)) else rt.construct(3, rt.f(0.0))))
         L = rt.f(0.0)
         C = rt.f(0.0)
         H = rt.f(0.0)
@@ -119,8 +119,8 @@ def run_pixel(ctx, out):
         color = rt.assign_swizzle(color, "rgb", hsv2rgb__vec3(hsv))
         color = rt.assign_swizzle(color, "rgb", rt.binary("*", rt.swizzle(color, "rgb"), _u_brightness, 3, "float"))
         contrastFactor = rt.binary("*", _u_contrast, rt.f(2.0), 1, "float")
-        color = rt.assign_swizzle(color, "rgb", rt.binary("+", rt.binary("*", rt.binary("-", rt.swizzle(color, "rgb"), rt.f(0.5), 3, "float"), contrastFactor, 3, "float"), rt.f(0.5), 3, "float"))
-        g.fragColor[:] = rt.construct(4, rt.binary("*", rt.swizzle(color, "rgb"), rt.swizzle(color, "a"), 3, "float"), rt.swizzle(color, "a"))
+        color = rt.assign_swizzle(color, "rgb", rt.binary("+", rt.binary("*", rt.binary("-", rt.swizzle(color, "rgb"), rt.f(0.5), 3, 'float'), contrastFactor, 3, 'float'), rt.f(0.5), 3, 'float'))
+        g.fragColor[:] = rt.construct(4, rt.binary("*", rt.swizzle(color, "rgb"), rt.swizzle(color, "a"), 3, 'float'), rt.swizzle(color, "a"))
     main__void()
     _c = g.fragColor
     out[0] = rt.f32(_c[0]); out[1] = rt.f32(_c[1]); out[2] = rt.f32(_c[2]); out[3] = rt.f32(_c[3])

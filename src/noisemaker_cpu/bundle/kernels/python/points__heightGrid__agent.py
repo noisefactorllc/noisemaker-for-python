@@ -18,7 +18,7 @@ def run_pixel(ctx, out):
     def main__void():
         coord = rt.construct(2, rt.swizzle(ctx.frag_coord, "xy"), base="int")
         stateSize = rt.texture_size(_u_xyzTex)
-        uv = rt.binary("/", rt.binary("+", rt.construct(2, coord), rt.f(0.5), 2, "float"), rt.construct(2, stateSize), 2, "float")
+        uv = rt.construct(2, rt.binary("/", rt.binary("+", rt.construct_raw(2, rt.construct(2, coord)), rt.f(0.5), 2, 'float'), rt.construct_raw(2, rt.construct(2, stateSize)), 2, 'float'))
         heightColor = rt.swizzle(rt.texture(_u_heightTex, uv), "rgb")
         elevation = rt.dot(heightColor, rt.construct(3, rt.f(0.2126), rt.f(0.7152), rt.f(0.0722)))
         g.outXYZ[:] = rt.construct(4, rt.binary("*", rt.binary("-", rt.swizzle(uv, "x"), rt.f(0.5), 1, "float"), _u_gridScale, 1, "float"), rt.binary("+", rt.binary("*", elevation, _u_heightScale, 1, "float"), _u_heightOffset, 1, "float"), rt.binary("*", rt.binary("-", rt.f(0.5), rt.swizzle(uv, "y"), 1, "float"), _u_gridScale, 1, "float"), rt.f(1.0))

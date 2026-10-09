@@ -13,10 +13,10 @@ def run_pixel(ctx, out):
     _u_alpha = U.get("alpha", rt.f(0.0))
     g.fragColor = rt.construct(4, 0.0)
     def main__void():
-        globalCoord = rt.binary("+", rt.swizzle(ctx.frag_coord, "xy"), _u_tileOffset, 2, "float")
-        uv = rt.binary("/", globalCoord, _u_fullResolution, 2, "float")
-        src = rt.texture(_u_inputTex, rt.binary("/", rt.swizzle(ctx.frag_coord, "xy"), rt.construct(2, rt.texture_size(_u_inputTex)), 2, "float"))
-        accum = rt.texture(_u_accumTex, rt.binary("/", rt.swizzle(ctx.frag_coord, "xy"), rt.construct(2, rt.texture_size(_u_accumTex)), 2, "float"))
+        globalCoord = rt.construct(2, rt.binary("+", rt.swizzle(ctx.frag_coord, "xy"), _u_tileOffset, 2, 'float'))
+        uv = rt.construct(2, rt.binary("/", globalCoord, _u_fullResolution, 2, 'float'))
+        src = rt.texture(_u_inputTex, rt.construct(2, rt.binary("/", rt.swizzle(ctx.frag_coord, "xy"), rt.construct(2, rt.texture_size(_u_inputTex)), 2, 'float')))
+        accum = rt.texture(_u_accumTex, rt.construct(2, rt.binary("/", rt.swizzle(ctx.frag_coord, "xy"), rt.construct(2, rt.texture_size(_u_accumTex)), 2, 'float')))
         sum = rt.f(0.0)
         count = rt.f(0.0)
         gy = rt.i(0)
@@ -35,7 +35,7 @@ def run_pixel(ctx, out):
                 _for1_first = False
                 if not (rt.binary("<", gx, rt.i(32))):
                     break
-                sampleUV = rt.binary("/", rt.binary("+", rt.construct(2, rt.construct(1, gx), rt.construct(1, gy)), rt.f(0.5), 2, "float"), rt.f(32.0), 2, "float")
+                sampleUV = rt.construct(2, rt.binary("/", rt.binary("+", rt.construct_raw(2, rt.construct(1, gx), rt.construct(1, gy)), rt.f(0.5), 2, 'float'), rt.f(32.0), 2, 'float'))
                 s = rt.texture(_u_accumTex, sampleUV)
                 v = rt.binary("/", rt.binary("+", rt.binary("+", rt.swizzle(s, "r"), rt.swizzle(s, "g"), 1, "float"), rt.swizzle(s, "b"), 1, "float"), rt.f(3.0), 1, "float")
                 sum = rt.binary("+", sum, v, 1, "float")
@@ -43,7 +43,7 @@ def run_pixel(ctx, out):
         mean = rt.binary("/", sum, count, 1, "float")
         normalized = rt.construct(3, 0.0)
         if rt.binary(">", mean, rt.f(0.0)):
-            normalized[:] = rt.component_wise("clamp", rt.binary("/", rt.swizzle(accum, "rgb"), rt.binary("*", mean, rt.f(4.0), 1, "float"), 3, "float"), rt.f(0.0), rt.f(1.0), width=3)
+            normalized[:] = rt.component_wise("clamp", rt.binary("/", rt.swizzle(accum, "rgb"), rt.binary("*", mean, rt.f(4.0), 1, "float"), 3, 'float'), rt.f(0.0), rt.f(1.0), width=3)
         else:
             normalized[:] = rt.swizzle(accum, "rgb")
         sqrtVal = rt.component_wise("sqrt", normalized, width=3)

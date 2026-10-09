@@ -73,7 +73,7 @@ def run_pixel(ctx, out):
         cellY = rt.binary("%", rt.construct(1, rt.binary("*", rt.swizzle(uv, "y"), rt.construct(1, n), 1, "float"), base="int"), n, 1, "int")
         cellNum = rt.binary("+", rt.binary("*", rt.binary("-", rt.binary("-", n, rt.i(1), 1, "int"), cellY, 1, "int"), n, 1, "int"), cellX, 1, "int")
         isWhiteCell = rt.binary("==", rt.binary("%", rt.binary("+", cellX, cellY, 1, "int"), rt.i(2), 1, "int"), rt.i(0))
-        cellUV = rt.component_wise("fract", rt.binary("*", uv, rt.construct(1, n), 2, "float"), width=2)
+        cellUV = rt.component_wise("fract", rt.binary("*", uv, rt.construct(1, n), 2, 'float'), width=2)
         isGlyph = renderNumber__int_vec2(cellNum, cellUV)
         cellColor = (rt.f(1.0) if isWhiteCell else rt.f(0.0))
         glyphColor = (rt.f(0.0) if isWhiteCell else rt.f(1.0))
@@ -94,9 +94,9 @@ def run_pixel(ctx, out):
     def gridLines__vec2(uv):
         uv = rt.copy(uv, "float")
         n = rt.component_wise("max", _u_gridSize, rt.i(1), width=1)
-        cellUV = rt.component_wise("fract", rt.binary("*", uv, rt.construct(1, n), 2, "float"), width=2)
-        edge = rt.component_wise("min", cellUV, rt.binary("-", rt.f(1.0), cellUV, 2, "float"), width=2)
-        fw = rt.binary("*", rt.binary("/", rt.construct(2, rt.f(1.0)), _u_fullResolution, 2, "float"), rt.construct(1, n), 2, "float")
+        cellUV = rt.component_wise("fract", rt.binary("*", uv, rt.construct(1, n), 2, 'float'), width=2)
+        edge = rt.component_wise("min", cellUV, rt.binary("-", rt.f(1.0), cellUV, 2, 'float'), width=2)
+        fw = rt.construct(2, rt.binary("*", rt.binary("/", rt.construct_raw(2, rt.f(1.0)), _u_fullResolution, 2, 'float'), rt.construct(1, n), 2, 'float'))
         line = rt.binary("-", rt.f(1.0), rt.binary("*", rt.component_wise("smoothstep", rt.f(0.0), rt.binary("*", rt.f(2.0), rt.swizzle(fw, "x"), 1, "float"), rt.swizzle(edge, "x"), width=1), rt.component_wise("smoothstep", rt.f(0.0), rt.binary("*", rt.f(2.0), rt.swizzle(fw, "y"), 1, "float"), rt.swizzle(edge, "y"), width=1), 1, "float"), 1, "float")
         return rt.construct(4, rt.construct(3, line), rt.f(1.0))
     def hue2rgb__float(h):
@@ -115,14 +115,14 @@ def run_pixel(ctx, out):
     def dotGrid__vec2(uv):
         uv = rt.copy(uv, "float")
         n = rt.component_wise("max", _u_gridSize, rt.i(1), width=1)
-        scaled = rt.binary("*", uv, rt.construct(1, n), 2, "float")
+        scaled = rt.construct(2, rt.binary("*", uv, rt.construct(1, n), 2, 'float'))
         nearest = rt.component_wise("round", scaled, width=2)
-        dist = rt.length(rt.binary("-", scaled, nearest, 2, "float"))
+        dist = rt.length(rt.binary("-", scaled, nearest, 2, 'float'))
         dot = rt.binary("-", rt.f(1.0), rt.component_wise("smoothstep", rt.f(0.12), rt.f(0.15), dist, width=1), 1, "float")
         return rt.construct(4, rt.construct(3, dot), rt.f(1.0))
     def main__void():
-        globalCoord = rt.binary("+", rt.swizzle(ctx.frag_coord, "xy"), _u_tileOffset, 2, "float")
-        uv = rt.binary("/", globalCoord, _u_fullResolution, 2, "float")
+        globalCoord = rt.construct(2, rt.binary("+", rt.swizzle(ctx.frag_coord, "xy"), _u_tileOffset, 2, 'float'))
+        uv = rt.construct(2, rt.binary("/", globalCoord, _u_fullResolution, 2, 'float'))
         if rt.binary("==", _u_pattern, rt.i(1)):
             g.fragColor[:] = colorBars__vec2(uv)
         else:

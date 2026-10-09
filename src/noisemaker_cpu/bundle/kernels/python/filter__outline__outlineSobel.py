@@ -35,7 +35,7 @@ def run_pixel(ctx, out):
                 else:
                     return rt.component_wise("sqrt", rt.binary("+", rt.binary("*", gx, gx, 1, "float"), rt.binary("*", gy, gy, 1, "float"), 1, "float"), width=1)
     def main__void():
-        globalCoord = rt.binary("+", rt.swizzle(ctx.frag_coord, "xy"), _u_tileOffset, 2, "float")
+        globalCoord = rt.construct(2, rt.binary("+", rt.swizzle(ctx.frag_coord, "xy"), _u_tileOffset, 2, 'float'))
         dimensions = rt.texture_size(_u_valueTexture)
         if (bool(rt.binary("==", rt.swizzle(dimensions, "x"), rt.i(0))) or bool(rt.binary("==", rt.swizzle(dimensions, "y"), rt.i(0)))):
             g.fragColor[:] = rt.construct(4, rt.f(0.0))

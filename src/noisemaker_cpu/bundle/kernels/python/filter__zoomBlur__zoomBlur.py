@@ -23,17 +23,17 @@ def run_pixel(ctx, out):
         return v
     def prng__vec3(p):
         p = rt.copy(p, "float")
-        return rt.binary("/", rt.construct(3, pcg__uvec3(rt.construct(3, p, base="uint"))), rt.construct(1, rt.construct(1, rt.i(4294967295), base="uint")), 3, "float")
+        return rt.construct(3, rt.binary("/", rt.construct(3, pcg__uvec3(rt.construct(3, p, base="uint"))), rt.construct(1, rt.construct(1, rt.i(4294967295), base="uint")), 3, 'float'))
     def main__void():
-        globalCoord = rt.binary("+", rt.swizzle(ctx.frag_coord, "xy"), _u_tileOffset, 2, "float")
+        globalCoord = rt.construct(2, rt.binary("+", rt.swizzle(ctx.frag_coord, "xy"), _u_tileOffset, 2, 'float'))
         texSize = rt.texture_size(_u_inputTex)
         tileDims = rt.construct(2, texSize)
-        fullRes = (_u_fullResolution if rt.binary(">", rt.swizzle(_u_fullResolution, "x"), rt.f(0.0)) else tileDims)
-        uv = rt.binary("/", rt.swizzle(ctx.frag_coord, "xy"), tileDims, 2, "float")
-        globalUV = rt.binary("/", rt.binary("+", rt.swizzle(ctx.frag_coord, "xy"), _u_tileOffset, 2, "float"), fullRes, 2, "float")
+        fullRes = rt.construct(2, (_u_fullResolution if rt.binary(">", rt.swizzle(_u_fullResolution, "x"), rt.f(0.0)) else tileDims))
+        uv = rt.construct(2, rt.binary("/", rt.swizzle(ctx.frag_coord, "xy"), tileDims, 2, 'float'))
+        globalUV = rt.construct(2, rt.binary("/", rt.binary("+", rt.swizzle(ctx.frag_coord, "xy"), _u_tileOffset, 2, 'float'), fullRes, 2, 'float'))
         color = rt.construct(3, rt.f(0.0))
         total = rt.f(0.0)
-        toCenter = rt.binary("-", globalUV, rt.f(0.5), 2, "float")
+        toCenter = rt.construct(2, rt.binary("-", globalUV, rt.f(0.5), 2, 'float'))
         offset = rt.swizzle(prng__vec3(rt.construct(3, rt.f(12.9898), rt.f(78.233), rt.f(151.7182))), "x")
         t = rt.f(0.0)
         _for0_first = True
@@ -45,8 +45,8 @@ def run_pixel(ctx, out):
                 break
             percent = rt.binary("/", rt.binary("+", t, offset, 1, "float"), rt.f(40.0), 1, "float")
             weight = rt.binary("*", rt.f(4.0), rt.binary("-", percent, rt.binary("*", percent, percent, 1, "float"), 1, "float"), 1, "float")
-            tex = rt.texture(_u_inputTex, rt.binary("+", uv, rt.binary("*", rt.binary("*", toCenter, percent, 2, "float"), _u_strength, 2, "float"), 2, "float"))
-            color[:] = rt.binary("+", color, rt.binary("*", rt.swizzle(tex, "rgb"), weight, 3, "float"), 3, "float")
+            tex = rt.texture(_u_inputTex, rt.binary("+", uv, rt.binary("*", rt.binary("*", toCenter, percent, 2, 'float'), _u_strength, 2, 'float'), 2, 'float'))
+            color[:] = rt.binary("+", color, rt.binary("*", rt.swizzle(tex, "rgb"), weight, 3, 'float'), 3, "float")
             total = rt.binary("+", total, weight, 1, "float")
         color[:] = rt.binary("/", color, total, 3, "float")
         g.fragColor[:] = rt.construct(4, color, rt.f(1.0))

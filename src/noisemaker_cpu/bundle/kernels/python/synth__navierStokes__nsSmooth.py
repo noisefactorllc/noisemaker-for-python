@@ -19,7 +19,7 @@ def run_pixel(ctx, out):
         p1 = rt.copy(p1, "float")
         p2 = rt.copy(p2, "float")
         t2 = rt.binary("*", t, t, 1, "float")
-        return rt.binary("+", rt.binary("+", rt.binary("*", rt.binary("*", rt.binary("*", p0, rt.f(0.5), 4, "float"), rt.binary("-", rt.f(1.0), t, 1, "float"), 4, "float"), rt.binary("-", rt.f(1.0), t, 1, "float"), 4, "float"), rt.binary("*", rt.binary("*", p1, rt.f(0.5), 4, "float"), rt.binary("+", rt.binary("+", rt.binary("*", rt.unary("-", rt.f(2.0)), t2, 1, "float"), rt.binary("*", rt.f(2.0), t, 1, "float"), 1, "float"), rt.f(1.0), 1, "float"), 4, "float"), 4, "float"), rt.binary("*", rt.binary("*", p2, rt.f(0.5), 4, "float"), t2, 4, "float"), 4, "float")
+        return rt.construct(4, rt.binary("+", rt.binary("+", rt.binary("*", rt.binary("*", rt.binary("*", p0, rt.f(0.5), 4, 'float'), rt.binary("-", rt.f(1.0), t, 1, "float"), 4, 'float'), rt.binary("-", rt.f(1.0), t, 1, "float"), 4, 'float'), rt.binary("*", rt.binary("*", p1, rt.f(0.5), 4, 'float'), rt.binary("+", rt.binary("+", rt.binary("*", rt.unary("-", rt.f(2.0)), t2, 1, "float"), rt.binary("*", rt.f(2.0), t, 1, "float"), 1, "float"), rt.f(1.0), 1, "float"), 4, 'float'), 4, 'float'), rt.binary("*", rt.binary("*", p2, rt.f(0.5), 4, 'float'), t2, 4, 'float'), 4, 'float'))
     def bicubic4v__vec4_vec4_vec4_vec4_float(p0, p1, p2, p3, t):
         p0 = rt.copy(p0, "float")
         p1 = rt.copy(p1, "float")
@@ -31,27 +31,27 @@ def run_pixel(ctx, out):
         b1 = rt.binary("/", rt.binary("+", rt.binary("-", rt.binary("*", rt.f(3.0), t3, 1, "float"), rt.binary("*", rt.f(6.0), t2, 1, "float"), 1, "float"), rt.f(4.0), 1, "float"), rt.f(6.0), 1, "float")
         b2 = rt.binary("/", rt.binary("+", rt.binary("+", rt.binary("+", rt.binary("*", rt.unary("-", rt.f(3.0)), t3, 1, "float"), rt.binary("*", rt.f(3.0), t2, 1, "float"), 1, "float"), rt.binary("*", rt.f(3.0), t, 1, "float"), 1, "float"), rt.f(1.0), 1, "float"), rt.f(6.0), 1, "float")
         b3 = rt.binary("/", t3, rt.f(6.0), 1, "float")
-        return rt.binary("+", rt.binary("+", rt.binary("+", rt.binary("*", p0, b0, 4, "float"), rt.binary("*", p1, b1, 4, "float"), 4, "float"), rt.binary("*", p2, b2, 4, "float"), 4, "float"), rt.binary("*", p3, b3, 4, "float"), 4, "float")
+        return rt.construct(4, rt.binary("+", rt.binary("+", rt.binary("+", rt.binary("*", p0, b0, 4, 'float'), rt.binary("*", p1, b1, 4, 'float'), 4, 'float'), rt.binary("*", p2, b2, 4, 'float'), 4, 'float'), rt.binary("*", p3, b3, 4, 'float'), 4, 'float'))
     def catmull3v__vec4_vec4_vec4_float(p0, p1, p2, t):
         p0 = rt.copy(p0, "float")
         p1 = rt.copy(p1, "float")
         p2 = rt.copy(p2, "float")
         t2 = rt.binary("*", t, t, 1, "float")
         t3 = rt.binary("*", t2, t, 1, "float")
-        m = rt.binary("*", rt.f(0.5), rt.binary("-", p2, p0, 4, "float"), 4, "float")
-        return rt.binary("+", rt.binary("+", rt.binary("+", rt.binary("*", rt.binary("+", rt.binary("-", rt.binary("*", rt.f(2.0), t3, 1, "float"), rt.binary("*", rt.f(3.0), t2, 1, "float"), 1, "float"), rt.f(1.0), 1, "float"), p1, 4, "float"), rt.binary("*", rt.binary("+", rt.binary("-", t3, rt.binary("*", rt.f(2.0), t2, 1, "float"), 1, "float"), t, 1, "float"), m, 4, "float"), 4, "float"), rt.binary("*", rt.binary("+", rt.binary("*", rt.unary("-", rt.f(2.0)), t3, 1, "float"), rt.binary("*", rt.f(3.0), t2, 1, "float"), 1, "float"), p2, 4, "float"), 4, "float"), rt.binary("*", rt.binary("-", t3, t2, 1, "float"), m, 4, "float"), 4, "float")
+        m = rt.construct(4, rt.binary("*", rt.f(0.5), rt.binary("-", p2, p0, 4, 'float'), 4, 'float'))
+        return rt.construct(4, rt.binary("+", rt.binary("+", rt.binary("+", rt.binary("*", rt.binary("+", rt.binary("-", rt.binary("*", rt.f(2.0), t3, 1, "float"), rt.binary("*", rt.f(3.0), t2, 1, "float"), 1, "float"), rt.f(1.0), 1, "float"), p1, 4, 'float'), rt.binary("*", rt.binary("+", rt.binary("-", t3, rt.binary("*", rt.f(2.0), t2, 1, "float"), 1, "float"), t, 1, "float"), m, 4, 'float'), 4, 'float'), rt.binary("*", rt.binary("+", rt.binary("*", rt.unary("-", rt.f(2.0)), t3, 1, "float"), rt.binary("*", rt.f(3.0), t2, 1, "float"), 1, "float"), p2, 4, 'float'), 4, 'float'), rt.binary("*", rt.binary("-", t3, t2, 1, "float"), m, 4, 'float'), 4, 'float'))
     def catmull4v__vec4_vec4_vec4_vec4_float(p0, p1, p2, p3, t):
         p0 = rt.copy(p0, "float")
         p1 = rt.copy(p1, "float")
         p2 = rt.copy(p2, "float")
         p3 = rt.copy(p3, "float")
-        return rt.binary("+", p1, rt.binary("*", rt.binary("*", rt.f(0.5), t, 1, "float"), rt.binary("+", rt.binary("-", p2, p0, 4, "float"), rt.binary("*", t, rt.binary("+", rt.binary("-", rt.binary("+", rt.binary("-", rt.binary("*", rt.f(2.0), p0, 4, "float"), rt.binary("*", rt.f(5.0), p1, 4, "float"), 4, "float"), rt.binary("*", rt.f(4.0), p2, 4, "float"), 4, "float"), p3, 4, "float"), rt.binary("*", t, rt.binary("-", rt.binary("+", rt.binary("*", rt.f(3.0), rt.binary("-", p1, p2, 4, "float"), 4, "float"), p3, 4, "float"), p0, 4, "float"), 4, "float"), 4, "float"), 4, "float"), 4, "float"), 4, "float"), 4, "float")
+        return rt.construct(4, rt.binary("+", p1, rt.binary("*", rt.binary("*", rt.f(0.5), t, 1, "float"), rt.binary("+", rt.binary("-", p2, p0, 4, 'float'), rt.binary("*", t, rt.binary("+", rt.binary("-", rt.binary("+", rt.binary("-", rt.binary("*", rt.f(2.0), p0, 4, 'float'), rt.binary("*", rt.f(5.0), p1, 4, 'float'), 4, 'float'), rt.binary("*", rt.f(4.0), p2, 4, 'float'), 4, 'float'), p3, 4, 'float'), rt.binary("*", t, rt.binary("-", rt.binary("+", rt.binary("*", rt.f(3.0), rt.binary("-", p1, p2, 4, 'float'), 4, 'float'), p3, 4, 'float'), p0, 4, 'float'), 4, 'float'), 4, 'float'), 4, 'float'), 4, 'float'), 4, 'float'), 4, 'float'))
     def main__void():
         texSize = rt.texture_size(_u_canvasTex)
         minIdx = rt.construct(2, rt.i(0), base="int")
         maxIdx = rt.binary("-", texSize, rt.construct(2, rt.i(1), base="int"), 2, "int")
-        uv = rt.binary("/", rt.swizzle(ctx.frag_coord, "xy"), _u_resolution, 2, "float")
-        texelPos = rt.binary("-", rt.binary("*", uv, rt.construct(2, texSize), 2, "float"), rt.construct(2, rt.f(0.5)), 2, "float")
+        uv = rt.construct(2, rt.binary("/", rt.swizzle(ctx.frag_coord, "xy"), _u_resolution, 2, 'float'))
+        texelPos = rt.construct(2, rt.binary("-", rt.binary("*", uv, rt.construct_raw(2, rt.construct(2, texSize)), 2, 'float'), rt.construct_raw(2, rt.f(0.5)), 2, 'float'))
         baseI = rt.construct(2, rt.component_wise("floor", texelPos, width=2), base="int")
         f = rt.component_wise("fract", texelPos, width=2)
         sampled = rt.construct(4, 0.0)
@@ -69,7 +69,7 @@ def run_pixel(ctx, out):
         r2 = rt.construct(4, 0.0)
         r3 = rt.construct(4, 0.0)
         if rt.binary("==", _u_smoothing, rt.i(0)):
-            idx = rt.component_wise("clamp", rt.construct(2, rt.component_wise("floor", rt.binary("+", texelPos, rt.f(0.5), 2, "float"), width=2), base="int"), minIdx, maxIdx, width=2)
+            idx = rt.component_wise("clamp", rt.construct(2, rt.component_wise("floor", rt.binary("+", texelPos, rt.f(0.5), 2, 'float'), width=2), base="int"), minIdx, maxIdx, width=2)
             sampled[:] = rt.texel_fetch(_u_canvasTex, idx, rt.i(0))
         else:
             if rt.binary("==", _u_smoothing, rt.i(2)):
@@ -100,7 +100,7 @@ def run_pixel(ctx, out):
                             _for1_first = False
                             if not (rt.binary("<", i, rt.i(3))):
                                 break
-                            p[int(rt.binary("+", rt.binary("*", j, rt.i(3), 1, "int"), i, 1, "int"))] = fetchTex__ivec2_ivec2_ivec2(rt.binary("+", baseI, rt.construct(2, rt.binary("-", i, rt.i(1), 1, "int"), rt.binary("-", j, rt.i(1), 1, "int"), base="int"), 2, "int"), minIdx, maxIdx)
+                            p[int(rt.binary("+", rt.binary("*", j, rt.i(3), 1, "int"), i, 1, "int"))] = rt.construct(4, fetchTex__ivec2_ivec2_ivec2(rt.binary("+", baseI, rt.construct(2, rt.binary("-", i, rt.i(1), 1, "int"), rt.binary("-", j, rt.i(1), 1, "int"), base="int"), 2, "int"), minIdx, maxIdx))
                     r0 = catmull3v__vec4_vec4_vec4_float(p[int(rt.i(0))], p[int(rt.i(1))], p[int(rt.i(2))], rt.swizzle(f, "x"))
                     r1 = catmull3v__vec4_vec4_vec4_float(p[int(rt.i(3))], p[int(rt.i(4))], p[int(rt.i(5))], rt.swizzle(f, "x"))
                     r2 = catmull3v__vec4_vec4_vec4_float(p[int(rt.i(6))], p[int(rt.i(7))], p[int(rt.i(8))], rt.swizzle(f, "x"))
@@ -124,7 +124,7 @@ def run_pixel(ctx, out):
                                 _for3_first = False
                                 if not (rt.binary("<", i, rt.i(4))):
                                     break
-                                p[int(rt.binary("+", rt.binary("*", j, rt.i(4), 1, "int"), i, 1, "int"))] = fetchTex__ivec2_ivec2_ivec2(rt.binary("+", baseI, rt.construct(2, rt.binary("-", i, rt.i(1), 1, "int"), rt.binary("-", j, rt.i(1), 1, "int"), base="int"), 2, "int"), minIdx, maxIdx)
+                                p[int(rt.binary("+", rt.binary("*", j, rt.i(4), 1, "int"), i, 1, "int"))] = rt.construct(4, fetchTex__ivec2_ivec2_ivec2(rt.binary("+", baseI, rt.construct(2, rt.binary("-", i, rt.i(1), 1, "int"), rt.binary("-", j, rt.i(1), 1, "int"), base="int"), 2, "int"), minIdx, maxIdx))
                         r0 = catmull4v__vec4_vec4_vec4_vec4_float(p[int(rt.i(0))], p[int(rt.i(1))], p[int(rt.i(2))], p[int(rt.i(3))], rt.swizzle(f, "x"))
                         r1 = catmull4v__vec4_vec4_vec4_vec4_float(p[int(rt.i(4))], p[int(rt.i(5))], p[int(rt.i(6))], p[int(rt.i(7))], rt.swizzle(f, "x"))
                         r2 = catmull4v__vec4_vec4_vec4_vec4_float(p[int(rt.i(8))], p[int(rt.i(9))], p[int(rt.i(10))], p[int(rt.i(11))], rt.swizzle(f, "x"))
@@ -149,7 +149,7 @@ def run_pixel(ctx, out):
                                     _for5_first = False
                                     if not (rt.binary("<", i, rt.i(3))):
                                         break
-                                    p[int(rt.binary("+", rt.binary("*", j, rt.i(3), 1, "int"), i, 1, "int"))] = fetchTex__ivec2_ivec2_ivec2(rt.binary("+", baseI, rt.construct(2, rt.binary("-", i, rt.i(1), 1, "int"), rt.binary("-", j, rt.i(1), 1, "int"), base="int"), 2, "int"), minIdx, maxIdx)
+                                    p[int(rt.binary("+", rt.binary("*", j, rt.i(3), 1, "int"), i, 1, "int"))] = rt.construct(4, fetchTex__ivec2_ivec2_ivec2(rt.binary("+", baseI, rt.construct(2, rt.binary("-", i, rt.i(1), 1, "int"), rt.binary("-", j, rt.i(1), 1, "int"), base="int"), 2, "int"), minIdx, maxIdx))
                             r0 = quad3v__vec4_vec4_vec4_float(p[int(rt.i(0))], p[int(rt.i(1))], p[int(rt.i(2))], rt.swizzle(f, "x"))
                             r1 = quad3v__vec4_vec4_vec4_float(p[int(rt.i(3))], p[int(rt.i(4))], p[int(rt.i(5))], rt.swizzle(f, "x"))
                             r2 = quad3v__vec4_vec4_vec4_float(p[int(rt.i(6))], p[int(rt.i(7))], p[int(rt.i(8))], rt.swizzle(f, "x"))
@@ -173,7 +173,7 @@ def run_pixel(ctx, out):
                                         _for7_first = False
                                         if not (rt.binary("<", i, rt.i(4))):
                                             break
-                                        p[int(rt.binary("+", rt.binary("*", j, rt.i(4), 1, "int"), i, 1, "int"))] = fetchTex__ivec2_ivec2_ivec2(rt.binary("+", baseI, rt.construct(2, rt.binary("-", i, rt.i(1), 1, "int"), rt.binary("-", j, rt.i(1), 1, "int"), base="int"), 2, "int"), minIdx, maxIdx)
+                                        p[int(rt.binary("+", rt.binary("*", j, rt.i(4), 1, "int"), i, 1, "int"))] = rt.construct(4, fetchTex__ivec2_ivec2_ivec2(rt.binary("+", baseI, rt.construct(2, rt.binary("-", i, rt.i(1), 1, "int"), rt.binary("-", j, rt.i(1), 1, "int"), base="int"), 2, "int"), minIdx, maxIdx))
                                 r0 = bicubic4v__vec4_vec4_vec4_vec4_float(p[int(rt.i(0))], p[int(rt.i(1))], p[int(rt.i(2))], p[int(rt.i(3))], rt.swizzle(f, "x"))
                                 r1 = bicubic4v__vec4_vec4_vec4_vec4_float(p[int(rt.i(4))], p[int(rt.i(5))], p[int(rt.i(6))], p[int(rt.i(7))], rt.swizzle(f, "x"))
                                 r2 = bicubic4v__vec4_vec4_vec4_vec4_float(p[int(rt.i(8))], p[int(rt.i(9))], p[int(rt.i(10))], p[int(rt.i(11))], rt.swizzle(f, "x"))

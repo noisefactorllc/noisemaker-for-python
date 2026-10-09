@@ -38,30 +38,30 @@ def run_pixel(ctx, out):
         p = rt.copy(p, "float")
         i = rt.component_wise("floor", p, width=2)
         f = rt.component_wise("fract", p, width=2)
-        f[:] = rt.binary("*", rt.binary("*", f, f, 2, "float"), rt.binary("-", rt.f(3.0), rt.binary("*", rt.f(2.0), f, 2, "float"), 2, "float"), 2, "float")
+        f[:] = rt.binary("*", rt.binary("*", f, f, 2, 'float'), rt.binary("-", rt.f(3.0), rt.binary("*", rt.f(2.0), f, 2, 'float'), 2, 'float'), 2, 'float')
         n = rt.binary("+", rt.swizzle(i, "x"), rt.binary("*", rt.swizzle(i, "y"), rt.f(57.0), 1, "float"), 1, "float")
         return rt.binary("-", rt.binary("*", rt.component_wise("mix", rt.component_wise("mix", hashFloat__float(n), hashFloat__float(rt.binary("+", n, rt.f(1.0), 1, "float")), rt.swizzle(f, "x"), width=1), rt.component_wise("mix", hashFloat__float(rt.binary("+", n, rt.f(57.0), 1, "float")), hashFloat__float(rt.binary("+", n, rt.f(58.0), 1, "float")), rt.swizzle(f, "x"), width=1), rt.swizzle(f, "y"), width=1), rt.f(2.0), 1, "float"), rt.f(1.0), 1, "float")
     def wrapPosition__vec2_vec2(position, bounds):
         position = rt.copy(position, "float")
         bounds = rt.copy(bounds, "float")
-        return rt.component_wise("mod", rt.binary("+", position, bounds, 2, "float"), bounds, width=2)
+        return rt.component_wise("mod", rt.binary("+", position, bounds, 2, 'float'), bounds, width=2)
     def limitVec__vec2_float(v, maxLen):
         v = rt.copy(v, "float")
         len = rt.length(v)
         if (bool(rt.binary(">", len, maxLen)) and bool(rt.binary(">", len, rt.f(0.0)))):
-            return rt.binary("*", v, rt.binary("/", maxLen, len, 1, "float"), 2, "float")
+            return rt.construct(2, rt.binary("*", v, rt.binary("/", maxLen, len, 1, "float"), 2, 'float'))
         return v
     def setMag__vec2_float(v, mag):
         v = rt.copy(v, "float")
         len = rt.length(v)
         if rt.binary(">", len, rt.f(0.0)):
-            return rt.binary("*", v, rt.binary("/", mag, len, 1, "float"), 2, "float")
+            return rt.construct(2, rt.binary("*", v, rt.binary("/", mag, len, 1, "float"), 2, 'float'))
         return v
     def getGridCell__vec2_vec2(pos, res):
         pos = rt.copy(pos, "float")
         res = rt.copy(res, "float")
-        cellSize = rt.binary("/", res, rt.construct(1, g.GRID_SIZE), 2, "float")
-        return rt.construct(2, rt.component_wise("clamp", rt.binary("/", pos, cellSize, 2, "float"), rt.construct(2, rt.f(0.0)), rt.construct(2, rt.construct(1, rt.binary("-", g.GRID_SIZE, rt.i(1), 1, "int"))), width=2), base="int")
+        cellSize = rt.construct(2, rt.binary("/", res, rt.construct(1, g.GRID_SIZE), 2, 'float'))
+        return rt.construct(2, rt.component_wise("clamp", rt.binary("/", pos, cellSize, 2, 'float'), rt.construct(2, rt.f(0.0)), rt.construct(2, rt.construct(1, rt.binary("-", g.GRID_SIZE, rt.i(1), 1, "int"))), width=2), base="int")
     def main__void():
         coord = rt.construct(2, rt.swizzle(ctx.frag_coord, "xy"), base="int")
         stateSize = rt.texture_size(_u_xyzTex)
@@ -76,7 +76,7 @@ def run_pixel(ctx, out):
         age = rt.swizzle(vel, "z")
         seed = rt.swizzle(vel, "w")
         boidId = rt.construct(1, rt.binary("+", rt.swizzle(coord, "x"), rt.binary("*", rt.swizzle(coord, "y"), rt.swizzle(stateSize, "x"), 1, "int"), 1, "int"), base="uint")
-        pos = rt.binary("*", rt.construct(2, px, py), _u_resolution, 2, "float")
+        pos = rt.construct(2, rt.binary("*", rt.construct_raw(2, px, py), _u_resolution, 2, 'float'))
         velocity = rt.construct(2, vx, vy)
         if rt.binary("<", alive, rt.f(0.5)):
             g.outXYZ[:] = xyz
@@ -89,7 +89,7 @@ def run_pixel(ctx, out):
             seed = hash__uint(rt.binary("+", boidId, rt.i(99999), 1, "uint"))
             angle = rt.binary("*", hash__uint(rt.binary("+", boidId, rt.i(12345), 1, "uint")), rt.f(6.28318530718), 1, "float")
             speed = rt.binary("+", rt.binary("*", rt.binary("*", hash__uint(rt.binary("+", boidId, rt.i(23456), 1, "uint")), _u_maxSpeed, 1, "float"), rt.f(0.5), 1, "float"), rt.binary("*", _u_maxSpeed, rt.f(0.25), 1, "float"), 1, "float")
-            velocity[:] = rt.binary("*", rt.construct(2, rt.component_wise("cos", angle, width=1), rt.component_wise("sin", angle, width=1)), speed, 2, "float")
+            velocity[:] = rt.binary("*", rt.construct_raw(2, rt.component_wise("cos", angle, width=1), rt.component_wise("sin", angle, width=1)), speed, 2, 'float')
         separationForce = rt.construct(2, rt.f(0.0))
         alignmentSum = rt.construct(2, rt.f(0.0))
         cohesionSum = rt.construct(2, rt.f(0.0))
@@ -140,9 +140,9 @@ def run_pixel(ctx, out):
                     otherVel = rt.texel_fetch(_u_velTex, rt.construct(2, sx, sy, base="int"), rt.i(0))
                     if rt.binary("<", rt.swizzle(otherXyz, "w"), rt.f(0.5)):
                         continue
-                    otherPos = rt.binary("*", rt.swizzle(otherXyz, "xy"), _u_resolution, 2, "float")
+                    otherPos = rt.construct(2, rt.binary("*", rt.swizzle(otherXyz, "xy"), _u_resolution, 2, 'float'))
                     otherVelocity = rt.swizzle(otherVel, "xy")
-                    diff = rt.binary("-", otherPos, pos, 2, "float")
+                    diff = rt.construct(2, rt.binary("-", otherPos, pos, 2, 'float'))
                     if rt.binary("==", _u_boundaryMode, rt.i(0)):
                         if rt.binary(">", rt.swizzle(diff, "x"), rt.binary("*", rt.swizzle(_u_resolution, "x"), rt.f(0.5), 1, "float")):
                             diff = rt.assign_swizzle(diff, "x", rt.binary("-", rt.swizzle(diff, "x"), rt.swizzle(_u_resolution, "x"), 1, "float"))
@@ -156,9 +156,9 @@ def run_pixel(ctx, out):
                     away = rt.construct(2, 0.0)
                     dist = rt.f(0.0)
                     if (bool(rt.binary("<", distSq, separationSq)) and bool(rt.binary(">", distSq, rt.f(0.0)))):
-                        away = rt.unary("-", diff)
+                        away = rt.construct(2, rt.unary("-", diff))
                         dist = rt.component_wise("sqrt", distSq, width=1)
-                        separationForce[:] = rt.binary("+", separationForce, rt.binary("/", away, dist, 2, "float"), 2, "float")
+                        separationForce[:] = rt.binary("+", separationForce, rt.binary("/", away, dist, 2, 'float'), 2, "float")
                         separationCount = rt.binary("+", separationCount, rt.i(1), 1, "int")
                     if (bool(rt.binary("<", distSq, perceptionSq)) and bool(rt.binary(">", distSq, rt.f(0.0)))):
                         alignmentSum[:] = rt.binary("+", alignmentSum, otherVelocity, 2, "float")
@@ -172,36 +172,36 @@ def run_pixel(ctx, out):
                 separationForce[:] = setMag__vec2_float(separationForce, _u_maxSpeed)
                 separationForce[:] = rt.binary("-", separationForce, velocity, 2, "float")
                 separationForce[:] = limitVec__vec2_float(separationForce, _u_maxForce)
-                steer[:] = rt.binary("+", steer, rt.binary("*", separationForce, _u_separation, 2, "float"), 2, "float")
+                steer[:] = rt.binary("+", steer, rt.binary("*", separationForce, _u_separation, 2, 'float'), 2, "float")
         avgVel = rt.construct(2, 0.0)
         if rt.binary(">", alignmentCount, rt.i(0)):
-            avgVel = rt.binary("/", alignmentSum, rt.construct(1, alignmentCount), 2, "float")
+            avgVel = rt.construct(2, rt.binary("/", alignmentSum, rt.construct(1, alignmentCount), 2, 'float'))
             alignSteer = rt.construct(2, 0.0)
             if rt.binary(">", rt.length(avgVel), rt.f(0.0)):
                 avgVel[:] = setMag__vec2_float(avgVel, _u_maxSpeed)
-                alignSteer = rt.binary("-", avgVel, velocity, 2, "float")
+                alignSteer = rt.construct(2, rt.binary("-", avgVel, velocity, 2, 'float'))
                 alignSteer[:] = limitVec__vec2_float(alignSteer, _u_maxForce)
-                steer[:] = rt.binary("+", steer, rt.binary("*", alignSteer, _u_alignment, 2, "float"), 2, "float")
+                steer[:] = rt.binary("+", steer, rt.binary("*", alignSteer, _u_alignment, 2, 'float'), 2, "float")
         avgPos = rt.construct(2, 0.0)
         desired = rt.construct(2, 0.0)
         if rt.binary(">", cohesionCount, rt.i(0)):
-            avgPos = rt.binary("/", cohesionSum, rt.construct(1, cohesionCount), 2, "float")
-            desired = rt.binary("-", avgPos, pos, 2, "float")
+            avgPos = rt.construct(2, rt.binary("/", cohesionSum, rt.construct(1, cohesionCount), 2, 'float'))
+            desired = rt.construct(2, rt.binary("-", avgPos, pos, 2, 'float'))
             cohesionSteer = rt.construct(2, 0.0)
             if rt.binary(">", rt.length(desired), rt.f(0.0)):
                 desired[:] = setMag__vec2_float(desired, _u_maxSpeed)
-                cohesionSteer = rt.binary("-", desired, velocity, 2, "float")
+                cohesionSteer = rt.construct(2, rt.binary("-", desired, velocity, 2, 'float'))
                 cohesionSteer[:] = limitVec__vec2_float(cohesionSteer, _u_maxForce)
-                steer[:] = rt.binary("+", steer, rt.binary("*", cohesionSteer, _u_cohesion, 2, "float"), 2, "float")
+                steer[:] = rt.binary("+", steer, rt.binary("*", cohesionSteer, _u_cohesion, 2, 'float'), 2, "float")
         noiseScale = rt.f(0.0)
         nx = rt.f(0.0)
         ny = rt.f(0.0)
         noiseForce = rt.construct(2, 0.0)
         if rt.binary(">", _u_noiseWeight, rt.f(0.0)):
             noiseScale = rt.f(0.01)
-            nx = noise2D__vec2(rt.binary("+", rt.binary("*", pos, noiseScale, 2, "float"), rt.binary("*", _u_time, rt.f(0.5), 1, "float"), 2, "float"))
-            ny = noise2D__vec2(rt.binary("+", rt.binary("+", rt.binary("*", pos, noiseScale, 2, "float"), rt.f(100.0), 2, "float"), rt.binary("*", _u_time, rt.f(0.5), 1, "float"), 2, "float"))
-            noiseForce = rt.binary("*", rt.binary("*", rt.construct(2, nx, ny), _u_maxForce, 2, "float"), _u_noiseWeight, 2, "float")
+            nx = noise2D__vec2(rt.construct(2, rt.binary("+", rt.binary("*", pos, noiseScale, 2, 'float'), rt.binary("*", _u_time, rt.f(0.5), 1, "float"), 2, 'float')))
+            ny = noise2D__vec2(rt.construct(2, rt.binary("+", rt.binary("+", rt.binary("*", pos, noiseScale, 2, 'float'), rt.construct_raw(2, rt.f(100.0), rt.f(100.0)), 2, 'float'), rt.binary("*", _u_time, rt.f(0.5), 1, "float"), 2, 'float')))
+            noiseForce = rt.construct(2, rt.binary("*", rt.binary("*", rt.construct_raw(2, nx, ny), _u_maxForce, 2, 'float'), _u_noiseWeight, 2, 'float'))
             steer[:] = rt.binary("+", steer, noiseForce, 2, "float")
         wallForce = rt.construct(2, 0.0)
         turnStrength = rt.f(0.0)
@@ -225,7 +225,7 @@ def run_pixel(ctx, out):
         if rt.binary("==", _u_boundaryMode, rt.i(0)):
             pos[:] = wrapPosition__vec2_vec2(pos, _u_resolution)
         else:
-            pos[:] = rt.component_wise("clamp", pos, rt.construct(2, rt.f(1.0)), rt.binary("-", _u_resolution, rt.construct(2, rt.f(1.0)), 2, "float"), width=2)
+            pos[:] = rt.component_wise("clamp", pos, rt.construct(2, rt.f(1.0)), rt.binary("-", _u_resolution, rt.construct_raw(2, rt.f(1.0)), 2, 'float'), width=2)
         age = rt.binary("+", age, rt.f(0.016), 1, "float")
         newPx = rt.binary("/", rt.swizzle(pos, "x"), rt.swizzle(_u_resolution, "x"), 1, "float")
         newPy = rt.binary("/", rt.swizzle(pos, "y"), rt.swizzle(_u_resolution, "y"), 1, "float")

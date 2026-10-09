@@ -25,17 +25,17 @@ def run_pixel(ctx, out):
         color1 = rt.copy(color1, "float")
         color2 = rt.copy(color2, "float")
         if rt.binary("==", m, rt.i(0)):
-            return rt.component_wise("min", rt.binary("+", color1, color2, 4, "float"), rt.construct(4, rt.f(1.0)), width=4)
+            return rt.component_wise("min", rt.binary("+", color1, color2, 4, 'float'), rt.construct(4, rt.f(1.0)), width=4)
         if rt.binary("==", m, rt.i(1)):
-            return rt.copy(rt.binary("-", rt.f(1.0), rt.component_wise("min", rt.binary("/", rt.binary("-", rt.f(1.0), color1, 4, "float"), rt.component_wise("max", color2, rt.construct(4, rt.f(0.001)), width=4), 4, "float"), rt.construct(4, rt.f(1.0)), width=4), 4, "float"), 'float')
+            return rt.construct(4, rt.binary("-", rt.f(1.0), rt.component_wise("min", rt.construct(4, rt.binary("/", rt.construct(4, rt.binary("-", rt.f(1.0), color1, 4, 'float')), rt.component_wise("max", color2, rt.construct(4, rt.f(0.001)), width=4), 4, 'float')), rt.construct(4, rt.f(1.0)), width=4), 4, 'float'))
         if rt.binary("==", m, rt.i(2)):
             return rt.component_wise("min", color1, color2, width=4)
         if rt.binary("==", m, rt.i(3)):
-            return rt.component_wise("abs", rt.binary("-", color1, color2, 4, "float"), width=4)
+            return rt.component_wise("abs", rt.binary("-", color1, color2, 4, 'float'), width=4)
         if rt.binary("==", m, rt.i(4)):
-            return rt.component_wise("min", rt.binary("/", color1, rt.component_wise("max", rt.binary("-", rt.f(1.0), color2, 4, "float"), rt.construct(4, rt.f(0.001)), width=4), 4, "float"), rt.construct(4, rt.f(1.0)), width=4)
+            return rt.component_wise("min", rt.construct(4, rt.binary("/", color1, rt.component_wise("max", rt.binary("-", rt.f(1.0), color2, 4, 'float'), rt.construct(4, rt.f(0.001)), width=4), 4, 'float')), rt.construct(4, rt.f(1.0)), width=4)
         if rt.binary("==", m, rt.i(5)):
-            return rt.binary("-", rt.binary("+", color1, color2, 4, "float"), rt.binary("*", rt.binary("*", rt.f(2.0), color1, 4, "float"), color2, 4, "float"), 4, "float")
+            return rt.construct(4, rt.binary("-", rt.binary("+", color1, color2, 4, 'float'), rt.binary("*", rt.binary("*", rt.f(2.0), color1, 4, 'float'), color2, 4, 'float'), 4, 'float'))
         if rt.binary("==", m, rt.i(6)):
             return rt.construct(4, blendOverlay__float_float(rt.swizzle(color2, "r"), rt.swizzle(color1, "r")), blendOverlay__float_float(rt.swizzle(color2, "g"), rt.swizzle(color1, "g")), blendOverlay__float_float(rt.swizzle(color2, "b"), rt.swizzle(color1, "b")), rt.f(1.0))
         if rt.binary("==", m, rt.i(7)):
@@ -43,18 +43,18 @@ def run_pixel(ctx, out):
         if rt.binary("==", m, rt.i(8)):
             return color2
         if rt.binary("==", m, rt.i(9)):
-            return rt.binary("*", color1, color2, 4, "float")
+            return rt.construct(4, rt.binary("*", color1, color2, 4, 'float'))
         if rt.binary("==", m, rt.i(10)):
-            return rt.binary("-", rt.construct(4, rt.f(1.0)), rt.component_wise("abs", rt.binary("-", rt.binary("-", rt.construct(4, rt.f(1.0)), color1, 4, "float"), color2, 4, "float"), width=4), 4, "float")
+            return rt.construct(4, rt.binary("-", rt.construct(4, rt.f(1.0)), rt.component_wise("abs", rt.binary("-", rt.binary("-", rt.construct_raw(4, rt.f(1.0)), color1, 4, 'float'), color2, 4, 'float'), width=4), 4, 'float'))
         if rt.binary("==", m, rt.i(11)):
             return rt.construct(4, blendOverlay__float_float(rt.swizzle(color1, "r"), rt.swizzle(color2, "r")), blendOverlay__float_float(rt.swizzle(color1, "g"), rt.swizzle(color2, "g")), blendOverlay__float_float(rt.swizzle(color1, "b"), rt.swizzle(color2, "b")), rt.f(1.0))
         if rt.binary("==", m, rt.i(12)):
-            return rt.binary("+", rt.binary("-", rt.component_wise("min", color1, color2, width=4), rt.component_wise("max", color1, color2, width=4), 4, "float"), rt.construct(4, rt.f(1.0)), 4, "float")
+            return rt.construct(4, rt.binary("+", rt.construct(4, rt.binary("-", rt.component_wise("min", color1, color2, width=4), rt.component_wise("max", color1, color2, width=4), 4, 'float')), rt.construct(4, rt.f(1.0)), 4, 'float'))
         if rt.binary("==", m, rt.i(13)):
-            return rt.binary("-", rt.construct(4, rt.f(1.0)), rt.binary("*", rt.binary("-", rt.construct(4, rt.f(1.0)), color1, 4, "float"), rt.binary("-", rt.construct(4, rt.f(1.0)), color2, 4, "float"), 4, "float"), 4, "float")
+            return rt.construct(4, rt.binary("-", rt.construct_raw(4, rt.f(1.0)), rt.binary("*", rt.binary("-", rt.construct_raw(4, rt.f(1.0)), color1, 4, 'float'), rt.binary("-", rt.construct_raw(4, rt.f(1.0)), color2, 4, 'float'), 4, 'float'), 4, 'float'))
         if rt.binary("==", m, rt.i(14)):
             return rt.construct(4, blendSoftLight__float_float(rt.swizzle(color1, "r"), rt.swizzle(color2, "r")), blendSoftLight__float_float(rt.swizzle(color1, "g"), rt.swizzle(color2, "g")), blendSoftLight__float_float(rt.swizzle(color1, "b"), rt.swizzle(color2, "b")), rt.f(1.0))
-        return rt.component_wise("max", rt.binary("-", color1, color2, 4, "float"), rt.construct(4, rt.f(0.0)), width=4)
+        return rt.component_wise("max", rt.binary("-", color1, color2, 4, 'float'), rt.construct(4, rt.f(0.0)), width=4)
     def distanceMetric__vec2_vec2_int(p, corner, m):
         p = rt.copy(p, "float")
         corner = rt.copy(corner, "float")
@@ -76,13 +76,13 @@ def run_pixel(ctx, out):
         maxD = rt.component_wise("max", rt.swizzle(corner, "x"), rt.swizzle(corner, "y"), width=1)
         return rt.binary("/", d, maxD, 1, "float")
     def main__void():
-        st = rt.binary("/", rt.swizzle(ctx.frag_coord, "xy"), _u_resolution, 2, "float")
+        st = rt.construct(2, rt.binary("/", rt.swizzle(ctx.frag_coord, "xy"), _u_resolution, 2, 'float'))
         edgeColor = rt.texture(_u_inputTex, st)
         centerColor = rt.texture(_u_tex, st)
         minRes = rt.component_wise("min", rt.swizzle(_u_fullResolution, "x"), rt.swizzle(_u_fullResolution, "y"), width=1)
-        globalCoord = rt.binary("+", rt.swizzle(ctx.frag_coord, "xy"), _u_tileOffset, 2, "float")
-        p = rt.binary("/", rt.binary("-", globalCoord, rt.binary("*", rt.f(0.5), _u_fullResolution, 2, "float"), 2, "float"), rt.binary("*", rt.f(0.5), minRes, 1, "float"), 2, "float")
-        corner = rt.binary("/", _u_fullResolution, minRes, 2, "float")
+        globalCoord = rt.construct(2, rt.binary("+", rt.swizzle(ctx.frag_coord, "xy"), _u_tileOffset, 2, 'float'))
+        p = rt.construct(2, rt.binary("/", rt.binary("-", globalCoord, rt.binary("*", rt.f(0.5), _u_fullResolution, 2, 'float'), 2, 'float'), rt.binary("*", rt.f(0.5), minRes, 1, "float"), 2, 'float'))
+        corner = rt.construct(2, rt.binary("/", _u_fullResolution, minRes, 2, 'float'))
         dist01 = clamp01__float(distanceMetric__vec2_vec2_int(p, corner, _u_shape))
         scaledPower = rt.component_wise("mix", rt.f(0.1), rt.f(25.05), rt.binary("/", rt.binary("+", _u_power, rt.f(100.0), 1, "float"), rt.f(200.0), 1, "float"), width=1)
         mask = rt.component_wise("pow", dist01, scaledPower, width=1)

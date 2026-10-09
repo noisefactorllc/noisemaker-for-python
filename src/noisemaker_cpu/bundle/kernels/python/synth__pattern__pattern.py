@@ -48,7 +48,7 @@ def run_pixel(ctx, out):
         return rt.binary("-", rt.f(1.0), rt.component_wise("min", lineX, lineY, width=1), 1, "float")
     def dots__vec2_float(p, t):
         p = rt.copy(p, "float")
-        f = rt.copy(rt.binary("-", rt.component_wise("fract", p, width=2), rt.f(0.5), 2, "float"), 'float')
+        f = rt.construct(2, rt.binary("-", rt.component_wise("fract", p, width=2), rt.f(0.5), 2, 'float'))
         d = rt.length(f)
         radius = rt.binary("*", t, rt.f(0.5), 1, "float")
         return rt.binary("-", rt.f(1.0), rt.component_wise("smoothstep", rt.binary("-", radius, _u_smoothness, 1, "float"), rt.binary("+", radius, _u_smoothness, 1, "float"), d, width=1), 1, "float")
@@ -59,10 +59,10 @@ def run_pixel(ctx, out):
     def hexagons__vec2_float(p, t):
         p = rt.copy(p, "float")
         s = rt.construct(2, rt.f(1.0), rt.f(1.7320508075688772))
-        h = rt.binary("*", s, rt.f(0.5), 2, "float")
-        a = rt.binary("-", rt.component_wise("mod", p, s, width=2), h, 2, "float")
-        b = rt.binary("-", rt.component_wise("mod", rt.binary("+", p, h, 2, "float"), s, width=2), h, 2, "float")
-        _g = (a if rt.binary("<", rt.length(a), rt.length(b)) else b)
+        h = rt.construct(2, rt.binary("*", s, rt.f(0.5), 2, 'float'))
+        a = rt.construct(2, rt.binary("-", rt.component_wise("mod", p, s, width=2), h, 2, 'float'))
+        b = rt.construct(2, rt.binary("-", rt.component_wise("mod", rt.binary("+", p, h, 2, 'float'), s, width=2), h, 2, 'float'))
+        _g = rt.construct(2, (a if rt.binary("<", rt.length(a), rt.length(b)) else b))
         d = hexDist__vec2(_g)
         edge = rt.binary("*", rt.f(0.5), t, 1, "float")
         return rt.component_wise("smoothstep", rt.binary("+", edge, _u_smoothness, 1, "float"), rt.binary("-", edge, _u_smoothness, 1, "float"), d, width=1)
@@ -104,13 +104,13 @@ def run_pixel(ctx, out):
         p = rt.copy(p, "float")
         p = rt.assign_swizzle(p, "x", rt.component_wise("abs", rt.swizzle(p, "x"), width=1))
         if rt.binary(">", rt.binary("+", rt.swizzle(p, "y"), rt.swizzle(p, "x"), 1, "float"), rt.f(1.0)):
-            return rt.binary("-", rt.component_wise("sqrt", rt.dot(rt.binary("-", p, rt.array([rt.f(0.25), rt.f(0.75)]), 2, "float"), rt.binary("-", p, rt.array([rt.f(0.25), rt.f(0.75)]), 2, "float")), width=1), rt.binary("/", rt.component_wise("sqrt", rt.f(2.0), width=1), rt.f(4.0), 1, "float"), 1, "float")
-        return rt.binary("*", rt.component_wise("sqrt", rt.component_wise("min", rt.dot(rt.binary("-", p, rt.array([rt.f(0.0), rt.f(1.0)]), 2, "float"), rt.binary("-", p, rt.array([rt.f(0.0), rt.f(1.0)]), 2, "float")), rt.dot(rt.binary("-", p, rt.binary("*", rt.f(0.5), rt.component_wise("max", rt.binary("+", rt.swizzle(p, "x"), rt.swizzle(p, "y"), 1, "float"), rt.f(0.0), width=1), 1, "float"), 2, "float"), rt.binary("-", p, rt.binary("*", rt.f(0.5), rt.component_wise("max", rt.binary("+", rt.swizzle(p, "x"), rt.swizzle(p, "y"), 1, "float"), rt.f(0.0), width=1), 1, "float"), 2, "float")), width=1), width=1), rt.component_wise("sign", rt.binary("-", rt.swizzle(p, "x"), rt.swizzle(p, "y"), 1, "float"), width=1), 1, "float")
+            return rt.binary("-", rt.component_wise("sqrt", rt.dot(rt.binary("-", p, rt.construct_raw(2, rt.f(0.25), rt.f(0.75)), 2, 'float'), rt.binary("-", p, rt.construct_raw(2, rt.f(0.25), rt.f(0.75)), 2, 'float')), width=1), rt.binary("/", rt.component_wise("sqrt", rt.f(2.0), width=1), rt.f(4.0), 1, "float"), 1, "float")
+        return rt.binary("*", rt.component_wise("sqrt", rt.component_wise("min", rt.dot(rt.binary("-", p, rt.construct_raw(2, rt.f(0.0), rt.f(1.0)), 2, 'float'), rt.binary("-", p, rt.construct_raw(2, rt.f(0.0), rt.f(1.0)), 2, 'float')), rt.dot(rt.binary("-", p, rt.binary("*", rt.f(0.5), rt.component_wise("max", rt.binary("+", rt.swizzle(p, "x"), rt.swizzle(p, "y"), 1, "float"), rt.f(0.0), width=1), 1, "float"), 2, 'float'), rt.binary("-", p, rt.binary("*", rt.f(0.5), rt.component_wise("max", rt.binary("+", rt.swizzle(p, "x"), rt.swizzle(p, "y"), 1, "float"), rt.f(0.0), width=1), 1, "float"), 2, 'float')), width=1), width=1), rt.component_wise("sign", rt.binary("-", rt.swizzle(p, "x"), rt.swizzle(p, "y"), 1, "float"), width=1), 1, "float")
     def hearts__vec2_float(p, t):
         p = rt.copy(p, "float")
-        cell = rt.copy(rt.binary("-", rt.component_wise("fract", p, width=2), rt.f(0.5), 2, "float"), 'float')
+        cell = rt.construct(2, rt.binary("-", rt.component_wise("fract", p, width=2), rt.f(0.5), 2, 'float'))
         cell = rt.assign_swizzle(cell, "y", rt.binary("+", rt.swizzle(cell, "y"), rt.f(0.25), 1, "float"))
-        d = heartSDF__vec2(rt.binary("*", cell, rt.f(2.4), 2, "float"))
+        d = heartSDF__vec2(rt.construct(2, rt.binary("*", cell, rt.f(2.4), 2, 'float')))
         radius = rt.binary("-", rt.f(0.15), rt.binary("*", t, rt.f(0.15), 1, "float"), 1, "float")
         sm = rt.component_wise("min", _u_smoothness, rt.binary("+", radius, rt.f(0.15), 1, "float"), width=1)
         return rt.binary("-", rt.f(1.0), rt.component_wise("smoothstep", rt.binary("-", rt.unary("-", radius), sm, 1, "float"), rt.binary("+", rt.unary("-", radius), sm, 1, "float"), d, width=1), 1, "float")
@@ -131,9 +131,9 @@ def run_pixel(ctx, out):
         sm = rt.component_wise("min", _u_smoothness, rt.component_wise("max", rt.binary("-", rt.f(0.24), halfW, 1, "float"), rt.f(0.005), width=1), width=1)
         return rt.binary("-", rt.f(1.0), rt.component_wise("smoothstep", rt.binary("-", halfW, sm, 1, "float"), rt.binary("+", halfW, sm, 1, "float"), dist, width=1), 1, "float")
     def main__void():
-        globalCoord = rt.binary("+", rt.swizzle(ctx.frag_coord, "xy"), _u_tileOffset, 2, "float")
-        st = rt.binary("/", globalCoord, _u_fullResolution, 2, "float")
-        st[:] = rt.binary("*", rt.binary("-", st, rt.f(0.5), 2, "float"), rt.f(2.0), 2, "float")
+        globalCoord = rt.construct(2, rt.binary("+", rt.swizzle(ctx.frag_coord, "xy"), _u_tileOffset, 2, 'float'))
+        st = rt.construct(2, rt.binary("/", globalCoord, _u_fullResolution, 2, 'float'))
+        st[:] = rt.binary("*", rt.binary("-", st, rt.f(0.5), 2, 'float'), rt.f(2.0), 2, 'float')
         st = rt.assign_swizzle(st, "x", rt.binary("*", rt.swizzle(st, "x"), _u_aspect, 1, "float"))
         rad = rt.binary("/", rt.binary("*", _u_rotation, rt.f(3.14159265359), 1, "float"), rt.f(180.0), 1, "float")
         st[:] = rotate2D__vec2_float(st, rad)
@@ -141,7 +141,7 @@ def run_pixel(ctx, out):
         if (bool((not (centered))) and bool(rt.binary("==", _u_animation, rt.i(2)))):
             st[:] = rotate2D__vec2_float(st, rt.binary("*", rt.binary("*", _u_time, rt.f(6.28318530718), 1, "float"), rt.component_wise("floor", _u_speed, width=1), 1, "float"))
         st = rt.assign_swizzle(st, "x", rt.binary("+", rt.swizzle(st, "x"), rt.binary("*", rt.swizzle(st, "y"), _u_skew, 1, "float"), 1, "float"))
-        p = rt.binary("*", st, rt.binary("-", rt.f(21.0), _u_scale, 1, "float"), 2, "float")
+        p = rt.construct(2, rt.binary("*", st, rt.binary("-", rt.f(21.0), _u_scale, 1, "float"), 2, 'float'))
         panPeriod = rt.f(0.0)
         if (bool((not (centered))) and bool(rt.binary("==", _u_animation, rt.i(1)))):
             panPeriod = (rt.f(2.0) if rt.binary("==", _u_patternType, rt.i(0)) else rt.f(1.0))

@@ -12,7 +12,7 @@ def run_pixel(ctx, out):
     _u_softKnee = U.get("softKnee", rt.f(0.0))
     g.fragColor = rt.construct(4, 0.0)
     def main__void():
-        globalCoord = rt.binary("+", rt.swizzle(ctx.frag_coord, "xy"), _u_tileOffset, 2, "float")
+        globalCoord = rt.construct(2, rt.binary("+", rt.swizzle(ctx.frag_coord, "xy"), _u_tileOffset, 2, 'float'))
         coord = rt.construct(2, rt.swizzle(ctx.frag_coord, "xy"), base="int")
         color = rt.texel_fetch(_u_inputTex, coord, rt.i(0))
         luma = rt.dot(rt.swizzle(color, "rgb"), rt.construct(3, rt.f(0.2126), rt.f(0.7152), rt.f(0.0722)))
@@ -29,7 +29,7 @@ def run_pixel(ctx, out):
             else:
                 t = rt.binary("/", rt.binary("-", luma, threshLow, 1, "float"), rt.binary("-", threshHigh, threshLow, 1, "float"), 1, "float")
                 bloomFactor = rt.binary("*", rt.binary("*", t, t, 1, "float"), rt.binary("-", rt.f(3.0), rt.binary("*", rt.f(2.0), t, 1, "float"), 1, "float"), 1, "float")
-        brightColor = rt.binary("*", rt.swizzle(color, "rgb"), bloomFactor, 3, "float")
+        brightColor = rt.construct(3, rt.binary("*", rt.swizzle(color, "rgb"), bloomFactor, 3, 'float'))
         g.fragColor[:] = rt.construct(4, brightColor, rt.swizzle(color, "a"))
     main__void()
     _c = g.fragColor

@@ -51,11 +51,11 @@ def run_pixel(ctx, out):
     def oscSquare__float(t):
         return rt.component_wise("step", rt.f(0.5), rt.component_wise("fract", t, width=1), width=1)
     def main__void():
-        globalCoord = rt.binary("+", rt.swizzle(ctx.frag_coord, "xy"), _u_tileOffset, 2, "float")
+        globalCoord = rt.construct(2, rt.binary("+", rt.swizzle(ctx.frag_coord, "xy"), _u_tileOffset, 2, 'float'))
         res = rt.copy_decl(_u_fullResolution, "float")
         if rt.binary("<", rt.swizzle(res, "x"), rt.f(1.0)):
             (res.__setitem__(0, rt.f(1024.0)), res.__setitem__(1, rt.f(1024.0)), res)[-1]
-        st = rt.binary("/", rt.binary("+", rt.swizzle(ctx.frag_coord, "xy"), _u_tileOffset, 2, "float"), res, 2, "float")
+        st = rt.construct(2, rt.binary("/", rt.binary("+", rt.swizzle(ctx.frag_coord, "xy"), _u_tileOffset, 2, 'float'), res, 2, 'float'))
         st[:] = rt.binary("-", st, rt.f(0.5), 2, "float")
         st = rt.assign_swizzle(st, "x", rt.binary("*", rt.swizzle(st, "x"), _u_aspect, 1, "float"))
         rotRad = rt.binary("/", rt.binary("*", _u_rotation, g.PI, 1, "float"), rt.f(180.0), 1, "float")

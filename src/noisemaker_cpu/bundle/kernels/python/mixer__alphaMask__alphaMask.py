@@ -17,7 +17,7 @@ def run_pixel(ctx, out):
     def map__float_float_float_float_float(value, inMin, inMax, outMin, outMax):
         return rt.binary("+", outMin, rt.binary("/", rt.binary("*", rt.binary("-", outMax, outMin, 1, "float"), rt.binary("-", value, inMin, 1, "float"), 1, "float"), rt.binary("-", inMax, inMin, 1, "float"), 1, "float"), 1, "float")
     def main__void():
-        uv = rt.binary("/", rt.swizzle(ctx.frag_coord, "xy"), rt.construct(2, rt.texture_size(_u_inputTex)), 2, "float")
+        uv = rt.construct(2, rt.binary("/", rt.swizzle(ctx.frag_coord, "xy"), rt.construct(2, rt.texture_size(_u_inputTex)), 2, 'float'))
         color1 = rt.texture(_u_inputTex, uv)
         color2 = rt.texture(_u_tex, uv)
         maskVal = rt.f(0.0)
@@ -31,10 +31,10 @@ def run_pixel(ctx, out):
         AoverB = rt.construct(4, 0.0)
         BoverA = rt.construct(4, 0.0)
         if rt.binary("<", _u_mixAmt, rt.f(0.0)):
-            AoverB = rt.binary("+", rt.binary("*", color2, rt.binary("-", rt.f(1.0), rt.swizzle(color1, "a"), 1, "float"), 4, "float"), color1, 4, "float")
+            AoverB = rt.construct(4, rt.binary("+", rt.binary("*", color2, rt.binary("-", rt.f(1.0), rt.swizzle(color1, "a"), 1, "float"), 4, 'float'), color1, 4, 'float'))
             color[:] = rt.component_wise("mix", color1, AoverB, map__float_float_float_float_float(_u_mixAmt, rt.unary("-", rt.f(100.0)), rt.f(0.0), rt.f(0.0), rt.f(1.0)), width=4)
         else:
-            BoverA = rt.binary("+", rt.binary("*", color1, rt.binary("-", rt.f(1.0), rt.swizzle(color2, "a"), 1, "float"), 4, "float"), color2, 4, "float")
+            BoverA = rt.construct(4, rt.binary("+", rt.binary("*", color1, rt.binary("-", rt.f(1.0), rt.swizzle(color2, "a"), 1, "float"), 4, 'float'), color2, 4, 'float'))
             color[:] = rt.component_wise("mix", BoverA, color2, map__float_float_float_float_float(_u_mixAmt, rt.f(0.0), rt.f(100.0), rt.f(0.0), rt.f(1.0)), width=4)
         g.fragColor[:] = color
     main__void()

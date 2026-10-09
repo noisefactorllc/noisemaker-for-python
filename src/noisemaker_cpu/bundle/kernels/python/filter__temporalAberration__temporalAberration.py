@@ -20,10 +20,10 @@ def run_pixel(ctx, out):
     g.fragColor = rt.construct(4, 0.0)
     def main__void():
         texSize = rt.texture_size(_u_inputTex)
-        uv = rt.binary("/", rt.swizzle(ctx.frag_coord, "xy"), rt.construct(2, texSize), 2, "float")
+        uv = rt.construct(2, rt.binary("/", rt.swizzle(ctx.frag_coord, "xy"), rt.construct_raw(2, rt.construct(2, texSize)), 2, 'float'))
         cur = rt.texture(_u_inputTex, uv)
         slots = rt.new_array(rt.i(9), 4)
-        slots[int(rt.i(0))] = cur
+        slots[int(rt.i(0))] = rt.construct(4, cur)
         s = rt.construct(4, 0.0)
         s[:] = rt.texture(_u_h1, uv)
         (cur if rt.binary("<", rt.swizzle(s, "a"), rt.f(0.5)) else (slots[int(rt.i(1))].__setitem__(slice(None), s), slots[int(rt.i(1))])[-1])

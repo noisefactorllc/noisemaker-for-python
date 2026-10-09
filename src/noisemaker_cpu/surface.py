@@ -70,5 +70,7 @@ class Surface:
         d = self.data
         v = np.where(np.isfinite(d), d, 0.0)
         v = np.clip(v, 0.0, 1.0)
-        out = np.floor(v * 255.0 + 0.5).astype(np.uint8)
+        # Scale in float64 like the oracle's Math.round(value * 255): a float32
+        # multiply can sit a hair below the exact product and flip the byte.
+        out = np.floor(v.astype(np.float64) * 255.0 + 0.5).astype(np.uint8)
         return out.tobytes()

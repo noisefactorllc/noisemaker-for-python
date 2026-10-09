@@ -26,8 +26,8 @@ def run_pixel(ctx, out):
         return st
     def main__void():
         aspectRatio = rt.binary("/", rt.swizzle(_u_fullResolution, "x"), rt.swizzle(_u_fullResolution, "y"), 1, "float")
-        globalCoord = rt.binary("+", rt.swizzle(ctx.frag_coord, "xy"), _u_tileOffset, 2, "float")
-        uv = rt.binary("/", globalCoord, _u_fullResolution, 2, "float")
+        globalCoord = rt.construct(2, rt.binary("+", rt.swizzle(ctx.frag_coord, "xy"), _u_tileOffset, 2, 'float'))
+        uv = rt.construct(2, rt.binary("/", globalCoord, _u_fullResolution, 2, 'float'))
         uv[:] = rotate2D__vec2_float_float(uv, rt.binary("/", _u_rotation, rt.f(180.0), 1, "float"), aspectRatio)
         intensity = rt.binary("*", _u_strength, rt.f(0.01), 1, "float")
         uv[:] = rt.binary("-", uv, rt.f(0.5), 2, "float")
@@ -35,19 +35,19 @@ def run_pixel(ctx, out):
             uv = rt.assign_swizzle(uv, "x", rt.binary("*", rt.swizzle(uv, "x"), aspectRatio, 1, "float"))
         r = rt.length(uv)
         effect = rt.component_wise("pow", r, rt.binary("-", rt.f(1.0), intensity, 1, "float"), width=1)
-        uv[:] = rt.copy(rt.binary("*", rt.normalize(uv), effect, 2, "float"), 'float')
+        uv[:] = rt.construct(2, rt.binary("*", rt.normalize(uv), effect, 2, 'float'))
         if _u_aspectLens:
             uv = rt.assign_swizzle(uv, "x", rt.binary("/", rt.swizzle(uv, "x"), aspectRatio, 1, "float"))
         uv[:] = rt.binary("+", uv, rt.f(0.5), 2, "float")
         if rt.binary("==", _u_wrap, rt.i(0)):
-            uv[:] = rt.component_wise("abs", rt.copy(rt.binary("-", rt.component_wise("mod", rt.binary("+", uv, rt.f(1.0), 2, "float"), rt.f(2.0), width=2), rt.f(1.0), 2, "float"), 'float'), width=2)
+            uv[:] = rt.component_wise("abs", rt.construct(2, rt.binary("-", rt.component_wise("mod", rt.binary("+", uv, rt.f(1.0), 2, 'float'), rt.f(2.0), width=2), rt.f(1.0), 2, 'float')), width=2)
         else:
             if rt.binary("==", _u_wrap, rt.i(1)):
                 uv[:] = rt.component_wise("mod", uv, rt.f(1.0), width=2)
             else:
                 uv[:] = rt.component_wise("clamp", uv, rt.f(0.0), rt.f(1.0), width=2)
         uv[:] = rotate2D__vec2_float_float(uv, rt.binary("/", rt.unary("-", _u_rotation), rt.f(180.0), 1, "float"), aspectRatio)
-        sampleUV = rt.component_wise("clamp", rt.binary("/", rt.binary("-", rt.binary("*", uv, _u_fullResolution, 2, "float"), _u_tileOffset, 2, "float"), _u_resolution, 2, "float"), rt.f(0.0), rt.f(1.0), width=2)
+        sampleUV = rt.component_wise("clamp", rt.binary("/", rt.binary("-", rt.binary("*", uv, _u_fullResolution, 2, 'float'), _u_tileOffset, 2, 'float'), _u_resolution, 2, 'float'), rt.f(0.0), rt.f(1.0), width=2)
         dx = rt.construct(2, 0.0)
         dy = rt.construct(2, 0.0)
         col = rt.construct(4, 0.0)
@@ -55,11 +55,11 @@ def run_pixel(ctx, out):
             dx = rt.dFdx(sampleUV)
             dy = rt.dFdy(sampleUV)
             col = rt.construct(4, rt.f(0.0))
-            col[:] = rt.binary("+", col, rt.texture(_u_inputTex, rt.binary("+", rt.binary("+", sampleUV, rt.binary("*", dx, rt.unary("-", rt.f(0.375)), 2, "float"), 2, "float"), rt.binary("*", dy, rt.unary("-", rt.f(0.125)), 2, "float"), 2, "float")), 4, "float")
-            col[:] = rt.binary("+", col, rt.texture(_u_inputTex, rt.binary("+", rt.binary("+", sampleUV, rt.binary("*", dx, rt.f(0.125), 2, "float"), 2, "float"), rt.binary("*", dy, rt.unary("-", rt.f(0.375)), 2, "float"), 2, "float")), 4, "float")
-            col[:] = rt.binary("+", col, rt.texture(_u_inputTex, rt.binary("+", rt.binary("+", sampleUV, rt.binary("*", dx, rt.f(0.375), 2, "float"), 2, "float"), rt.binary("*", dy, rt.f(0.125), 2, "float"), 2, "float")), 4, "float")
-            col[:] = rt.binary("+", col, rt.texture(_u_inputTex, rt.binary("+", rt.binary("+", sampleUV, rt.binary("*", dx, rt.unary("-", rt.f(0.125)), 2, "float"), 2, "float"), rt.binary("*", dy, rt.f(0.375), 2, "float"), 2, "float")), 4, "float")
-            g.fragColor[:] = rt.binary("*", col, rt.f(0.25), 4, "float")
+            col[:] = rt.binary("+", col, rt.texture(_u_inputTex, rt.binary("+", rt.binary("+", sampleUV, rt.binary("*", dx, rt.unary("-", rt.f(0.375)), 2, 'float'), 2, 'float'), rt.binary("*", dy, rt.unary("-", rt.f(0.125)), 2, 'float'), 2, 'float')), 4, "float")
+            col[:] = rt.binary("+", col, rt.texture(_u_inputTex, rt.binary("+", rt.binary("+", sampleUV, rt.binary("*", dx, rt.f(0.125), 2, 'float'), 2, 'float'), rt.binary("*", dy, rt.unary("-", rt.f(0.375)), 2, 'float'), 2, 'float')), 4, "float")
+            col[:] = rt.binary("+", col, rt.texture(_u_inputTex, rt.binary("+", rt.binary("+", sampleUV, rt.binary("*", dx, rt.f(0.375), 2, 'float'), 2, 'float'), rt.binary("*", dy, rt.f(0.125), 2, 'float'), 2, 'float')), 4, "float")
+            col[:] = rt.binary("+", col, rt.texture(_u_inputTex, rt.binary("+", rt.binary("+", sampleUV, rt.binary("*", dx, rt.unary("-", rt.f(0.125)), 2, 'float'), 2, 'float'), rt.binary("*", dy, rt.f(0.375), 2, 'float'), 2, 'float')), 4, "float")
+            g.fragColor[:] = rt.binary("*", col, rt.f(0.25), 4, 'float')
         else:
             g.fragColor[:] = rt.texture(_u_inputTex, sampleUV)
     main__void()

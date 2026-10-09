@@ -33,9 +33,9 @@ def run_pixel(ctx, out):
             return rt.component_wise("clamp", rt.swizzle(texel, "r"), rt.f(0.0), rt.f(1.0), width=1)
         return oklabLComponent__vec3(rt.swizzle(texel, "rgb"))
     def main__void():
-        globalCoord = rt.binary("+", rt.swizzle(ctx.frag_coord, "xy"), _u_tileOffset, 2, "float")
+        globalCoord = rt.construct(2, rt.binary("+", rt.swizzle(ctx.frag_coord, "xy"), _u_tileOffset, 2, 'float'))
         dimensions = rt.texture_size(_u_inputTex)
-        uv = rt.binary("/", rt.binary("-", rt.swizzle(ctx.frag_coord, "xy"), rt.construct(2, rt.f(0.5)), 2, "float"), rt.array([rt.component_wise("max", rt.swizzle(dimensions, "x"), rt.i(1), width=1), rt.component_wise("max", rt.swizzle(dimensions, "y"), rt.i(1), width=1)]), 2, "float")
+        uv = rt.construct(2, rt.binary("/", rt.binary("-", rt.swizzle(ctx.frag_coord, "xy"), rt.construct_raw(2, rt.f(0.5)), 2, 'float'), rt.construct_raw(2, rt.construct(1, rt.component_wise("max", rt.swizzle(dimensions, "x"), rt.i(1), width=1)), rt.construct(1, rt.component_wise("max", rt.swizzle(dimensions, "y"), rt.i(1), width=1))), 2, 'float'))
         texel = rt.texture(_u_inputTex, uv)
         value = valueMapComponent__vec4(texel)
         g.fragColor[:] = rt.construct(4, value, value, value, rt.swizzle(texel, "a"))

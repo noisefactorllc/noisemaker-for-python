@@ -51,16 +51,16 @@ def run_pixel(ctx, out):
         oms = rt.binary("-", rt.f(1.0), s, 1, "float")
         return rt.construct(3, rt.binary("*", rt.binary("+", oms, rt.binary("*", s, dr, 1, "float"), 1, "float"), v, 1, "float"), rt.binary("*", rt.binary("+", oms, rt.binary("*", s, dg, 1, "float"), 1, "float"), v, 1, "float"), rt.binary("*", rt.binary("+", oms, rt.binary("*", s, db, 1, "float"), 1, "float"), v, 1, "float"))
     def main__void():
-        globalCoord = rt.binary("+", rt.swizzle(ctx.frag_coord, "xy"), _u_tileOffset, 2, "float")
-        st = rt.binary("/", rt.swizzle(ctx.frag_coord, "xy"), rt.construct(2, rt.component_wise("max", rt.texture_size(_u_inputTex), rt.construct(2, rt.i(1), base="int"), width=2)), 2, "float")
+        globalCoord = rt.construct(2, rt.binary("+", rt.swizzle(ctx.frag_coord, "xy"), _u_tileOffset, 2, 'float'))
+        st = rt.construct(2, rt.binary("/", rt.swizzle(ctx.frag_coord, "xy"), rt.construct(2, rt.component_wise("max", rt.texture_size(_u_inputTex), rt.construct(2, rt.i(1), base="int"), width=2)), 2, 'float'))
         base = rt.texture(_u_inputTex, st)
-        base_rgb = (rt.component_wise("clamp", rt.binary("/", rt.swizzle(base, "rgb"), rt.swizzle(base, "a"), 3, "float"), rt.f(0.0), rt.f(1.0), width=3) if rt.binary(">", rt.swizzle(base, "a"), rt.f(0.0)) else rt.construct(3, rt.f(0.0)))
+        base_rgb = rt.construct(3, (rt.component_wise("clamp", rt.binary("/", rt.swizzle(base, "rgb"), rt.swizzle(base, "a"), 3, 'float'), rt.f(0.0), rt.f(1.0), width=3) if rt.binary(">", rt.swizzle(base, "a"), rt.f(0.0)) else rt.construct(3, rt.f(0.0))))
         m = rt.construct(1, _u_mode, base="int")
         tinted = rt.construct(3, 0.0)
         tintHue = rt.f(0.0)
         base_hsv = rt.construct(3, 0.0)
         if rt.binary("==", m, rt.i(1)):
-            tinted[:] = rt.binary("*", base_rgb, _u_color, 3, "float")
+            tinted[:] = rt.binary("*", base_rgb, _u_color, 3, 'float')
         else:
             if rt.binary("==", m, rt.i(2)):
                 tintHue = rt.swizzle(rgb_to_hsv__vec3(_u_color), "x")
@@ -69,7 +69,7 @@ def run_pixel(ctx, out):
             else:
                 tinted[:] = _u_color
         rgb = rt.component_wise("mix", base_rgb, tinted, _u_alpha, width=3)
-        g.fragColor[:] = rt.construct(4, rt.binary("*", rgb, rt.swizzle(base, "a"), 3, "float"), rt.swizzle(base, "a"))
+        g.fragColor[:] = rt.construct(4, rt.binary("*", rgb, rt.swizzle(base, "a"), 3, 'float'), rt.swizzle(base, "a"))
     main__void()
     _c = g.fragColor
     out[0] = rt.f32(_c[0]); out[1] = rt.f32(_c[1]); out[2] = rt.f32(_c[2]); out[3] = rt.f32(_c[3])

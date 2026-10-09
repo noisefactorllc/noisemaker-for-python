@@ -57,7 +57,7 @@ def run_pixel(ctx, out):
                                 (rgb.__setitem__(0, c), rgb.__setitem__(1, rt.f(0.0)), rgb.__setitem__(2, x), rgb)[-1]
                             else:
                                 (rgb.__setitem__(0, rt.f(0.0)), rgb.__setitem__(1, rt.f(0.0)), rgb.__setitem__(2, rt.f(0.0)), rgb)[-1]
-        return rt.binary("+", rgb, m, 3, "float")
+        return rt.construct(3, rt.binary("+", rgb, rt.construct_raw(3, m, m, m), 3, 'float'))
     def rgb2hsv__vec3(rgb):
         rgb = rt.copy(rgb, "float")
         r = rt.swizzle(rgb, "r")
@@ -124,7 +124,7 @@ def run_pixel(ctx, out):
         color = rt.copy(color, "float")
         sat = map__float_float_float_float_float(_u_saturation, rt.unary("-", rt.f(100.0)), rt.f(100.0), rt.unary("-", rt.f(1.0)), rt.f(1.0))
         avg = rt.binary("/", rt.binary("+", rt.binary("+", rt.swizzle(color, "r"), rt.swizzle(color, "g"), 1, "float"), rt.swizzle(color, "b"), 1, "float"), rt.f(3.0), 1, "float")
-        color[:] = rt.binary("-", color, rt.binary("*", rt.binary("-", avg, color, 3, "float"), sat, 3, "float"), 3, "float")
+        color[:] = rt.binary("-", color, rt.binary("*", rt.binary("-", avg, color, 3, 'float'), sat, 3, 'float'), 3, "float")
         return color
     def _distance__vec2_vec2(diff, uv):
         diff = rt.copy(diff, "float")
@@ -159,12 +159,12 @@ def run_pixel(ctx, out):
             t = rt.binary("-", rt.binary("*", dist, lf, 1, "float"), _u_time, 1, "float")
         return rt.component_wise("mix", dist, rt.binary("*", rt.binary("*", rt.binary("+", rt.component_wise("sin", rt.binary("*", t, rt.f(6.28318530718), 1, "float"), width=1), rt.binary("*", rt.f(1.0), rt.f(0.5), 1, "float"), 1, "float"), rt.component_wise("abs", _u_speed, width=1), 1, "float"), rt.f(0.005), 1, "float"), rt.binary("*", rt.component_wise("abs", _u_speed, width=1), rt.f(0.01), 1, "float"), width=1)
     def main__void():
-        globalCoord = rt.binary("+", rt.swizzle(ctx.frag_coord, "xy"), _u_tileOffset, 2, "float")
-        uv = rt.binary("/", globalCoord, _u_fullResolution, 2, "float")
+        globalCoord = rt.construct(2, rt.binary("+", rt.swizzle(ctx.frag_coord, "xy"), _u_tileOffset, 2, 'float'))
+        uv = rt.construct(2, rt.binary("/", globalCoord, _u_fullResolution, 2, 'float'))
         color = rt.construct(4, rt.f(0.0), rt.f(0.0), rt.f(0.0), rt.f(1.0))
-        diff = rt.binary("-", rt.f(0.5), uv, 2, "float")
+        diff = rt.construct(2, rt.binary("-", rt.f(0.5), uv, 2, 'float'))
         if _u_aspectLens:
-            diff[:] = rt.binary("-", rt.construct(2, rt.binary("/", rt.binary("*", rt.f(0.5), rt.swizzle(_u_fullResolution, "x"), 1, "float"), rt.swizzle(_u_fullResolution, "y"), 1, "float"), rt.f(0.5)), rt.array([rt.binary("/", rt.binary("*", rt.swizzle(uv, "x"), rt.swizzle(_u_fullResolution, "x"), 1, "float"), rt.swizzle(_u_fullResolution, "y"), 1, "float"), rt.swizzle(uv, "y")]), 2, "float")
+            diff[:] = rt.binary("-", rt.construct_raw(2, rt.binary("/", rt.binary("*", rt.f(0.5), rt.swizzle(_u_fullResolution, "x"), 1, "float"), rt.swizzle(_u_fullResolution, "y"), 1, "float"), rt.f(0.5)), rt.construct_raw(2, rt.binary("/", rt.binary("*", rt.swizzle(uv, "x"), rt.swizzle(_u_fullResolution, "x"), 1, "float"), rt.swizzle(_u_fullResolution, "y"), 1, "float"), rt.swizzle(uv, "y")), 2, 'float')
         centerDist = _distance__vec2_vec2(diff, uv)
         distort = rt.f(0.0)
         zoom = rt.f(1.0)
@@ -174,7 +174,7 @@ def run_pixel(ctx, out):
         else:
             distort = map__float_float_float_float_float(_u_distortion, rt.f(0.0), rt.f(100.0), rt.f(0.0), rt.f(2.0))
             zoom = map__float_float_float_float_float(_u_distortion, rt.f(0.0), rt.f(100.0), rt.f(0.0), rt.unary("-", rt.f(1.0)))
-        lensedCoords = rt.component_wise("fract", rt.binary("-", rt.binary("-", uv, rt.binary("*", diff, zoom, 2, "float"), 2, "float"), rt.binary("*", rt.binary("*", rt.binary("*", diff, centerDist, 2, "float"), centerDist, 2, "float"), distort, 2, "float"), 2, "float"), width=2)
+        lensedCoords = rt.component_wise("fract", rt.binary("-", rt.binary("-", uv, rt.binary("*", diff, zoom, 2, 'float'), 2, 'float'), rt.binary("*", rt.binary("*", rt.binary("*", diff, centerDist, 2, 'float'), centerDist, 2, 'float'), distort, 2, 'float'), 2, 'float'), width=2)
         aberrationOffset = rt.binary("*", rt.binary("*", rt.binary("*", map__float_float_float_float_float(_u_aberration, rt.f(0.0), rt.f(100.0), rt.f(0.0), rt.f(0.05)), centerDist, 1, "float"), rt.f(3.14159265359), 1, "float"), rt.f(0.5), 1, "float")
         redOffset = rt.component_wise("mix", rt.component_wise("clamp", rt.binary("+", rt.swizzle(lensedCoords, "x"), aberrationOffset, 1, "float"), rt.f(0.0), rt.f(1.0), width=1), rt.swizzle(lensedCoords, "x"), rt.swizzle(lensedCoords, "x"), width=1)
         red = rt.texture(_u_inputTex, rt.construct(2, redOffset, rt.swizzle(lensedCoords, "y")))
@@ -184,31 +184,31 @@ def run_pixel(ctx, out):
         hsv = rt.construct(3, rt.f(1.0))
         t = (_u_time if _u_modulate else rt.f(0.0))
         if rt.binary("==", _u_mode, rt.i(0)):
-            color[:] = rt.binary("-", rt.construct(4, rt.swizzle(red, "r"), rt.swizzle(green, "g"), rt.swizzle(blue, "b"), rt.swizzle(color, "a")), green, 4, "float")
+            color[:] = rt.binary("-", rt.construct_raw(4, rt.swizzle(red, "r"), rt.swizzle(green, "g"), rt.swizzle(blue, "b"), rt.swizzle(color, "a")), green, 4, 'float')
             color = rt.assign_swizzle(color, "a", rt.swizzle(green, "a"))
             hsv[:] = rgb2hsv__vec3(rt.swizzle(color, "rgb"))
-            hsv[int(rt.i(0))] = rt.component_wise("fract", rt.binary("+", rt.binary("+", rt.binary("+", hsv[int(rt.i(0))], rt.binary("-", rt.f(1.0), rt.binary("/", _u_hueRotation, rt.f(360.0), 1, "float"), 1, "float"), 1, "float"), rt.binary("*", rt.binary("*", hsv[int(rt.i(0))], _u_hueRange, 1, "float"), rt.f(0.01), 1, "float"), 1, "float"), t, 1, "float"), width=1)
-            hsv[int(rt.i(1))] = rt.f(1.0)
+            hsv[int(rt.i(0))] = rt.f32(rt.component_wise("fract", rt.binary("+", rt.binary("+", rt.binary("+", hsv[int(rt.i(0))], rt.binary("-", rt.f(1.0), rt.binary("/", _u_hueRotation, rt.f(360.0), 1, "float"), 1, "float"), 1, "float"), rt.binary("*", rt.binary("*", hsv[int(rt.i(0))], _u_hueRange, 1, "float"), rt.f(0.01), 1, "float"), 1, "float"), t, 1, "float"), width=1))
+            hsv[int(rt.i(1))] = rt.f32(rt.f(1.0))
         else:
-            color[:] = rt.binary("*", rt.construct(4, rt.length(rt.binary("-", rt.construct(4, rt.swizzle(red, "r"), rt.swizzle(green, "g"), rt.swizzle(blue, "b"), rt.swizzle(color, "a")), green, 4, "float"))), green, 4, "float")
+            color[:] = rt.binary("*", rt.construct_raw(4, rt.length(rt.binary("-", rt.construct_raw(4, rt.swizzle(red, "r"), rt.swizzle(green, "g"), rt.swizzle(blue, "b"), rt.swizzle(color, "a")), green, 4, 'float'))), green, 4, 'float')
             color = rt.assign_swizzle(color, "a", rt.swizzle(green, "a"))
             hsv[:] = rgb2hsv__vec3(rt.swizzle(color, "rgb"))
-            hsv[int(rt.i(0))] = rt.component_wise("fract", rt.binary("+", rt.binary("*", rt.binary("+", rt.binary("+", hsv[int(rt.i(0))], rt.f(0.125), 1, "float"), rt.binary("-", rt.f(1.0), rt.binary("/", _u_hueRotation, rt.f(360.0), 1, "float"), 1, "float"), 1, "float"), rt.binary("+", rt.f(2.0), rt.binary("*", _u_hueRange, rt.f(0.05), 1, "float"), 1, "float"), 1, "float"), t, 1, "float"), width=1)
-            hsv[int(rt.i(1))] = rt.f(1.0)
-        green = rt.assign_swizzle(green, "rgb", rt.copy(rt.binary("*", saturate__vec3(rt.swizzle(green, "rgb")), map__float_float_float_float_float(_u_passthru, rt.f(0.0), rt.f(100.0), rt.f(0.0), rt.f(2.0)), 3, "float"), 'float'))
+            hsv[int(rt.i(0))] = rt.f32(rt.component_wise("fract", rt.binary("+", rt.binary("*", rt.binary("+", rt.binary("+", hsv[int(rt.i(0))], rt.f(0.125), 1, "float"), rt.binary("-", rt.f(1.0), rt.binary("/", _u_hueRotation, rt.f(360.0), 1, "float"), 1, "float"), 1, "float"), rt.binary("+", rt.f(2.0), rt.binary("*", _u_hueRange, rt.f(0.05), 1, "float"), 1, "float"), 1, "float"), t, 1, "float"), width=1))
+            hsv[int(rt.i(1))] = rt.f32(rt.f(1.0))
+        green = rt.assign_swizzle(green, "rgb", rt.construct(3, rt.binary("*", saturate__vec3(rt.swizzle(green, "rgb")), map__float_float_float_float_float(_u_passthru, rt.f(0.0), rt.f(100.0), rt.f(0.0), rt.f(2.0)), 3, 'float')))
         if rt.binary("==", _u_blendMode, rt.i(0)):
-            color = rt.assign_swizzle(color, "rgb", rt.component_wise("min", rt.binary("+", rt.swizzle(green, "rgb"), hsv2rgb__vec3(hsv), 3, "float"), rt.f(1.0), width=3))
+            color = rt.assign_swizzle(color, "rgb", rt.component_wise("min", rt.construct(3, rt.binary("+", rt.swizzle(green, "rgb"), hsv2rgb__vec3(hsv), 3, 'float')), rt.f(1.0), width=3))
         else:
             if rt.binary("==", _u_blendMode, rt.i(1)):
-                color = rt.assign_swizzle(color, "rgb", rt.component_wise("min", rt.binary("+", rt.component_wise("max", rt.binary("-", rt.swizzle(green, "rgb"), rt.construct(3, hsv[int(rt.i(2))]), 3, "float"), rt.f(0.0), width=3), hsv2rgb__vec3(hsv), 3, "float"), rt.f(1.0), width=3))
-        color = rt.assign_swizzle(color, "rgb", rt.component_wise("mix", rt.swizzle(color, "rgb"), (rt.swizzle(color, "rgb") if rt.binary("==", rt.swizzle(color, "rgb"), rt.construct(3, rt.f(1.0))) else rt.component_wise("min", rt.binary("/", rt.binary("*", _u_tint, _u_tint, 3, "float"), rt.binary("-", rt.f(1.0), rt.swizzle(color, "rgb"), 3, "float"), 3, "float"), rt.construct(3, rt.f(1.0)), width=3)), rt.binary("*", _u_alpha, rt.f(0.01), 1, "float"), width=3))
+                color = rt.assign_swizzle(color, "rgb", rt.component_wise("min", rt.construct(3, rt.binary("+", rt.component_wise("max", rt.binary("-", rt.swizzle(green, "rgb"), rt.construct_raw(3, hsv[int(rt.i(2))]), 3, 'float'), rt.f(0.0), width=3), hsv2rgb__vec3(hsv), 3, 'float')), rt.f(1.0), width=3))
+        color = rt.assign_swizzle(color, "rgb", rt.component_wise("mix", rt.swizzle(color, "rgb"), (rt.swizzle(color, "rgb") if rt.binary("==", rt.swizzle(color, "rgb"), rt.construct(3, rt.f(1.0))) else rt.component_wise("min", rt.binary("/", rt.binary("*", _u_tint, _u_tint, 3, 'float'), rt.binary("-", rt.f(1.0), rt.swizzle(color, "rgb"), 3, 'float'), 3, 'float'), rt.construct(3, rt.f(1.0)), width=3)), rt.binary("*", _u_alpha, rt.f(0.01), 1, "float"), width=3))
         color = rt.assign_swizzle(color, "a", rt.component_wise("max", rt.swizzle(color, "a"), rt.binary("*", _u_alpha, rt.f(0.01), 1, "float"), width=1))
         if rt.binary("<", _u_vignetteAmt, rt.f(0.0)):
-            color = rt.assign_swizzle(color, "rgb", rt.component_wise("mix", rt.binary("-", rt.binary("*", rt.swizzle(color, "rgb"), rt.f(1.0), 3, "float"), rt.component_wise("pow", rt.binary("*", rt.length(rt.binary("-", rt.f(0.5), uv, 2, "float")), rt.f(1.125), 1, "float"), rt.f(2.0), width=1), 3, "float"), rt.swizzle(color, "rgb"), map__float_float_float_float_float(_u_vignetteAmt, rt.unary("-", rt.f(100.0)), rt.f(0.0), rt.f(0.0), rt.f(1.0)), width=3))
-            color = rt.assign_swizzle(color, "a", rt.component_wise("max", rt.swizzle(color, "a"), rt.binary("*", rt.length(rt.binary("-", rt.f(0.5), uv, 2, "float")), map__float_float_float_float_float(_u_vignetteAmt, rt.unary("-", rt.f(100.0)), rt.f(0.0), rt.f(1.0), rt.f(0.0)), 1, "float"), width=1))
+            color = rt.assign_swizzle(color, "rgb", rt.component_wise("mix", rt.binary("-", rt.binary("*", rt.swizzle(color, "rgb"), rt.f(1.0), 3, 'float'), rt.component_wise("pow", rt.binary("*", rt.length(rt.binary("-", rt.f(0.5), uv, 2, 'float')), rt.f(1.125), 1, "float"), rt.f(2.0), width=1), 3, 'float'), rt.swizzle(color, "rgb"), map__float_float_float_float_float(_u_vignetteAmt, rt.unary("-", rt.f(100.0)), rt.f(0.0), rt.f(0.0), rt.f(1.0)), width=3))
+            color = rt.assign_swizzle(color, "a", rt.component_wise("max", rt.swizzle(color, "a"), rt.binary("*", rt.length(rt.binary("-", rt.f(0.5), uv, 2, 'float')), map__float_float_float_float_float(_u_vignetteAmt, rt.unary("-", rt.f(100.0)), rt.f(0.0), rt.f(1.0), rt.f(0.0)), 1, "float"), width=1))
         else:
-            color = rt.assign_swizzle(color, "rgb", rt.component_wise("mix", rt.swizzle(color, "rgb"), rt.binary("-", rt.f(1.0), rt.binary("-", rt.binary("-", rt.f(1.0), rt.binary("*", rt.swizzle(color, "rgb"), rt.f(1.0), 3, "float"), 3, "float"), rt.component_wise("pow", rt.binary("*", rt.length(rt.binary("-", rt.f(0.5), uv, 2, "float")), rt.f(1.125), 1, "float"), rt.f(2.0), width=1), 3, "float"), 3, "float"), map__float_float_float_float_float(_u_vignetteAmt, rt.f(0.0), rt.f(100.0), rt.f(0.0), rt.f(1.0)), width=3))
-            color = rt.assign_swizzle(color, "a", rt.component_wise("max", rt.swizzle(color, "a"), rt.binary("*", rt.length(rt.binary("-", rt.f(0.5), uv, 2, "float")), map__float_float_float_float_float(_u_vignetteAmt, rt.unary("-", rt.f(100.0)), rt.f(0.0), rt.f(1.0), rt.f(0.0)), 1, "float"), width=1))
+            color = rt.assign_swizzle(color, "rgb", rt.component_wise("mix", rt.swizzle(color, "rgb"), rt.binary("-", rt.f(1.0), rt.binary("-", rt.binary("-", rt.f(1.0), rt.binary("*", rt.swizzle(color, "rgb"), rt.f(1.0), 3, 'float'), 3, 'float'), rt.component_wise("pow", rt.binary("*", rt.length(rt.binary("-", rt.f(0.5), uv, 2, 'float')), rt.f(1.125), 1, "float"), rt.f(2.0), width=1), 3, 'float'), 3, 'float'), map__float_float_float_float_float(_u_vignetteAmt, rt.f(0.0), rt.f(100.0), rt.f(0.0), rt.f(1.0)), width=3))
+            color = rt.assign_swizzle(color, "a", rt.component_wise("max", rt.swizzle(color, "a"), rt.binary("*", rt.length(rt.binary("-", rt.f(0.5), uv, 2, 'float')), map__float_float_float_float_float(_u_vignetteAmt, rt.unary("-", rt.f(100.0)), rt.f(0.0), rt.f(1.0), rt.f(0.0)), 1, "float"), width=1))
         g.fragColor[:] = color
     main__void()
     _c = g.fragColor

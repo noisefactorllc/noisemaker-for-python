@@ -10,7 +10,7 @@ def run_pixel(ctx, out):
     g.fragColor = rt.construct(4, 0.0)
     def main__void():
         texSize = rt.texture_size(_u_sourceTex)
-        uv = rt.binary("/", rt.swizzle(ctx.frag_coord, "xy"), rt.construct(2, texSize), 2, "float")
+        uv = rt.construct(2, rt.binary("/", rt.swizzle(ctx.frag_coord, "xy"), rt.construct_raw(2, rt.construct(2, texSize)), 2, 'float'))
         g.fragColor[:] = rt.texture(_u_sourceTex, uv)
     main__void()
     _c = g.fragColor

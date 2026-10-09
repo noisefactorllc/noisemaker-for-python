@@ -12,8 +12,8 @@ def run_pixel(ctx, out):
     _u_radius = U.get("radius", rt.f(0.0))
     g.fragColor = rt.construct(4, 0.0)
     def main__void():
-        uv = rt.binary("/", rt.swizzle(ctx.frag_coord, "xy"), _u_resolution, 2, "float")
-        texel = rt.binary("/", rt.f(1.0), _u_resolution, 2, "float")
+        uv = rt.construct(2, rt.binary("/", rt.swizzle(ctx.frag_coord, "xy"), _u_resolution, 2, 'float'))
+        texel = rt.construct(2, rt.binary("/", rt.f(1.0), _u_resolution, 2, 'float'))
         acc = rt.texture(_u_inputTex, uv)
         r = rt.f(0.0)
         r2 = rt.f(0.0)
@@ -41,7 +41,7 @@ def run_pixel(ctx, out):
                     d = rt.construct(2, rt.construct(1, x), rt.construct(1, y))
                     if rt.binary(">", rt.dot(d, d), r2):
                         continue
-                    s = rt.texture(_u_inputTex, rt.binary("+", uv, rt.binary("*", d, texel, 2, "float"), 2, "float"))
+                    s = rt.texture(_u_inputTex, rt.binary("+", uv, rt.binary("*", d, texel, 2, 'float'), 2, 'float'))
                     hi = rt.component_wise("max", acc, s, width=4)
                     lo = rt.component_wise("min", acc, s, width=4)
                     acc[:] = rt.component_wise("mix", hi, lo, rt.construct(1, _u_mode), width=4)
@@ -57,9 +57,9 @@ def run_pixel(ctx, out):
                     break
                 if rt.binary(">", rt.construct(1, i), r):
                     break
-                o = rt.binary("*", rt.construct(2, rt.construct(1, i), rt.f(0.0)), texel, 2, "float")
-                sL = rt.texture(_u_inputTex, rt.binary("-", uv, o, 2, "float"))
-                sR = rt.texture(_u_inputTex, rt.binary("+", uv, o, 2, "float"))
+                o = rt.construct(2, rt.binary("*", rt.construct_raw(2, rt.construct(1, i), rt.f(0.0)), texel, 2, 'float'))
+                sL = rt.texture(_u_inputTex, rt.binary("-", uv, o, 2, 'float'))
+                sR = rt.texture(_u_inputTex, rt.binary("+", uv, o, 2, 'float'))
                 hi = rt.component_wise("max", acc, rt.component_wise("max", sL, sR, width=4), width=4)
                 lo = rt.component_wise("min", acc, rt.component_wise("min", sL, sR, width=4), width=4)
                 acc[:] = rt.component_wise("mix", hi, lo, rt.construct(1, _u_mode), width=4)

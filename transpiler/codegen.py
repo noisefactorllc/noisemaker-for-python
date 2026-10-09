@@ -365,16 +365,24 @@ class CodeGen:
                 t = self.type_of_name(s["type"], dc.get("array"))
                 # Resolve the initializer in the ENCLOSING scope, before the new
                 # name is defined (GLSL `float time = time;` reads the outer time).
+                # A float vector initializer is stored the way the oracle stores
+                # it: an inline value as a pooled Float32Array (see
+                # _materialized_operand); typed and plain values pass through.
                 init_node = dc.get("init")
                 init_code = self.expr(init_node, scope)[0] if init_node is not None else None
                 if init_code is not None:
                     init_code = self._restore_integer_division(init_node, init_code, scope)
+                    init_code = self._materialized_operand(init_node, scope, code=init_code)
                 if (
                     self.js_vector_storage
                     and init_code is not None
                     and width_of(t) > 1
+                    and base_of(t) in ("int", "uint")
                     and dc["init"].get("k") == "binary"
                 ):
+                    # Float vectors already materialize above (the full oracle
+                    # model); int/uint vector declarations keep their own
+                    # materialized store before later hash conversions.
                     init_code = f"rt.construct({t['width']}, {init_code}{_construct_base(t)})"
                 e = scope.define(dc["name"], t)
                 if init_code is not None:
@@ -444,13 +452,16 @@ class CodeGen:
                 stmt_code, _ = self._e_assign(val_node, scope)
                 out.append(f"{pad}{stmt_code}")
                 val_node = val_node["target"]
+            # A vector-valued function returns a pooled Float32Array in the
+            # oracle's JS, so an inline return value rounds there (see
+            # _materialized_operand); typed and plain values pass through.
             if self.cur_out:
-                val = self.expr(val_node, scope)[0] if val_node is not None else "None"
+                val = self._materialized_operand(val_node, scope) if val_node is not None else "None"
                 out.append(f"{pad}return ({val}, {', '.join(self.cur_out)})")
             elif val_node is None:
                 out.append(f"{pad}return")
             else:
-                code, _ = self.expr(val_node, scope)
+                code = self._materialized_operand(val_node, scope)
                 out.append(f"{pad}return {code}")
         elif k == "break":
             out.append(f"{pad}break")
@@ -600,37 +611,6 @@ class CodeGen:
         w = max(width_of(a_t), width_of(b_t))
         return (f"({a_code} if {c_code} else {b_code})", {"base": base_of(a_t), "width": w})
 
-    def _splat_fused_code(self, node, scope, width):
-        """Emit a vecN(scalar, ...) operand of a component-wise binary without
-        pre-rounding its scalar arguments. The JS glsl-transpiler (canonical
-        kernels) fuses such inline constructors into per-component scalar
-        arithmetic and rounds each component only once at the pooled
-        Float32Array store; materializing the constructor with rt.construct
-        would round every element twice and land 1 ULP off at quantization
-        boundaries (e.g. synth/noise's `st -= vec2(resolution.x / resolution.y
-        * 0.5, 0.5)`, feedback's `rgb + vec3(m, m, m)`).
-
-        Returns (code, type): a bare scalar expression for a uniform splat
-        (broadcast by rt.binary), or an rt.array([...]) of raw float64 elements
-        for distinct scalars. None when the node is not a foldable float-vector
-        constructor of scalars."""
-        if node.get("k") != "construct" or node.get("array") is not None:
-            return None
-        if node.get("type") not in ("vec2", "vec3", "vec4") or width != int(node["type"][-1]):
-            return None
-        args = node.get("args") or []
-        if len(args) != width or any(a.get("k") == "cond" for a in args):
-            return None
-        codes = []
-        for arg in args:
-            code, t = self.expr(arg, scope)
-            if width_of(t) != 1:
-                return None
-            codes.append(code)
-        if all(c == codes[0] for c in codes[1:]):
-            return (codes[0], FLOAT)
-        return (f"rt.array([{', '.join(codes)}])", TYPE[node["type"]])
-
     def _restore_integer_division(self, node, code, scope):
         """Mirror noisemaker-for-cpu compile-glsl.js ``restoreIntegerDivision``
         (first present in a146f22839dc): GLSL int/int division truncates toward
@@ -682,34 +662,8 @@ class CodeGen:
 
     def _e_binary(self, node, scope):
         op = node["op"]
-        # Probe for a foldable vecN(scalar, ...) splat operand BEFORE emitting
-        # that operand, so a successful fold evaluates each splat argument
-        # exactly once. expr() is pure code-string generation (no statement
-        # emission, no scope mutation), so when the fold fails the operand is
-        # simply evaluated again on the normal path with no side effects.
-        splat_l = splat_r = None
-        l_probe = self.expr(node["l"], scope) if op in ("+", "-", "*", "/") else None
-        if l_probe is not None and width_of(l_probe[1]) > 1:
-            splat_r = self._splat_fused_code(node["r"], scope, width_of(l_probe[1]))
-        else:
-            r_probe = self.expr(node["r"], scope) if l_probe is not None else None
-            if r_probe is not None and width_of(r_probe[1]) > 1:
-                splat_l = self._splat_fused_code(node["l"], scope, width_of(r_probe[1]))
         l_code, l_t = self.expr(node["l"], scope)
         r_code, r_t = self.expr(node["r"], scope)
-        glsl_l_t, glsl_r_t = l_t, r_t  # operand types before any splat fold below
-        # GLSL vecN(scalar[, scalar, ...]) splats inside a component-wise binary:
-        # the JS oracle (glsl-transpiler) folds the splat into per-component
-        # scalar arithmetic with the UNROUNDED scalars (e.g. filter/feedback
-        # hsv2rgb's `rgb + vec3(m, m, m)` emits `rgb[0] + m` over a raw float64
-        # m). Pre-rounding the scalars in rt.construct double-rounds and lands
-        # 1 ULP off at quantization boundaries; fuse the splat to raw unrounded
-        # scalars (uniform → broadcast, distinct → rt.array of raw elements).
-        if op in ("+", "-", "*", "/"):
-            if splat_r is not None:
-                r_code, r_t = splat_r
-            elif splat_l is not None:
-                l_code, l_t = splat_l
         if op in ("==", "!=", "<", ">", "<=", ">=", "&&", "||"):
             pyop = {"&&": "and", "||": "or"}.get(op)
             if pyop:
@@ -729,23 +683,156 @@ class CodeGen:
         else:
             base = "float"
         code = f"rt.binary({q(op)}, {l_code}, {r_code}, {width}, {q(base)})"
-        # A vector-valued call returns a Float32Array in the sibling, and a
-        # scalar operation on it compiles to Float32Array#map, which stores
-        # into a new Float32Array: `randomDirection(seed) * 0.3` is
-        # randomDirection(seed).map(_ => _ * 0.3), and `1.0 - abs(x)` is
-        # abs(x).map(_ => 1 - _). Those round to f32 before the next
-        # operation. Vector-vector operations compile to vecN.op([], a, b) on a
-        # plain array and keep float64 until a store, as here; that includes a
-        # vecN(s, s) splat operand, which the transpiler does not fold into the
-        # map, so the decision reads the GLSL operand types.
-        scalar_l, scalar_r = width_of(glsl_l_t) == 1, width_of(glsl_r_t) == 1
-        if base == "float" and width > 1 and op in ("+", "-", "*", "/") and (
-            (scalar_r and _is_float32_vector_result(node["l"], glsl_l_t))
-            or (scalar_l and _is_float32_vector_result(node["r"], glsl_r_t))
-        ):
-            code = f"rt.copy({code}, 'float')"
-            node["float32_result"] = True  # operands are generated first, so parents see this
+        # Round where the oracle's compiled JS rounds (see _vec_kind); otherwise
+        # the result stays raw until its next consumption boundary.
+        if base == "float" and width > 1 and op in ("+", "-", "*", "/"):
+            if self._vec_binary_rounds(node, scope):
+                # vecN.op: inline operands materialize into pooled Float32Arrays
+                # first (which rounds each); typed and plain pass through. The
+                # op fills a plain [] with f32 components (rt.construct).
+                code = (
+                    f"rt.construct({width}, rt.binary({q(op)}, "
+                    f"{self._materialized_operand(node['l'], scope)}, "
+                    f"{self._materialized_operand(node['r'], scope)}, {width}, 'float'))"
+                )
+            else:
+                # Fused inline per-component arithmetic: the components stay raw
+                # float64 until the next store (construct keeps them raw).
+                code = (
+                    f"rt.binary({q(op)}, {self._fused_operand(node['l'], scope)}, "
+                    f"{self._fused_operand(node['r'], scope)}, {width}, 'float')"
+                )
         return (code, {"base": base, "width": width})
+
+    def _vec_kind(self, node, scope):
+        """The oracle's compiled JS holds a float vector in one of three forms,
+        which decides where its arithmetic rounds to f32:
+
+        ``inline`` — per-component slot expressions (ids, swizzles of them,
+        literals, inline constructors and fused arithmetic on them): raw f64,
+        rounded once where the value is stored;
+
+        ``typed`` — a pooled Float32Array: a vector-valued call (builtin,
+        user function or sampler read) or a scalar operation on a typed value,
+        which compiles to Float32Array#map and rounds each component;
+
+        ``plain`` — the [] filled by vecN.add/subtract/multiply/divide, which
+        round each component; a scalar .map over a plain Array stays raw.
+
+        Vector-vector arithmetic compiles to vecN.op as soon as either operand
+        is not inline. The kinds follow the GLSL operand types, before any
+        splat: `call * vec2(64.0)` is vec2.multiply, not a map. A swizzle of a
+        non-inline vector (`texture(t, uv).rgb`) and a constructor that has to
+        spread one (`vec4(call(), 1.0)`) compile to new Float32Arrays, so they
+        are typed; a single-vector constructor (`vec3(call())`) passes its
+        argument through."""
+        k = node.get("k")
+        if k == "call":
+            _, t = self.expr(node, scope)
+            return "typed" if (base_of(t) == "float" and width_of(t) > 1 and not t.get("mat")) else "inline"
+        if k in ("member", "index"):
+            _, t = self.expr(node, scope)
+            if not (width_of(t) > 1 and not t.get("mat")):
+                return "inline"
+            return "typed" if self._spreads(node["obj"], scope) else "inline"
+        if k == "unary" and node["op"] == "-":
+            return self._vec_kind(node["x"], scope)
+        if k == "construct" and node.get("array") is None:
+            args = node.get("args") or []
+            if len(args) == 1:
+                _, a_t = self.expr(args[0], scope)
+                if width_of(a_t) > 1 and not a_t.get("mat"):
+                    if args[0].get("k") == "call":
+                        return "typed"
+                    return self._vec_kind(args[0], scope) if base_of(a_t) == "float" else "inline"
+            for arg in args:
+                if self._spreads(arg, scope):
+                    return "typed"
+                arg_k = arg.get("k")
+                if arg_k in ("member", "index") and self._spreads(arg.get("obj"), scope):
+                    return "typed"
+            return "inline"
+        if k == "binary" and node["op"] in ("+", "-", "*", "/"):
+            _, l_t = self.expr(node["l"], scope)
+            _, r_t = self.expr(node["r"], scope)
+            if l_t.get("mat") or r_t.get("mat") or base_of(l_t) != "float" or base_of(r_t) != "float":
+                return "inline"
+            lk, rk = self._vec_kind(node["l"], scope), self._vec_kind(node["r"], scope)
+            if width_of(l_t) > 1 and width_of(r_t) > 1:
+                return "inline" if (lk == "inline" and rk == "inline") else "plain"
+            return lk if width_of(l_t) > 1 else rk
+        return "inline"
+
+    def _spreads(self, node, scope):
+        """A vector the oracle cannot expand per component: a vector-valued
+        call of any base, or a float vector that is typed or plain."""
+        _, t = self.expr(node, scope)
+        if not (width_of(t) > 1 and not t.get("mat")):
+            return False
+        if node.get("k") == "call":
+            return True
+        return base_of(t) == "float" and self._vec_kind(node, scope) != "inline"
+
+    def _vec_binary_rounds(self, node, scope):
+        """Whether this component-wise binary's result rounds to f32 right
+        here: vecN.op (either vector operand not inline) or Float32Array#map
+        (the single vector operand is typed)."""
+        _, l_t = self.expr(node["l"], scope)
+        _, r_t = self.expr(node["r"], scope)
+        if l_t.get("mat") or r_t.get("mat"):
+            return False
+        lk, rk = self._vec_kind(node["l"], scope), self._vec_kind(node["r"], scope)
+        if width_of(l_t) > 1 and width_of(r_t) > 1:
+            return not (lk == "inline" and rk == "inline")
+        return (lk if width_of(l_t) > 1 else rk) == "typed"
+
+    def _materialized_operand(self, node, scope, code=None):
+        """An operand of vecN.op, a user-function call, a vector declaration or
+        a vector return. The oracle materializes an inline operand as a pooled
+        Float32Array, which rounds each component before the consumer reads it;
+        typed and plain operands reach the consumer as they are."""
+        if code is None:
+            code, t = self.expr(node, scope)
+        else:
+            t = self.expr(node, scope)[1]
+        if base_of(t) != "float" or width_of(t) <= 1 or t.get("mat"):
+            return code
+        k = node.get("k")
+        kind = self._vec_kind(node, scope)
+        if kind == "plain":
+            # A single-vector constructor passes the Array through raw.
+            if k != "construct":
+                return code
+            return f"rt.construct_raw({t['width']}, {self.expr(node['args'][0], scope)[0]})"
+        if kind == "typed" or k in ("id", "construct"):
+            return code
+        if k in ("member", "index") and node["obj"].get("k") == "id":
+            return code
+        return f"rt.construct({t['width']}, {code})"
+
+    def _fused_operand(self, node, scope):
+        """An inline operand of fused arithmetic. Its constructors keep float
+        components raw (see Runtime.construct_raw), including under a negation;
+        an int or uint component still rounds, as the oracle's cpu_float
+        conversion does."""
+        code, t = self.expr(node, scope)
+        if base_of(t) != "float" or width_of(t) <= 1 or t.get("mat"):
+            return code
+        k = node.get("k")
+        if k == "construct" and node.get("array") is None:
+            if self._vec_kind(node, scope) == "typed":
+                return code  # a new Float32Array
+            arg_codes = []
+            for arg in node["args"]:
+                arg_code, arg_t = self.expr(arg, scope)
+                if base_of(arg_t) == "float":
+                    arg_codes.append(self._fused_operand(arg, scope))
+                else:
+                    arg_codes.append(f"rt.construct({width_of(arg_t)}, {arg_code})")
+            return f"rt.construct_raw({t['width']}, {', '.join(arg_codes)})"
+        if k == "unary" and node["op"] == "-":
+            return f"rt.unary('-', {self._fused_operand(node['x'], scope)})"
+        return code
 
     def _e_assign(self, node, scope):
         op = node["op"]
@@ -797,6 +884,15 @@ class CodeGen:
             # place to match; scalars are immutable and index targets already do.
             if target["k"] == "id" and width_of(tt) > 1:
                 return (f"{tcode}[:] = {rhs}", tt)
+            # An element of a float vector, or of an array of float vectors, is
+            # a Float32Array slot in the oracle's JS, so the store rounds; a
+            # float array is a plain Array and keeps the value.
+            if target["k"] == "index" and base_of(tt) == "float" and not tt.get("mat"):
+                _obj_code, obj_t = self.expr(target["obj"], scope)
+                if width_of(tt) > 1 and not obj_t.get("mat"):
+                    return (f"{tcode} = rt.construct({width_of(tt)}, {rhs})", tt)
+                if width_of(tt) == 1 and width_of(obj_t) > 1 and not obj_t.get("array") and not obj_t.get("mat"):
+                    return (f"{tcode} = rt.f32({rhs})", tt)
             return (f"{tcode} = {rhs}", tt)
         if target["k"] == "member":
             obj_code, obj_t = self.expr(target["obj"], scope)
@@ -860,6 +956,13 @@ class CodeGen:
             return r(self, codes, args)
         if name in self.overloads:
             fn = self._resolve_overload(name, [a[1] for a in args])
+            # A vector argument reaches the function as the oracle passes it: an
+            # inline value materialized as a pooled Float32Array (which rounds),
+            # typed and plain as is.
+            codes = [
+                self._materialized_operand(node["args"][i], scope, code=codes[i])
+                for i in range(len(codes))
+            ]
             if fn.get("out_idxs"):  # out/inout: unpack outputs back to caller lvalues
                 temp = f"_retc{self.call_id}"
                 self.call_id += 1
@@ -931,14 +1034,6 @@ class CodeGen:
             None,
         )
         return exact or (same[0] if same else cands[0])
-
-
-def _is_float32_vector_result(node, node_type):
-    """A float vector the sibling holds as a Float32Array: a call result, or
-    the Float32Array#map of one."""
-    if width_of(node_type) <= 1 or base_of(node_type) != "float" or node_type.get("mat"):
-        return False
-    return node["k"] == "call" or bool(node.get("float32_result"))
 
 
 def _type_name(t):

@@ -197,9 +197,9 @@ def run_pixel(ctx, out):
         return rt.binary("/", rt.construct(1, rt.swizzle(v, "x")), rt.construct(1, rt.i(4294967295)), 1, "float")
     def dotPattern__vec2_float(uv, scale):
         uv = rt.copy(uv, "float")
-        p = rt.binary("*", uv, scale, 2, "float")
-        c = rt.copy(rt.binary("+", rt.component_wise("floor", p, width=2), rt.f(0.5), 2, "float"), 'float')
-        d = rt.length(rt.copy(rt.binary("-", rt.component_wise("fract", p, width=2), rt.f(0.5), 2, "float"), 'float'))
+        p = rt.construct(2, rt.binary("*", uv, scale, 2, 'float'))
+        c = rt.construct(2, rt.binary("+", rt.component_wise("floor", p, width=2), rt.f(0.5), 2, 'float'))
+        d = rt.length(rt.construct(2, rt.binary("-", rt.component_wise("fract", p, width=2), rt.f(0.5), 2, 'float')))
         return rt.component_wise("smoothstep", rt.f(0.5), rt.f(0.0), d, width=1)
     def linePattern__vec2_float(uv, scale):
         uv = rt.copy(uv, "float")
@@ -207,13 +207,13 @@ def run_pixel(ctx, out):
         return rt.binary("*", rt.component_wise("abs", rt.binary("-", rt.component_wise("fract", p, width=1), rt.f(0.5), 1, "float"), width=1), rt.f(2.0), 1, "float")
     def crosshatchPattern__vec2_float(uv, scale):
         uv = rt.copy(uv, "float")
-        p = rt.binary("*", uv, scale, 2, "float")
+        p = rt.construct(2, rt.binary("*", uv, scale, 2, 'float'))
         line1 = rt.binary("*", rt.component_wise("abs", rt.binary("-", rt.component_wise("fract", rt.binary("+", rt.swizzle(p, "x"), rt.swizzle(p, "y"), 1, "float"), width=1), rt.f(0.5), 1, "float"), width=1), rt.f(2.0), 1, "float")
         line2 = rt.binary("*", rt.component_wise("abs", rt.binary("-", rt.component_wise("fract", rt.binary("-", rt.swizzle(p, "x"), rt.swizzle(p, "y"), 1, "float"), width=1), rt.f(0.5), 1, "float"), width=1), rt.f(2.0), 1, "float")
         return rt.component_wise("min", line1, line2, width=1)
     def getDitherThreshold__vec2_int_float(pixelCoord, type, scale):
         pixelCoord = rt.copy(pixelCoord, "float")
-        scaledCoord = rt.component_wise("floor", rt.binary("/", pixelCoord, scale, 2, "float"), width=2)
+        scaledCoord = rt.component_wise("floor", rt.binary("/", pixelCoord, scale, 2, 'float'), width=2)
         x = rt.construct(1, rt.swizzle(scaledCoord, "x"), base="int")
         y = rt.construct(1, rt.swizzle(scaledCoord, "y"), base="int")
         if rt.binary("==", type, g.DITHER_BAYER_2X2):
@@ -235,17 +235,17 @@ def run_pixel(ctx, out):
                                 return crosshatchPattern__vec2_float(pixelCoord, rt.binary("/", rt.f(1.0), rt.binary("*", rt.f(8.0), scale, 1, "float"), 1, "float"))
                             else:
                                 if rt.binary("==", type, g.DITHER_NOISE):
-                                    return hash__vec2(rt.binary("+", scaledCoord, rt.binary("*", _u_time, rt.f(0.001), 1, "float"), 2, "float"))
+                                    return hash__vec2(rt.construct(2, rt.binary("+", scaledCoord, rt.binary("*", _u_time, rt.f(0.001), 1, "float"), 2, 'float')))
         return rt.f(0.5)
     def quantizeWithDither__vec3_float_float_float(color, levels, ditherValue, thresh):
         color = rt.copy(color, "float")
         adjustedDither = rt.binary("+", rt.binary("-", ditherValue, rt.f(0.5), 1, "float"), thresh, 1, "float")
-        dithered = rt.binary("+", color, rt.binary("/", adjustedDither, levels, 1, "float"), 3, "float")
-        return rt.copy(rt.binary("/", rt.component_wise("floor", rt.binary("*", dithered, levels, 3, "float"), width=3), rt.binary("-", levels, rt.f(1.0), 1, "float"), 3, "float"), 'float')
+        dithered = rt.construct(3, rt.binary("+", color, rt.binary("/", adjustedDither, levels, 1, "float"), 3, 'float'))
+        return rt.construct(3, rt.binary("/", rt.component_wise("floor", rt.binary("*", dithered, levels, 3, 'float'), width=3), rt.binary("-", levels, rt.f(1.0), 1, "float"), 3, 'float'))
     def colorDistance__vec3_vec3(a, b):
         a = rt.copy(a, "float")
         b = rt.copy(b, "float")
-        diff = rt.binary("-", a, b, 3, "float")
+        diff = rt.construct(3, rt.binary("-", a, b, 3, 'float'))
         return rt.dot(diff, diff)
     def findClosest4__vec3_vec3(color, pal):
         color = rt.copy(color, "float")
@@ -334,7 +334,7 @@ def run_pixel(ctx, out):
         return color
     def ditherWithPalette__vec3_float_float_int(color, ditherValue, thresh, paletteType):
         color = rt.copy(color, "float")
-        dithered = rt.binary("+", color, rt.binary("*", rt.binary("+", rt.binary("-", ditherValue, rt.f(0.5), 1, "float"), thresh, 1, "float"), rt.f(0.25), 1, "float"), 3, "float")
+        dithered = rt.construct(3, rt.binary("+", color, rt.binary("*", rt.binary("+", rt.binary("-", ditherValue, rt.f(0.5), 1, "float"), thresh, 1, "float"), rt.f(0.25), 1, "float"), 3, 'float'))
         dithered[:] = rt.component_wise("clamp", dithered, rt.f(0.0), rt.f(1.0), width=3)
         return findClosestPaletteColor__vec3_int(dithered, paletteType)
     def fsQuantize__vec3(v):
@@ -342,7 +342,7 @@ def run_pixel(ctx, out):
         maxLevel = rt.f(0.0)
         if rt.binary("==", _u_palette, g.PALETTE_INPUT):
             maxLevel = rt.binary("-", rt.construct(1, _u_levels), rt.f(1.0), 1, "float")
-            return rt.copy(rt.binary("/", rt.component_wise("floor", rt.binary("+", rt.binary("*", v, maxLevel, 3, "float"), rt.f(0.5), 3, "float"), width=3), maxLevel, 3, "float"), 'float')
+            return rt.construct(3, rt.binary("/", rt.component_wise("floor", rt.binary("+", rt.binary("*", v, maxLevel, 3, 'float'), rt.f(0.5), 3, 'float'), width=3), maxLevel, 3, 'float'))
         return findClosestPaletteColor__vec3_int(v, _u_palette)
     def fsScale__void():
         if rt.binary("==", _u_palette, g.PALETTE_INPUT):
@@ -351,18 +351,18 @@ def run_pixel(ctx, out):
     def fsSeedNoise__ivec2_int(blockOrigin, lane):
         blockOrigin = rt.copy(blockOrigin, "int")
         v = pcg__uvec3(rt.construct(3, rt.construct(1, rt.binary("+", rt.swizzle(blockOrigin, "x"), rt.i(1), 1, "int"), base="uint"), rt.construct(1, rt.binary("+", rt.swizzle(blockOrigin, "y"), rt.i(1), 1, "int"), base="uint"), rt.construct(1, rt.binary("+", lane, rt.i(1), 1, "int"), base="uint"), base="uint"))
-        return rt.binary("-", rt.binary("/", rt.construct(3, v), rt.construct(1, rt.i(4294967295)), 3, "float"), rt.f(0.5), 3, "float")
+        return rt.construct(3, rt.binary("-", rt.binary("/", rt.construct_raw(3, rt.construct(3, v)), rt.construct(1, rt.i(4294967295)), 3, 'float'), rt.f(0.5), 3, 'float'))
     def fsFetchCell__ivec2_float_ivec2(cell, cellSize, texSize):
         cell = rt.copy(cell, "int")
         texSize = rt.copy(texSize, "int")
-        pGlobal = rt.binary("*", rt.binary("+", rt.construct(2, cell), rt.f(0.5), 2, "float"), cellSize, 2, "float")
+        pGlobal = rt.construct(2, rt.binary("*", rt.binary("+", rt.construct_raw(2, rt.construct(2, cell)), rt.f(0.5), 2, 'float'), cellSize, 2, 'float'))
         pLocal = rt.binary("-", rt.construct(2, rt.component_wise("floor", pGlobal, width=2), base="int"), rt.construct(2, _u_tileOffset, base="int"), 2, "int")
         pLocal[:] = rt.component_wise("clamp", pLocal, rt.construct(2, rt.i(0), base="int"), rt.binary("-", texSize, rt.i(1), 2, "int"), width=2)
         return rt.swizzle(rt.texel_fetch(_u_inputTex, pLocal, rt.i(0)), "rgb")
     def errorDiffusion__vec2_float_ivec2(globalCoord, cellSize, texSize):
         globalCoord = rt.copy(globalCoord, "float")
         texSize = rt.copy(texSize, "int")
-        cell = rt.construct(2, rt.component_wise("floor", rt.binary("/", globalCoord, cellSize, 2, "float"), width=2), base="int")
+        cell = rt.construct(2, rt.component_wise("floor", rt.binary("/", globalCoord, cellSize, 2, 'float'), width=2), base="int")
         blockOrigin = rt.binary("*", rt.binary("/", cell, g.FS_BLOCK, 2, "int"), g.FS_BLOCK, 2, "int")
         lx = rt.binary("-", rt.swizzle(cell, "x"), rt.swizzle(blockOrigin, "x"), 1, "int")
         ly = rt.binary("-", rt.swizzle(cell, "y"), rt.swizzle(blockOrigin, "y"), 1, "int")
@@ -380,7 +380,7 @@ def run_pixel(ctx, out):
             _for3_first = False
             if not (rt.binary("<", i, g.FS_ERR_W)):
                 break
-            errRow[int(i)] = rt.copy(rt.binary("*", fsSeedNoise__ivec2_int(blockOrigin, i), stepScale, 3, "float"), 'float')
+            errRow[int(i)] = rt.construct(3, rt.construct(3, rt.binary("*", fsSeedNoise__ivec2_int(blockOrigin, i), stepScale, 3, 'float')))
         carried = rt.construct(3, rt.f(0.0))
         r = rt.unary("-", g.FS_APRON_MAX)
         _for4_first = True
@@ -393,7 +393,7 @@ def run_pixel(ctx, out):
             if rt.binary("<", r, rt.unary("-", apronY)):
                 continue
             lastRow = rt.binary("==", r, ly)
-            rightErr = rt.copy(rt.binary("*", fsSeedNoise__ivec2_int(blockOrigin, rt.binary("+", rt.binary("+", g.FS_ERR_W, g.FS_APRON_MAX, 1, "int"), r, 1, "int")), stepScale, 3, "float"), 'float')
+            rightErr = rt.construct(3, rt.binary("*", fsSeedNoise__ivec2_int(blockOrigin, rt.binary("+", rt.binary("+", g.FS_ERR_W, g.FS_APRON_MAX, 1, "int"), r, 1, "int")), stepScale, 3, 'float'))
             diag = rt.construct(3, rt.f(0.0))
             c = rt.unary("-", g.FS_APRON_MAX)
             _for5_first = True
@@ -408,12 +408,12 @@ def run_pixel(ctx, out):
                 err = rt.construct(3, 0.0)
                 if (bool(rt.binary(">=", c, rt.unary("-", apronX))) and bool((not ((bool(lastRow) and bool(rt.binary(">=", c, lx))))))):
                     src = fsFetchCell__ivec2_float_ivec2(rt.binary("+", blockOrigin, rt.construct(2, c, r, base="int"), 2, "int"), cellSize, texSize)
-                    v = rt.component_wise("clamp", rt.binary("+", rt.binary("+", rt.binary("+", src, errRow[int(rt.binary("+", rt.binary("+", c, g.FS_APRON_MAX, 1, "int"), rt.i(1), 1, "int"))], 3, "float"), rightErr, 3, "float"), bias, 3, "float"), rt.f(0.0), rt.f(1.0), width=3)
-                    err = rt.binary("-", v, fsQuantize__vec3(v), 3, "float")
-                    rightErr[:] = rt.binary("*", err, rt.binary("/", rt.f(7.0), rt.f(16.0), 1, "float"), 3, "float")
-                    errRow[int(rt.binary("+", c, g.FS_APRON_MAX, 1, "int"))] = rt.binary("+", errRow[int(rt.binary("+", c, g.FS_APRON_MAX, 1, "int"))], rt.binary("*", err, rt.binary("/", rt.f(3.0), rt.f(16.0), 1, "float"), 3, "float"), 3, "float")
-                    errRow[int(rt.binary("+", rt.binary("+", c, g.FS_APRON_MAX, 1, "int"), rt.i(1), 1, "int"))] = rt.binary("+", diag, rt.binary("*", err, rt.binary("/", rt.f(5.0), rt.f(16.0), 1, "float"), 3, "float"), 3, "float")
-                    diag[:] = rt.binary("*", err, rt.binary("/", rt.f(1.0), rt.f(16.0), 1, "float"), 3, "float")
+                    v = rt.component_wise("clamp", rt.binary("+", rt.binary("+", rt.binary("+", src, errRow[int(rt.binary("+", rt.binary("+", c, g.FS_APRON_MAX, 1, "int"), rt.i(1), 1, "int"))], 3, 'float'), rightErr, 3, 'float'), bias, 3, 'float'), rt.f(0.0), rt.f(1.0), width=3)
+                    err = rt.construct(3, rt.binary("-", v, fsQuantize__vec3(v), 3, 'float'))
+                    rightErr[:] = rt.binary("*", err, rt.binary("/", rt.f(7.0), rt.f(16.0), 1, "float"), 3, 'float')
+                    errRow[int(rt.binary("+", c, g.FS_APRON_MAX, 1, "int"))] = rt.construct(3, rt.binary("+", errRow[int(rt.binary("+", c, g.FS_APRON_MAX, 1, "int"))], rt.binary("*", err, rt.binary("/", rt.f(3.0), rt.f(16.0), 1, "float"), 3, 'float'), 3, "float"))
+                    errRow[int(rt.binary("+", rt.binary("+", c, g.FS_APRON_MAX, 1, "int"), rt.i(1), 1, "int"))] = rt.construct(3, rt.binary("+", diag, rt.binary("*", err, rt.binary("/", rt.f(5.0), rt.f(16.0), 1, "float"), 3, 'float'), 3, 'float'))
+                    diag[:] = rt.binary("*", err, rt.binary("/", rt.f(1.0), rt.f(16.0), 1, "float"), 3, 'float')
             incoming = rt.construct(3, 0.0)
             if lastRow:
                 incoming = errRow[int(rt.binary("+", g.FS_APRON_MAX, rt.i(1), 1, "int"))]
@@ -423,15 +423,15 @@ def run_pixel(ctx, out):
                     incoming[:] = errRow[int(rt.binary("+", g.FS_APRON_MAX, rt.i(3), 1, "int"))]
                 if rt.binary("==", lx, rt.i(3)):
                     incoming[:] = errRow[int(rt.binary("+", g.FS_APRON_MAX, rt.i(4), 1, "int"))]
-                carried[:] = rt.binary("+", incoming, rightErr, 3, "float")
+                carried[:] = rt.binary("+", incoming, rightErr, 3, 'float')
         src = rt.swizzle(rt.texel_fetch(_u_inputTex, rt.construct(2, rt.swizzle(ctx.frag_coord, "xy"), base="int"), rt.i(0)), "rgb")
-        v = rt.component_wise("clamp", rt.binary("+", rt.binary("+", src, carried, 3, "float"), bias, 3, "float"), rt.f(0.0), rt.f(1.0), width=3)
+        v = rt.component_wise("clamp", rt.binary("+", rt.binary("+", src, carried, 3, 'float'), bias, 3, 'float'), rt.f(0.0), rt.f(1.0), width=3)
         return fsQuantize__vec3(v)
     def main__void():
         texSize = rt.texture_size(_u_inputTex)
-        uv = rt.binary("/", rt.swizzle(ctx.frag_coord, "xy"), rt.construct(2, texSize), 2, "float")
+        uv = rt.construct(2, rt.binary("/", rt.swizzle(ctx.frag_coord, "xy"), rt.construct_raw(2, rt.construct(2, texSize)), 2, 'float'))
         color = rt.texture(_u_inputTex, uv)
-        globalCoord = rt.binary("+", rt.swizzle(ctx.frag_coord, "xy"), _u_tileOffset, 2, "float")
+        globalCoord = rt.construct(2, rt.binary("+", rt.swizzle(ctx.frag_coord, "xy"), _u_tileOffset, 2, 'float'))
         result = rt.construct(3, 0.0)
         ditherValue = rt.f(0.0)
         if rt.binary("==", _u_ditherType, g.DITHER_ERROR_DIFFUSION):

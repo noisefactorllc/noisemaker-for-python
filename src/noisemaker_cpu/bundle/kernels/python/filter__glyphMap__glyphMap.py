@@ -202,26 +202,26 @@ def run_pixel(ctx, out):
     def main__void():
         texSize = rt.texture_size(_u_inputTex)
         resolution = rt.construct(2, texSize)
-        pixelCoord = rt.binary("+", rt.swizzle(ctx.frag_coord, "xy"), _u_tileOffset, 2, "float")
+        pixelCoord = rt.construct(2, rt.binary("+", rt.swizzle(ctx.frag_coord, "xy"), _u_tileOffset, 2, 'float'))
         cs = rt.component_wise("max", rt.construct(1, rt.binary("*", rt.construct(1, _u_cellSize), _u_renderScale, 1, "float"), base="int"), rt.i(1), width=1)
         isTileRendering = rt.binary(">", rt.length(_u_tileOffset), rt.f(0.0))
         if isTileRendering:
             cs = rt.component_wise("min", cs, rt.i(512), width=1)
         csf = rt.construct(1, cs)
-        cellIndex = rt.component_wise("floor", rt.binary("/", pixelCoord, csf, 2, "float"), width=2)
-        localPos = rt.component_wise("fract", rt.binary("/", pixelCoord, csf, 2, "float"), width=2)
+        cellIndex = rt.component_wise("floor", rt.binary("/", pixelCoord, csf, 2, 'float'), width=2)
+        localPos = rt.component_wise("fract", rt.binary("/", pixelCoord, csf, 2, 'float'), width=2)
         gx = rt.construct(1, rt.component_wise("floor", rt.binary("*", rt.swizzle(localPos, "x"), rt.f(5.0), 1, "float"), width=1), base="int")
         gy = rt.binary("-", rt.i(6), rt.component_wise("clamp", rt.construct(1, rt.component_wise("floor", rt.binary("*", rt.swizzle(localPos, "y"), rt.f(7.0), 1, "float"), width=1), base="int"), rt.i(0), rt.i(6), width=1), 1, "int")
         gx = rt.component_wise("clamp", gx, rt.i(0), rt.i(4), width=1)
-        cellCenter = rt.binary("*", rt.binary("+", cellIndex, rt.f(0.5), 2, "float"), csf, 2, "float")
-        sampleUV = rt.binary("/", rt.binary("-", cellCenter, _u_tileOffset, 2, "float"), resolution, 2, "float")
+        cellCenter = rt.construct(2, rt.binary("*", rt.binary("+", cellIndex, rt.f(0.5), 2, 'float'), csf, 2, 'float'))
+        sampleUV = rt.construct(2, rt.binary("/", rt.binary("-", cellCenter, _u_tileOffset, 2, 'float'), resolution, 2, 'float'))
         if isTileRendering:
             sampleUV[:] = rt.component_wise("clamp", sampleUV, rt.f(0.0), rt.f(1.0), width=2)
         srcColor = rt.texture(_u_inputTex, sampleUV)
         luma = rt.dot(rt.swizzle(srcColor, "rgb"), rt.construct(3, rt.f(0.299), rt.f(0.587), rt.f(0.114)))
         glyphIdx = rt.construct(1, rt.component_wise("floor", rt.binary("*", luma, rt.construct(1, g.GLYPH_COUNT), 1, "float"), width=1), base="int")
         glyphIdx = rt.component_wise("clamp", glyphIdx, rt.i(0), rt.binary("-", g.GLYPH_COUNT, rt.i(1), 1, "int"), width=1)
-        cellHash = hash__vec2(rt.binary("+", cellIndex, rt.binary("*", rt.construct(1, _u_seed), rt.f(0.37), 1, "float"), 2, "float"))
+        cellHash = hash__vec2(rt.construct(2, rt.binary("+", cellIndex, rt.binary("*", rt.construct(1, _u_seed), rt.f(0.37), 1, "float"), 2, 'float')))
         variant = rt.construct(1, rt.component_wise("floor", rt.binary("*", cellHash, rt.f(3.0), 1, "float"), width=1), base="int")
         if (bool((bool(rt.binary("==", variant, rt.i(1))) and bool(rt.binary(">", glyphIdx, rt.i(0))))) and bool(rt.binary("<", glyphIdx, rt.binary("-", g.GLYPH_COUNT, rt.i(1), 1, "int")))):
             glyphIdx = glyphIdx
@@ -230,7 +230,7 @@ def run_pixel(ctx, out):
                 glyphIdx = rt.binary("-", glyphIdx, rt.i(1), 1, "int")
         glyphVal = glyphPixel__int_int_int(glyphIdx, gx, gy)
         if rt.binary(">", _u_colorMode, rt.i(0)):
-            g.fragColor[:] = rt.construct(4, rt.binary("*", rt.swizzle(srcColor, "rgb"), glyphVal, 3, "float"), rt.f(1.0))
+            g.fragColor[:] = rt.construct(4, rt.binary("*", rt.swizzle(srcColor, "rgb"), glyphVal, 3, 'float'), rt.f(1.0))
         else:
             g.fragColor[:] = rt.construct(4, rt.construct(3, glyphVal), rt.f(1.0))
     main__void()

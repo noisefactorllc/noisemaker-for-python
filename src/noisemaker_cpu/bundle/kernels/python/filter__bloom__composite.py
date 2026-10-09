@@ -13,12 +13,12 @@ def run_pixel(ctx, out):
     _u_tint = U.get("tint", rt.construct(3, 0.0))
     g.fragColor = rt.construct(4, 0.0)
     def main__void():
-        globalCoord = rt.binary("+", rt.swizzle(ctx.frag_coord, "xy"), _u_tileOffset, 2, "float")
+        globalCoord = rt.construct(2, rt.binary("+", rt.swizzle(ctx.frag_coord, "xy"), _u_tileOffset, 2, 'float'))
         coord = rt.construct(2, rt.swizzle(ctx.frag_coord, "xy"), base="int")
         sceneColor = rt.texel_fetch(_u_inputTex, coord, rt.i(0))
         bloom = rt.swizzle(rt.texel_fetch(_u_bloomTex, coord, rt.i(0)), "rgb")
         bloom[:] = rt.binary("*", bloom, _u_tint, 3, "float")
-        finalRgb = rt.binary("+", rt.swizzle(sceneColor, "rgb"), rt.binary("*", _u_intensity, bloom, 3, "float"), 3, "float")
+        finalRgb = rt.construct(3, rt.binary("+", rt.swizzle(sceneColor, "rgb"), rt.binary("*", _u_intensity, bloom, 3, 'float'), 3, 'float'))
         g.fragColor[:] = rt.construct(4, finalRgb, rt.swizzle(sceneColor, "a"))
     main__void()
     _c = g.fragColor

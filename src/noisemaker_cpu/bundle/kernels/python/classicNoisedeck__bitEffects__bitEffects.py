@@ -43,14 +43,14 @@ def run_pixel(ctx, out):
         return v
     def prng__vec3(p):
         p = rt.copy(p, "float")
-        return rt.binary("/", rt.construct(3, pcg__uvec3(rt.construct(3, p, base="uint"))), rt.construct(1, rt.construct(1, rt.i(4294967295), base="uint")), 3, "float")
+        return rt.construct(3, rt.binary("/", rt.construct(3, pcg__uvec3(rt.construct(3, p, base="uint"))), rt.construct(1, rt.construct(1, rt.i(4294967295), base="uint")), 3, 'float'))
     def rotate2D__vec2_float(st, rot):
         st = rt.copy(st, "float")
         rot = map__float_float_float_float_float(rot, rt.f(0.0), rt.f(360.0), rt.f(0.0), rt.f(1.0))
         angle = rt.binary("*", rot, rt.f(6.28318530718), 1, "float")
-        st[:] = rt.binary("-", st, rt.binary("*", _u_fullResolution, rt.f(0.5), 2, "float"), 2, "float")
+        st[:] = rt.binary("-", st, rt.binary("*", _u_fullResolution, rt.f(0.5), 2, 'float'), 2, "float")
         st[:] = rt.matrix_mult(rt.construct(4, rt.component_wise("cos", angle, width=1), rt.unary("-", rt.component_wise("sin", angle, width=1)), rt.component_wise("sin", angle, width=1), rt.component_wise("cos", angle, width=1)), st, 2)
-        st[:] = rt.binary("+", st, rt.binary("*", _u_fullResolution, rt.f(0.5), 2, "float"), 2, "float")
+        st[:] = rt.binary("+", st, rt.binary("*", _u_fullResolution, rt.f(0.5), 2, 'float'), 2, "float")
         return st
     def periodicFunction__float(p):
         return map__float_float_float_float_float(rt.component_wise("sin", rt.binary("*", p, rt.f(6.28318530718), 1, "float"), width=1), rt.unary("-", rt.f(1.0)), rt.f(1.0), rt.f(0.0), rt.f(1.0))
@@ -60,7 +60,7 @@ def run_pixel(ctx, out):
         lattice = rt.construct(2, rt.binary("*", rt.swizzle(st, "x"), xFreq, 1, "float"), rt.binary("*", rt.swizzle(st, "y"), yFreq, 1, "float"))
         baseFloor = rt.component_wise("floor", lattice, width=2)
         base = rt.binary("+", rt.construct(2, baseFloor, base="int"), offset, 2, "int")
-        frac = rt.binary("-", lattice, baseFloor, 2, "float")
+        frac = rt.construct(2, rt.binary("-", lattice, baseFloor, 2, 'float'))
         seedInt = rt.construct(1, rt.component_wise("floor", s, width=1), base="int")
         seedFrac = rt.component_wise("fract", s, width=1)
         xCombined = rt.binary("+", rt.swizzle(frac, "x"), seedFrac, 1, "float")
@@ -228,7 +228,7 @@ def run_pixel(ctx, out):
                                 (rgb.__setitem__(0, c), rgb.__setitem__(1, rt.f(0.0)), rgb.__setitem__(2, x), rgb)[-1]
                             else:
                                 (rgb.__setitem__(0, rt.f(0.0)), rgb.__setitem__(1, rt.f(0.0)), rgb.__setitem__(2, rt.f(0.0)), rgb)[-1]
-        return rt.binary("+", rgb, m, 3, "float")
+        return rt.construct(3, rt.binary("+", rgb, rt.construct_raw(3, m, m, m), 3, 'float'))
     def rgb2hsv__vec3(rgb):
         rgb = rt.copy(rgb, "float")
         r = rt.swizzle(rgb, "r")
@@ -337,16 +337,16 @@ def run_pixel(ctx, out):
             color[:] = hsv2rgb__vec3(color)
         return color
     def main__void():
-        globalCoord = rt.binary("+", rt.swizzle(ctx.frag_coord, "xy"), _u_tileOffset, 2, "float")
+        globalCoord = rt.construct(2, rt.binary("+", rt.swizzle(ctx.frag_coord, "xy"), _u_tileOffset, 2, 'float'))
         color = rt.construct(4, rt.f(0.0), rt.f(0.0), rt.f(0.0), rt.f(1.0))
         st = rt.copy_decl(globalCoord, "float")
         if rt.binary("==", _u_MODE, rt.i(0)):
             color = rt.assign_swizzle(color, "rgb", bitField__vec2(st))
         else:
-            st[:] = rt.binary("/", globalCoord, rt.swizzle(_u_fullResolution, "y"), 2, "float")
+            st[:] = rt.binary("/", globalCoord, rt.swizzle(_u_fullResolution, "y"), 2, 'float')
             st[:] = rt.binary("+", st, rt.binary("+", rt.construct(1, _u_seed), rt.f(1000.0), 1, "float"), 2, "float")
             color = rt.assign_swizzle(color, "rgb", bitMask__vec2(st))
-        st[:] = rt.binary("/", globalCoord, _u_fullResolution, 2, "float")
+        st[:] = rt.binary("/", globalCoord, _u_fullResolution, 2, 'float')
         g.fragColor[:] = color
     main__void()
     _c = g.fragColor

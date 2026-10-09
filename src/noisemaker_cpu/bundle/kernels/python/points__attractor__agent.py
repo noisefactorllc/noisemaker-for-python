@@ -87,7 +87,7 @@ def run_pixel(ctx, out):
                                 dp[:] = chen__vec3(p)
                             else:
                                 dp[:] = dadras__vec3(p)
-        return rt.binary("+", p, rt.binary("*", dp, dt, 3, "float"), 3, "float")
+        return rt.construct(3, rt.binary("+", p, rt.binary("*", dp, dt, 3, 'float'), 3, 'float'))
     def main__void():
         coord = rt.construct(2, rt.swizzle(ctx.frag_coord, "xy"), base="int")
         texSize = rt.texture_size(_u_xyzTex)

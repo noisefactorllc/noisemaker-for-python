@@ -375,6 +375,33 @@ class Runtime:
             arr = np.concatenate([arr, np.full(width - arr.shape[0], arr[-1], dtype=F32)])
         return arr
 
+    def construct_raw(self, width: int, *comps, base="float"):
+        """A float vecN constructor whose components stay RAW (float64).
+
+        Emulates the oracle's fused inline arithmetic: `vec3(a, b, c)` as an
+        operand of a component-wise binary is substituted per component
+        (`vec3(a, b, c) / eps` is `[(a) / eps, ...]`), so its float components
+        must not round at construction — the fused result rounds once at its
+        store. Int/uint components are NOT raw here (the oracle's cpu_float
+        conversion rounds them), so callers pass those through `construct`.
+        """
+        if base in ("int", "uint"):
+            return self.construct(width, *comps, base=base)
+        supplied = [c for c in comps if c is not None]
+        if len(supplied) == 1 and _is_scalar(supplied[0]):
+            return np.full(width, np.float64(supplied[0]), dtype=np.float64)
+        vals: list = []
+        for c in supplied:
+            if _is_scalar(c):
+                vals.append(np.float64(c))
+            else:
+                vals.extend(np.asarray(c, dtype=np.float64).ravel().tolist())
+        if not vals:
+            raise ValueError(f"construct_raw({width}) with no components")
+        if len(vals) < width:  # GLSL pads by repeating the last component
+            vals.extend([vals[-1]] * (width - len(vals)))
+        return np.array(vals[:width], dtype=np.float64)
+
     def copy(self, vec, base=None):
         # Pass-by-value copy of a function argument, coerced to the *declared*
         # parameter's element type. Float params force float32 (GLSL implicit

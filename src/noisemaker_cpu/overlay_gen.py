@@ -213,7 +213,10 @@ def render_worm_overlay(effect_id, width, height, params):
     else:
         raise ValueError(f"Unsupported canonical CPU overlay {effect_id}")
     d = surface.data
-    d[:] = np.round(np.clip(d, 0.0, 1.0) * 255.0) / 255.0
+    # The oracle scales in float64 and rounds half up (Math.round); float32
+    # scaling plus numpy's banker's rounding can land one byte lower.
+    scaled = np.clip(d, 0.0, 1.0).astype(np.float64) * 255.0
+    d[:] = (np.floor(scaled + 0.5) / 255.0).astype(d.dtype)
     return surface
 
 

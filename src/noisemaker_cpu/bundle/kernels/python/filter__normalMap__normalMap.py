@@ -70,7 +70,7 @@ def run_pixel(ctx, out):
         texel = rt.texel_fetch(_u_inputTex, coords, rt.i(0))
         return value_map_component__vec4_uint(texel, channelCount)
     def main__void():
-        globalCoord = rt.binary("+", rt.swizzle(ctx.frag_coord, "xy"), _u_tileOffset, 2, "float")
+        globalCoord = rt.construct(2, rt.binary("+", rt.swizzle(ctx.frag_coord, "xy"), _u_tileOffset, 2, 'float'))
         global_id = rt.construct(3, rt.construct(1, rt.swizzle(ctx.frag_coord, "x"), base="uint"), rt.construct(1, rt.swizzle(ctx.frag_coord, "y"), base="uint"), rt.i(0), base="uint")
         width = as_u32__float(rt.swizzle(_u_size, "x"))
         height = as_u32__float(rt.swizzle(_u_size, "y"))

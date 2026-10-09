@@ -12,12 +12,12 @@ def run_pixel(ctx, out):
     _u_intensity = U.get("intensity", rt.f(0.0))
     g.fragColor = rt.construct(4, 0.0)
     def main__void():
-        st = rt.binary("/", rt.swizzle(ctx.frag_coord, "xy"), _u_resolution, 2, "float")
+        st = rt.construct(2, rt.binary("/", rt.swizzle(ctx.frag_coord, "xy"), _u_resolution, 2, 'float'))
         inputColor = rt.texture(_u_inputTex, st)
         accum = rt.texture(_u_accumTex, st)
         a = rt.binary("/", _u_alpha, rt.f(100.0), 1, "float")
         i = rt.binary("/", _u_intensity, rt.f(100.0), 1, "float")
-        blended = rt.component_wise("max", inputColor, rt.binary("*", accum, i, 4, "float"), width=4)
+        blended = rt.component_wise("max", inputColor, rt.binary("*", accum, i, 4, 'float'), width=4)
         result = rt.component_wise("mix", inputColor, blended, a, width=4)
         result = rt.assign_swizzle(result, "a", rt.component_wise("max", rt.swizzle(inputColor, "a"), rt.swizzle(accum, "a"), width=1))
         g.fragColor[:] = result

@@ -12,14 +12,14 @@ def run_pixel(ctx, out):
     _u_antialias = U.get("antialias", False)
     g.fragColor = rt.construct(4, 0.0)
     def main__void():
-        globalCoord = rt.binary("+", rt.swizzle(ctx.frag_coord, "xy"), _u_tileOffset, 2, "float")
+        globalCoord = rt.construct(2, rt.binary("+", rt.swizzle(ctx.frag_coord, "xy"), _u_tileOffset, 2, 'float'))
         texSize = rt.texture_size(_u_inputTex)
-        uv = rt.binary("/", rt.swizzle(ctx.frag_coord, "xy"), rt.construct(2, texSize), 2, "float")
+        uv = rt.construct(2, rt.binary("/", rt.swizzle(ctx.frag_coord, "xy"), rt.construct_raw(2, rt.construct(2, texSize)), 2, 'float'))
         color = rt.texture(_u_inputTex, uv)
         fw = rt.construct(3, 0.0)
         if _u_antialias:
             fw = rt.fwidth(rt.swizzle(color, "rgb"))
-            color = rt.assign_swizzle(color, "rgb", rt.component_wise("smoothstep", rt.binary("-", _u_threshold, rt.binary("*", fw, rt.f(0.5), 3, "float"), 3, "float"), rt.binary("+", _u_threshold, rt.binary("*", fw, rt.f(0.5), 3, "float"), 3, "float"), rt.swizzle(color, "rgb"), width=3))
+            color = rt.assign_swizzle(color, "rgb", rt.component_wise("smoothstep", rt.binary("-", _u_threshold, rt.binary("*", fw, rt.f(0.5), 3, 'float'), 3, 'float'), rt.binary("+", _u_threshold, rt.binary("*", fw, rt.f(0.5), 3, 'float'), 3, 'float'), rt.swizzle(color, "rgb"), width=3))
         else:
             color = rt.assign_swizzle(color, "rgb", rt.component_wise("step", _u_threshold, rt.swizzle(color, "rgb"), width=3))
         g.fragColor[:] = color

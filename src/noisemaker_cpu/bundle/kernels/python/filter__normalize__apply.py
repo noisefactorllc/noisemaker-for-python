@@ -11,7 +11,7 @@ def run_pixel(ctx, out):
     _u_statsTex = T["statsTex"]
     g.fragColor = rt.construct(4, 0.0)
     def main__void():
-        globalCoord = rt.binary("+", rt.swizzle(ctx.frag_coord, "xy"), _u_tileOffset, 2, "float")
+        globalCoord = rt.construct(2, rt.binary("+", rt.swizzle(ctx.frag_coord, "xy"), _u_tileOffset, 2, 'float'))
         coord = rt.construct(2, rt.swizzle(ctx.frag_coord, "xy"), base="int")
         color = rt.texel_fetch(_u_inputTex, coord, rt.i(0))
         stats = rt.texel_fetch(_u_statsTex, rt.construct(2, rt.i(0), rt.i(0), base="int"), rt.i(0))
@@ -20,7 +20,7 @@ def run_pixel(ctx, out):
         if rt.binary("<", rt.binary("-", maxVal, minVal, 1, "float"), rt.f(1e-05)):
             g.fragColor[:] = color
             return
-        normalized = rt.binary("/", rt.binary("-", rt.swizzle(color, "rgb"), minVal, 3, "float"), rt.binary("-", maxVal, minVal, 1, "float"), 3, "float")
+        normalized = rt.construct(3, rt.binary("/", rt.binary("-", rt.swizzle(color, "rgb"), minVal, 3, 'float'), rt.binary("-", maxVal, minVal, 1, "float"), 3, 'float'))
         g.fragColor[:] = rt.construct(4, normalized, rt.swizzle(color, "a"))
     main__void()
     _c = g.fragColor

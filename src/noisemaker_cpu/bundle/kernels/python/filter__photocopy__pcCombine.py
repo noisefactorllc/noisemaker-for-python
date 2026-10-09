@@ -20,7 +20,7 @@ def run_pixel(ctx, out):
         paper = rt.copy(paper, "float")
         return rt.component_wise("mix", ink, paper, rt.component_wise("clamp", t, rt.f(0.0), rt.f(1.0), width=1), width=3)
     def main__void():
-        uv = rt.binary("/", rt.swizzle(ctx.frag_coord, "xy"), _u_resolution, 2, "float")
+        uv = rt.construct(2, rt.binary("/", rt.swizzle(ctx.frag_coord, "xy"), _u_resolution, 2, 'float'))
         src = rt.texture(_u_inputTex, uv)
         blur = rt.texture(_u_blurTex, uv)
         lumSrc = lum__vec3(rt.swizzle(src, "rgb"))

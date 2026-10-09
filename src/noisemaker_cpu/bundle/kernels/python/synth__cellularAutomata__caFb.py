@@ -139,21 +139,21 @@ def run_pixel(ctx, out):
                     break
                 if (bool(rt.binary("==", x, rt.i(0))) and bool(rt.binary("==", y, rt.i(0)))):
                     continue
-                offset = rt.binary("*", rt.construct(2, rt.construct(1, x), rt.construct(1, y)), texelSize, 2, "float")
-                n = rt.swizzle(rt.texture(_u_bufTex, rt.binary("+", uv, offset, 2, "float")), "r")
+                offset = rt.construct(2, rt.binary("*", rt.construct_raw(2, rt.construct(1, x), rt.construct(1, y)), texelSize, 2, 'float'))
+                n = rt.swizzle(rt.texture(_u_bufTex, rt.binary("+", uv, offset, 2, 'float')), "r")
                 count = rt.binary("+", count, rt.construct(1, rt.binary(">", n, rt.f(0.5)), base="int"), 1, "int")
         return count
     def main__void():
         texSize = rt.construct(2, rt.texture_size(_u_bufTex))
-        uv = rt.binary("/", rt.swizzle(ctx.frag_coord, "xy"), texSize, 2, "float")
-        texelSize = rt.binary("/", rt.f(1.0), texSize, 2, "float")
+        uv = rt.construct(2, rt.binary("/", rt.swizzle(ctx.frag_coord, "xy"), texSize, 2, 'float'))
+        texelSize = rt.construct(2, rt.binary("/", rt.f(1.0), texSize, 2, 'float'))
         state = rt.swizzle(rt.texture(_u_bufTex, uv), "r")
         bufState = rt.texture(_u_bufTex, uv)
         bufferIsEmpty = (bool((bool((bool(rt.binary("==", rt.swizzle(bufState, "r"), rt.f(0.0))) and bool(rt.binary("==", rt.swizzle(bufState, "g"), rt.f(0.0))))) and bool(rt.binary("==", rt.swizzle(bufState, "b"), rt.f(0.0))))) and bool(rt.binary("==", rt.swizzle(bufState, "a"), rt.f(0.0))))
         r = rt.f(0.0)
         alive = rt.f(0.0)
         if (bool(_u_resetState) or bool(bufferIsEmpty)):
-            r = random__vec2(rt.binary("+", uv, rt.construct(2, rt.construct(1, _u_seed)), 2, "float"))
+            r = random__vec2(rt.construct(2, rt.binary("+", uv, rt.construct_raw(2, rt.construct(1, _u_seed)), 2, 'float')))
             alive = rt.component_wise("step", rt.f(0.5), r, width=1)
             g.fragColor[:] = rt.construct(4, alive, alive, alive, rt.f(1.0))
             return

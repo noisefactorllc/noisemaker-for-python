@@ -9,7 +9,7 @@ def run_pixel(ctx, out):
     _u_resolution = U.get("resolution", rt.construct(2, 0.0))
     g.fragColor = rt.construct(4, 0.0)
     def main__void():
-        uv = rt.binary("/", rt.swizzle(ctx.frag_coord, "xy"), _u_resolution, 2, "float")
+        uv = rt.construct(2, rt.binary("/", rt.swizzle(ctx.frag_coord, "xy"), _u_resolution, 2, 'float'))
         g.fragColor[:] = rt.texture(_u_gridTex, uv)
     main__void()
     _c = g.fragColor

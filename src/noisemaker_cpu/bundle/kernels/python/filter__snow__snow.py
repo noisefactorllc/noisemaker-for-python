@@ -29,12 +29,12 @@ def run_pixel(ctx, out):
         return normalized_sine__float(rt.binary("*", rt.binary("-", time, value, 1, "float"), g.TAU, 1, "float"))
     def snow_fract_vec3__vec3(value):
         value = rt.copy(value, "float")
-        return rt.binary("-", value, rt.component_wise("floor", value, width=3), 3, "float")
+        return rt.construct(3, rt.binary("-", value, rt.component_wise("floor", value, width=3), 3, 'float'))
     def snow_hash__vec3(input_sample):
         input_sample = rt.copy(input_sample, "float")
-        scaled = snow_fract_vec3__vec3(rt.binary("*", input_sample, rt.f(0.1031), 3, "float"))
-        dot_val = rt.dot(scaled, rt.binary("+", rt.swizzle(scaled, "yzx"), rt.construct(3, rt.f(33.33)), 3, "float"))
-        shifted = rt.binary("+", scaled, dot_val, 3, "float")
+        scaled = snow_fract_vec3__vec3(rt.construct(3, rt.binary("*", input_sample, rt.f(0.1031), 3, 'float')))
+        dot_val = rt.dot(scaled, rt.binary("+", rt.swizzle(scaled, "yzx"), rt.construct_raw(3, rt.f(33.33)), 3, 'float'))
+        shifted = rt.construct(3, rt.binary("+", scaled, dot_val, 3, 'float'))
         combined = rt.binary("*", rt.binary("+", rt.swizzle(shifted, "x"), rt.swizzle(shifted, "y"), 1, "float"), rt.swizzle(shifted, "z"), 1, "float")
         fractional = rt.binary("-", combined, rt.component_wise("floor", combined, width=1), 1, "float")
         return rt.component_wise("clamp", fractional, rt.f(0.0), rt.f(1.0), width=1)
@@ -47,14 +47,14 @@ def run_pixel(ctx, out):
         base_value = snow_hash__vec3(base_sample)
         if (bool(rt.binary("==", speed, rt.f(0.0))) or bool(rt.binary("==", time, rt.f(0.0)))):
             return base_value
-        time_seed = rt.binary("+", seed, g.TIME_SEED_OFFSETS, 3, "float")
+        time_seed = rt.construct(3, rt.binary("+", seed, g.TIME_SEED_OFFSETS, 3, 'float'))
         time_sample = rt.construct(3, rt.binary("+", rt.swizzle(coord, "x"), rt.swizzle(time_seed, "x"), 1, "float"), rt.binary("+", rt.swizzle(coord, "y"), rt.swizzle(time_seed, "y"), 1, "float"), rt.binary("+", rt.f(1.0), rt.swizzle(time_seed, "z"), 1, "float"))
         time_value = snow_hash__vec3(time_sample)
         scaled_time = rt.binary("*", periodic_value__float_float(time, time_value), speed, 1, "float")
         periodic = periodic_value__float_float(scaled_time, base_value)
         return rt.component_wise("clamp", periodic, rt.f(0.0), rt.f(1.0), width=1)
     def main__void():
-        globalCoord = rt.binary("+", rt.swizzle(ctx.frag_coord, "xy"), _u_tileOffset, 2, "float")
+        globalCoord = rt.construct(2, rt.binary("+", rt.swizzle(ctx.frag_coord, "xy"), _u_tileOffset, 2, 'float'))
         coords = rt.construct(2, rt.construct(1, rt.swizzle(ctx.frag_coord, "x"), base="int"), rt.construct(1, rt.swizzle(ctx.frag_coord, "y"), base="int"), base="int")
         texel = rt.texel_fetch(_u_inputTex, coords, rt.i(0))
         alphaVal = rt.component_wise("clamp", _u_alpha, rt.f(0.0), rt.f(1.0), width=1)

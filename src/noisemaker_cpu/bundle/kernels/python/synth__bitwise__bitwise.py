@@ -24,8 +24,8 @@ def run_pixel(ctx, out):
     g.PI = rt.f(3.14159265358979)
     def hsv2rgb__vec3(c):
         c = rt.copy(c, "float")
-        p = rt.component_wise("abs", rt.copy(rt.binary("-", rt.copy(rt.binary("*", rt.component_wise("fract", rt.binary("+", rt.swizzle(c, "xxx"), rt.array([rt.f(1.0), rt.binary("/", rt.f(2.0), rt.f(3.0), 1, "float"), rt.binary("/", rt.f(1.0), rt.f(3.0), 1, "float")]), 3, "float"), width=3), rt.f(6.0), 3, "float"), 'float'), rt.f(3.0), 3, "float"), 'float'), width=3)
-        return rt.copy(rt.binary("*", rt.swizzle(c, "z"), rt.component_wise("mix", rt.construct(3, rt.f(1.0)), rt.component_wise("clamp", rt.binary("-", p, rt.f(1.0), 3, "float"), rt.f(0.0), rt.f(1.0), width=3), rt.swizzle(c, "y"), width=3), 3, "float"), 'float')
+        p = rt.component_wise("abs", rt.construct(3, rt.binary("-", rt.construct(3, rt.binary("*", rt.component_wise("fract", rt.binary("+", rt.swizzle(c, "xxx"), rt.construct_raw(3, rt.f(1.0), rt.binary("/", rt.f(2.0), rt.f(3.0), 1, "float"), rt.binary("/", rt.f(1.0), rt.f(3.0), 1, "float")), 3, 'float'), width=3), rt.f(6.0), 3, 'float')), rt.f(3.0), 3, 'float')), width=3)
+        return rt.construct(3, rt.binary("*", rt.swizzle(c, "z"), rt.component_wise("mix", rt.construct(3, rt.f(1.0)), rt.component_wise("clamp", rt.binary("-", p, rt.f(1.0), 3, 'float'), rt.f(0.0), rt.f(1.0), width=3), rt.swizzle(c, "y"), width=3), 3, 'float'))
     def bitOp__int_int_int_int(a, b, op, m):
         r = rt.i(0)
         if rt.binary("==", op, rt.i(0)):
@@ -57,10 +57,10 @@ def run_pixel(ctx, out):
         angle = rt.binary("/", rt.binary("*", _u_rotation, g.PI, 1, "float"), rt.f(180.0), 1, "float")
         c = rt.component_wise("cos", angle, width=1)
         s = rt.component_wise("sin", angle, width=1)
-        globalCoord = rt.binary("+", rt.swizzle(ctx.frag_coord, "xy"), _u_tileOffset, 2, "float")
-        centered = rt.binary("-", globalCoord, rt.binary("*", _u_fullResolution, rt.f(0.5), 2, "float"), 2, "float")
+        globalCoord = rt.construct(2, rt.binary("+", rt.swizzle(ctx.frag_coord, "xy"), _u_tileOffset, 2, 'float'))
+        centered = rt.construct(2, rt.binary("-", globalCoord, rt.binary("*", _u_fullResolution, rt.f(0.5), 2, 'float'), 2, 'float'))
         rotated = rt.construct(2, rt.binary("-", rt.binary("*", rt.swizzle(centered, "x"), c, 1, "float"), rt.binary("*", rt.swizzle(centered, "y"), s, 1, "float"), 1, "float"), rt.binary("+", rt.binary("*", rt.swizzle(centered, "x"), s, 1, "float"), rt.binary("*", rt.swizzle(centered, "y"), c, 1, "float"), 1, "float"))
-        coord = rt.binary("+", rotated, rt.binary("*", _u_fullResolution, rt.f(0.5), 2, "float"), 2, "float")
+        coord = rt.construct(2, rt.binary("+", rotated, rt.binary("*", _u_fullResolution, rt.f(0.5), 2, 'float'), 2, 'float'))
         animOffset = rt.construct(1, rt.component_wise("floor", rt.binary("*", rt.binary("*", _u_time, rt.construct(1, rt.construct(1, rt.unary("-", _u_speed), base="int")), 1, "float"), rt.f(256.0), 1, "float"), width=1), base="int")
         x = rt.binary("+", rt.binary("+", rt.construct(1, rt.component_wise("floor", rt.binary("/", rt.swizzle(coord, "x"), pixelScale, 1, "float"), width=1), base="int"), _u_offsetX, 1, "int"), animOffset, 1, "int")
         y = rt.binary("+", rt.construct(1, rt.component_wise("floor", rt.binary("/", rt.swizzle(coord, "y"), pixelScale, 1, "float"), width=1), base="int"), _u_offsetY, 1, "int")

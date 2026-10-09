@@ -67,7 +67,7 @@ def run_pixel(ctx, out):
                     continue
                 sc = rt.component_wise("clamp", rt.binary("+", icenter, rt.construct(2, x, y, base="int"), 2, "int"), rt.construct(2, rt.i(0), base="int"), rt.binary("-", dims, rt.construct(2, rt.i(1), base="int"), 2, "int"), width=2)
                 c = rt.swizzle(rt.texel_fetch(_u_inputTex, sc, rt.i(0)), "rgb")
-                cc = rt.binary("*", c, c, 3, "float")
+                cc = rt.construct(3, rt.binary("*", c, c, 3, 'float'))
                 if (bool(rt.binary("==", x, rt.i(0))) and bool(rt.binary("==", y, rt.i(0)))):
                     m4[:] = rt.binary("+", m4, c, 3, "float")
                     q4[:] = rt.binary("+", q4, cc, 3, "float")
@@ -117,57 +117,57 @@ def run_pixel(ctx, out):
         v = rt.construct(3, 0.0)
         tv = rt.f(0.0)
         if rt.binary(">=", n0, rt.f(1.0)):
-            m = rt.binary("/", m0, n0, 3, "float")
-            v = rt.binary("-", rt.binary("/", q0, n0, 3, "float"), rt.binary("*", m, m, 3, "float"), 3, "float")
+            m = rt.construct(3, rt.binary("/", m0, n0, 3, 'float'))
+            v = rt.construct(3, rt.binary("-", rt.binary("/", q0, n0, 3, 'float'), rt.binary("*", m, m, 3, 'float'), 3, 'float'))
             tv = rt.binary("+", rt.binary("+", rt.swizzle(v, "r"), rt.swizzle(v, "g"), 1, "float"), rt.swizzle(v, "b"), 1, "float")
             if rt.binary("<", tv, bestV):
                 bestV = tv
                 bestC[:] = m
         if rt.binary(">=", n1, rt.f(1.0)):
-            m = rt.binary("/", m1, n1, 3, "float")
-            v = rt.binary("-", rt.binary("/", q1, n1, 3, "float"), rt.binary("*", m, m, 3, "float"), 3, "float")
+            m = rt.construct(3, rt.binary("/", m1, n1, 3, 'float'))
+            v = rt.construct(3, rt.binary("-", rt.binary("/", q1, n1, 3, 'float'), rt.binary("*", m, m, 3, 'float'), 3, 'float'))
             tv = rt.binary("+", rt.binary("+", rt.swizzle(v, "r"), rt.swizzle(v, "g"), 1, "float"), rt.swizzle(v, "b"), 1, "float")
             if rt.binary("<", tv, bestV):
                 bestV = tv
                 bestC[:] = m
         if rt.binary(">=", n2, rt.f(1.0)):
-            m = rt.binary("/", m2, n2, 3, "float")
-            v = rt.binary("-", rt.binary("/", q2, n2, 3, "float"), rt.binary("*", m, m, 3, "float"), 3, "float")
+            m = rt.construct(3, rt.binary("/", m2, n2, 3, 'float'))
+            v = rt.construct(3, rt.binary("-", rt.binary("/", q2, n2, 3, 'float'), rt.binary("*", m, m, 3, 'float'), 3, 'float'))
             tv = rt.binary("+", rt.binary("+", rt.swizzle(v, "r"), rt.swizzle(v, "g"), 1, "float"), rt.swizzle(v, "b"), 1, "float")
             if rt.binary("<", tv, bestV):
                 bestV = tv
                 bestC[:] = m
         if rt.binary(">=", n3, rt.f(1.0)):
-            m = rt.binary("/", m3, n3, 3, "float")
-            v = rt.binary("-", rt.binary("/", q3, n3, 3, "float"), rt.binary("*", m, m, 3, "float"), 3, "float")
+            m = rt.construct(3, rt.binary("/", m3, n3, 3, 'float'))
+            v = rt.construct(3, rt.binary("-", rt.binary("/", q3, n3, 3, 'float'), rt.binary("*", m, m, 3, 'float'), 3, 'float'))
             tv = rt.binary("+", rt.binary("+", rt.swizzle(v, "r"), rt.swizzle(v, "g"), 1, "float"), rt.swizzle(v, "b"), 1, "float")
             if rt.binary("<", tv, bestV):
                 bestV = tv
                 bestC[:] = m
         if rt.binary(">=", n4, rt.f(1.0)):
-            m = rt.binary("/", m4, n4, 3, "float")
-            v = rt.binary("-", rt.binary("/", q4, n4, 3, "float"), rt.binary("*", m, m, 3, "float"), 3, "float")
+            m = rt.construct(3, rt.binary("/", m4, n4, 3, 'float'))
+            v = rt.construct(3, rt.binary("-", rt.binary("/", q4, n4, 3, 'float'), rt.binary("*", m, m, 3, 'float'), 3, 'float'))
             tv = rt.binary("+", rt.binary("+", rt.swizzle(v, "r"), rt.swizzle(v, "g"), 1, "float"), rt.swizzle(v, "b"), 1, "float")
             if rt.binary("<", tv, bestV):
                 bestV = tv
                 bestC[:] = m
         if rt.binary(">=", n5, rt.f(1.0)):
-            m = rt.binary("/", m5, n5, 3, "float")
-            v = rt.binary("-", rt.binary("/", q5, n5, 3, "float"), rt.binary("*", m, m, 3, "float"), 3, "float")
+            m = rt.construct(3, rt.binary("/", m5, n5, 3, 'float'))
+            v = rt.construct(3, rt.binary("-", rt.binary("/", q5, n5, 3, 'float'), rt.binary("*", m, m, 3, 'float'), 3, 'float'))
             tv = rt.binary("+", rt.binary("+", rt.swizzle(v, "r"), rt.swizzle(v, "g"), 1, "float"), rt.swizzle(v, "b"), 1, "float")
             if rt.binary("<", tv, bestV):
                 bestV = tv
                 bestC[:] = m
         if rt.binary(">=", n6, rt.f(1.0)):
-            m = rt.binary("/", m6, n6, 3, "float")
-            v = rt.binary("-", rt.binary("/", q6, n6, 3, "float"), rt.binary("*", m, m, 3, "float"), 3, "float")
+            m = rt.construct(3, rt.binary("/", m6, n6, 3, 'float'))
+            v = rt.construct(3, rt.binary("-", rt.binary("/", q6, n6, 3, 'float'), rt.binary("*", m, m, 3, 'float'), 3, 'float'))
             tv = rt.binary("+", rt.binary("+", rt.swizzle(v, "r"), rt.swizzle(v, "g"), 1, "float"), rt.swizzle(v, "b"), 1, "float")
             if rt.binary("<", tv, bestV):
                 bestV = tv
                 bestC[:] = m
         if rt.binary(">=", n7, rt.f(1.0)):
-            m = rt.binary("/", m7, n7, 3, "float")
-            v = rt.binary("-", rt.binary("/", q7, n7, 3, "float"), rt.binary("*", m, m, 3, "float"), 3, "float")
+            m = rt.construct(3, rt.binary("/", m7, n7, 3, 'float'))
+            v = rt.construct(3, rt.binary("-", rt.binary("/", q7, n7, 3, 'float'), rt.binary("*", m, m, 3, 'float'), 3, 'float'))
             tv = rt.binary("+", rt.binary("+", rt.swizzle(v, "r"), rt.swizzle(v, "g"), 1, "float"), rt.swizzle(v, "b"), 1, "float")
             if rt.binary("<", tv, bestV):
                 bestV = tv

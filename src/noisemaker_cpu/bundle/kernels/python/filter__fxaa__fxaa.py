@@ -47,7 +47,7 @@ def run_pixel(ctx, out):
     def weight_from_luma__float_float(center_luma, neighbor_luma):
         return rt.component_wise("exp", rt.binary("*", rt.unary("-", _u_sharpness), rt.component_wise("abs", rt.binary("-", center_luma, neighbor_luma, 1, "float"), width=1), 1, "float"), width=1)
     def main__void():
-        globalCoord = rt.binary("+", rt.swizzle(ctx.frag_coord, "xy"), _u_tileOffset, 2, "float")
+        globalCoord = rt.construct(2, rt.binary("+", rt.swizzle(ctx.frag_coord, "xy"), _u_tileOffset, 2, 'float'))
         global_id = rt.construct(3, rt.construct(1, rt.swizzle(ctx.frag_coord, "x"), base="uint"), rt.construct(1, rt.swizzle(ctx.frag_coord, "y"), base="uint"), rt.i(0), base="uint")
         width_u = rt.component_wise("max", as_u32__float(rt.swizzle(_u_resolution, "x")), rt.i(1), width=1)
         height_u = rt.component_wise("max", as_u32__float(rt.swizzle(_u_resolution, "y")), rt.i(1), width=1)
@@ -103,7 +103,7 @@ def run_pixel(ctx, out):
                 result_texel = rt.assign_swizzle(result_texel, "y", rt.swizzle(center_texel, "y"))
                 result_texel = rt.assign_swizzle(result_texel, "z", rt.swizzle(center_texel, "z"))
         else:
-            blended_rgb = rt.binary("/", rt.binary("+", rt.binary("+", rt.binary("+", rt.binary("+", rt.binary("*", center_rgb, weight_center, 3, "float"), rt.binary("*", north_rgb, weight_north, 3, "float"), 3, "float"), rt.binary("*", south_rgb, weight_south, 3, "float"), 3, "float"), rt.binary("*", west_rgb, weight_west, 3, "float"), 3, "float"), rt.binary("*", east_rgb, weight_east, 3, "float"), 3, "float"), weight_sum, 3, "float")
+            blended_rgb = rt.construct(3, rt.binary("/", rt.binary("+", rt.binary("+", rt.binary("+", rt.binary("+", rt.binary("*", center_rgb, weight_center, 3, 'float'), rt.binary("*", north_rgb, weight_north, 3, 'float'), 3, 'float'), rt.binary("*", south_rgb, weight_south, 3, 'float'), 3, 'float'), rt.binary("*", west_rgb, weight_west, 3, 'float'), 3, 'float'), rt.binary("*", east_rgb, weight_east, 3, 'float'), 3, 'float'), weight_sum, 3, 'float'))
             result_texel[:] = rt.construct(4, blended_rgb, rt.swizzle(result_texel, "w"))
         result_texel = rt.assign_swizzle(result_texel, "w", rt.swizzle(center_texel, "w"))
         g.fragColor[:] = rt.component_wise("mix", center_texel, result_texel, _u_strength, width=4)

@@ -27,9 +27,9 @@ def run_pixel(ctx, out):
             if not (rt.binary("<", i, rt.i(3))):
                 break
             if rt.binary("<=", srgb[int(i)], rt.f(0.04045)):
-                linear[int(i)] = rt.binary("/", srgb[int(i)], rt.f(12.92), 1, "float")
+                linear[int(i)] = rt.f32(rt.binary("/", srgb[int(i)], rt.f(12.92), 1, "float"))
             else:
-                linear[int(i)] = rt.component_wise("pow", rt.binary("/", rt.binary("+", srgb[int(i)], rt.f(0.055), 1, "float"), rt.f(1.055), 1, "float"), rt.f(2.4), width=1)
+                linear[int(i)] = rt.f32(rt.component_wise("pow", rt.binary("/", rt.binary("+", srgb[int(i)], rt.f(0.055), 1, "float"), rt.f(1.055), 1, "float"), rt.f(2.4), width=1))
         return linear
     def linearToSrgb__vec3(linear):
         linear = rt.copy(linear, "float")
@@ -43,19 +43,19 @@ def run_pixel(ctx, out):
             if not (rt.binary("<", i, rt.i(3))):
                 break
             if rt.binary("<=", linear[int(i)], rt.f(0.0031308)):
-                srgb[int(i)] = rt.binary("*", linear[int(i)], rt.f(12.92), 1, "float")
+                srgb[int(i)] = rt.f32(rt.binary("*", linear[int(i)], rt.f(12.92), 1, "float"))
             else:
-                srgb[int(i)] = rt.binary("-", rt.binary("*", rt.f(1.055), rt.component_wise("pow", linear[int(i)], rt.binary("/", rt.f(1.0), rt.f(2.4), 1, "float"), width=1), 1, "float"), rt.f(0.055), 1, "float")
+                srgb[int(i)] = rt.f32(rt.binary("-", rt.binary("*", rt.f(1.055), rt.component_wise("pow", linear[int(i)], rt.binary("/", rt.f(1.0), rt.f(2.4), 1, "float"), width=1), 1, "float"), rt.f(0.055), 1, "float"))
         return srgb
     def computeVignette__vec2_vec2_float_float_float(uv, aspectRatio, midpoint, roundness, feather):
         uv = rt.copy(uv, "float")
         aspectRatio = rt.copy(aspectRatio, "float")
-        centered = rt.binary("-", uv, rt.f(0.5), 2, "float")
+        centered = rt.construct(2, rt.binary("-", uv, rt.f(0.5), 2, 'float'))
         scale = rt.construct(2, 0.0)
         if rt.binary(">", roundness, rt.f(0.0)):
             scale[:] = rt.component_wise("mix", aspectRatio, rt.construct(2, rt.f(1.0)), roundness, width=2)
         else:
-            scale[:] = rt.component_wise("mix", aspectRatio, rt.binary("*", aspectRatio, rt.array([rt.binary("+", rt.f(1.0), rt.component_wise("abs", roundness, width=1), 1, "float"), rt.binary("-", rt.f(1.0), rt.binary("*", rt.component_wise("abs", roundness, width=1), rt.f(0.5), 1, "float"), 1, "float")]), 2, "float"), rt.unary("-", roundness), width=2)
+            scale[:] = rt.component_wise("mix", aspectRatio, rt.binary("*", aspectRatio, rt.construct_raw(2, rt.binary("+", rt.f(1.0), rt.component_wise("abs", roundness, width=1), 1, "float"), rt.binary("-", rt.f(1.0), rt.binary("*", rt.component_wise("abs", roundness, width=1), rt.f(0.5), 1, "float"), 1, "float")), 2, 'float'), rt.unary("-", roundness), width=2)
         centered[:] = rt.binary("*", centered, scale, 2, "float")
         dist = rt.binary("*", rt.length(centered), rt.f(2.0), 1, "float")
         inner = rt.binary("-", midpoint, rt.binary("*", feather, rt.f(0.5), 1, "float"), 1, "float")
@@ -73,19 +73,19 @@ def run_pixel(ctx, out):
             protection = rt.binary("*", rt.component_wise("smoothstep", rt.f(0.5), rt.f(1.0), luma, width=1), highlightProtect, 1, "float")
             darken = rt.component_wise("mix", darken, rt.f(1.0), protection, width=1)
         if rt.binary(">", amount, rt.f(0.0)):
-            return rt.binary("*", rgb, darken, 3, "float")
+            return rt.construct(3, rt.binary("*", rgb, darken, 3, 'float'))
         else:
-            return rt.binary("-", rt.f(1.0), rt.binary("*", rt.binary("-", rt.f(1.0), rgb, 3, "float"), darken, 3, "float"), 3, "float")
+            return rt.construct(3, rt.binary("-", rt.f(1.0), rt.binary("*", rt.binary("-", rt.f(1.0), rgb, 3, 'float'), darken, 3, 'float'), 3, 'float'))
     def main__void():
-        globalCoord = rt.binary("+", rt.swizzle(ctx.frag_coord, "xy"), _u_tileOffset, 2, "float")
+        globalCoord = rt.construct(2, rt.binary("+", rt.swizzle(ctx.frag_coord, "xy"), _u_tileOffset, 2, 'float'))
         texSize = rt.construct(2, rt.texture_size(_u_inputTex))
-        fullRes = (_u_fullResolution if rt.binary(">", rt.swizzle(_u_fullResolution, "x"), rt.f(0.0)) else texSize)
-        uv = rt.binary("/", rt.swizzle(ctx.frag_coord, "xy"), texSize, 2, "float")
-        globalUV = rt.binary("/", rt.binary("+", rt.swizzle(ctx.frag_coord, "xy"), _u_tileOffset, 2, "float"), fullRes, 2, "float")
+        fullRes = rt.construct(2, (_u_fullResolution if rt.binary(">", rt.swizzle(_u_fullResolution, "x"), rt.f(0.0)) else texSize))
+        uv = rt.construct(2, rt.binary("/", rt.swizzle(ctx.frag_coord, "xy"), texSize, 2, 'float'))
+        globalUV = rt.construct(2, rt.binary("/", rt.binary("+", rt.swizzle(ctx.frag_coord, "xy"), _u_tileOffset, 2, 'float'), fullRes, 2, 'float'))
         coord = rt.construct(2, rt.swizzle(ctx.frag_coord, "xy"), base="int")
         color = rt.texel_fetch(_u_inputTex, coord, rt.i(0))
         if rt.binary("<", rt.component_wise("abs", _u_vignetteAmount, width=1), rt.f(0.001)):
-            g.fragColor[:] = rt.construct(4, rt.binary("*", rt.swizzle(color, "rgb"), rt.swizzle(color, "a"), 3, "float"), rt.swizzle(color, "a"))
+            g.fragColor[:] = rt.construct(4, rt.binary("*", rt.swizzle(color, "rgb"), rt.swizzle(color, "a"), 3, 'float'), rt.swizzle(color, "a"))
             return
         rgb = srgbToLinear__vec3(rt.swizzle(color, "rgb"))
         aspectRatio = rt.construct(2, rt.f(1.0))
@@ -96,7 +96,7 @@ def run_pixel(ctx, out):
         vignetteMask = computeVignette__vec2_vec2_float_float_float(globalUV, aspectRatio, _u_vignetteMidpoint, _u_vignetteRoundness, _u_vignetteFeather)
         rgb[:] = applyVignette__vec3_float_float_float(rgb, vignetteMask, _u_vignetteAmount, _u_vigHiProtect)
         rgb[:] = linearToSrgb__vec3(rt.component_wise("max", rgb, rt.construct(3, rt.f(0.0)), width=3))
-        g.fragColor[:] = rt.construct(4, rt.binary("*", rgb, rt.swizzle(color, "a"), 3, "float"), rt.swizzle(color, "a"))
+        g.fragColor[:] = rt.construct(4, rt.binary("*", rgb, rt.swizzle(color, "a"), 3, 'float'), rt.swizzle(color, "a"))
     main__void()
     _c = g.fragColor
     out[0] = rt.f32(_c[0]); out[1] = rt.f32(_c[1]); out[2] = rt.f32(_c[2]); out[3] = rt.f32(_c[3])

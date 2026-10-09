@@ -19,7 +19,7 @@ def run_pixel(ctx, out):
         base = rt.texel_fetch(_u_inputTex, rt.component_wise("clamp", coord, rt.construct(2, rt.i(0), base="int"), rt.binary("-", baseSize, rt.i(1), 2, "int"), width=2), rt.i(0))
         overlay = rt.texel_fetch(_u_overlayTex, rt.component_wise("clamp", coord, rt.construct(2, rt.i(0), base="int"), rt.binary("-", overlaySize, rt.i(1), 2, "int"), width=2), rt.i(0))
         a = rt.binary("*", rt.swizzle(overlay, "a"), _u_alpha, 1, "float")
-        result = rt.binary("+", rt.binary("*", rt.swizzle(base, "rgb"), rt.binary("-", rt.f(1.0), a, 1, "float"), 3, "float"), rt.binary("*", rt.swizzle(overlay, "rgb"), a, 3, "float"), 3, "float")
+        result = rt.construct(3, rt.binary("+", rt.binary("*", rt.swizzle(base, "rgb"), rt.binary("-", rt.f(1.0), a, 1, "float"), 3, 'float'), rt.binary("*", rt.swizzle(overlay, "rgb"), a, 3, 'float'), 3, 'float'))
         g.fragColor[:] = rt.construct(4, result, rt.swizzle(base, "a"))
     main__void()
     _c = g.fragColor

@@ -22,9 +22,9 @@ def run_pixel(ctx, out):
     g.fragColor = rt.construct(4, 0.0)
     def hash3__vec3(p):
         p = rt.copy(p, "float")
-        p[:] = rt.binary("+", p, rt.binary("*", rt.construct(1, _u_seed), rt.f(0.1), 1, "float"), 3, "float")
-        p[:] = rt.component_wise("fract", rt.binary("*", p, rt.array([rt.f(0.1031), rt.f(0.103), rt.f(0.0973)]), 3, "float"), width=3)
-        p[:] = rt.binary("+", p, rt.dot(p, rt.binary("+", rt.swizzle(p, "yxz"), rt.f(33.33), 3, "float")), 3, "float")
+        p[:] = rt.binary("+", p, rt.binary("*", rt.construct(1, _u_seed), rt.f(0.1), 1, "float"), 3, 'float')
+        p[:] = rt.component_wise("fract", rt.binary("*", p, rt.construct_raw(3, rt.f(0.1031), rt.f(0.103), rt.f(0.0973)), 3, 'float'), width=3)
+        p[:] = rt.binary("+", p, rt.dot(p, rt.binary("+", rt.swizzle(p, "yxz"), rt.f(33.33), 3, 'float')), 3, "float")
         return rt.component_wise("fract", rt.binary("*", rt.binary("+", rt.swizzle(p, "x"), rt.swizzle(p, "y"), 1, "float"), rt.swizzle(p, "z"), 1, "float"), width=1)
     def atlasTexel__ivec3_int(p, volSize):
         p = rt.copy(p, "int")
@@ -45,8 +45,8 @@ def run_pixel(ctx, out):
         yn = sampleState__ivec3_int(rt.binary("+", voxel, rt.construct(3, rt.i(0), rt.unary("-", rt.i(1)), rt.i(0), base="int"), 3, "int"), volSize)
         zp = sampleState__ivec3_int(rt.binary("+", voxel, rt.construct(3, rt.i(0), rt.i(0), rt.i(1), base="int"), 3, "int"), volSize)
         zn = sampleState__ivec3_int(rt.binary("+", voxel, rt.construct(3, rt.i(0), rt.i(0), rt.unary("-", rt.i(1)), base="int"), 3, "int"), volSize)
-        neighborSum = rt.binary("+", rt.binary("+", rt.binary("+", rt.binary("+", rt.binary("+", rt.swizzle(xp, "ra"), rt.swizzle(xn, "ra"), 2, "float"), rt.swizzle(yp, "ra"), 2, "float"), rt.swizzle(yn, "ra"), 2, "float"), rt.swizzle(zp, "ra"), 2, "float"), rt.swizzle(zn, "ra"), 2, "float")
-        lap = rt.binary("-", neighborSum, rt.binary("*", rt.f(6.0), rt.swizzle(center, "ra"), 2, "float"), 2, "float")
+        neighborSum = rt.construct(2, rt.binary("+", rt.binary("+", rt.binary("+", rt.binary("+", rt.binary("+", rt.swizzle(xp, "ra"), rt.swizzle(xn, "ra"), 2, 'float'), rt.swizzle(yp, "ra"), 2, 'float'), rt.swizzle(yn, "ra"), 2, 'float'), rt.swizzle(zp, "ra"), 2, 'float'), rt.swizzle(zn, "ra"), 2, 'float'))
+        lap = rt.construct(2, rt.binary("-", neighborSum, rt.binary("*", rt.f(6.0), rt.swizzle(center, "ra"), 2, 'float'), 2, 'float'))
         return lap
     def main__void():
         volSize = _u_volumeSize

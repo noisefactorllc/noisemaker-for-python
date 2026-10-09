@@ -34,9 +34,9 @@ def run_pixel(ctx, out):
             if not (rt.binary("<", i, rt.i(3))):
                 break
             if rt.binary("<=", srgb[int(i)], rt.f(0.04045)):
-                linear[int(i)] = rt.binary("/", srgb[int(i)], rt.f(12.92), 1, "float")
+                linear[int(i)] = rt.f32(rt.binary("/", srgb[int(i)], rt.f(12.92), 1, "float"))
             else:
-                linear[int(i)] = rt.component_wise("pow", rt.binary("/", rt.binary("+", srgb[int(i)], rt.f(0.055), 1, "float"), rt.f(1.055), 1, "float"), rt.f(2.4), width=1)
+                linear[int(i)] = rt.f32(rt.component_wise("pow", rt.binary("/", rt.binary("+", srgb[int(i)], rt.f(0.055), 1, "float"), rt.f(1.055), 1, "float"), rt.f(2.4), width=1))
         return linear
     def linearToSrgb__vec3(linear):
         linear = rt.copy(linear, "float")
@@ -50,9 +50,9 @@ def run_pixel(ctx, out):
             if not (rt.binary("<", i, rt.i(3))):
                 break
             if rt.binary("<=", linear[int(i)], rt.f(0.0031308)):
-                srgb[int(i)] = rt.binary("*", linear[int(i)], rt.f(12.92), 1, "float")
+                srgb[int(i)] = rt.f32(rt.binary("*", linear[int(i)], rt.f(12.92), 1, "float"))
             else:
-                srgb[int(i)] = rt.binary("-", rt.binary("*", rt.f(1.055), rt.component_wise("pow", linear[int(i)], rt.binary("/", rt.f(1.0), rt.f(2.4), 1, "float"), width=1), 1, "float"), rt.f(0.055), 1, "float")
+                srgb[int(i)] = rt.f32(rt.binary("-", rt.binary("*", rt.f(1.055), rt.component_wise("pow", linear[int(i)], rt.binary("/", rt.f(1.0), rt.f(2.4), 1, "float"), width=1), 1, "float"), rt.f(0.055), 1, "float"))
         return srgb
     def rgbToHsl__vec3(rgb):
         rgb = rt.copy(rgb, "float")
@@ -94,15 +94,15 @@ def run_pixel(ctx, out):
             t = rt.binary("+", h, rt.binary("/", rt.binary("-", rt.f(1.0), rt.construct(1, i), 1, "float"), rt.f(3.0), 1, "float"), 1, "float")
             t = rt.component_wise("fract", t, width=1)
             if rt.binary("<", t, rt.binary("/", rt.f(1.0), rt.f(6.0), 1, "float")):
-                rgb[int(i)] = rt.binary("+", p, rt.binary("*", rt.binary("*", rt.binary("-", q, p, 1, "float"), rt.f(6.0), 1, "float"), t, 1, "float"), 1, "float")
+                rgb[int(i)] = rt.f32(rt.binary("+", p, rt.binary("*", rt.binary("*", rt.binary("-", q, p, 1, "float"), rt.f(6.0), 1, "float"), t, 1, "float"), 1, "float"))
             else:
                 if rt.binary("<", t, rt.f(0.5)):
-                    rgb[int(i)] = q
+                    rgb[int(i)] = rt.f32(q)
                 else:
                     if rt.binary("<", t, rt.binary("/", rt.f(2.0), rt.f(3.0), 1, "float")):
-                        rgb[int(i)] = rt.binary("+", p, rt.binary("*", rt.binary("*", rt.binary("-", q, p, 1, "float"), rt.binary("-", rt.binary("/", rt.f(2.0), rt.f(3.0), 1, "float"), t, 1, "float"), 1, "float"), rt.f(6.0), 1, "float"), 1, "float")
+                        rgb[int(i)] = rt.f32(rt.binary("+", p, rt.binary("*", rt.binary("*", rt.binary("-", q, p, 1, "float"), rt.binary("-", rt.binary("/", rt.f(2.0), rt.f(3.0), 1, "float"), t, 1, "float"), 1, "float"), rt.f(6.0), 1, "float"), 1, "float"))
                     else:
-                        rgb[int(i)] = p
+                        rgb[int(i)] = rt.f32(p)
         return rgb
     def computeHslKey__vec3_float_float_float_float_float_float_float(hsl, hueCenter, hueRange, satMin, satMax, lumMin, lumMax, feather):
         hsl = rt.copy(hsl, "float")
@@ -120,7 +120,7 @@ def run_pixel(ctx, out):
         corrected = rt.assign_swizzle(corrected, "z", rt.component_wise("clamp", rt.binary("+", rt.swizzle(corrected, "z"), rt.binary("*", lumAdjust, rt.f(0.5), 1, "float"), 1, "float"), rt.f(0.0), rt.f(1.0), width=1))
         return corrected
     def main__void():
-        globalCoord = rt.binary("+", rt.swizzle(ctx.frag_coord, "xy"), _u_tileOffset, 2, "float")
+        globalCoord = rt.construct(2, rt.binary("+", rt.swizzle(ctx.frag_coord, "xy"), _u_tileOffset, 2, 'float'))
         coord = rt.construct(2, rt.swizzle(ctx.frag_coord, "xy"), base="int")
         color = rt.texel_fetch(_u_inputTex, coord, rt.i(0))
         if rt.binary("==", _u_hslEnable, rt.i(0)):

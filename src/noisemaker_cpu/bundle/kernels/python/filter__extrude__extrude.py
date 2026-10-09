@@ -23,15 +23,15 @@ def run_pixel(ctx, out):
     g.EPS = rt.f(0.0001)
     def hash12__vec2(p):
         p = rt.copy(p, "float")
-        p3 = rt.component_wise("fract", rt.binary("*", rt.construct(3, rt.swizzle(p, "xyx")), rt.f(0.1031), 3, "float"), width=3)
-        p3[:] = rt.binary("+", p3, rt.dot(p3, rt.binary("+", rt.swizzle(p3, "yzx"), rt.f(33.33), 3, "float")), 3, "float")
+        p3 = rt.component_wise("fract", rt.binary("*", rt.construct_raw(3, rt.swizzle(p, "xyx")), rt.f(0.1031), 3, 'float'), width=3)
+        p3[:] = rt.binary("+", p3, rt.dot(p3, rt.binary("+", rt.swizzle(p3, "yzx"), rt.f(33.33), 3, 'float')), 3, "float")
         return rt.component_wise("fract", rt.construct(1, rt.binary("*", rt.construct(1, rt.binary("+", rt.swizzle(p3, "x"), rt.swizzle(p3, "y"), 1, "float")), rt.swizzle(p3, "z"), 1, "float")), width=1)
     def lum__vec3(c):
         c = rt.copy(c, "float")
         return rt.dot(c, rt.construct(3, rt.f(0.2126), rt.f(0.7152), rt.f(0.0722)))
     def toSampleUV__vec2(globalPixelPos):
         globalPixelPos = rt.copy(globalPixelPos, "float")
-        return rt.component_wise("clamp", rt.binary("/", rt.binary("-", globalPixelPos, _u_tileOffset, 2, "float"), _u_resolution, 2, "float"), rt.f(0.0), rt.f(1.0), width=2)
+        return rt.component_wise("clamp", rt.binary("/", rt.binary("-", globalPixelPos, _u_tileOffset, 2, 'float'), _u_resolution, 2, 'float'), rt.f(0.0), rt.f(1.0), width=2)
     def cellAvgColor3x3__vec2(centerPx):
         centerPx = rt.copy(centerPx, "float")
         sp = rt.binary("*", _u_size, rt.f(0.25), 1, "float")
@@ -52,9 +52,9 @@ def run_pixel(ctx, out):
                 _for1_first = False
                 if not (rt.binary("<=", i, rt.i(1))):
                     break
-                p = rt.binary("+", centerPx, rt.binary("*", rt.construct(2, rt.construct(1, i), rt.construct(1, j)), sp, 2, "float"), 2, "float")
+                p = rt.construct(2, rt.binary("+", centerPx, rt.binary("*", rt.construct_raw(2, rt.construct(1, i), rt.construct(1, j)), sp, 2, 'float'), 2, 'float'))
                 sum[:] = rt.binary("+", sum, rt.texture(_u_inputTex, toSampleUV__vec2(p)), 4, "float")
-        return rt.binary("*", sum, rt.binary("/", rt.f(1.0), rt.f(9.0), 1, "float"), 4, "float")
+        return rt.construct(4, rt.binary("*", sum, rt.binary("/", rt.f(1.0), rt.f(9.0), 1, "float"), 4, 'float'))
     def cellHeight__vec2_vec2(cellC, cellIdxF):
         cellC = rt.copy(cellC, "float")
         cellIdxF = rt.copy(cellIdxF, "float")
@@ -67,9 +67,9 @@ def run_pixel(ctx, out):
         a = rt.copy(a, "float")
         b = rt.copy(b, "float")
         c = rt.copy(c, "float")
-        v0 = rt.binary("-", b, a, 2, "float")
-        v1 = rt.binary("-", c, a, 2, "float")
-        v2 = rt.binary("-", p, a, 2, "float")
+        v0 = rt.construct(2, rt.binary("-", b, a, 2, 'float'))
+        v1 = rt.construct(2, rt.binary("-", c, a, 2, 'float'))
+        v2 = rt.construct(2, rt.binary("-", p, a, 2, 'float'))
         d00 = rt.dot(v0, v0)
         d01 = rt.dot(v0, v1)
         d11 = rt.dot(v1, v1)
@@ -87,8 +87,8 @@ def run_pixel(ctx, out):
         cellC = rt.copy(cellC, "float")
         apex = rt.copy(apex, "float")
         halfCell = rt.copy(halfCell, "float")
-        topC = rt.binary("+", cellC, rt.binary("*", g.TOP_SIGN, rt.construct(2, rt.f(0.0), rt.swizzle(halfCell, "y")), 2, "float"), 2, "float")
-        botC = rt.binary("-", cellC, rt.binary("*", g.TOP_SIGN, rt.construct(2, rt.f(0.0), rt.swizzle(halfCell, "y")), 2, "float"), 2, "float")
+        topC = rt.construct(2, rt.binary("+", cellC, rt.binary("*", g.TOP_SIGN, rt.construct_raw(2, rt.f(0.0), rt.swizzle(halfCell, "y")), 2, 'float'), 2, 'float'))
+        botC = rt.construct(2, rt.binary("-", cellC, rt.binary("*", g.TOP_SIGN, rt.construct_raw(2, rt.f(0.0), rt.swizzle(halfCell, "y")), 2, 'float'), 2, 'float'))
         leftX = rt.binary("-", rt.swizzle(cellC, "x"), rt.swizzle(halfCell, "x"), 1, "float")
         rightX = rt.binary("+", rt.swizzle(cellC, "x"), rt.swizzle(halfCell, "x"), 1, "float")
         Cbl = rt.construct(2, leftX, rt.swizzle(botC, "y"))
@@ -111,18 +111,18 @@ def run_pixel(ctx, out):
     def sideShade__vec2_vec2(P, cellC):
         P = rt.copy(P, "float")
         cellC = rt.copy(cellC, "float")
-        d = rt.binary("-", P, cellC, 2, "float")
+        d = rt.construct(2, rt.binary("-", P, cellC, 2, 'float'))
         dyUp = rt.binary("*", rt.swizzle(d, "y"), g.TOP_SIGN, 1, "float")
         if rt.binary(">", rt.component_wise("abs", rt.swizzle(d, "x"), width=1), rt.component_wise("abs", dyUp, width=1)):
             return (g.SHADE_RIGHT if rt.binary(">", rt.swizzle(d, "x"), rt.f(0.0)) else g.SHADE_LEFT)
         return (g.SHADE_TOP if rt.binary(">", dyUp, rt.f(0.0)) else g.SHADE_BOTTOM)
     def main__void():
-        P = rt.binary("+", rt.swizzle(ctx.frag_coord, "xy"), _u_tileOffset, 2, "float")
-        imgCenter = rt.binary("*", _u_fullResolution, rt.f(0.5), 2, "float")
+        P = rt.construct(2, rt.binary("+", rt.swizzle(ctx.frag_coord, "xy"), _u_tileOffset, 2, 'float'))
+        imgCenter = rt.construct(2, rt.binary("*", _u_fullResolution, rt.f(0.5), 2, 'float'))
         halfCell = rt.construct(2, rt.binary("*", _u_size, rt.f(0.5), 1, "float"))
-        toCenter = rt.binary("-", imgCenter, P, 2, "float")
+        toCenter = rt.construct(2, rt.binary("-", imgCenter, P, 2, 'float'))
         distToCenter = rt.length(toCenter)
-        stepDir = (rt.binary("/", toCenter, distToCenter, 2, "float") if rt.binary(">", distToCenter, rt.f(0.0)) else rt.construct(2, rt.f(0.0)))
+        stepDir = rt.construct(2, (rt.binary("/", toCenter, distToCenter, 2, 'float') if rt.binary(">", distToCenter, rt.f(0.0)) else rt.construct(2, rt.f(0.0))))
         bestPriority = rt.unary("-", rt.f(1000000000.0))
         bestCenterPx = rt.construct(2, rt.f(0.0))
         bestS = rt.f(1.0)
@@ -138,9 +138,9 @@ def run_pixel(ctx, out):
             if not (rt.binary("<", i, rt.i(6))):
                 break
             t = rt.component_wise("min", rt.binary("*", rt.construct(1, i), _u_size, 1, "float"), distToCenter, width=1)
-            samplePos = rt.binary("+", P, rt.binary("*", stepDir, t, 2, "float"), 2, "float")
-            cellIdxF = rt.component_wise("floor", rt.binary("/", rt.binary("-", samplePos, imgCenter, 2, "float"), _u_size, 2, "float"), width=2)
-            cellC = rt.binary("+", imgCenter, rt.binary("*", rt.binary("+", cellIdxF, rt.f(0.5), 2, "float"), _u_size, 2, "float"), 2, "float")
+            samplePos = rt.construct(2, rt.binary("+", P, rt.binary("*", stepDir, t, 2, 'float'), 2, 'float'))
+            cellIdxF = rt.component_wise("floor", rt.binary("/", rt.binary("-", samplePos, imgCenter, 2, 'float'), _u_size, 2, 'float'), width=2)
+            cellC = rt.construct(2, rt.binary("+", imgCenter, rt.binary("*", rt.binary("+", cellIdxF, rt.f(0.5), 2, 'float'), _u_size, 2, 'float'), 2, 'float'))
             h = cellHeight__vec2_vec2(cellC, cellIdxF)
             s = rt.binary("+", rt.f(1.0), rt.binary("*", rt.binary("*", h, rt.binary("/", _u_depth, rt.f(100.0), 1, "float"), 1, "float"), rt.f(0.4), 1, "float"), 1, "float")
             apex = rt.construct(2, 0.0)
@@ -150,7 +150,7 @@ def run_pixel(ctx, out):
             topHit = False
             sideHit = False
             if rt.binary("==", _u_EXTRUDE_TYPE, rt.i(1)):
-                apex = rt.binary("+", imgCenter, rt.binary("*", rt.binary("-", cellC, imgCenter, 2, "float"), s, 2, "float"), 2, "float")
+                apex = rt.construct(2, rt.binary("+", imgCenter, rt.binary("*", rt.binary("-", cellC, imgCenter, 2, 'float'), s, 2, 'float'), 2, 'float'))
                 tri = pyramidTriHit__vec2_vec2_vec2_vec2(P, cellC, apex, halfCell)
                 if (bool(rt.binary(">=", tri, rt.i(0))) and bool(rt.binary(">", s, bestPriority))):
                     bestPriority = s
@@ -159,10 +159,10 @@ def run_pixel(ctx, out):
                     bestTri = tri
                     found = True
             else:
-                faceCenter = rt.binary("+", imgCenter, rt.binary("*", rt.binary("-", cellC, imgCenter, 2, "float"), s, 2, "float"), 2, "float")
-                faceHalf = rt.binary("*", halfCell, s, 2, "float")
-                topHit = rt.component_wise("all", rt.component_wise("lessThanEqual", rt.component_wise("abs", rt.binary("-", P, faceCenter, 2, "float"), width=2), faceHalf, width=2), width=2)
-                sideHit = (bool((not (topHit))) and bool(rt.component_wise("all", rt.component_wise("lessThanEqual", rt.component_wise("abs", rt.binary("-", P, cellC, 2, "float"), width=2), halfCell, width=2), width=2)))
+                faceCenter = rt.construct(2, rt.binary("+", imgCenter, rt.binary("*", rt.binary("-", cellC, imgCenter, 2, 'float'), s, 2, 'float'), 2, 'float'))
+                faceHalf = rt.construct(2, rt.binary("*", halfCell, s, 2, 'float'))
+                topHit = rt.component_wise("all", rt.component_wise("lessThanEqual", rt.component_wise("abs", rt.binary("-", P, faceCenter, 2, 'float'), width=2), faceHalf, width=2), width=2)
+                sideHit = (bool((not (topHit))) and bool(rt.component_wise("all", rt.component_wise("lessThanEqual", rt.component_wise("abs", rt.binary("-", P, cellC, 2, 'float'), width=2), halfCell, width=2), width=2)))
                 priority = rt.f(0.0)
                 if (bool(topHit) or bool(sideHit)):
                     priority = rt.binary("+", s, (rt.f(1000.0) if topHit else rt.f(0.0)), 1, "float")
@@ -177,7 +177,7 @@ def run_pixel(ctx, out):
         outColor = rt.construct(4, 0.0)
         cellC = rt.construct(2, 0.0)
         if (not (found)):
-            cellC = rt.binary("+", imgCenter, rt.copy(rt.binary("*", rt.copy(rt.binary("+", rt.component_wise("floor", rt.binary("/", rt.binary("-", P, imgCenter, 2, "float"), _u_size, 2, "float"), width=2), rt.f(0.5), 2, "float"), 'float'), _u_size, 2, "float"), 'float'), 2, "float")
+            cellC = rt.construct(2, rt.binary("+", imgCenter, rt.construct(2, rt.binary("*", rt.construct(2, rt.binary("+", rt.component_wise("floor", rt.binary("/", rt.binary("-", P, imgCenter, 2, 'float'), _u_size, 2, 'float'), width=2), rt.f(0.5), 2, 'float')), _u_size, 2, 'float')), 2, 'float'))
             outColor[:] = cellAvgColor3x3__vec2(cellC)
         else:
             apex = rt.construct(2, 0.0)
@@ -197,9 +197,9 @@ def run_pixel(ctx, out):
             baseColor = rt.construct(4, 0.0)
             shade = rt.f(0.0)
             if rt.binary("==", _u_EXTRUDE_TYPE, rt.i(1)):
-                apex = rt.binary("+", imgCenter, rt.binary("*", rt.binary("-", bestCenterPx, imgCenter, 2, "float"), bestS, 2, "float"), 2, "float")
-                topC = rt.binary("+", bestCenterPx, rt.binary("*", g.TOP_SIGN, rt.construct(2, rt.f(0.0), rt.swizzle(halfCell, "y")), 2, "float"), 2, "float")
-                botC = rt.binary("-", bestCenterPx, rt.binary("*", g.TOP_SIGN, rt.construct(2, rt.f(0.0), rt.swizzle(halfCell, "y")), 2, "float"), 2, "float")
+                apex = rt.construct(2, rt.binary("+", imgCenter, rt.binary("*", rt.binary("-", bestCenterPx, imgCenter, 2, 'float'), bestS, 2, 'float'), 2, 'float'))
+                topC = rt.construct(2, rt.binary("+", bestCenterPx, rt.binary("*", g.TOP_SIGN, rt.construct_raw(2, rt.f(0.0), rt.swizzle(halfCell, "y")), 2, 'float'), 2, 'float'))
+                botC = rt.construct(2, rt.binary("-", bestCenterPx, rt.binary("*", g.TOP_SIGN, rt.construct_raw(2, rt.f(0.0), rt.swizzle(halfCell, "y")), 2, 'float'), 2, 'float'))
                 leftX = rt.binary("-", rt.swizzle(bestCenterPx, "x"), rt.swizzle(halfCell, "x"), 1, "float")
                 rightX = rt.binary("+", rt.swizzle(bestCenterPx, "x"), rt.swizzle(halfCell, "x"), 1, "float")
                 Cbl = rt.construct(2, leftX, rt.swizzle(botC, "y"))
@@ -234,10 +234,10 @@ def run_pixel(ctx, out):
                 if _u_solidFront:
                     baseColor[:] = cellAvgColor3x3__vec2(bestCenterPx)
                 else:
-                    localPos = rt.binary("+", rt.binary("+", rt.binary("*", rt.swizzle(bc, "x"), Ci, 2, "float"), rt.binary("*", rt.swizzle(bc, "y"), Ci1, 2, "float"), 2, "float"), rt.binary("*", rt.swizzle(bc, "z"), bestCenterPx, 2, "float"), 2, "float")
+                    localPos = rt.construct(2, rt.binary("+", rt.binary("+", rt.binary("*", rt.swizzle(bc, "x"), Ci, 2, 'float'), rt.binary("*", rt.swizzle(bc, "y"), Ci1, 2, 'float'), 2, 'float'), rt.binary("*", rt.swizzle(bc, "z"), bestCenterPx, 2, 'float'), 2, 'float'))
                     baseColor[:] = rt.texture(_u_inputTex, toSampleUV__vec2(localPos))
                 shade = rt.component_wise("mix", rt.f(1.0), shadeConst, apexW, width=1)
-                outColor[:] = rt.construct(4, rt.binary("*", rt.swizzle(baseColor, "rgb"), shade, 3, "float"), rt.swizzle(baseColor, "a"))
+                outColor[:] = rt.construct(4, rt.binary("*", rt.swizzle(baseColor, "rgb"), shade, 3, 'float'), rt.swizzle(baseColor, "a"))
             else:
                 meanColor = rt.construct(4, 0.0)
                 if bestIsTop:
@@ -245,12 +245,12 @@ def run_pixel(ctx, out):
                     if _u_solidFront:
                         outColor[:] = cellAvgColor3x3__vec2(bestCenterPx)
                     else:
-                        localPos = rt.binary("+", imgCenter, rt.binary("/", rt.binary("-", P, imgCenter, 2, "float"), bestS, 2, "float"), 2, "float")
+                        localPos = rt.construct(2, rt.binary("+", imgCenter, rt.binary("/", rt.binary("-", P, imgCenter, 2, 'float'), bestS, 2, 'float'), 2, 'float'))
                         outColor[:] = rt.texture(_u_inputTex, toSampleUV__vec2(localPos))
                 else:
                     shade = sideShade__vec2_vec2(P, bestCenterPx)
                     meanColor = cellAvgColor3x3__vec2(bestCenterPx)
-                    outColor[:] = rt.construct(4, rt.binary("*", rt.swizzle(meanColor, "rgb"), shade, 3, "float"), rt.swizzle(meanColor, "a"))
+                    outColor[:] = rt.construct(4, rt.binary("*", rt.swizzle(meanColor, "rgb"), shade, 3, 'float'), rt.swizzle(meanColor, "a"))
         g.fragColor[:] = outColor
     main__void()
     _c = g.fragColor

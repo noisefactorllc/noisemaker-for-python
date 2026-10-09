@@ -18,8 +18,8 @@ def run_pixel(ctx, out):
         return rt.component_wise("exp", rt.binary("*", rt.unary("-", x), x, 1, "float"), width=1)
     def main__void():
         densitySize = rt.construct(2, rt.texture_size(_u_densityTex))
-        uv = rt.binary("/", rt.swizzle(ctx.frag_coord, "xy"), densitySize, 2, "float")
-        texelSize = rt.binary("/", rt.f(1.0), densitySize, 2, "float")
+        uv = rt.construct(2, rt.binary("/", rt.swizzle(ctx.frag_coord, "xy"), densitySize, 2, 'float'))
+        texelSize = rt.construct(2, rt.binary("/", rt.f(1.0), densitySize, 2, 'float'))
         wK = rt.f(0.0)
         numSamples = rt.i(64)
         dr = rt.binary("/", _u_searchRadius, rt.construct(1, numSamples), 1, "float")
@@ -55,7 +55,7 @@ def run_pixel(ctx, out):
                 r = rt.length(rt.construct(2, rt.construct(1, dx), rt.construct(1, dy)))
                 if rt.binary(">", r, _u_searchRadius):
                     continue
-                sampleUV = rt.component_wise("fract", rt.binary("+", uv, rt.binary("*", rt.construct(2, rt.construct(1, dx), rt.construct(1, dy)), texelSize, 2, "float"), 2, "float"), width=2)
+                sampleUV = rt.component_wise("fract", rt.binary("+", uv, rt.binary("*", rt.construct_raw(2, rt.construct(1, dx), rt.construct(1, dy)), texelSize, 2, 'float'), 2, 'float'), width=2)
                 density = rt.swizzle(rt.texture(_u_densityTex, sampleUV), "r")
                 kVal = rt.binary("*", kernel__float_float_float(r, _u_muK, _u_sigmaK), wK, 1, "float")
                 _U = rt.binary("+", _U, rt.binary("*", density, kVal, 1, "float"), 1, "float")

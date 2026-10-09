@@ -23,9 +23,9 @@ def run_pixel(ctx, out):
             if not (rt.binary("<", i, rt.i(3))):
                 break
             if rt.binary("<=", srgb[int(i)], rt.f(0.04045)):
-                linear[int(i)] = rt.binary("/", srgb[int(i)], rt.f(12.92), 1, "float")
+                linear[int(i)] = rt.f32(rt.binary("/", srgb[int(i)], rt.f(12.92), 1, "float"))
             else:
-                linear[int(i)] = rt.component_wise("pow", rt.binary("/", rt.binary("+", srgb[int(i)], rt.f(0.055), 1, "float"), rt.f(1.055), 1, "float"), rt.f(2.4), width=1)
+                linear[int(i)] = rt.f32(rt.component_wise("pow", rt.binary("/", rt.binary("+", srgb[int(i)], rt.f(0.055), 1, "float"), rt.f(1.055), 1, "float"), rt.f(2.4), width=1))
         return linear
     def linearToSrgb__vec3(linear):
         linear = rt.copy(linear, "float")
@@ -39,9 +39,9 @@ def run_pixel(ctx, out):
             if not (rt.binary("<", i, rt.i(3))):
                 break
             if rt.binary("<=", linear[int(i)], rt.f(0.0031308)):
-                srgb[int(i)] = rt.binary("*", linear[int(i)], rt.f(12.92), 1, "float")
+                srgb[int(i)] = rt.f32(rt.binary("*", linear[int(i)], rt.f(12.92), 1, "float"))
             else:
-                srgb[int(i)] = rt.binary("-", rt.binary("*", rt.f(1.055), rt.component_wise("pow", linear[int(i)], rt.binary("/", rt.f(1.0), rt.f(2.4), 1, "float"), width=1), 1, "float"), rt.f(0.055), 1, "float")
+                srgb[int(i)] = rt.f32(rt.binary("-", rt.binary("*", rt.f(1.055), rt.component_wise("pow", linear[int(i)], rt.binary("/", rt.f(1.0), rt.f(2.4), 1, "float"), width=1), 1, "float"), rt.f(0.055), 1, "float"))
         return srgb
     def rgbToHsl__vec3(rgb):
         rgb = rt.copy(rgb, "float")
@@ -96,26 +96,26 @@ def run_pixel(ctx, out):
         return hslToRgb__vec3(gradedHsl)
     def lutWarmFilm__vec3(rgb):
         rgb = rt.copy(rgb, "float")
-        rgb[:] = rt.binary("+", rt.binary("*", rgb, rt.f(0.95), 3, "float"), rt.f(0.05), 3, "float")
+        rgb[:] = rt.binary("+", rt.binary("*", rgb, rt.f(0.95), 3, 'float'), rt.f(0.05), 3, 'float')
         rgb = rt.assign_swizzle(rgb, "r", rt.component_wise("pow", rt.swizzle(rgb, "r"), rt.f(0.95), width=1))
         rgb = rt.assign_swizzle(rgb, "b", rt.component_wise("pow", rt.swizzle(rgb, "b"), rt.f(1.05), width=1))
         l = luma__vec3(rgb)
         rgb = rt.assign_swizzle(rgb, "g", rt.component_wise("mix", rt.binary("*", rt.swizzle(rgb, "g"), rt.f(0.95), 1, "float"), rt.swizzle(rgb, "g"), l, width=1))
-        rgb[:] = rt.binary("*", rt.binary("*", rgb, rgb, 3, "float"), rt.binary("-", rt.f(3.0), rt.binary("*", rt.f(2.0), rgb, 3, "float"), 3, "float"), 3, "float")
+        rgb[:] = rt.binary("*", rt.binary("*", rgb, rgb, 3, 'float'), rt.binary("-", rt.f(3.0), rt.binary("*", rt.f(2.0), rgb, 3, 'float'), 3, 'float'), 3, 'float')
         return rgb
     def lutCoolShadows__vec3(rgb):
         rgb = rt.copy(rgb, "float")
         l = luma__vec3(rgb)
         coolBlue = rt.construct(3, rt.f(0.4), rt.f(0.5), rt.f(0.7))
         shadowMask = rt.binary("-", rt.f(1.0), rt.component_wise("smoothstep", rt.f(0.0), rt.f(0.5), l, width=1), 1, "float")
-        rgb[:] = rt.component_wise("mix", rgb, rt.binary("*", rt.binary("*", coolBlue, l, 3, "float"), rt.f(2.0), 3, "float"), rt.binary("*", shadowMask, rt.f(0.4), 1, "float"), width=3)
+        rgb[:] = rt.component_wise("mix", rgb, rt.binary("*", rt.binary("*", coolBlue, l, 3, 'float'), rt.f(2.0), 3, 'float'), rt.binary("*", shadowMask, rt.f(0.4), 1, "float"), width=3)
         return rgb
     def lutBleachBypass__vec3(rgb):
         rgb = rt.copy(rgb, "float")
         l = luma__vec3(rgb)
         desat = rt.construct(3, l)
         rgb[:] = rt.component_wise("mix", rgb, desat, rt.f(0.5), width=3)
-        rgb[:] = rt.binary("+", rt.binary("*", rt.binary("-", rgb, rt.f(0.5), 3, "float"), rt.f(1.3), 3, "float"), rt.f(0.5), 3, "float")
+        rgb[:] = rt.binary("+", rt.binary("*", rt.binary("-", rgb, rt.f(0.5), 3, 'float'), rt.f(1.3), 3, 'float'), rt.f(0.5), 3, 'float')
         rgb = rt.assign_swizzle(rgb, "r", rt.binary("*", rt.swizzle(rgb, "r"), rt.f(1.02), 1, "float"))
         rgb = rt.assign_swizzle(rgb, "b", rt.binary("*", rt.swizzle(rgb, "b"), rt.f(0.98), 1, "float"))
         return rt.component_wise("clamp", rgb, rt.f(0.0), rt.f(1.0), width=3)
@@ -135,7 +135,7 @@ def run_pixel(ctx, out):
     def lutCinematic__vec3(rgb):
         rgb = rt.copy(rgb, "float")
         l = luma__vec3(rgb)
-        rgb[:] = rt.binary("+", rt.binary("*", rgb, rt.f(0.9), 3, "float"), rt.f(0.03), 3, "float")
+        rgb[:] = rt.binary("+", rt.binary("*", rgb, rt.f(0.9), 3, 'float'), rt.f(0.03), 3, 'float')
         shadowTint = rt.construct(3, rt.f(0.95), rt.f(1.0), rt.f(1.05))
         highlightTint = rt.construct(3, rt.f(1.05), rt.f(1.0), rt.f(0.95))
         rgb[:] = rt.binary("*", rgb, rt.component_wise("mix", shadowTint, highlightTint, l, width=3), 3, "float")
@@ -152,7 +152,7 @@ def run_pixel(ctx, out):
         return rgb
     def lutVintage__vec3(rgb):
         rgb = rt.copy(rgb, "float")
-        rgb[:] = rt.binary("+", rt.binary("*", rgb, rt.f(0.85), 3, "float"), rt.f(0.08), 3, "float")
+        rgb[:] = rt.binary("+", rt.binary("*", rgb, rt.f(0.85), 3, 'float'), rt.f(0.08), 3, 'float')
         rgb = rt.assign_swizzle(rgb, "r", rt.component_wise("pow", rt.swizzle(rgb, "r"), rt.f(0.95), width=1))
         rgb = rt.assign_swizzle(rgb, "b", rt.component_wise("pow", rt.swizzle(rgb, "b"), rt.f(1.1), width=1))
         hsl = rgbToHsl__vec3(rgb)
@@ -165,14 +165,14 @@ def run_pixel(ctx, out):
         l = rt.binary("+", rt.binary("*", rt.binary("-", l, rt.f(0.5), 1, "float"), rt.f(1.5), 1, "float"), rt.f(0.5), 1, "float")
         l = rt.component_wise("clamp", l, rt.f(0.0), rt.f(1.0), width=1)
         blue = rt.construct(3, rt.f(0.9), rt.f(0.95), rt.f(1.0))
-        mono = rt.binary("*", rt.construct(3, l), rt.component_wise("mix", blue, rt.construct(3, rt.f(1.0)), l, width=3), 3, "float")
+        mono = rt.construct(3, rt.binary("*", rt.construct(3, l), rt.component_wise("mix", blue, rt.construct(3, rt.f(1.0)), l, width=3), 3, 'float'))
         return rt.component_wise("clamp", mono, rt.f(0.0), rt.f(1.0), width=3)
     def lutSepia__vec3(rgb):
         rgb = rt.copy(rgb, "float")
         l = luma__vec3(rgb)
         sepia = rt.construct(3, rt.f(1.0), rt.f(0.89), rt.f(0.71))
-        result = rt.binary("*", l, sepia, 3, "float")
-        result[:] = rt.binary("+", rt.binary("*", result, rt.f(0.9), 3, "float"), rt.f(0.05), 3, "float")
+        result = rt.construct(3, rt.binary("*", l, sepia, 3, 'float'))
+        result[:] = rt.binary("+", rt.binary("*", result, rt.f(0.9), 3, 'float'), rt.f(0.05), 3, 'float')
         return rt.component_wise("clamp", result, rt.f(0.0), rt.f(1.0), width=3)
     def lutInfrared__vec3(rgb):
         rgb = rt.copy(rgb, "float")
@@ -192,7 +192,7 @@ def run_pixel(ctx, out):
         hsl = rgbToHsl__vec3(rgb)
         hsl = rt.assign_swizzle(hsl, "y", rt.component_wise("min", rt.binary("*", rt.swizzle(hsl, "y"), rt.f(1.4), 1, "float"), rt.f(1.0), width=1))
         rgb[:] = hslToRgb__vec3(hsl)
-        rgb[:] = rt.binary("+", rt.binary("*", rt.binary("-", rgb, rt.f(0.5), 3, "float"), rt.f(1.15), 3, "float"), rt.f(0.5), 3, "float")
+        rgb[:] = rt.binary("+", rt.binary("*", rt.binary("-", rgb, rt.f(0.5), 3, 'float'), rt.f(1.15), 3, 'float'), rt.f(0.5), 3, 'float')
         return rt.component_wise("clamp", rgb, rt.f(0.0), rt.f(1.0), width=3)
     def lutNeon__vec3(rgb):
         rgb = rt.copy(rgb, "float")
@@ -200,7 +200,7 @@ def run_pixel(ctx, out):
         hsl = rt.assign_swizzle(hsl, "x", rt.component_wise("mod", rt.binary("+", rt.swizzle(hsl, "x"), rt.f(0.05), 1, "float"), rt.f(1.0), width=1))
         hsl = rt.assign_swizzle(hsl, "y", rt.component_wise("min", rt.binary("*", rt.swizzle(hsl, "y"), rt.f(1.8), 1, "float"), rt.f(1.0), width=1))
         rgb[:] = hslToRgb__vec3(hsl)
-        rgb[:] = rt.binary("+", rt.binary("*", rt.binary("-", rgb, rt.f(0.5), 3, "float"), rt.f(1.4), 3, "float"), rt.f(0.5), 3, "float")
+        rgb[:] = rt.binary("+", rt.binary("*", rt.binary("-", rgb, rt.f(0.5), 3, 'float'), rt.f(1.4), 3, 'float'), rt.f(0.5), 3, 'float')
         rgb = rt.assign_swizzle(rgb, "r", rt.component_wise("pow", rt.component_wise("max", rt.swizzle(rgb, "r"), rt.f(0.0), width=1), rt.f(0.9), width=1))
         rgb = rt.assign_swizzle(rgb, "b", rt.component_wise("pow", rt.component_wise("max", rt.swizzle(rgb, "b"), rt.f(0.0), width=1), rt.f(0.85), width=1))
         return rt.component_wise("clamp", rgb, rt.f(0.0), rt.f(1.0), width=3)
@@ -217,14 +217,14 @@ def run_pixel(ctx, out):
         rgb = rt.assign_swizzle(rgb, "g", rt.binary("*", rt.component_wise("pow", rt.swizzle(rgb, "g"), rt.f(0.9), width=1), rt.f(0.9), 1, "float"))
         rgb = rt.assign_swizzle(rgb, "b", rt.binary("*", rt.component_wise("pow", rt.swizzle(rgb, "b"), rt.f(0.85), width=1), rt.f(1.1), 1, "float"))
         depth = rt.binary("-", rt.f(1.0), rt.binary("*", luma__vec3(rgb), rt.f(0.3), 1, "float"), 1, "float")
-        rgb[:] = rt.component_wise("mix", rgb, rt.binary("*", rgb, rt.array([rt.f(0.4), rt.f(0.7), rt.f(1.0)]), 3, "float"), rt.binary("*", rt.f(0.3), depth, 1, "float"), width=3)
+        rgb[:] = rt.component_wise("mix", rgb, rt.binary("*", rgb, rt.construct_raw(3, rt.f(0.4), rt.f(0.7), rt.f(1.0)), 3, 'float'), rt.binary("*", rt.f(0.3), depth, 1, "float"), width=3)
         return rt.component_wise("clamp", rgb, rt.f(0.0), rt.f(1.0), width=3)
     def lutSunset__vec3(rgb):
         rgb = rt.copy(rgb, "float")
         l = luma__vec3(rgb)
         warmth = rt.component_wise("smoothstep", rt.f(0.3), rt.f(0.7), l, width=1)
         sunset = rt.component_wise("mix", rt.construct(3, rt.f(1.0), rt.f(0.3), rt.f(0.5)), rt.construct(3, rt.f(1.0), rt.f(0.8), rt.f(0.4)), warmth, width=3)
-        rgb[:] = rt.component_wise("mix", rt.binary("*", rgb, sunset, 3, "float"), rgb, rt.f(0.4), width=3)
+        rgb[:] = rt.component_wise("mix", rt.binary("*", rgb, sunset, 3, 'float'), rgb, rt.f(0.4), width=3)
         rgb = rt.assign_swizzle(rgb, "r", rt.component_wise("pow", rt.swizzle(rgb, "r"), rt.f(0.9), width=1))
         return rt.component_wise("clamp", rgb, rt.f(0.0), rt.f(1.0), width=3)
     def lutMonochrome__vec3(rgb):
@@ -253,10 +253,10 @@ def run_pixel(ctx, out):
             if not (rt.binary("<", i, rt.i(3))):
                 break
             if rt.binary("<", rgb[int(i)], rt.f(0.5)):
-                result[int(i)] = rt.binary("*", rt.binary("*", rt.f(2.0), rgb[int(i)], 1, "float"), l, 1, "float")
+                result[int(i)] = rt.f32(rt.binary("*", rt.binary("*", rt.f(2.0), rgb[int(i)], 1, "float"), l, 1, "float"))
             else:
-                result[int(i)] = rt.binary("-", rt.f(1.0), rt.binary("*", rt.binary("*", rt.f(2.0), rt.binary("-", rt.f(1.0), rgb[int(i)], 1, "float"), 1, "float"), rt.binary("-", rt.f(1.0), l, 1, "float"), 1, "float"), 1, "float")
-        result[:] = rt.binary("+", rt.binary("*", rt.binary("-", result, rt.f(0.5), 3, "float"), rt.f(1.4), 3, "float"), rt.f(0.5), 3, "float")
+                result[int(i)] = rt.f32(rt.binary("-", rt.f(1.0), rt.binary("*", rt.binary("*", rt.f(2.0), rt.binary("-", rt.f(1.0), rgb[int(i)], 1, "float"), 1, "float"), rt.binary("-", rt.f(1.0), l, 1, "float"), 1, "float"), 1, "float"))
+        result[:] = rt.binary("+", rt.binary("*", rt.binary("-", result, rt.f(0.5), 3, 'float'), rt.f(1.4), 3, 'float'), rt.f(0.5), 3, 'float')
         highlightMask = rt.component_wise("smoothstep", rt.f(0.5), rt.f(1.0), l, width=1)
         result = rt.assign_swizzle(result, "b", rt.binary("+", rt.swizzle(result, "b"), rt.binary("*", highlightMask, rt.f(0.05), 1, "float"), 1, "float"))
         return rt.component_wise("clamp", result, rt.f(0.0), rt.f(1.0), width=3)
@@ -297,16 +297,16 @@ def run_pixel(ctx, out):
             if not (rt.binary("<", i, rt.i(3))):
                 break
             if rt.binary(">", rgb[int(i)], threshold):
-                result[int(i)] = rt.binary("*", rt.f(2.0), rt.binary("-", rt.f(1.0), rgb[int(i)], 1, "float"), 1, "float")
+                result[int(i)] = rt.f32(rt.binary("*", rt.f(2.0), rt.binary("-", rt.f(1.0), rgb[int(i)], 1, "float"), 1, "float"))
             else:
-                result[int(i)] = rt.binary("*", rt.f(2.0), rgb[int(i)], 1, "float")
+                result[int(i)] = rt.f32(rt.binary("*", rt.f(2.0), rgb[int(i)], 1, "float"))
         hsl = rgbToHsl__vec3(result)
         hsl = rt.assign_swizzle(hsl, "y", rt.component_wise("min", rt.binary("*", rt.swizzle(hsl, "y"), rt.f(1.5), 1, "float"), rt.f(1.0), width=1))
         result[:] = hslToRgb__vec3(hsl)
-        result[:] = rt.binary("+", rt.binary("*", rt.binary("-", result, rt.f(0.5), 3, "float"), rt.f(1.1), 3, "float"), rt.f(0.5), 3, "float")
+        result[:] = rt.binary("+", rt.binary("*", rt.binary("-", result, rt.f(0.5), 3, 'float'), rt.f(1.1), 3, 'float'), rt.f(0.5), 3, 'float')
         return rt.component_wise("clamp", result, rt.f(0.0), rt.f(1.0), width=3)
     def main__void():
-        globalCoord = rt.binary("+", rt.swizzle(ctx.frag_coord, "xy"), _u_tileOffset, 2, "float")
+        globalCoord = rt.construct(2, rt.binary("+", rt.swizzle(ctx.frag_coord, "xy"), _u_tileOffset, 2, 'float'))
         coord = rt.construct(2, rt.swizzle(ctx.frag_coord, "xy"), base="int")
         color = rt.texel_fetch(_u_inputTex, coord, rt.i(0))
         if (bool(rt.binary("==", _u_preset, rt.i(0))) or bool(rt.binary("<=", _u_alpha, rt.f(0.0)))):

@@ -35,11 +35,11 @@ def run_pixel(ctx, out):
         worldPos = rt.copy(worldPos, "float")
         volSize = _u_volumeSize
         volSizeF = rt.construct(1, volSize)
-        uvw = rt.binary("+", rt.binary("*", worldPos, rt.f(0.5), 3, "float"), rt.f(0.5), 3, "float")
+        uvw = rt.construct(3, rt.binary("+", rt.binary("*", worldPos, rt.f(0.5), 3, 'float'), rt.f(0.5), 3, 'float'))
         uvw[:] = rt.component_wise("clamp", uvw, rt.f(0.0), rt.f(1.0), width=3)
-        texelPos = rt.binary("*", uvw, rt.binary("-", volSizeF, rt.f(1.0), 1, "float"), 3, "float")
+        texelPos = rt.construct(3, rt.binary("*", uvw, rt.binary("-", volSizeF, rt.f(1.0), 1, "float"), 3, 'float'))
         texelFloor = rt.component_wise("floor", texelPos, width=3)
-        frac = rt.binary("-", texelPos, texelFloor, 3, "float")
+        frac = rt.construct(3, rt.binary("-", texelPos, texelFloor, 3, 'float'))
         i0 = rt.construct(3, texelFloor, base="int")
         i1 = rt.component_wise("min", rt.binary("+", i0, rt.i(1), 3, "int"), rt.binary("-", volSize, rt.i(1), 1, "int"), width=3)
         c000 = rt.texel_fetch(_u_volumeCache, atlasTexel__ivec3_int(rt.construct(3, rt.swizzle(i0, "x"), rt.swizzle(i0, "y"), rt.swizzle(i0, "z"), base="int"), volSize), rt.i(0))
@@ -72,13 +72,13 @@ def run_pixel(ctx, out):
     def worldToVoxel__vec3(worldPos):
         worldPos = rt.copy(worldPos, "float")
         volSize = _u_volumeSize
-        uvw = rt.binary("+", rt.binary("*", worldPos, rt.f(0.5), 3, "float"), rt.f(0.5), 3, "float")
-        return rt.construct(3, rt.component_wise("floor", rt.binary("*", uvw, rt.construct(1, volSize), 3, "float"), width=3), base="int")
+        uvw = rt.construct(3, rt.binary("+", rt.binary("*", worldPos, rt.f(0.5), 3, 'float'), rt.f(0.5), 3, 'float'))
+        return rt.construct(3, rt.component_wise("floor", rt.binary("*", uvw, rt.construct(1, volSize), 3, 'float'), width=3), base="int")
     def voxelToWorld__ivec3(voxel):
         voxel = rt.copy(voxel, "int")
         volSize = _u_volumeSize
-        uvw = rt.binary("/", rt.binary("+", rt.construct(3, voxel), rt.f(0.5), 3, "float"), rt.construct(1, volSize), 3, "float")
-        return rt.binary("-", rt.binary("*", uvw, rt.f(2.0), 3, "float"), rt.f(1.0), 3, "float")
+        uvw = rt.construct(3, rt.binary("/", rt.binary("+", rt.construct_raw(3, rt.construct(3, voxel)), rt.f(0.5), 3, 'float'), rt.construct(1, volSize), 3, 'float'))
+        return rt.construct(3, rt.binary("-", rt.binary("*", uvw, rt.f(2.0), 3, 'float'), rt.f(1.0), 3, 'float'))
     def voxelTrace__vec3_vec3(ro, rd):
         ro = rt.copy(ro, "float")
         rd = rt.copy(rd, "float")
@@ -88,9 +88,9 @@ def run_pixel(ctx, out):
         result[2] = rt.construct(3, rt.i(0), base="int")
         volSize = _u_volumeSize
         voxelSize = rt.binary("/", rt.f(2.0), rt.construct(1, volSize), 1, "float")
-        invRd = rt.binary("/", rt.f(1.0), rd, 3, "float")
-        t0 = rt.binary("*", rt.binary("-", rt.unary("-", rt.f(1.0)), ro, 3, "float"), invRd, 3, "float")
-        t1 = rt.binary("*", rt.binary("-", rt.f(1.0), ro, 3, "float"), invRd, 3, "float")
+        invRd = rt.construct(3, rt.binary("/", rt.f(1.0), rd, 3, 'float'))
+        t0 = rt.construct(3, rt.binary("*", rt.binary("-", rt.unary("-", rt.f(1.0)), ro, 3, 'float'), invRd, 3, 'float'))
+        t1 = rt.construct(3, rt.binary("*", rt.binary("-", rt.f(1.0), ro, 3, 'float'), invRd, 3, 'float'))
         tmin = rt.component_wise("min", t0, t1, width=3)
         tmax = rt.component_wise("max", t0, t1, width=3)
         tEnter = rt.component_wise("max", rt.component_wise("max", rt.swizzle(tmin, "x"), rt.swizzle(tmin, "y"), width=1), rt.swizzle(tmin, "z"), width=1)
@@ -98,13 +98,13 @@ def run_pixel(ctx, out):
         if (bool(rt.binary(">", tEnter, tExit)) or bool(rt.binary("<", tExit, rt.f(0.0)))):
             return result
         tStart = rt.component_wise("max", rt.binary("+", tEnter, rt.f(0.001), 1, "float"), rt.f(0.0), width=1)
-        pos = rt.binary("+", ro, rt.binary("*", rd, tStart, 3, "float"), 3, "float")
+        pos = rt.construct(3, rt.binary("+", ro, rt.binary("*", rd, tStart, 3, 'float'), 3, 'float'))
         voxel = worldToVoxel__vec3(pos)
         voxel[:] = rt.component_wise("clamp", voxel, rt.construct(3, rt.i(0), base="int"), rt.construct(3, rt.binary("-", volSize, rt.i(1), 1, "int"), base="int"), width=3)
         step = rt.construct(3, rt.component_wise("sign", rd, width=3), base="int")
         voxelBounds = voxelToWorld__ivec3(rt.binary("+", voxel, rt.component_wise("max", step, rt.construct(3, rt.i(0), base="int"), width=3), 3, "int"))
-        tMaxVec = rt.binary("*", rt.binary("-", voxelBounds, ro, 3, "float"), invRd, 3, "float")
-        tDelta = rt.component_wise("abs", rt.binary("*", voxelSize, invRd, 3, "float"), width=3)
+        tMaxVec = rt.construct(3, rt.binary("*", rt.binary("-", voxelBounds, ro, 3, 'float'), invRd, 3, 'float'))
+        tDelta = rt.component_wise("abs", rt.binary("*", voxelSize, invRd, 3, 'float'), width=3)
         lastNormal = rt.construct(3, rt.f(0.0))
         i = rt.i(0)
         _for0_first = True
@@ -156,14 +156,14 @@ def run_pixel(ctx, out):
     def calcNormal__vec3(p):
         p = rt.copy(p, "float")
         eps = rt.binary("/", rt.f(2.0), rt.construct(1, _u_volumeSize), 1, "float")
-        dx = rt.binary("-", getField__vec3(rt.binary("+", p, rt.array([eps, rt.f(0.0), rt.f(0.0)]), 3, "float")), getField__vec3(rt.binary("-", p, rt.array([eps, rt.f(0.0), rt.f(0.0)]), 3, "float")), 1, "float")
-        dy = rt.binary("-", getField__vec3(rt.binary("+", p, rt.array([rt.f(0.0), eps, rt.f(0.0)]), 3, "float")), getField__vec3(rt.binary("-", p, rt.array([rt.f(0.0), eps, rt.f(0.0)]), 3, "float")), 1, "float")
-        dz = rt.binary("-", getField__vec3(rt.binary("+", p, rt.array([rt.f(0.0), rt.f(0.0), eps]), 3, "float")), getField__vec3(rt.binary("-", p, rt.array([rt.f(0.0), rt.f(0.0), eps]), 3, "float")), 1, "float")
+        dx = rt.binary("-", getField__vec3(rt.construct(3, rt.binary("+", p, rt.construct_raw(3, eps, rt.f(0.0), rt.f(0.0)), 3, 'float'))), getField__vec3(rt.construct(3, rt.binary("-", p, rt.construct_raw(3, eps, rt.f(0.0), rt.f(0.0)), 3, 'float'))), 1, "float")
+        dy = rt.binary("-", getField__vec3(rt.construct(3, rt.binary("+", p, rt.construct_raw(3, rt.f(0.0), eps, rt.f(0.0)), 3, 'float'))), getField__vec3(rt.construct(3, rt.binary("-", p, rt.construct_raw(3, rt.f(0.0), eps, rt.f(0.0)), 3, 'float'))), 1, "float")
+        dz = rt.binary("-", getField__vec3(rt.construct(3, rt.binary("+", p, rt.construct_raw(3, rt.f(0.0), rt.f(0.0), eps), 3, 'float'))), getField__vec3(rt.construct(3, rt.binary("-", p, rt.construct_raw(3, rt.f(0.0), rt.f(0.0), eps), 3, 'float'))), 1, "float")
         n = rt.construct(3, dx, dy, dz)
         len = rt.length(n)
         if rt.binary("<", len, rt.f(0.0001)):
             return rt.construct(3, rt.f(0.0), rt.f(1.0), rt.f(0.0))
-        return rt.binary("/", n, len, 3, "float")
+        return rt.construct(3, rt.binary("/", n, len, 3, 'float'))
     def isosurfaceTrace__vec3_vec3(ro, rd):
         ro = rt.copy(ro, "float")
         rd = rt.copy(rd, "float")
@@ -171,9 +171,9 @@ def run_pixel(ctx, out):
         result[2] = False
         result[0] = rt.unary("-", rt.f(1.0))
         result[1] = rt.construct(3, rt.f(0.0))
-        invRd = rt.binary("/", rt.f(1.0), rd, 3, "float")
-        t0 = rt.binary("*", rt.binary("-", rt.unary("-", rt.f(1.0)), ro, 3, "float"), invRd, 3, "float")
-        t1 = rt.binary("*", rt.binary("-", rt.f(1.0), ro, 3, "float"), invRd, 3, "float")
+        invRd = rt.construct(3, rt.binary("/", rt.f(1.0), rd, 3, 'float'))
+        t0 = rt.construct(3, rt.binary("*", rt.binary("-", rt.unary("-", rt.f(1.0)), ro, 3, 'float'), invRd, 3, 'float'))
+        t1 = rt.construct(3, rt.binary("*", rt.binary("-", rt.f(1.0), ro, 3, 'float'), invRd, 3, 'float'))
         tmin = rt.component_wise("min", t0, t1, width=3)
         tmax = rt.component_wise("max", t0, t1, width=3)
         tEnter = rt.component_wise("max", rt.component_wise("max", rt.swizzle(tmin, "x"), rt.swizzle(tmin, "y"), width=1), rt.swizzle(tmin, "z"), width=1)
@@ -183,11 +183,11 @@ def run_pixel(ctx, out):
         tStart = rt.component_wise("max", tEnter, rt.f(0.0), width=1)
         stepSize = rt.binary("/", rt.f(1.5), rt.construct(1, _u_volumeSize), 1, "float")
         t = tStart
-        prevField = getField__vec3(rt.binary("+", ro, rt.binary("*", rd, t, 3, "float"), 3, "float"))
+        prevField = getField__vec3(rt.construct(3, rt.binary("+", ro, rt.binary("*", rd, t, 3, 'float'), 3, 'float')))
         if rt.binary("<", prevField, rt.f(0.0)):
             result[2] = True
             result[0] = tStart
-            result[1] = rt.binary("+", ro, rt.binary("*", rd, tStart, 3, "float"), 3, "float")
+            result[1] = rt.binary("+", ro, rt.binary("*", rd, tStart, 3, 'float'), 3, 'float')
             return result
         i = rt.i(0)
         _for1_first = True
@@ -200,7 +200,7 @@ def run_pixel(ctx, out):
             t = rt.binary("+", t, stepSize, 1, "float")
             if rt.binary(">", t, tExit):
                 break
-            p = rt.binary("+", ro, rt.binary("*", rd, t, 3, "float"), 3, "float")
+            p = rt.construct(3, rt.binary("+", ro, rt.binary("*", rd, t, 3, 'float'), 3, 'float'))
             field = getField__vec3(p)
             tLo = rt.f(0.0)
             tHi = rt.f(0.0)
@@ -216,7 +216,7 @@ def run_pixel(ctx, out):
                     if not (rt.binary("<", j, rt.i(8))):
                         break
                     tMid = rt.binary("*", rt.binary("+", tLo, tHi, 1, "float"), rt.f(0.5), 1, "float")
-                    fMid = getField__vec3(rt.binary("+", ro, rt.binary("*", rd, tMid, 3, "float"), 3, "float"))
+                    fMid = getField__vec3(rt.construct(3, rt.binary("+", ro, rt.binary("*", rd, tMid, 3, 'float'), 3, 'float')))
                     if rt.binary("<", rt.binary("*", prevField, fMid, 1, "float"), rt.f(0.0)):
                         tHi = tMid
                     else:
@@ -224,7 +224,7 @@ def run_pixel(ctx, out):
                         prevField = fMid
                 result[2] = True
                 result[0] = rt.binary("*", rt.binary("+", tLo, tHi, 1, "float"), rt.f(0.5), 1, "float")
-                result[1] = rt.binary("+", ro, rt.binary("*", rd, result[0], 3, "float"), 3, "float")
+                result[1] = rt.binary("+", ro, rt.binary("*", rd, result[0], 3, 'float'), 3, 'float')
                 return result
             prevField = field
         return result
@@ -235,15 +235,15 @@ def run_pixel(ctx, out):
         lightDir = rt.normalize(rt.construct(3, rt.unary("-", rt.f(1.0)), rt.f(1.0), rt.unary("-", rt.f(1.0))))
         diff = rt.component_wise("max", rt.dot(n, lightDir), rt.f(0.0), width=1)
         amb = rt.f(0.15)
-        halfVec = rt.normalize(rt.binary("-", lightDir, rd, 3, "float"))
+        halfVec = rt.normalize(rt.binary("-", lightDir, rd, 3, 'float'))
         spec = rt.component_wise("pow", rt.component_wise("max", rt.dot(n, halfVec), rt.f(0.0), width=1), rt.f(32.0), width=1)
         rim = rt.component_wise("pow", rt.binary("-", rt.f(1.0), rt.component_wise("max", rt.dot(n, rt.unary("-", rd)), rt.f(0.0), width=1), 1, "float"), rt.f(3.0), width=1)
         volColor = sampleVolume__vec3(p)
         baseColor = rt.swizzle(volColor, "rgb")
-        colorVariance = rt.length(rt.binary("-", rt.swizzle(volColor, "rgb"), rt.construct(3, rt.swizzle(volColor, "r")), 3, "float"))
+        colorVariance = rt.length(rt.binary("-", rt.swizzle(volColor, "rgb"), rt.construct_raw(3, rt.swizzle(volColor, "r")), 3, 'float'))
         if rt.binary("<", colorVariance, rt.f(0.01)):
             baseColor[:] = rt.construct(3, rt.f(0.75))
-        return rt.binary("+", rt.binary("+", rt.binary("*", baseColor, rt.binary("+", amb, rt.binary("*", diff, rt.f(0.7), 1, "float"), 1, "float"), 3, "float"), rt.binary("*", spec, rt.f(0.2), 1, "float"), 3, "float"), rt.binary("*", rim, rt.f(0.15), 1, "float"), 3, "float")
+        return rt.construct(3, rt.binary("+", rt.binary("+", rt.binary("*", baseColor, rt.binary("+", amb, rt.binary("*", diff, rt.f(0.7), 1, "float"), 1, "float"), 3, 'float'), rt.binary("*", spec, rt.f(0.2), 1, "float"), 3, 'float'), rt.binary("*", rim, rt.f(0.15), 1, "float"), 3, 'float'))
     def shadeVoxel__vec3_vec3_vec3_ivec3(p, rd, n, voxel):
         p = rt.copy(p, "float")
         rd = rt.copy(rd, "float")
@@ -254,26 +254,26 @@ def run_pixel(ctx, out):
         amb = rt.f(0.3)
         volColor = sampleVoxel__ivec3(voxel)
         baseColor = rt.swizzle(volColor, "rgb")
-        colorVariance = rt.length(rt.binary("-", rt.swizzle(volColor, "rgb"), rt.construct(3, rt.swizzle(volColor, "r")), 3, "float"))
+        colorVariance = rt.length(rt.binary("-", rt.swizzle(volColor, "rgb"), rt.construct_raw(3, rt.swizzle(volColor, "r")), 3, 'float'))
         faceShade = rt.f(0.0)
         if rt.binary("<", colorVariance, rt.f(0.01)):
             faceShade = rt.binary("+", rt.binary("+", rt.binary("*", rt.component_wise("abs", rt.swizzle(n, "x"), width=1), rt.f(0.9), 1, "float"), rt.binary("*", rt.component_wise("abs", rt.swizzle(n, "y"), width=1), rt.f(1.0), 1, "float"), 1, "float"), rt.binary("*", rt.component_wise("abs", rt.swizzle(n, "z"), width=1), rt.f(0.85), 1, "float"), 1, "float")
             baseColor[:] = rt.construct(3, rt.binary("*", rt.f(0.7), faceShade, 1, "float"))
-        return rt.binary("*", baseColor, rt.binary("+", amb, rt.binary("*", diff, rt.f(0.7), 1, "float"), 1, "float"), 3, "float")
+        return rt.construct(3, rt.binary("*", baseColor, rt.binary("+", amb, rt.binary("*", diff, rt.f(0.7), 1, "float"), 1, "float"), 3, 'float'))
     def main__void():
-        fullRes = (_u_fullResolution if rt.binary(">", rt.swizzle(_u_fullResolution, "x"), rt.f(0.0)) else _u_resolution)
+        fullRes = rt.construct(2, (_u_fullResolution if rt.binary(">", rt.swizzle(_u_fullResolution, "x"), rt.f(0.0)) else _u_resolution))
         if rt.binary("<", rt.swizzle(fullRes, "x"), rt.f(1.0)):
             (fullRes.__setitem__(0, rt.f(1024.0)), fullRes.__setitem__(1, rt.f(1024.0)), fullRes)[-1]
-        globalCoord = rt.binary("+", rt.swizzle(ctx.frag_coord, "xy"), _u_tileOffset, 2, "float")
-        uv = rt.binary("/", rt.binary("-", globalCoord, rt.binary("*", rt.f(0.5), fullRes, 2, "float"), 2, "float"), rt.swizzle(fullRes, "y"), 2, "float")
+        globalCoord = rt.construct(2, rt.binary("+", rt.swizzle(ctx.frag_coord, "xy"), _u_tileOffset, 2, 'float'))
+        uv = rt.construct(2, rt.binary("/", rt.binary("-", globalCoord, rt.binary("*", rt.f(0.5), fullRes, 2, 'float'), 2, 'float'), rt.swizzle(fullRes, "y"), 2, 'float'))
         camDist = rt.f(3.5)
         angle = rt.binary("*", rt.binary("*", rt.unary("-", _u_time), g.TAU, 1, "float"), rt.construct(1, _u_orbitSpeed), 1, "float")
         ro = rt.construct(3, rt.binary("*", rt.component_wise("sin", angle, width=1), camDist, 1, "float"), rt.f(0.5), rt.binary("*", rt.component_wise("cos", angle, width=1), camDist, 1, "float"))
         lookAt = rt.construct(3, rt.f(0.0))
-        forward = rt.normalize(rt.binary("-", lookAt, ro, 3, "float"))
+        forward = rt.normalize(rt.binary("-", lookAt, ro, 3, 'float'))
         right = rt.normalize(rt.cross(forward, rt.construct(3, rt.f(0.0), rt.f(1.0), rt.f(0.0))))
         up = rt.cross(right, forward)
-        rd = rt.normalize(rt.binary("+", rt.binary("+", forward, rt.binary("*", rt.swizzle(uv, "x"), right, 3, "float"), 3, "float"), rt.binary("*", rt.swizzle(uv, "y"), up, 3, "float"), 3, "float"))
+        rd = rt.normalize(rt.binary("+", rt.binary("+", forward, rt.binary("*", rt.swizzle(uv, "x"), right, 3, 'float'), 3, 'float'), rt.binary("*", rt.swizzle(uv, "y"), up, 3, 'float'), 3, 'float'))
         color = rt.construct(3, 0.0)
         normal = rt.construct(3, rt.f(0.0), rt.f(0.0), rt.f(1.0))
         depth = rt.f(1.0)
@@ -283,7 +283,7 @@ def run_pixel(ctx, out):
             hit = voxelTrace__vec3_vec3(ro, rd)
             p = rt.construct(3, 0.0)
             if rt.binary(">", hit[0], rt.f(0.0)):
-                p = rt.binary("+", ro, rt.binary("*", rd, hit[0], 3, "float"), 3, "float")
+                p = rt.construct(3, rt.binary("+", ro, rt.binary("*", rd, hit[0], 3, 'float'), 3, 'float'))
                 color[:] = shadeVoxel__vec3_vec3_vec3_ivec3(p, rd, hit[1], hit[2])
                 normal[:] = hit[1]
                 depth = rt.binary("/", hit[0], g.MAX_DIST, 1, "float")
@@ -301,7 +301,7 @@ def run_pixel(ctx, out):
                 alpha = _u_bgAlpha
         color[:] = rt.component_wise("pow", color, rt.construct(3, rt.binary("/", rt.f(1.0), rt.f(2.2), 1, "float")), width=3)
         g.fragColor[:] = rt.construct(4, color, alpha)
-        g.geoOut[:] = rt.construct(4, rt.binary("+", rt.binary("*", normal, rt.f(0.5), 3, "float"), rt.f(0.5), 3, "float"), depth)
+        g.geoOut[:] = rt.construct(4, rt.binary("+", rt.binary("*", normal, rt.f(0.5), 3, 'float'), rt.f(0.5), 3, 'float'), depth)
     main__void()
     _c = g.fragColor
     out[0][0] = rt.f32(_c[0]); out[0][1] = rt.f32(_c[1]); out[0][2] = rt.f32(_c[2]); out[0][3] = rt.f32(_c[3])

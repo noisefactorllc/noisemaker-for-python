@@ -49,18 +49,18 @@ def run_pixel(ctx, out):
         p = rt.copy(p, "int")
         size = rt.copy(size, "int")
         c = rt.texel_fetch(_u_imageTex, rt.component_wise("clamp", p, rt.construct(2, rt.i(0), base="int"), rt.binary("-", size, rt.i(1), 2, "int"), width=2), rt.i(0))
-        return rt.construct(4, rt.binary("*", rt.swizzle(c, "rgb"), rt.swizzle(c, "a"), 3, "float"), rt.swizzle(c, "a"))
+        return rt.construct(4, rt.binary("*", rt.swizzle(c, "rgb"), rt.swizzle(c, "a"), 3, 'float'), rt.swizzle(c, "a"))
     def sampleMedia__vec2(uv):
         uv = rt.copy(uv, "float")
         size = rt.texture_size(_u_imageTex)
-        p = rt.binary("-", rt.binary("*", uv, rt.construct(2, size), 2, "float"), rt.f(0.5), 2, "float")
+        p = rt.construct(2, rt.binary("-", rt.binary("*", uv, rt.construct_raw(2, rt.construct(2, size)), 2, 'float'), rt.f(0.5), 2, 'float'))
         lo = rt.construct(2, rt.component_wise("floor", p, width=2), base="int")
         f = rt.component_wise("fract", p, width=2)
         return rt.component_wise("mix", rt.component_wise("mix", mediaTexel__ivec2_ivec2(lo, size), mediaTexel__ivec2_ivec2(rt.binary("+", lo, rt.construct(2, rt.i(1), rt.i(0), base="int"), 2, "int"), size), rt.swizzle(f, "x"), width=4), rt.component_wise("mix", mediaTexel__ivec2_ivec2(rt.binary("+", lo, rt.construct(2, rt.i(0), rt.i(1), base="int"), 2, "int"), size), mediaTexel__ivec2_ivec2(rt.binary("+", lo, rt.construct(2, rt.i(1), rt.i(1), base="int"), 2, "int"), size), rt.swizzle(f, "x"), width=4), rt.swizzle(f, "y"), width=4)
     def getImage__vec2(st):
         st = rt.copy(st, "float")
         size = rt.copy_decl(_u_imageSize, "float")
-        st[:] = rt.binary("/", rt.swizzle(ctx.frag_coord, "xy"), size, 2, "float")
+        st[:] = rt.binary("/", rt.swizzle(ctx.frag_coord, "xy"), size, 2, 'float')
         st = rt.assign_swizzle(st, "y", rt.binary("-", rt.f(1.0), rt.swizzle(st, "y"), 1, "float"))
         scale = rt.binary("/", rt.f(100.0), _u_scaleAmt, 1, "float")
         if rt.binary("==", scale, rt.f(0.0)):
@@ -105,7 +105,7 @@ def run_pixel(ctx, out):
             st[:] = rotate2D__vec2_float(st, _u_rotation)
         st = rt.assign_swizzle(st, "x", rt.binary("/", rt.swizzle(st, "x"), rt.binary("/", rt.swizzle(size, "x"), rt.swizzle(size, "y"), 1, "float"), 1, "float"))
         st[:] = tile__vec2(st)
-        st[:] = rt.binary("+", st, rt.binary("/", rt.f(1.0), size, 2, "float"), 2, "float")
+        st[:] = rt.binary("+", st, rt.binary("/", rt.f(1.0), size, 2, 'float'), 2, "float")
         if rt.binary("==", _u_flip, rt.i(1)):
             st = rt.assign_swizzle(st, "x", rt.binary("-", rt.f(1.0), rt.swizzle(st, "x"), 1, "float"))
             st = rt.assign_swizzle(st, "y", rt.binary("-", rt.f(1.0), rt.swizzle(st, "y"), 1, "float"))
@@ -157,10 +157,10 @@ def run_pixel(ctx, out):
                                                         st = rt.assign_swizzle(st, "y", rt.binary("-", rt.f(1.0), rt.swizzle(st, "y"), 1, "float"))
         text = sampleMedia__vec2(st)
         if (bool((bool((bool(rt.binary("<", rt.swizzle(st, "x"), rt.f(0.0))) or bool(rt.binary(">", rt.swizzle(st, "x"), rt.f(1.0))))) or bool(rt.binary("<", rt.swizzle(st, "y"), rt.f(0.0))))) or bool(rt.binary(">", rt.swizzle(st, "y"), rt.f(1.0)))):
-            return rt.construct(4, rt.binary("*", _u_bgColor, _u_bgAlpha, 3, "float"), _u_bgAlpha)
+            return rt.construct(4, rt.binary("*", _u_bgColor, _u_bgAlpha, 3, 'float'), _u_bgAlpha)
         return text
     def main__void():
-        st = rt.binary("/", rt.swizzle(ctx.frag_coord, "xy"), _u_resolution, 2, "float")
+        st = rt.construct(2, rt.binary("/", rt.swizzle(ctx.frag_coord, "xy"), _u_resolution, 2, 'float'))
         st = rt.assign_swizzle(st, "y", rt.binary("-", rt.f(1.0), rt.swizzle(st, "y"), 1, "float"))
         g.fragColor[:] = getImage__vec2(st)
     main__void()

@@ -39,7 +39,7 @@ def run_pixel(ctx, out):
         g.fragColor[:] = rt.construct(4, color, occupied)
         normal = rt.construct(3, rt.binary("-", density__ivec3(rt.binary("-", p, rt.construct(3, rt.i(1), rt.i(0), rt.i(0), base="int"), 3, "int")), density__ivec3(rt.binary("+", p, rt.construct(3, rt.i(1), rt.i(0), rt.i(0), base="int"), 3, "int")), 1, "float"), rt.binary("-", density__ivec3(rt.binary("-", p, rt.construct(3, rt.i(0), rt.i(1), rt.i(0), base="int"), 3, "int")), density__ivec3(rt.binary("+", p, rt.construct(3, rt.i(0), rt.i(1), rt.i(0), base="int"), 3, "int")), 1, "float"), rt.binary("-", density__ivec3(rt.binary("-", p, rt.construct(3, rt.i(0), rt.i(0), rt.i(1), base="int"), 3, "int")), density__ivec3(rt.binary("+", p, rt.construct(3, rt.i(0), rt.i(0), rt.i(1), base="int"), 3, "int")), 1, "float"))
         normal[:] = (rt.normalize(normal) if rt.binary(">", rt.dot(normal, normal), rt.f(0.0)) else rt.construct(3, rt.f(0.0), rt.f(1.0), rt.f(0.0)))
-        g.geoOut[:] = rt.construct(4, rt.binary("+", rt.binary("*", normal, rt.f(0.5), 3, "float"), rt.f(0.5), 3, "float"), occupied)
+        g.geoOut[:] = rt.construct(4, rt.binary("+", rt.binary("*", normal, rt.f(0.5), 3, 'float'), rt.f(0.5), 3, 'float'), occupied)
     main__void()
     _c = g.fragColor
     out[0][0] = rt.f32(_c[0]); out[0][1] = rt.f32(_c[1]); out[0][2] = rt.f32(_c[2]); out[0][3] = rt.f32(_c[3])

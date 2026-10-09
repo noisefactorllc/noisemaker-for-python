@@ -30,7 +30,7 @@ def run_pixel(ctx, out):
         p = rt.copy(p, "float")
         i = rt.component_wise("floor", p, width=2)
         f = rt.component_wise("fract", p, width=2)
-        f[:] = rt.binary("*", rt.binary("*", f, f, 2, "float"), rt.binary("-", rt.f(3.0), rt.binary("*", rt.f(2.0), f, 2, "float"), 2, "float"), 2, "float")
+        f[:] = rt.binary("*", rt.binary("*", f, f, 2, 'float'), rt.binary("-", rt.f(3.0), rt.binary("*", rt.f(2.0), f, 2, 'float'), 2, 'float'), 2, 'float')
         n = rt.binary("+", rt.construct(1, rt.swizzle(i, "x"), base="uint"), rt.binary("*", rt.construct(1, rt.swizzle(i, "y"), base="uint"), rt.i(57), 1, "uint"), 1, "uint")
         a = hash__uint(n)
         b = hash__uint(rt.binary("+", n, rt.i(1), 1, "uint"))
@@ -74,7 +74,7 @@ def run_pixel(ctx, out):
             return
         deviationMultiplier = rt.binary("+", rt.f(1.0), rt.binary("*", rt.binary("*", rt.binary("-", seed_f, rt.f(0.5), 1, "float"), _u_deviation, 1, "float"), rt.f(2.0), 1, "float"), 1, "float")
         noiseScale = rt.f(2.0)
-        wanderAngle = rt.binary("*", rt.binary("*", fbm__vec2(rt.binary("+", rt.binary("*", rt.construct(2, px, py), noiseScale, 2, "float"), rt.binary("*", _u_time, rt.f(0.5), 1, "float"), 2, "float")), rt.f(6.283185), 1, "float"), rt.f(2.0), 1, "float")
+        wanderAngle = rt.binary("*", rt.binary("*", fbm__vec2(rt.construct(2, rt.binary("+", rt.binary("*", rt.construct_raw(2, px, py), noiseScale, 2, 'float'), rt.binary("*", _u_time, rt.f(0.5), 1, "float"), 2, 'float'))), rt.f(6.283185), 1, "float"), rt.f(2.0), 1, "float")
         wanderStrength = rt.binary("*", _u_wander, rt.f(0.002), 1, "float")
         wanderX = rt.binary("*", rt.component_wise("cos", wanderAngle, width=1), wanderStrength, 1, "float")
         wanderY = rt.binary("*", rt.component_wise("sin", wanderAngle, width=1), wanderStrength, 1, "float")

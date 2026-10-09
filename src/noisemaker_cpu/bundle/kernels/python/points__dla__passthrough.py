@@ -11,13 +11,13 @@ def run_pixel(ctx, out):
     _u_matteOpacity = U.get("matteOpacity", rt.f(0.0))
     g.fragColor = rt.construct(4, 0.0)
     def main__void():
-        uv = rt.binary("/", rt.swizzle(ctx.frag_coord, "xy"), _u_resolution, 2, "float")
+        uv = rt.construct(2, rt.binary("/", rt.swizzle(ctx.frag_coord, "xy"), _u_resolution, 2, 'float'))
         inputCol = rt.texture(_u_inputTex, uv)
         grid = rt.texture(_u_gridTex, uv)
         gridStrength = rt.component_wise("clamp", rt.swizzle(grid, "a"), rt.f(0.0), rt.f(1.0), width=1)
         gridColor = rt.swizzle(grid, "rgb")
         matteAlpha = _u_matteOpacity
-        color = rt.component_wise("mix", rt.binary("*", rt.swizzle(inputCol, "rgb"), matteAlpha, 3, "float"), gridColor, gridStrength, width=3)
+        color = rt.component_wise("mix", rt.binary("*", rt.swizzle(inputCol, "rgb"), matteAlpha, 3, 'float'), gridColor, gridStrength, width=3)
         alpha = rt.component_wise("max", gridStrength, matteAlpha, width=1)
         g.fragColor[:] = rt.construct(4, color, alpha)
     main__void()

@@ -61,7 +61,7 @@ def run_pixel(ctx, out):
                             (rgb.__setitem__(0, x), rgb.__setitem__(1, rt.f(0.0)), rgb.__setitem__(2, c), rgb)[-1]
                         else:
                             (rgb.__setitem__(0, c), rgb.__setitem__(1, rt.f(0.0)), rgb.__setitem__(2, x), rgb)[-1]
-        return rt.binary("+", rgb, rt.construct(3, m), 3, "float")
+        return rt.construct(3, rt.binary("+", rgb, rt.construct_raw(3, m), 3, 'float'))
     def rgb2hsv__vec3(c):
         c = rt.copy(c, "float")
         cmax = rt.component_wise("max", rt.swizzle(c, "r"), rt.component_wise("max", rt.swizzle(c, "g"), rt.swizzle(c, "b"), width=1), width=1)
@@ -80,13 +80,13 @@ def run_pixel(ctx, out):
         return rt.construct(3, h, s, cmax)
     def linear2srgb__vec3(lin):
         lin = rt.copy(lin, "float")
-        low = rt.binary("*", lin, rt.f(12.92), 3, "float")
-        high = rt.copy(rt.binary("-", rt.copy(rt.binary("*", rt.f(1.055), rt.component_wise("pow", rt.component_wise("max", lin, rt.construct(3, rt.f(0.0)), width=3), rt.construct(3, rt.binary("/", rt.f(1.0), rt.f(2.4), 1, "float")), width=3), 3, "float"), 'float'), rt.f(0.055), 3, "float"), 'float')
+        low = rt.construct(3, rt.binary("*", lin, rt.f(12.92), 3, 'float'))
+        high = rt.construct(3, rt.binary("-", rt.construct(3, rt.binary("*", rt.f(1.055), rt.component_wise("pow", rt.component_wise("max", lin, rt.construct(3, rt.f(0.0)), width=3), rt.construct(3, rt.binary("/", rt.f(1.0), rt.f(2.4), 1, "float")), width=3), 3, 'float')), rt.f(0.055), 3, 'float'))
         return rt.component_wise("mix", high, low, rt.component_wise("step", lin, rt.construct(3, rt.f(0.0031308)), width=3), width=3)
     def srgb2linear__vec3(c):
         c = rt.copy(c, "float")
-        low = rt.binary("/", c, rt.f(12.92), 3, "float")
-        high = rt.component_wise("pow", rt.binary("/", rt.binary("+", c, rt.f(0.055), 3, "float"), rt.f(1.055), 3, "float"), rt.construct(3, rt.f(2.4)), width=3)
+        low = rt.construct(3, rt.binary("/", c, rt.f(12.92), 3, 'float'))
+        high = rt.component_wise("pow", rt.binary("/", rt.binary("+", c, rt.f(0.055), 3, 'float'), rt.f(1.055), 3, 'float'), rt.construct(3, rt.f(2.4)), width=3)
         return rt.component_wise("mix", high, low, rt.component_wise("step", c, rt.construct(3, rt.f(0.04045)), width=3), width=3)
     def oklab2linear__vec3(lab):
         lab = rt.copy(lab, "float")
@@ -251,9 +251,9 @@ def run_pixel(ctx, out):
                 result[:] = mixInColorSpace__vec3_vec3_float_int(result, wrapColor, wrapMask, mode)
         return colorSpaceToRgb__vec3_int(result, mode)
     def main__void():
-        globalCoord = rt.binary("+", rt.swizzle(ctx.frag_coord, "xy"), _u_tileOffset, 2, "float")
+        globalCoord = rt.construct(2, rt.binary("+", rt.swizzle(ctx.frag_coord, "xy"), _u_tileOffset, 2, 'float'))
         texSize = rt.construct(2, rt.texture_size(_u_inputTex))
-        uv = rt.binary("/", rt.swizzle(ctx.frag_coord, "xy"), texSize, 2, "float")
+        uv = rt.construct(2, rt.binary("/", rt.swizzle(ctx.frag_coord, "xy"), texSize, 2, 'float'))
         inputColor = rt.texture(_u_inputTex, uv)
         lum = rt.dot(rt.swizzle(inputColor, "rgb"), rt.construct(3, rt.f(0.299), rt.f(0.587), rt.f(0.114)))
         t = rt.binary("+", rt.binary("*", rt.binary("*", lum, rt.binary("-", rt.f(1.0), rt.f(0.0001), 1, "float"), 1, "float"), _u_repeat, 1, "float"), _u_offset, 1, "float")

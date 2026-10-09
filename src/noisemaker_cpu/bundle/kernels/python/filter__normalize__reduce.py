@@ -10,7 +10,7 @@ def run_pixel(ctx, out):
     _u_inputTex = T["inputTex"]
     g.fragColor = rt.construct(4, 0.0)
     def main__void():
-        globalCoord = rt.binary("+", rt.swizzle(ctx.frag_coord, "xy"), _u_tileOffset, 2, "float")
+        globalCoord = rt.construct(2, rt.binary("+", rt.swizzle(ctx.frag_coord, "xy"), _u_tileOffset, 2, 'float'))
         outCoord = rt.construct(2, rt.swizzle(ctx.frag_coord, "xy"), base="int")
         inSize = rt.texture_size(_u_inputTex)
         baseCoord = rt.binary("*", outCoord, rt.i(16), 2, "int")

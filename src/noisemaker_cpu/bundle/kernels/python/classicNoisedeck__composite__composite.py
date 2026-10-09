@@ -44,7 +44,7 @@ def run_pixel(ctx, out):
                                 (rgb.__setitem__(0, c), rgb.__setitem__(1, rt.f(0.0)), rgb.__setitem__(2, x), rgb)[-1]
                             else:
                                 (rgb.__setitem__(0, rt.f(0.0)), rgb.__setitem__(1, rt.f(0.0)), rgb.__setitem__(2, rt.f(0.0)), rgb)[-1]
-        return rt.binary("+", rgb, m, 3, "float")
+        return rt.construct(3, rt.binary("+", rgb, rt.construct_raw(3, m, m, m), 3, 'float'))
     def rgb2hsv__vec3(rgb):
         rgb = rt.copy(rgb, "float")
         r = rt.swizzle(rgb, "r")
@@ -104,7 +104,7 @@ def run_pixel(ctx, out):
                         color[:] = rt.component_wise("mix", color1, color2, rt.binary("*", _u_mixAmt, rt.f(0.01), 1, "float"), width=3)
                     else:
                         if rt.binary("==", _u_blendMode, rt.i(4)):
-                            c = rt.copy(rt.binary("-", rt.f(1.0), rt.component_wise("step", cut, color2, width=3), 3, "float"), 'float')
+                            c = rt.construct(3, rt.binary("-", rt.f(1.0), rt.component_wise("step", cut, color2, width=3), 3, 'float'))
                             color2[:] = rt.component_wise("mix", color1, rt.construct(3, rt.f(0.0)), c, width=3)
                             color[:] = rt.component_wise("mix", color1, color2, rt.binary("*", _u_mixAmt, rt.f(0.01), 1, "float"), width=3)
                         else:
@@ -129,7 +129,7 @@ def run_pixel(ctx, out):
                                             color[:] = rt.component_wise("mix", color2, color1, rt.binary("*", _u_mixAmt, rt.f(0.01), 1, "float"), width=3)
                                         else:
                                             if rt.binary("==", _u_blendMode, rt.i(9)):
-                                                c = rt.copy(rt.binary("-", rt.f(1.0), rt.component_wise("step", cut, color1, width=3), 3, "float"), 'float')
+                                                c = rt.construct(3, rt.binary("-", rt.f(1.0), rt.component_wise("step", cut, color1, width=3), 3, 'float'))
                                                 color1[:] = rt.component_wise("mix", color2, rt.construct(3, rt.f(0.0)), c, width=3)
                                                 color[:] = rt.component_wise("mix", color2, color1, rt.binary("*", _u_mixAmt, rt.f(0.01), 1, "float"), width=3)
                                             else:
@@ -163,11 +163,11 @@ def run_pixel(ctx, out):
                                                                         color[:] = rt.component_wise("mix", rt.swizzle(c1, "brg"), rt.swizzle(c2, "gbr"), rt.binary("*", _u_mixAmt, rt.f(0.01), 1, "float"), width=3)
         return color
     def main__void():
-        globalCoord = rt.binary("+", rt.swizzle(ctx.frag_coord, "xy"), _u_tileOffset, 2, "float")
+        globalCoord = rt.construct(2, rt.binary("+", rt.swizzle(ctx.frag_coord, "xy"), _u_tileOffset, 2, 'float'))
         color = rt.construct(4, rt.f(0.0), rt.f(0.0), rt.f(1.0), rt.f(1.0))
-        st = rt.binary("/", globalCoord, _u_fullResolution, 2, "float")
-        color1 = rt.texture(_u_inputTex, rt.binary("/", rt.swizzle(ctx.frag_coord, "xy"), rt.construct(2, rt.texture_size(_u_inputTex)), 2, "float"))
-        color2 = rt.texture(_u_tex, rt.binary("/", rt.swizzle(ctx.frag_coord, "xy"), rt.construct(2, rt.texture_size(_u_tex)), 2, "float"))
+        st = rt.construct(2, rt.binary("/", globalCoord, _u_fullResolution, 2, 'float'))
+        color1 = rt.texture(_u_inputTex, rt.construct(2, rt.binary("/", rt.swizzle(ctx.frag_coord, "xy"), rt.construct(2, rt.texture_size(_u_inputTex)), 2, 'float')))
+        color2 = rt.texture(_u_tex, rt.construct(2, rt.binary("/", rt.swizzle(ctx.frag_coord, "xy"), rt.construct(2, rt.texture_size(_u_tex)), 2, 'float')))
         color = rt.assign_swizzle(color, "rgb", blend__vec3_vec3(rt.swizzle(color1, "rgb"), rt.swizzle(color2, "rgb")))
         color = rt.assign_swizzle(color, "a", rt.component_wise("mix", rt.swizzle(color1, "a"), rt.swizzle(color2, "a"), rt.binary("*", _u_mixAmt, rt.f(0.01), 1, "float"), width=1))
         g.fragColor[:] = color

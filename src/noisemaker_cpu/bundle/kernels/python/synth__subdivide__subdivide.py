@@ -35,7 +35,7 @@ def run_pixel(ctx, out):
         return v
     def prng__vec3(p):
         p = rt.copy(p, "float")
-        return rt.binary("/", rt.construct(3, pcg__uvec3(rt.construct(3, rt.construct(1, rt.swizzle(p, "x"), base="uint"), rt.construct(1, rt.swizzle(p, "y"), base="uint"), rt.construct(1, rt.swizzle(p, "z"), base="uint"), base="uint"))), rt.construct(1, rt.i(4294967295)), 3, "float")
+        return rt.construct(3, rt.binary("/", rt.construct(3, pcg__uvec3(rt.construct(3, rt.construct(1, rt.swizzle(p, "x"), base="uint"), rt.construct(1, rt.swizzle(p, "y"), base="uint"), rt.construct(1, rt.swizzle(p, "z"), base="uint"), base="uint"))), rt.construct(1, rt.i(4294967295)), 3, 'float'))
     def cellRand__vec2_float_float_float(cellMin, level, channel, animSeed):
         cellMin = rt.copy(cellMin, "float")
         cx = rt.component_wise("floor", rt.binary("*", rt.swizzle(cellMin, "x"), rt.f(1000.0), 1, "float"), width=1)
@@ -64,7 +64,7 @@ def run_pixel(ctx, out):
                     (origin.__setitem__(0, rt.unary("-", halfW)), origin.__setitem__(1, halfH), origin)[-1]
                 else:
                     (origin.__setitem__(0, halfW), origin.__setitem__(1, halfH), origin)[-1]
-        dist = rt.length(rt.binary("-", centered, origin, 2, "float"))
+        dist = rt.length(rt.binary("-", centered, origin, 2, 'float'))
         return rt.binary("*", rt.component_wise("step", dist, rt.f(0.7), width=1), rt.binary("-", rt.f(1.0), rt.component_wise("step", dist, rt.f(0.5), width=1), 1, "float"), 1, "float")
     def drawShape__int_vec2_float_float_float(shapeType, centered, halfW, halfH, h):
         centered = rt.copy(centered, "float")
@@ -91,8 +91,8 @@ def run_pixel(ctx, out):
             return rt.f(0.75)
         return rt.f(1.0)
     def main__void():
-        globalCoord = rt.binary("+", rt.swizzle(ctx.frag_coord, "xy"), _u_tileOffset, 2, "float")
-        st = rt.binary("/", globalCoord, _u_fullResolution, 2, "float")
+        globalCoord = rt.construct(2, rt.binary("+", rt.swizzle(ctx.frag_coord, "xy"), _u_tileOffset, 2, 'float'))
+        st = rt.construct(2, rt.binary("/", globalCoord, _u_fullResolution, 2, 'float'))
         maxDepth = rt.construct(1, _u_depth, base="int")
         dens = rt.binary("/", _u_density, rt.f(100.0), 1, "float")
         fillType = rt.construct(1, _u_fill, base="int")
@@ -162,7 +162,7 @@ def run_pixel(ctx, out):
                 else:
                     mid = rt.construct(2, 0.0)
                     if (bool(canSplitH) and bool(canSplitV)):
-                        mid = rt.binary("*", rt.binary("+", cellMin, cellMax, 2, "float"), rt.f(0.5), 2, "float")
+                        mid = rt.construct(2, rt.binary("*", rt.binary("+", cellMin, cellMax, 2, 'float'), rt.f(0.5), 2, 'float'))
                         if (bool(rt.binary("<", rt.component_wise("abs", rt.binary("-", rt.swizzle(st, "x"), rt.swizzle(mid, "x"), 1, "float"), width=1), outlineWidthX)) or bool(rt.binary("<", rt.component_wise("abs", rt.binary("-", rt.swizzle(st, "y"), rt.swizzle(mid, "y"), 1, "float"), width=1), outlineWidthY))):
                             isOutline = True
                         if rt.binary("<", rt.swizzle(st, "x"), rt.swizzle(mid, "x")):
@@ -173,12 +173,12 @@ def run_pixel(ctx, out):
                             cellMax = rt.assign_swizzle(cellMax, "y", rt.swizzle(mid, "y"))
                         else:
                             cellMin = rt.assign_swizzle(cellMin, "y", rt.swizzle(mid, "y"))
-        cellSize = rt.binary("-", cellMax, cellMin, 2, "float")
-        cellUv = rt.binary("/", rt.binary("-", st, cellMin, 2, "float"), cellSize, 2, "float")
+        cellSize = rt.construct(2, rt.binary("-", cellMax, cellMin, 2, 'float'))
+        cellUv = rt.construct(2, rt.binary("/", rt.binary("-", st, cellMin, 2, 'float'), cellSize, 2, 'float'))
         cellPixelW = rt.binary("*", rt.swizzle(cellSize, "x"), rt.swizzle(_u_fullResolution, "x"), 1, "float")
         cellPixelH = rt.binary("*", rt.swizzle(cellSize, "y"), rt.swizzle(_u_fullResolution, "y"), 1, "float")
         minDim = rt.component_wise("min", cellPixelW, cellPixelH, width=1)
-        centered = rt.binary("-", cellUv, rt.f(0.5), 2, "float")
+        centered = rt.construct(2, rt.binary("-", cellUv, rt.f(0.5), 2, 'float'))
         centered = rt.assign_swizzle(centered, "x", rt.binary("*", rt.swizzle(centered, "x"), rt.binary("/", cellPixelW, minDim, 1, "float"), 1, "float"))
         centered = rt.assign_swizzle(centered, "y", rt.binary("*", rt.swizzle(centered, "y"), rt.binary("/", cellPixelH, minDim, 1, "float"), 1, "float"))
         halfW = rt.binary("*", rt.binary("/", cellPixelW, minDim, 1, "float"), rt.f(0.5), 1, "float")
@@ -227,12 +227,12 @@ def run_pixel(ctx, out):
                 texUv = rt.assign_swizzle(texUv, "x", rt.binary("+", rt.f(0.5), rt.binary("*", rt.binary("-", rt.swizzle(texUv, "x"), rt.f(0.5), 1, "float"), ratio, 1, "float"), 1, "float"))
             else:
                 texUv = rt.assign_swizzle(texUv, "y", rt.binary("+", rt.f(0.5), rt.binary("/", rt.binary("-", rt.swizzle(texUv, "y"), rt.f(0.5), 1, "float"), ratio, 1, "float"), 1, "float"))
-            texUv[:] = rt.binary("*", texUv, texScale, 2, "float")
+            texUv[:] = rt.binary("*", texUv, texScale, 2, 'float')
             texUv = rt.assign_swizzle(texUv, "x", rt.binary("+", rt.swizzle(texUv, "x"), rt.binary("*", rt.component_wise("mix", cellRand__vec2_float_float_float(cellMin, rt.f(0.0), rt.f(6.0), curVisualTime), cellRand__vec2_float_float_float(cellMin, rt.f(0.0), rt.f(6.0), nextVisualTime), visualBlend, width=1), rt.binary("-", rt.f(1.0), texScale, 1, "float"), 1, "float"), 1, "float"))
             texUv = rt.assign_swizzle(texUv, "y", rt.binary("+", rt.swizzle(texUv, "y"), rt.binary("*", rt.component_wise("mix", cellRand__vec2_float_float_float(cellMin, rt.f(0.0), rt.f(7.0), curVisualTime), cellRand__vec2_float_float_float(cellMin, rt.f(0.0), rt.f(7.0), nextVisualTime), visualBlend, width=1), rt.binary("-", rt.f(1.0), texScale, 1, "float"), 1, "float"), 1, "float"))
             wrapMode = rt.construct(1, _u_wrap, base="int")
             if rt.binary("==", wrapMode, rt.i(0)):
-                texUv[:] = rt.component_wise("abs", rt.copy(rt.binary("-", rt.component_wise("mod", rt.binary("+", texUv, rt.f(1.0), 2, "float"), rt.f(2.0), width=2), rt.f(1.0), 2, "float"), 'float'), width=2)
+                texUv[:] = rt.component_wise("abs", rt.construct(2, rt.binary("-", rt.component_wise("mod", rt.binary("+", texUv, rt.f(1.0), 2, 'float'), rt.f(2.0), width=2), rt.f(1.0), 2, 'float')), width=2)
             else:
                 if rt.binary("==", wrapMode, rt.i(1)):
                     texUv[:] = rt.component_wise("mod", texUv, rt.f(1.0), width=2)

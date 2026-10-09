@@ -18,8 +18,8 @@ def run_pixel(ctx, out):
     _u_noteGridTex = T["noteGridTex"]
     g.fragColor = rt.construct(4, 0.0)
     def main__void():
-        globalCoord = rt.binary("+", rt.swizzle(ctx.frag_coord, "xy"), _u_tileOffset, 2, "float")
-        uv = rt.binary("/", globalCoord, _u_fullResolution, 2, "float")
+        globalCoord = rt.construct(2, rt.binary("+", rt.swizzle(ctx.frag_coord, "xy"), _u_tileOffset, 2, 'float'))
+        uv = rt.construct(2, rt.binary("/", globalCoord, _u_fullResolution, 2, 'float'))
         scrollAmount = rt.binary("*", rt.binary("*", _u_speed, _u_deltaTime, 1, "float"), rt.f(0.5), 1, "float")
         scrollUv = rt.construct(2, rt.binary("-", rt.swizzle(uv, "x"), scrollAmount, 1, "float"), rt.swizzle(uv, "y"))
         prev = rt.construct(4, rt.f(0.0))
@@ -61,7 +61,7 @@ def run_pixel(ctx, out):
             laneSep = rt.f(0.2)
         prevBright = rt.component_wise("max", rt.swizzle(prev, "r"), rt.component_wise("max", rt.swizzle(prev, "g"), rt.swizzle(prev, "b"), width=1), width=1)
         brightness = rt.component_wise("max", prevBright, rt.component_wise("max", noteVal, laneSep, width=1), width=1)
-        col = rt.binary("*", _u_lineColor, brightness, 3, "float")
+        col = rt.construct(3, rt.binary("*", _u_lineColor, brightness, 3, 'float'))
         g.fragColor[:] = rt.construct(4, col, rt.f(1.0))
     main__void()
     _c = g.fragColor

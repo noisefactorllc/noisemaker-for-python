@@ -40,10 +40,10 @@ def run_pixel(ctx, out):
                 _for1_first = False
                 if not (rt.binary("<", x, rt.swizzle(end, "x"))):
                     break
-                uv = rt.binary("/", rt.binary("+", rt.construct(2, x, y), rt.f(0.5), 2, "float"), rt.construct(2, dims), 2, "float")
-                weight = rt.component_wise("max", rt.construct(2, rt.f(0.0)), rt.copy(rt.binary("-", rt.f(1.0), rt.component_wise("abs", rt.binary("-", rt.binary("*", uv, rt.f(4.0), 2, "float"), rt.construct(2, node), 2, "float"), width=2), 2, "float"), 'float'), width=2)
-                total[:] = rt.binary("+", total, rt.copy(rt.binary("*", rt.texel_fetch(_u_spriteTex, rt.construct(2, x, y, base="int"), rt.i(0)), rt.binary("*", rt.swizzle(weight, "x"), rt.swizzle(weight, "y"), 1, "float"), 4, "float"), 'float'), 4, "float")
-        g.fragColor[:] = rt.binary("/", total, rt.construct(1, rt.binary("*", rt.swizzle(dims, "x"), rt.swizzle(dims, "y"), 1, "int")), 4, "float")
+                uv = rt.construct(2, rt.binary("/", rt.binary("+", rt.construct_raw(2, rt.construct(1, x), rt.construct(1, y)), rt.f(0.5), 2, 'float'), rt.construct_raw(2, rt.construct(2, dims)), 2, 'float'))
+                weight = rt.component_wise("max", rt.construct(2, rt.f(0.0)), rt.construct(2, rt.binary("-", rt.f(1.0), rt.component_wise("abs", rt.binary("-", rt.binary("*", uv, rt.f(4.0), 2, 'float'), rt.construct_raw(2, rt.construct(2, node)), 2, 'float'), width=2), 2, 'float')), width=2)
+                total[:] = rt.binary("+", total, rt.construct(4, rt.binary("*", rt.texel_fetch(_u_spriteTex, rt.construct(2, x, y, base="int"), rt.i(0)), rt.binary("*", rt.swizzle(weight, "x"), rt.swizzle(weight, "y"), 1, "float"), 4, 'float')), 4, "float")
+        g.fragColor[:] = rt.binary("/", total, rt.construct(1, rt.binary("*", rt.swizzle(dims, "x"), rt.swizzle(dims, "y"), 1, "int")), 4, 'float')
     main__void()
     _c = g.fragColor
     out[0] = rt.f32(_c[0]); out[1] = rt.f32(_c[1]); out[2] = rt.f32(_c[2]); out[3] = rt.f32(_c[3])

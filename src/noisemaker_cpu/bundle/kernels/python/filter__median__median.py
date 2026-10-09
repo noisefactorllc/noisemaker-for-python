@@ -105,7 +105,7 @@ def run_pixel(ctx, out):
             if rt.binary("<", medianIndex, scanLeft):
                 right = scanRight
         medianRgb = unpackRecordRgb__uvec2_uint(majorRecords[int(medianIndex)], blueRecords[int(medianIndex)])
-        difference = rt.component_wise("abs", rt.binary("-", originalRgb, medianRgb, 3, "float"), width=3)
+        difference = rt.component_wise("abs", rt.binary("-", originalRgb, medianRgb, 3, 'float'), width=3)
         maxDifference = rt.component_wise("max", rt.component_wise("max", rt.swizzle(difference, "r"), rt.swizzle(difference, "g"), width=1), rt.swizzle(difference, "b"), width=1)
         replaceCenter = (bool(rt.binary("<=", _u_threshold, rt.f(0.0))) or bool(rt.binary(">=", maxDifference, rt.binary("/", _u_threshold, rt.f(100.0), 1, "float"))))
         g.fragColor[:] = rt.construct(4, (medianRgb if replaceCenter else originalRgb), centerAlpha)

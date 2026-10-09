@@ -19,9 +19,9 @@ def run_pixel(ctx, out):
     g.fragColor = rt.construct(4, 0.0)
     def hash3__vec3(p):
         p = rt.copy(p, "float")
-        p[:] = rt.binary("+", p, rt.binary("*", rt.construct(1, _u_seed), rt.f(0.1), 1, "float"), 3, "float")
-        p[:] = rt.component_wise("fract", rt.binary("*", p, rt.array([rt.f(0.1031), rt.f(0.103), rt.f(0.0973)]), 3, "float"), width=3)
-        p[:] = rt.binary("+", p, rt.dot(p, rt.binary("+", rt.swizzle(p, "yxz"), rt.f(33.33), 3, "float")), 3, "float")
+        p[:] = rt.binary("+", p, rt.binary("*", rt.construct(1, _u_seed), rt.f(0.1), 1, "float"), 3, 'float')
+        p[:] = rt.component_wise("fract", rt.binary("*", p, rt.construct_raw(3, rt.f(0.1031), rt.f(0.103), rt.f(0.0973)), 3, 'float'), width=3)
+        p[:] = rt.binary("+", p, rt.dot(p, rt.binary("+", rt.swizzle(p, "yxz"), rt.f(33.33), 3, 'float')), 3, "float")
         return rt.component_wise("fract", rt.binary("*", rt.binary("+", rt.swizzle(p, "x"), rt.swizzle(p, "y"), 1, "float"), rt.swizzle(p, "z"), 1, "float"), width=1)
     def atlasTexel__ivec3_int(p, volSize):
         p = rt.copy(p, "int")
@@ -172,7 +172,7 @@ def run_pixel(ctx, out):
                 h = hash3__vec3(p)
                 threshold = rt.binary("*", _u_density, rt.f(0.01), 1, "float")
                 center = rt.construct(3, rt.binary("*", volSizeF, rt.f(0.5), 1, "float"))
-                dist = rt.length(rt.binary("-", p, center, 3, "float"))
+                dist = rt.length(rt.binary("-", p, center, 3, 'float'))
                 radius = rt.binary("*", volSizeF, rt.f(0.15), 1, "float")
                 if (bool(rt.binary("<", h, threshold)) or bool(rt.binary("<", dist, radius))):
                     alive = rt.f(1.0)

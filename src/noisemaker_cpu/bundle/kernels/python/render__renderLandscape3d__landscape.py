@@ -40,11 +40,11 @@ def run_pixel(ctx, out):
         light = rt.construct(3, rt.f(0.0), rt.f(1.0), rt.f(0.0))
         if rt.binary(">", rt.dot(_u_lightDirection, _u_lightDirection), rt.f(1e-06)):
             light[:] = rt.normalize(_u_lightDirection)
-        halfVector = rt.binary("+", light, viewDirection, 3, "float")
+        halfVector = rt.construct(3, rt.binary("+", light, viewDirection, 3, 'float'))
         specular = rt.f(0.0)
         if rt.binary(">", rt.dot(halfVector, halfVector), rt.f(1e-06)):
             specular = rt.binary("*", rt.component_wise("pow", rt.component_wise("max", rt.dot(normal, rt.normalize(halfVector)), rt.f(0.0), width=1), rt.f(32.0), width=1), _u_specularIntensity, 1, "float")
-        return rt.binary("+", rt.binary("*", color, rt.binary("+", _u_ambient, rt.binary("*", rt.component_wise("max", rt.dot(normal, light), rt.f(0.0), width=1), _u_diffuseIntensity, 1, "float"), 1, "float"), 3, "float"), specular, 3, "float")
+        return rt.construct(3, rt.binary("+", rt.binary("*", color, rt.binary("+", _u_ambient, rt.binary("*", rt.component_wise("max", rt.dot(normal, light), rt.f(0.0), width=1), _u_diffuseIntensity, 1, "float"), 1, "float"), 3, 'float'), specular, 3, 'float'))
     def sampleAtlasTexel__sampler2D_ivec3_bool(atlas, p, material):
         p = rt.copy(p, "int")
         coord = rt.construct(2, rt.swizzle(p, "x"), rt.binary("+", rt.swizzle(p, "y"), rt.binary("*", rt.swizzle(p, "z"), _u_volumeSize, 1, "int"), 1, "int"), base="int")
@@ -52,15 +52,15 @@ def run_pixel(ctx, out):
         present = rt.f(0.0)
         if material:
             present = (rt.f(1.0) if rt.binary(">", rt.swizzle(rt.texel_fetch(_u_analyticalGeo, coord, rt.i(0)), "a"), rt.f(0.0)) else rt.f(0.0))
-            return rt.construct(4, rt.binary("*", rt.swizzle(value, "rgb"), present, 3, "float"), present)
+            return rt.construct(4, rt.binary("*", rt.swizzle(value, "rgb"), present, 3, 'float'), present)
         return value
     def interpolateAtlas__vec4_vec4_float(a, b, weight):
         a = rt.copy(a, "float")
         b = rt.copy(b, "float")
-        return rt.binary("+", a, rt.binary("*", rt.binary("-", b, a, 4, "float"), weight, 4, "float"), 4, "float")
+        return rt.construct(4, rt.binary("+", a, rt.binary("*", rt.binary("-", b, a, 4, 'float'), weight, 4, 'float'), 4, 'float'))
     def atlasCoords__vec3(p):
         p = rt.copy(p, "float")
-        texel = rt.component_wise("clamp", rt.binary("-", p, rt.f(0.5), 3, "float"), rt.construct(3, rt.f(0.0)), rt.construct(3, rt.construct(1, rt.binary("-", _u_volumeSize, rt.i(1), 1, "int"))), width=3)
+        texel = rt.component_wise("clamp", rt.binary("-", p, rt.f(0.5), 3, 'float'), rt.construct(3, rt.f(0.0)), rt.construct(3, rt.construct(1, rt.binary("-", _u_volumeSize, rt.i(1), 1, "int"))), width=3)
         return [rt.construct(3, rt.component_wise("floor", texel, width=3), base="int"), rt.component_wise("fract", texel, width=3)]
     def sampleAtlasCoords__sampler2D_struct1_bool(atlas, coords, material):
         lo = coords[0]
@@ -83,7 +83,7 @@ def run_pixel(ctx, out):
     def traceIsosurface__vec3_vec3_float_float(origin, direction, start, leave):
         origin = rt.copy(origin, "float")
         direction = rt.copy(direction, "float")
-        position = rt.binary("+", origin, rt.binary("*", direction, start, 3, "float"), 3, "float")
+        position = rt.construct(3, rt.binary("+", origin, rt.binary("*", direction, start, 3, 'float'), 3, 'float'))
         coords = atlasCoords__vec3(position)
         if isSolid__struct1(coords):
             return [start, position, coords]
@@ -98,7 +98,7 @@ def run_pixel(ctx, out):
             if not (rt.binary("<", step, rt.binary("*", _u_volumeSize, rt.i(4), 1, "int"))):
                 break
             distance = rt.component_wise("min", rt.binary("+", previous, stepSize, 1, "float"), leave, width=1)
-            position[:] = rt.binary("+", origin, rt.binary("*", direction, distance, 3, "float"), 3, "float")
+            position[:] = rt.binary("+", origin, rt.binary("*", direction, distance, 3, 'float'), 3, 'float')
             coords = atlasCoords__vec3(position)
             lo = rt.f(0.0)
             hi = rt.f(0.0)
@@ -114,7 +114,7 @@ def run_pixel(ctx, out):
                     if not (rt.binary("<", refine, rt.i(8))):
                         break
                     mid = rt.binary("*", rt.binary("+", lo, hi, 1, "float"), rt.f(0.5), 1, "float")
-                    candidate = rt.binary("+", origin, rt.binary("*", direction, mid, 3, "float"), 3, "float")
+                    candidate = rt.construct(3, rt.binary("+", origin, rt.binary("*", direction, mid, 3, 'float'), 3, 'float'))
                     candidateCoords = atlasCoords__vec3(candidate)
                     if isSolid__struct1(candidateCoords):
                         hi = mid
@@ -130,7 +130,7 @@ def run_pixel(ctx, out):
     def isosurfaceNormal__vec3_vec3(p, fallback):
         p = rt.copy(p, "float")
         fallback = rt.copy(fallback, "float")
-        gradient = rt.construct(3, rt.binary("-", rt.swizzle(sampleAtlas__sampler2D_vec3_bool(_u_analyticalGeo, rt.binary("-", p, rt.array([rt.f(0.5), rt.f(0.0), rt.f(0.0)]), 3, "float"), False), "a"), rt.swizzle(sampleAtlas__sampler2D_vec3_bool(_u_analyticalGeo, rt.binary("+", p, rt.array([rt.f(0.5), rt.f(0.0), rt.f(0.0)]), 3, "float"), False), "a"), 1, "float"), rt.binary("-", rt.swizzle(sampleAtlas__sampler2D_vec3_bool(_u_analyticalGeo, rt.binary("-", p, rt.array([rt.f(0.0), rt.f(0.5), rt.f(0.0)]), 3, "float"), False), "a"), rt.swizzle(sampleAtlas__sampler2D_vec3_bool(_u_analyticalGeo, rt.binary("+", p, rt.array([rt.f(0.0), rt.f(0.5), rt.f(0.0)]), 3, "float"), False), "a"), 1, "float"), rt.binary("-", rt.swizzle(sampleAtlas__sampler2D_vec3_bool(_u_analyticalGeo, rt.binary("-", p, rt.array([rt.f(0.0), rt.f(0.0), rt.f(0.5)]), 3, "float"), False), "a"), rt.swizzle(sampleAtlas__sampler2D_vec3_bool(_u_analyticalGeo, rt.binary("+", p, rt.array([rt.f(0.0), rt.f(0.0), rt.f(0.5)]), 3, "float"), False), "a"), 1, "float"))
+        gradient = rt.construct(3, rt.binary("-", rt.swizzle(sampleAtlas__sampler2D_vec3_bool(_u_analyticalGeo, rt.construct(3, rt.binary("-", p, rt.construct_raw(3, rt.f(0.5), rt.f(0.0), rt.f(0.0)), 3, 'float')), False), "a"), rt.swizzle(sampleAtlas__sampler2D_vec3_bool(_u_analyticalGeo, rt.construct(3, rt.binary("+", p, rt.construct_raw(3, rt.f(0.5), rt.f(0.0), rt.f(0.0)), 3, 'float')), False), "a"), 1, "float"), rt.binary("-", rt.swizzle(sampleAtlas__sampler2D_vec3_bool(_u_analyticalGeo, rt.construct(3, rt.binary("-", p, rt.construct_raw(3, rt.f(0.0), rt.f(0.5), rt.f(0.0)), 3, 'float')), False), "a"), rt.swizzle(sampleAtlas__sampler2D_vec3_bool(_u_analyticalGeo, rt.construct(3, rt.binary("+", p, rt.construct_raw(3, rt.f(0.0), rt.f(0.5), rt.f(0.0)), 3, 'float')), False), "a"), 1, "float"), rt.binary("-", rt.swizzle(sampleAtlas__sampler2D_vec3_bool(_u_analyticalGeo, rt.construct(3, rt.binary("-", p, rt.construct_raw(3, rt.f(0.0), rt.f(0.0), rt.f(0.5)), 3, 'float')), False), "a"), rt.swizzle(sampleAtlas__sampler2D_vec3_bool(_u_analyticalGeo, rt.construct(3, rt.binary("+", p, rt.construct_raw(3, rt.f(0.0), rt.f(0.0), rt.f(0.5)), 3, 'float')), False), "a"), 1, "float"))
         if rt.binary(">", rt.dot(gradient, gradient), rt.f(1e-12)):
             return rt.normalize(gradient)
         return fallback
@@ -152,10 +152,10 @@ def run_pixel(ctx, out):
         uv = rt.copy(uv, "float")
         size = rt.construct(1, _u_volumeSize)
         focalLength = rt.binary("/", rt.f(1.0), rt.component_wise("tan", rt.binary("*", rt.component_wise("clamp", _u_fieldOfView, rt.f(10.0), rt.f(150.0), width=1), rt.f(0.00872664626), 1, "float"), width=1), 1, "float")
-        origin = rt.copy(rt.binary("*", rt.copy(rt.binary("+", rt.copy(rt.binary("/", inverseRotation__vec3(rt.construct(3, rt.unary("-", _u_posX), rt.unary("-", _u_posY), rt.binary("-", rt.f(80.0), _u_posZ, 1, "float"))), rt.f(80.0), 3, "float"), 'float'), rt.f(0.5), 3, "float"), 'float'), size, 3, "float"), 'float')
-        framedUv = rt.binary("/", rt.binary("+", uv, rt.array([_u_panX, _u_panY]), 2, "float"), rt.component_wise("max", _u_zoom, rt.f(0.001), width=1), 2, "float")
-        cameraRay = rt.construct(3, rt.binary("/", rt.binary("*", framedUv, rt.f(2.0), 2, "float"), rt.binary("*", focalLength, rt.component_wise("max", _u_viewScale, rt.f(0.001), width=1), 1, "float"), 2, "float"), rt.unary("-", rt.f(1.0)))
-        direction = rt.copy(rt.binary("*", inverseRotation__vec3(cameraRay), rt.binary("/", size, rt.f(80.0), 1, "float"), 3, "float"), 'float')
+        origin = rt.construct(3, rt.binary("*", rt.construct(3, rt.binary("+", rt.construct(3, rt.binary("/", inverseRotation__vec3(rt.construct(3, rt.unary("-", _u_posX), rt.unary("-", _u_posY), rt.binary("-", rt.f(80.0), _u_posZ, 1, "float"))), rt.f(80.0), 3, 'float')), rt.f(0.5), 3, 'float')), size, 3, 'float'))
+        framedUv = rt.construct(2, rt.binary("/", rt.binary("+", uv, rt.construct_raw(2, _u_panX, _u_panY), 2, 'float'), rt.component_wise("max", _u_zoom, rt.f(0.001), width=1), 2, 'float'))
+        cameraRay = rt.construct(3, rt.binary("/", rt.binary("*", framedUv, rt.f(2.0), 2, 'float'), rt.binary("*", focalLength, rt.component_wise("max", _u_viewScale, rt.f(0.001), width=1), 1, "float"), 2, 'float'), rt.unary("-", rt.f(1.0)))
+        direction = rt.construct(3, rt.binary("*", inverseRotation__vec3(cameraRay), rt.binary("/", size, rt.f(80.0), 1, "float"), 3, 'float'))
         nearT = rt.construct(3, rt.unary("-", rt.f(1e+30)))
         farT = rt.construct(3, rt.f(1e+30))
         delta = rt.construct(3, rt.f(1e+30))
@@ -176,16 +176,16 @@ def run_pixel(ctx, out):
             else:
                 a = rt.binary("/", rt.unary("-", origin[int(axis)]), direction[int(axis)], 1, "float")
                 b = rt.binary("/", rt.binary("-", size, origin[int(axis)], 1, "float"), direction[int(axis)], 1, "float")
-                nearT[int(axis)] = rt.component_wise("min", a, b, width=1)
-                farT[int(axis)] = rt.component_wise("max", a, b, width=1)
-                delta[int(axis)] = rt.binary("/", rt.f(1.0), rt.component_wise("abs", direction[int(axis)], width=1), 1, "float")
+                nearT[int(axis)] = rt.f32(rt.component_wise("min", a, b, width=1))
+                farT[int(axis)] = rt.f32(rt.component_wise("max", a, b, width=1))
+                delta[int(axis)] = rt.f32(rt.binary("/", rt.f(1.0), rt.component_wise("abs", direction[int(axis)], width=1), 1, "float"))
                 stepDir[int(axis)] = (rt.i(1) if rt.binary(">", direction[int(axis)], rt.f(0.0)) else rt.unary("-", rt.i(1)))
         enter = rt.component_wise("max", rt.component_wise("max", rt.swizzle(nearT, "x"), rt.swizzle(nearT, "y"), width=1), rt.swizzle(nearT, "z"), width=1)
         leave = rt.component_wise("min", rt.component_wise("min", rt.swizzle(farT, "x"), rt.swizzle(farT, "y"), width=1), rt.swizzle(farT, "z"), width=1)
         distance = rt.component_wise("max", enter, rt.f(0.1), width=1)
         if rt.binary(">=", distance, leave):
             return
-        cell = rt.component_wise("clamp", rt.construct(3, rt.component_wise("floor", rt.binary("+", rt.binary("+", origin, rt.binary("*", direction, distance, 3, "float"), 3, "float"), rt.binary("*", rt.construct(3, stepDir), rt.f(0.0001), 3, "float"), 3, "float"), width=3), base="int"), rt.construct(3, rt.i(0), base="int"), rt.construct(3, rt.binary("-", _u_volumeSize, rt.i(1), 1, "int"), base="int"), width=3)
+        cell = rt.component_wise("clamp", rt.construct(3, rt.component_wise("floor", rt.binary("+", rt.binary("+", origin, rt.binary("*", direction, distance, 3, 'float'), 3, 'float'), rt.binary("*", rt.construct_raw(3, rt.construct(3, stepDir)), rt.f(0.0001), 3, 'float'), 3, 'float'), width=3), base="int"), rt.construct(3, rt.i(0), base="int"), rt.construct(3, rt.binary("-", _u_volumeSize, rt.i(1), 1, "int"), base="int"), width=3)
         nextT = rt.construct(3, rt.f(1e+30))
         axis = rt.i(0)
         _for3_first = True
@@ -198,7 +198,7 @@ def run_pixel(ctx, out):
             boundary = rt.f(0.0)
             if rt.binary("!=", stepDir[int(axis)], rt.i(0)):
                 boundary = rt.binary("+", rt.construct(1, cell[int(axis)]), (rt.f(1.0) if rt.binary(">", stepDir[int(axis)], rt.i(0)) else rt.f(0.0)), 1, "float")
-                nextT[int(axis)] = rt.binary("/", rt.binary("-", boundary, origin[int(axis)], 1, "float"), direction[int(axis)], 1, "float")
+                nextT[int(axis)] = rt.f32(rt.binary("/", rt.binary("-", boundary, origin[int(axis)], 1, "float"), direction[int(axis)], 1, "float"))
         viewDirection = rt.normalize(rt.unary("-", cameraRay))
         normal = rt.normalize(rt.unary("-", direction))
         if rt.binary(">=", enter, rt.f(0.1)):
@@ -222,7 +222,7 @@ def run_pixel(ctx, out):
                 normal[:] = isosurfaceNormal__vec3_vec3(p, normal)
             worldNormal = forwardRotation__vec3(normal)
             g.fragColor[:] = rt.construct(4, lighting__vec3_vec3_vec3(rt.swizzle(sampleAtlasCoords__sampler2D_struct1_bool(_u_volumeCache, hit[2], True), "rgb"), worldNormal, viewDirection), rt.f(1.0))
-            g.geoOut[:] = rt.construct(4, rt.binary("+", rt.binary("*", worldNormal, rt.f(0.5), 3, "float"), rt.f(0.5), 3, "float"), rt.component_wise("clamp", rt.binary("/", hit[0], rt.f(320.0), 1, "float"), rt.f(0.0), rt.f(1.0), width=1))
+            g.geoOut[:] = rt.construct(4, rt.binary("+", rt.binary("*", worldNormal, rt.f(0.5), 3, 'float'), rt.f(0.5), 3, 'float'), rt.component_wise("clamp", rt.binary("/", hit[0], rt.f(320.0), 1, "float"), rt.f(0.0), rt.f(1.0), width=1))
             return
         step = rt.i(0)
         _for4_first = True
@@ -239,7 +239,7 @@ def run_pixel(ctx, out):
             if (bool(rt.binary(">", density, rt.f(0.0))) and bool(rt.binary(">=", density, _u_threshold))):
                 worldNormal = forwardRotation__vec3(normal)
                 g.fragColor[:] = rt.construct(4, lighting__vec3_vec3_vec3(rt.swizzle(rt.texel_fetch(_u_volumeCache, atlas, rt.i(0)), "rgb"), worldNormal, viewDirection), rt.f(1.0))
-                g.geoOut[:] = rt.construct(4, rt.binary("+", rt.binary("*", worldNormal, rt.f(0.5), 3, "float"), rt.f(0.5), 3, "float"), rt.component_wise("clamp", rt.binary("/", distance, rt.f(320.0), 1, "float"), rt.f(0.0), rt.f(1.0), width=1))
+                g.geoOut[:] = rt.construct(4, rt.binary("+", rt.binary("*", worldNormal, rt.f(0.5), 3, 'float'), rt.f(0.5), 3, 'float'), rt.component_wise("clamp", rt.binary("/", distance, rt.f(320.0), 1, "float"), rt.f(0.0), rt.f(1.0), width=1))
                 return
             distance = rt.component_wise("min", rt.component_wise("min", rt.swizzle(nextT, "x"), rt.swizzle(nextT, "y"), width=1), rt.swizzle(nextT, "z"), width=1)
             crossed = rt.component_wise("lessThanEqual", nextT, rt.construct(3, distance), width=3)
@@ -252,12 +252,12 @@ def run_pixel(ctx, out):
                 else:
                     normal = rt.assign_swizzle(normal, "z", rt.unary("-", rt.construct(1, rt.swizzle(stepDir, "z"))))
             cell[:] = rt.binary("+", cell, rt.binary("*", rt.construct(3, crossed, base="int"), stepDir, 3, "int"), 3, "int")
-            nextT[:] = rt.binary("+", nextT, rt.binary("*", rt.construct(3, crossed), delta, 3, "float"), 3, "float")
+            nextT[:] = rt.binary("+", nextT, rt.binary("*", rt.construct_raw(3, rt.construct(3, crossed)), delta, 3, 'float'), 3, "float")
     def main__void():
-        g.fragColor[:] = rt.construct(4, rt.binary("*", _u_bgColor, _u_bgAlpha, 3, "float"), _u_bgAlpha)
+        g.fragColor[:] = rt.construct(4, rt.binary("*", _u_bgColor, _u_bgAlpha, 3, 'float'), _u_bgAlpha)
         g.geoOut[:] = rt.construct(4, rt.f(0.5), rt.f(0.5), rt.f(1.0), rt.f(1.0))
-        fullRes = (_u_fullResolution if rt.binary(">", rt.swizzle(_u_fullResolution, "x"), rt.f(0.0)) else _u_resolution)
-        uv = rt.binary("/", rt.binary("-", rt.binary("+", rt.swizzle(ctx.frag_coord, "xy"), _u_tileOffset, 2, "float"), rt.binary("*", fullRes, rt.f(0.5), 2, "float"), 2, "float"), rt.swizzle(fullRes, "y"), 2, "float")
+        fullRes = rt.construct(2, (_u_fullResolution if rt.binary(">", rt.swizzle(_u_fullResolution, "x"), rt.f(0.0)) else _u_resolution))
+        uv = rt.construct(2, rt.binary("/", rt.binary("-", rt.binary("+", rt.swizzle(ctx.frag_coord, "xy"), _u_tileOffset, 2, 'float'), rt.binary("*", fullRes, rt.f(0.5), 2, 'float'), 2, 'float'), rt.swizzle(fullRes, "y"), 2, 'float'))
         size = rt.f(0.0)
         aspect = rt.f(0.0)
         span = rt.f(0.0)
@@ -279,15 +279,15 @@ def run_pixel(ctx, out):
             span = rt.binary("/", rt.binary("*", rt.binary("*", rt.component_wise("max", rt.f(1.6329931619), rt.binary("/", rt.f(1.4142135624), aspect, 1, "float"), width=1), size, 1, "float"), rt.f(1.08), 1, "float"), rt.component_wise("max", _u_zoom, rt.f(0.001), width=1), 1, "float")
             right = rt.construct(3, rt.f(0.7071067812), rt.f(0.0), rt.unary("-", rt.f(0.7071067812)))
             up = rt.construct(3, rt.unary("-", rt.f(0.4082482905)), rt.f(0.8164965809), rt.unary("-", rt.f(0.4082482905)))
-            origin = rt.binary("+", rt.binary("+", rt.construct(3, rt.binary("*", size, rt.f(2.5), 1, "float")), rt.binary("*", rt.binary("*", right, rt.binary("+", rt.swizzle(uv, "x"), _u_panX, 1, "float"), 3, "float"), span, 3, "float"), 3, "float"), rt.binary("*", rt.binary("*", up, rt.binary("+", rt.swizzle(uv, "y"), _u_panY, 1, "float"), 3, "float"), span, 3, "float"), 3, "float")
-            nearT = rt.binary("-", origin, size, 3, "float")
+            origin = rt.construct(3, rt.binary("+", rt.binary("+", rt.construct_raw(3, rt.binary("*", size, rt.f(2.5), 1, "float")), rt.binary("*", rt.binary("*", right, rt.binary("+", rt.swizzle(uv, "x"), _u_panX, 1, "float"), 3, 'float'), span, 3, 'float'), 3, 'float'), rt.binary("*", rt.binary("*", up, rt.binary("+", rt.swizzle(uv, "y"), _u_panY, 1, "float"), 3, 'float'), span, 3, 'float'), 3, 'float'))
+            nearT = rt.construct(3, rt.binary("-", origin, size, 3, 'float'))
             enter = rt.component_wise("max", rt.component_wise("max", rt.swizzle(nearT, "x"), rt.swizzle(nearT, "y"), width=1), rt.swizzle(nearT, "z"), width=1)
             leave = rt.component_wise("min", rt.component_wise("min", rt.swizzle(origin, "x"), rt.swizzle(origin, "y"), width=1), rt.swizzle(origin, "z"), width=1)
             if rt.binary(">=", enter, leave):
                 return
             distance = rt.component_wise("max", enter, rt.f(0.0), width=1)
-            cell = rt.component_wise("clamp", rt.construct(3, rt.component_wise("floor", rt.binary("-", origin, rt.binary("+", distance, rt.f(0.0001), 1, "float"), 3, "float"), width=3), base="int"), rt.construct(3, rt.i(0), base="int"), rt.construct(3, rt.binary("-", _u_volumeSize, rt.i(1), 1, "int"), base="int"), width=3)
-            nextT = rt.binary("-", origin, rt.construct(3, cell), 3, "float")
+            cell = rt.component_wise("clamp", rt.construct(3, rt.component_wise("floor", rt.binary("-", origin, rt.binary("+", distance, rt.f(0.0001), 1, "float"), 3, 'float'), width=3), base="int"), rt.construct(3, rt.i(0), base="int"), rt.construct(3, rt.binary("-", _u_volumeSize, rt.i(1), 1, "int"), base="int"), width=3)
+            nextT = rt.construct(3, rt.binary("-", origin, rt.construct_raw(3, rt.construct(3, cell)), 3, 'float'))
             normal = rt.construct(3, rt.f(0.0), rt.f(0.0), rt.f(1.0))
             if (bool(rt.binary(">=", rt.swizzle(nearT, "y"), rt.swizzle(nearT, "x"))) and bool(rt.binary(">=", rt.swizzle(nearT, "y"), rt.swizzle(nearT, "z")))):
                 (normal.__setitem__(0, rt.f(0.0)), normal.__setitem__(1, rt.f(1.0)), normal.__setitem__(2, rt.f(0.0)), normal)[-1]
@@ -304,7 +304,7 @@ def run_pixel(ctx, out):
                 if rt.binary(">", hit[0], distance):
                     normal[:] = isosurfaceNormal__vec3_vec3(p, normal)
                 g.fragColor[:] = rt.construct(4, lighting__vec3_vec3_vec3(rt.swizzle(sampleAtlasCoords__sampler2D_struct1_bool(_u_volumeCache, hit[2], True), "rgb"), normal, rt.construct(3, rt.f(0.5773502692))), rt.f(1.0))
-                g.geoOut[:] = rt.construct(4, rt.binary("+", rt.binary("*", normal, rt.f(0.5), 3, "float"), rt.f(0.5), 3, "float"), rt.component_wise("clamp", rt.binary("/", hit[0], rt.binary("*", size, rt.f(4.0), 1, "float"), 1, "float"), rt.f(0.0), rt.f(1.0), width=1))
+                g.geoOut[:] = rt.construct(4, rt.binary("+", rt.binary("*", normal, rt.f(0.5), 3, 'float'), rt.f(0.5), 3, 'float'), rt.component_wise("clamp", rt.binary("/", hit[0], rt.binary("*", size, rt.f(4.0), 1, "float"), 1, "float"), rt.f(0.0), rt.f(1.0), width=1))
                 return
             step = rt.i(0)
             _for5_first = True
@@ -322,7 +322,7 @@ def run_pixel(ctx, out):
                 if (bool(rt.binary(">", density, rt.f(0.0))) and bool(rt.binary(">=", density, _u_threshold))):
                     color = rt.swizzle(rt.texel_fetch(_u_volumeCache, atlas, rt.i(0)), "rgb")
                     g.fragColor[:] = rt.construct(4, lighting__vec3_vec3_vec3(color, normal, rt.construct(3, rt.f(0.5773502692))), rt.f(1.0))
-                    g.geoOut[:] = rt.construct(4, rt.binary("+", rt.binary("*", normal, rt.f(0.5), 3, "float"), rt.f(0.5), 3, "float"), rt.component_wise("clamp", rt.binary("/", distance, rt.binary("*", size, rt.f(4.0), 1, "float"), 1, "float"), rt.f(0.0), rt.f(1.0), width=1))
+                    g.geoOut[:] = rt.construct(4, rt.binary("+", rt.binary("*", normal, rt.f(0.5), 3, 'float'), rt.f(0.5), 3, 'float'), rt.component_wise("clamp", rt.binary("/", distance, rt.binary("*", size, rt.f(4.0), 1, "float"), 1, "float"), rt.f(0.0), rt.f(1.0), width=1))
                     return
                 distance = rt.component_wise("min", rt.component_wise("min", rt.swizzle(nextT, "x"), rt.swizzle(nextT, "y"), width=1), rt.swizzle(nextT, "z"), width=1)
                 crossed = rt.component_wise("lessThanEqual", nextT, rt.construct(3, distance), width=3)

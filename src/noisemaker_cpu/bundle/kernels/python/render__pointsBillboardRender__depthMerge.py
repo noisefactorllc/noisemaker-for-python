@@ -46,8 +46,8 @@ def run_pixel(ctx, out):
             else:
                 high = mid
         other = rt.binary("-", diagonal, low, 1, "int")
-        a = (keyAt__int_int(rt.binary("+", start, low, 1, "int"), rt.swizzle(dims, "x")) if rt.binary("<", low, lengthA) else rt.construct(2, rt.f(3.402823466e+38)))
-        b = (keyAt__int_int(rt.binary("+", rt.binary("+", start, lengthA, 1, "int"), other, 1, "int"), rt.swizzle(dims, "x")) if rt.binary("<", other, lengthB) else rt.construct(2, rt.f(3.402823466e+38)))
+        a = rt.construct(2, (keyAt__int_int(rt.binary("+", start, low, 1, "int"), rt.swizzle(dims, "x")) if rt.binary("<", low, lengthA) else rt.construct(2, rt.f(3.402823466e+38))))
+        b = rt.construct(2, (keyAt__int_int(rt.binary("+", rt.binary("+", start, lengthA, 1, "int"), other, 1, "int"), rt.swizzle(dims, "x")) if rt.binary("<", other, lengthB) else rt.construct(2, rt.f(3.402823466e+38))))
         g.fragColor[:] = rt.construct(4, (a if before__vec2_vec2(a, b) else b), rt.f(0.0), rt.f(1.0))
     main__void()
     _c = g.fragColor

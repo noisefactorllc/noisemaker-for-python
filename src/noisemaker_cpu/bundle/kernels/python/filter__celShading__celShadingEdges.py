@@ -23,7 +23,7 @@ def run_pixel(ctx, out):
             wrapped = rt.binary("+", wrapped, size, 1, "int")
         return wrapped
     def main__void():
-        globalCoord = rt.binary("+", rt.swizzle(ctx.frag_coord, "xy"), _u_tileOffset, 2, "float")
+        globalCoord = rt.construct(2, rt.binary("+", rt.swizzle(ctx.frag_coord, "xy"), _u_tileOffset, 2, 'float'))
         texSize = rt.texture_size(_u_colorTex)
         if (bool(rt.binary("==", rt.swizzle(texSize, "x"), rt.i(0))) or bool(rt.binary("==", rt.swizzle(texSize, "y"), rt.i(0)))):
             g.fragColor[:] = rt.construct(4, rt.f(0.0))

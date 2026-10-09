@@ -45,7 +45,7 @@ def run_pixel(ctx, out):
                             (rgb.__setitem__(0, x), rgb.__setitem__(1, rt.f(0.0)), rgb.__setitem__(2, c), rgb)[-1]
                         else:
                             (rgb.__setitem__(0, c), rgb.__setitem__(1, rt.f(0.0)), rgb.__setitem__(2, x), rgb)[-1]
-        return rt.binary("+", rgb, rt.construct(3, m), 3, "float")
+        return rt.construct(3, rt.binary("+", rgb, rt.construct_raw(3, m), 3, 'float'))
     def oklab2linear__vec3(lab):
         lab = rt.copy(lab, "float")
         L = rt.swizzle(lab, "x")
@@ -60,8 +60,8 @@ def run_pixel(ctx, out):
         return rt.construct(3, rt.binary("+", rt.binary("-", rt.binary("*", rt.f(4.0767416621), l, 1, "float"), rt.binary("*", rt.f(3.3077115913), m, 1, "float"), 1, "float"), rt.binary("*", rt.f(0.2309699292), s, 1, "float"), 1, "float"), rt.binary("-", rt.binary("+", rt.binary("*", rt.unary("-", rt.f(1.2684380046)), l, 1, "float"), rt.binary("*", rt.f(2.6097574011), m, 1, "float"), 1, "float"), rt.binary("*", rt.f(0.3413193965), s, 1, "float"), 1, "float"), rt.binary("+", rt.binary("-", rt.binary("*", rt.unary("-", rt.f(0.0041960863)), l, 1, "float"), rt.binary("*", rt.f(0.7034186147), m, 1, "float"), 1, "float"), rt.binary("*", rt.f(1.707614701), s, 1, "float"), 1, "float"))
     def linear2srgb__vec3(linear):
         linear = rt.copy(linear, "float")
-        low = rt.binary("*", linear, rt.f(12.92), 3, "float")
-        high = rt.copy(rt.binary("-", rt.copy(rt.binary("*", rt.f(1.055), rt.component_wise("pow", linear, rt.construct(3, rt.binary("/", rt.f(1.0), rt.f(2.4), 1, "float")), width=3), 3, "float"), 'float'), rt.f(0.055), 3, "float"), 'float')
+        low = rt.construct(3, rt.binary("*", linear, rt.f(12.92), 3, 'float'))
+        high = rt.construct(3, rt.binary("-", rt.construct(3, rt.binary("*", rt.f(1.055), rt.component_wise("pow", linear, rt.construct(3, rt.binary("/", rt.f(1.0), rt.f(2.4), 1, "float")), width=3), 3, 'float')), rt.f(0.055), 3, 'float'))
         return rt.component_wise("mix", high, low, rt.component_wise("step", linear, rt.construct(3, rt.f(0.0031308)), width=3), width=3)
     def oklab2rgb__vec3(lab):
         lab = rt.copy(lab, "float")
@@ -74,10 +74,10 @@ def run_pixel(ctx, out):
         freq = rt.copy(freq, "float")
         offset = rt.copy(offset, "float")
         phase = rt.copy(phase, "float")
-        return rt.component_wise("clamp", rt.binary("+", offset, rt.binary("*", amp, rt.component_wise("cos", rt.binary("*", g.TAU, rt.binary("+", rt.binary("*", freq, t, 3, "float"), phase, 3, "float"), 3, "float"), width=3), 3, "float"), 3, "float"), rt.f(0.0), rt.f(1.0), width=3)
+        return rt.component_wise("clamp", rt.construct(3, rt.binary("+", offset, rt.construct(3, rt.binary("*", amp, rt.component_wise("cos", rt.binary("*", g.TAU, rt.binary("+", rt.binary("*", freq, t, 3, 'float'), phase, 3, 'float'), 3, 'float'), width=3), 3, 'float')), 3, 'float')), rt.f(0.0), rt.f(1.0), width=3)
     def main__void():
         texSize = rt.construct(2, rt.texture_size(_u_inputTex3d))
-        uv = rt.binary("/", rt.swizzle(ctx.frag_coord, "xy"), texSize, 2, "float")
+        uv = rt.construct(2, rt.binary("/", rt.swizzle(ctx.frag_coord, "xy"), texSize, 2, 'float'))
         inputColor = rt.texture(_u_inputTex3d, uv)
         if (bool(rt.binary("<=", _u_paletteIndex, rt.i(0))) or bool(rt.binary(">", _u_paletteIndex, g.PALETTE_COUNT))):
             g.fragColor[:] = inputColor
@@ -91,7 +91,7 @@ def run_pixel(ctx, out):
                 t = rt.binary("-", t, _u_time, 1, "float")
         entry = g.PALETTES[int(rt.binary("-", _u_paletteIndex, rt.i(1), 1, "int"))]
         mode = rt.construct(1, rt.swizzle(entry[0], "w"), base="int")
-        paletteColor = cosinePalette__float_vec3_vec3_vec3_vec3(t, rt.swizzle(entry[0], "xyz"), rt.swizzle(entry[1], "xyz"), rt.swizzle(entry[2], "xyz"), rt.swizzle(entry[3], "xyz"))
+        paletteColor = cosinePalette__float_vec3_vec3_vec3_vec3(t, rt.construct(3, rt.swizzle(entry[0], "xyz")), rt.construct(3, rt.swizzle(entry[1], "xyz")), rt.construct(3, rt.swizzle(entry[2], "xyz")), rt.construct(3, rt.swizzle(entry[3], "xyz")))
         finalColor = rt.construct(3, 0.0)
         if rt.binary("==", mode, g.MODE_HSV):
             finalColor[:] = hsv2rgb__vec3(paletteColor)

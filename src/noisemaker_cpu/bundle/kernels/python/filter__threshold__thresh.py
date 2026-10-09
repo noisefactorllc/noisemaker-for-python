@@ -12,8 +12,8 @@ def run_pixel(ctx, out):
     _u_sharpness = U.get("sharpness", rt.f(0.0))
     g.fragColor = rt.construct(4, 0.0)
     def main__void():
-        globalCoord = rt.binary("+", rt.swizzle(ctx.frag_coord, "xy"), _u_tileOffset, 2, "float")
-        st = rt.binary("/", rt.swizzle(ctx.frag_coord, "xy"), rt.construct(2, rt.texture_size(_u_inputTex)), 2, "float")
+        globalCoord = rt.construct(2, rt.binary("+", rt.swizzle(ctx.frag_coord, "xy"), _u_tileOffset, 2, 'float'))
+        st = rt.construct(2, rt.binary("/", rt.swizzle(ctx.frag_coord, "xy"), rt.construct(2, rt.texture_size(_u_inputTex)), 2, 'float'))
         c = rt.texture(_u_inputTex, st)
         l = rt.dot(rt.swizzle(c, "rgb"), rt.construct(3, rt.f(0.299), rt.f(0.587), rt.f(0.114)))
         e = rt.component_wise("smoothstep", rt.binary("-", _u_level, _u_sharpness, 1, "float"), rt.binary("+", _u_level, _u_sharpness, 1, "float"), l, width=1)

@@ -13,11 +13,11 @@ def run_pixel(ctx, out):
     _u_inputTex = T["inputTex"]
     g.fragColor = rt.construct(4, 0.0)
     def main__void():
-        globalCoord = rt.binary("+", rt.swizzle(ctx.frag_coord, "xy"), _u_tileOffset, 2, "float")
+        globalCoord = rt.construct(2, rt.binary("+", rt.swizzle(ctx.frag_coord, "xy"), _u_tileOffset, 2, 'float'))
         texSize = rt.texture_size(_u_fbTex)
         minIdx = rt.construct(2, rt.i(0), base="int")
         maxIdx = rt.binary("-", texSize, rt.construct(2, rt.i(1), base="int"), 2, "int")
-        texelPos = rt.binary("-", rt.binary("/", rt.binary("*", globalCoord, rt.construct(2, texSize), 2, "float"), _u_fullResolution, 2, "float"), rt.construct(2, rt.f(0.5)), 2, "float")
+        texelPos = rt.construct(2, rt.binary("-", rt.binary("/", rt.binary("*", globalCoord, rt.construct_raw(2, rt.construct(2, texSize)), 2, 'float'), _u_fullResolution, 2, 'float'), rt.construct_raw(2, rt.f(0.5)), 2, 'float'))
         baseI = rt.construct(2, rt.component_wise("floor", texelPos, width=2), base="int")
         f = rt.component_wise("fract", texelPos, width=2)
         v00 = rt.swizzle(rt.texel_fetch(_u_fbTex, rt.component_wise("clamp", baseI, minIdx, maxIdx, width=2), rt.i(0)), "b")
@@ -33,7 +33,7 @@ def run_pixel(ctx, out):
         inputUv = rt.construct(2, 0.0)
         inputColor = rt.construct(3, 0.0)
         if rt.binary(">", blend, rt.f(0.0)):
-            inputUv = rt.binary("/", globalCoord, _u_fullResolution, 2, "float")
+            inputUv = rt.construct(2, rt.binary("/", globalCoord, _u_fullResolution, 2, 'float'))
             inputColor = rt.swizzle(rt.texture(_u_inputTex, inputUv), "rgb")
             outCol[:] = rt.component_wise("mix", outCol, inputColor, blend, width=3)
         g.fragColor[:] = rt.construct(4, outCol, rt.f(1.0))

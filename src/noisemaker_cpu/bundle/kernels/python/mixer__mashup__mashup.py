@@ -67,11 +67,11 @@ def run_pixel(ctx, out):
             return rt.component_wise("step", boundary, lum, width=1)
         return rt.component_wise("smoothstep", rt.binary("-", boundary, _u_smoothness, 1, "float"), rt.binary("+", boundary, _u_smoothness, 1, "float"), lum, width=1)
     def main__void():
-        uv = rt.binary("/", rt.swizzle(ctx.frag_coord, "xy"), _u_resolution, 2, "float")
+        uv = rt.construct(2, rt.binary("/", rt.swizzle(ctx.frag_coord, "xy"), _u_resolution, 2, 'float'))
         controlColor = rt.texture(_u_source, uv)
         lum = getLuminosity__vec3(rt.swizzle(controlColor, "rgb"))
         n = rt.component_wise("clamp", _u_layers, rt.i(2), rt.i(8), width=1)
-        result = (sampleLayer__int_vec2(rt.i(0), uv) if rt.binary("==", layerActive__int(rt.i(0)), rt.i(1)) else controlColor)
+        result = rt.construct(4, (sampleLayer__int_vec2(rt.i(0), uv) if rt.binary("==", layerActive__int(rt.i(0)), rt.i(1)) else controlColor))
         k = rt.i(1)
         _for0_first = True
         for _for0 in range(1048576):
@@ -82,7 +82,7 @@ def run_pixel(ctx, out):
                 break
             if rt.binary(">=", k, n):
                 break
-            src = (sampleLayer__int_vec2(k, uv) if rt.binary("==", layerActive__int(k), rt.i(1)) else controlColor)
+            src = rt.construct(4, (sampleLayer__int_vec2(k, uv) if rt.binary("==", layerActive__int(k), rt.i(1)) else controlColor))
             boundary = rt.binary("/", rt.construct(1, k), rt.construct(1, n), 1, "float")
             w = bandWeight__float_float(lum, boundary)
             result[:] = rt.component_wise("mix", result, src, w, width=4)

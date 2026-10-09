@@ -62,8 +62,8 @@ def run_pixel(ctx, out):
         return rgb
     def getGridCell__vec2(pos):
         pos = rt.copy(pos, "float")
-        cellSize = rt.binary("/", rt.construct(2, rt.f(1.0)), rt.construct(1, g.GRID_SIZE), 2, "float")
-        return rt.construct(2, rt.component_wise("clamp", rt.binary("/", pos, cellSize, 2, "float"), rt.construct(2, rt.f(0.0)), rt.construct(2, rt.construct(1, rt.binary("-", g.GRID_SIZE, rt.i(1), 1, "int"))), width=2), base="int")
+        cellSize = rt.construct(2, rt.binary("/", rt.construct_raw(2, rt.f(1.0)), rt.construct(1, g.GRID_SIZE), 2, 'float'))
+        return rt.construct(2, rt.component_wise("clamp", rt.binary("/", pos, cellSize, 2, 'float'), rt.construct(2, rt.f(0.0)), rt.construct(2, rt.construct(1, rt.binary("-", g.GRID_SIZE, rt.i(1), 1, "int"))), width=2), base="int")
     def radialForce__float_float_float_float(dist, strength, prefDist, curveShape):
         normDist = rt.binary("/", rt.binary("-", dist, _u_minRadius, 1, "float"), rt.binary("-", _u_maxRadius, _u_minRadius, 1, "float"), 1, "float")
         forceScale = rt.binary("*", _u_maxSpeed, rt.f(10.0), 1, "float")
@@ -83,12 +83,12 @@ def run_pixel(ctx, out):
             return rt.binary("*", rt.binary("*", shaped, _u_repulsionScale, 1, "float"), forceScale, 1, "float")
     def wrapPosition__vec2(pos):
         pos = rt.copy(pos, "float")
-        return rt.component_wise("mod", rt.binary("+", pos, rt.f(1.0), 2, "float"), rt.f(1.0), width=2)
+        return rt.component_wise("mod", rt.binary("+", pos, rt.f(1.0), 2, 'float'), rt.f(1.0), width=2)
     def limitVec__vec2_float(v, maxLen):
         v = rt.copy(v, "float")
         len = rt.length(v)
         if (bool(rt.binary(">", len, maxLen)) and bool(rt.binary(">", len, rt.f(0.0)))):
-            return rt.binary("*", v, rt.binary("/", maxLen, len, 1, "float"), 2, "float")
+            return rt.construct(2, rt.binary("*", v, rt.binary("/", maxLen, len, 1, "float"), 2, 'float'))
         return v
     def main__void():
         coord = rt.construct(2, rt.swizzle(ctx.frag_coord, "xy"), base="int")
@@ -125,7 +125,7 @@ def run_pixel(ctx, out):
             if rt.binary("==", rt.length(velocity), rt.f(0.0)):
                 angle = rt.binary("*", hash__uint(rt.binary("+", initSeed, rt.i(2), 1, "uint")), rt.f(6.28318530718), 1, "float")
                 speed = rt.binary("*", rt.binary("*", hash__uint(rt.binary("+", initSeed, rt.i(3), 1, "uint")), _u_maxSpeed, 1, "float"), rt.f(0.3), 1, "float")
-                velocity[:] = rt.binary("*", rt.construct(2, rt.component_wise("cos", angle, width=1), rt.component_wise("sin", angle, width=1)), speed, 2, "float")
+                velocity[:] = rt.binary("*", rt.construct_raw(2, rt.component_wise("cos", angle, width=1), rt.component_wise("sin", angle, width=1)), speed, 2, 'float')
         mass = rt.component_wise("max", mass, rt.f(0.1), width=1)
         totalForce = rt.construct(2, rt.f(0.0))
         neighborCount = rt.i(0)
@@ -172,7 +172,7 @@ def run_pixel(ctx, out):
                     otherType = rt.construct(1, rt.swizzle(otherData, "x"), base="int")
                     if rt.binary("<", otherAlive, rt.f(0.5)):
                         continue
-                    diff = rt.binary("-", otherPos, pos, 2, "float")
+                    diff = rt.construct(2, rt.binary("-", otherPos, pos, 2, 'float'))
                     if rt.binary(">", rt.swizzle(diff, "x"), rt.f(0.5)):
                         diff = rt.assign_swizzle(diff, "x", rt.binary("-", rt.swizzle(diff, "x"), rt.f(1.0), 1, "float"))
                     if rt.binary("<", rt.swizzle(diff, "x"), rt.unary("-", rt.f(0.5))):
@@ -189,8 +189,8 @@ def run_pixel(ctx, out):
                     prefDist = rt.swizzle(forceParams, "y")
                     curveShape = rt.swizzle(forceParams, "z")
                     forceMag = radialForce__float_float_float_float(dist, strength, prefDist, curveShape)
-                    forceDir = rt.binary("/", diff, dist, 2, "float")
-                    totalForce[:] = rt.binary("+", totalForce, rt.binary("*", forceDir, forceMag, 2, "float"), 2, "float")
+                    forceDir = rt.construct(2, rt.binary("/", diff, dist, 2, 'float'))
+                    totalForce[:] = rt.binary("+", totalForce, rt.binary("*", forceDir, forceMag, 2, 'float'), 2, "float")
                     neighborCount = rt.binary("+", neighborCount, rt.i(1), 1, "int")
         totalForce[:] = rt.binary("/", totalForce, mass, 2, "float")
         velocity[:] = rt.binary("+", velocity, totalForce, 2, "float")

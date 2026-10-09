@@ -13,12 +13,12 @@ def run_pixel(ctx, out):
     def ridge_transform__vec4_float(value, lvl):
         value = rt.copy(value, "float")
         denom = rt.component_wise("max", lvl, rt.binary("-", rt.f(1.0), lvl, 1, "float"), width=1)
-        result = rt.binary("-", rt.construct(4, rt.f(1.0)), rt.copy(rt.binary("/", rt.component_wise("abs", rt.binary("-", value, rt.construct(4, lvl), 4, "float"), width=4), denom, 4, "float"), 'float'), 4, "float")
+        result = rt.construct(4, rt.binary("-", rt.construct(4, rt.f(1.0)), rt.construct(4, rt.binary("/", rt.component_wise("abs", rt.binary("-", value, rt.construct_raw(4, lvl), 4, 'float'), width=4), denom, 4, 'float')), 4, 'float'))
         return rt.component_wise("clamp", result, rt.construct(4, rt.f(0.0)), rt.construct(4, rt.f(1.0)), width=4)
     def main__void():
-        globalCoord = rt.binary("+", rt.swizzle(ctx.frag_coord, "xy"), _u_tileOffset, 2, "float")
+        globalCoord = rt.construct(2, rt.binary("+", rt.swizzle(ctx.frag_coord, "xy"), _u_tileOffset, 2, 'float'))
         dims = rt.texture_size(_u_inputTex)
-        uv = rt.binary("/", rt.swizzle(ctx.frag_coord, "xy"), rt.construct(2, dims), 2, "float")
+        uv = rt.construct(2, rt.binary("/", rt.swizzle(ctx.frag_coord, "xy"), rt.construct_raw(2, rt.construct(2, dims)), 2, 'float'))
         texel = rt.texture(_u_inputTex, uv)
         ridged = ridge_transform__vec4_float(texel, _u_level)
         out_color = rt.construct(4, rt.swizzle(ridged, "xyz"), rt.f(1.0))

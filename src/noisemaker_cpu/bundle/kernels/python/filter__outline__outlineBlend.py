@@ -12,16 +12,16 @@ def run_pixel(ctx, out):
     _u_invert = U.get("invert", rt.f(0.0))
     g.fragColor = rt.construct(4, 0.0)
     def main__void():
-        globalCoord = rt.binary("+", rt.swizzle(ctx.frag_coord, "xy"), _u_tileOffset, 2, "float")
+        globalCoord = rt.construct(2, rt.binary("+", rt.swizzle(ctx.frag_coord, "xy"), _u_tileOffset, 2, 'float'))
         dimensions = rt.texture_size(_u_inputTex)
         if (bool(rt.binary("==", rt.swizzle(dimensions, "x"), rt.i(0))) or bool(rt.binary("==", rt.swizzle(dimensions, "y"), rt.i(0)))):
             g.fragColor[:] = rt.construct(4, rt.f(0.0))
             return
-        uv = rt.binary("/", rt.swizzle(ctx.frag_coord, "xy"), rt.construct(2, dimensions), 2, "float")
+        uv = rt.construct(2, rt.binary("/", rt.swizzle(ctx.frag_coord, "xy"), rt.construct_raw(2, rt.construct(2, dimensions)), 2, 'float'))
         base = rt.texture(_u_inputTex, uv)
         edges = rt.texture(_u_edgesTexture, uv)
         strength = rt.component_wise("clamp", rt.swizzle(edges, "r"), rt.f(0.0), rt.f(1.0), width=1)
-        outlineColor = (rt.construct(3, rt.f(1.0)) if rt.binary(">", _u_invert, rt.f(0.5)) else rt.construct(3, rt.f(0.0)))
+        outlineColor = rt.construct(3, (rt.construct(3, rt.f(1.0)) if rt.binary(">", _u_invert, rt.f(0.5)) else rt.construct(3, rt.f(0.0))))
         out_rgb = rt.component_wise("mix", rt.swizzle(base, "rgb"), outlineColor, strength, width=3)
         g.fragColor[:] = rt.construct(4, out_rgb, rt.swizzle(base, "a"))
     main__void()
