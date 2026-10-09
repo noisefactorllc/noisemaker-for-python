@@ -69,6 +69,14 @@ def test_an_undeclared_skip_fails_the_gate():
     assert "SKIP filter/adjust is not in the declared skip set" in result["errors"], result["errors"]
 
 
+def test_a_strict_case_fails_the_gate_despite_consistent_counts():
+    result = gate.evaluate_release_gate(summary_output(verdicts={"filter/adjust": "STRICT"}), **EMPTY_POLICY)
+    assert result["ok"] is False
+    assert any(
+        error.startswith("STRICT filter/adjust") and "byte identity" in error for error in result["errors"]
+    ), result["errors"]
+
+
 def test_a_declared_skip_that_is_graded_fails_until_the_declaration_drops_it():
     result = gate.evaluate_release_gate(
         summary_output(verdicts={"filter/adjust": "EXACT"}),

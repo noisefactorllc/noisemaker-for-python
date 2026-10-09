@@ -8,7 +8,8 @@ The gate passes only when all of these are true:
   - the output carries exactly one PARITY-SUMMARY line;
   - every authority-manifest effect is reported exactly once, and no other
     id is;
-  - no case is MISSING and the near and defer counts are zero;
+  - no case is MISSING, STRICT, NEAR or DEFER: the release contract is
+    byte-exact, so a strict pass is not byte identity;
   - the SKIP cases are exactly the declared skip set (an undeclared skip
     fails, and a declared skip that is graded fails until the declaration
     drops it);
@@ -130,9 +131,12 @@ def evaluate_release_gate(text: str, *, declared_skips=None, accepted_failures=N
         if case_id in verdicts and verdicts[case_id] != "FAIL":
             errors.append(f"accepted failure {case_id} was reported {verdicts[case_id]}; remove it from the accepted failures")
 
+    strict = _sorted_ids(verdicts, "STRICT")
+    for case_id in strict:
+        errors.append(f"STRICT {case_id}: the port's release contract is byte-exact; a strict pass is not byte identity")
+
     if summary is not None:
         exact = _sorted_ids(verdicts, "EXACT")
-        strict = _sorted_ids(verdicts, "STRICT")
         expected_counts = {
             "expected": len(authority),
             "executed": len(exact) + len(strict),
