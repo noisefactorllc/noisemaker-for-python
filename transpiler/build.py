@@ -73,6 +73,132 @@ def _adapt_source(effect_id: str, program: str, source: str) -> str:
         if source.count(z_old) != 1 or source.count(comment) != 1:
             raise ValueError("heightGrid canonical Z pattern changed")
         source = source.replace(z_old, z_new).replace(comment, comment + comment_new)
+    if effect_id == "filter/flipMirror" and program == "flipMirror":
+        # Upstream f496735d keeps the named half in flipMirror's vertical
+        # mirror modes: warpedUV.y runs up the frame, so mode 13 (mirror up
+        # to down) keeps the top half and mode 14 (mirror down to up) keeps
+        # the bottom half, and the combined modes 15-18 follow the same
+        # named-half rule for y. The pinned CDN snapshot predates the change;
+        # keep the adapted program byte-identical to the upstream file so a
+        # later engine bump regenerates the same kernel.
+        flips = (
+            (
+                "        // mirror up to down\n        if (warpedUV.y > 0.5) {",
+                "        // mirror up to down. warpedUV.y runs up the frame, so the top half\n"
+                "        // is warpedUV.y > 0.5 and the bottom half samples its reflection.\n"
+                "        if (warpedUV.y < 0.5) {",
+            ),
+            ("        // mirror down to up\n        if (warpedUV.y < 0.5) {",
+             "        // mirror down to up\n        if (warpedUV.y > 0.5) {"),
+            (
+                "        // mirror left to right, up to down\n"
+                "        if (warpedUV.x > 0.5) {\n"
+                "            warpedUV.x = 1.0 - warpedUV.x;\n"
+                "        }\n"
+                "        if (warpedUV.y > 0.5) {",
+                "        // mirror left to right, up to down\n"
+                "        if (warpedUV.x > 0.5) {\n"
+                "            warpedUV.x = 1.0 - warpedUV.x;\n"
+                "        }\n"
+                "        if (warpedUV.y < 0.5) {",
+            ),
+            (
+                "        // mirror left to right, down to up\n"
+                "        if (warpedUV.x > 0.5) {\n"
+                "            warpedUV.x = 1.0 - warpedUV.x;\n"
+                "        }\n"
+                "        if (warpedUV.y < 0.5) {",
+                "        // mirror left to right, down to up\n"
+                "        if (warpedUV.x > 0.5) {\n"
+                "            warpedUV.x = 1.0 - warpedUV.x;\n"
+                "        }\n"
+                "        if (warpedUV.y > 0.5) {",
+            ),
+            (
+                "        // mirror right to left, up to down\n"
+                "        if (warpedUV.x < 0.5) {\n"
+                "            warpedUV.x = 1.0 - warpedUV.x;\n"
+                "        }\n"
+                "        if (warpedUV.y > 0.5) {",
+                "        // mirror right to left, up to down\n"
+                "        if (warpedUV.x < 0.5) {\n"
+                "            warpedUV.x = 1.0 - warpedUV.x;\n"
+                "        }\n"
+                "        if (warpedUV.y < 0.5) {",
+            ),
+            (
+                "        // mirror right to left, down to up\n"
+                "        if (warpedUV.x < 0.5) {\n"
+                "            warpedUV.x = 1.0 - warpedUV.x;\n"
+                "        }\n"
+                "        if (warpedUV.y < 0.5) {",
+                "        // mirror right to left, down to up\n"
+                "        if (warpedUV.x < 0.5) {\n"
+                "            warpedUV.x = 1.0 - warpedUV.x;\n"
+                "        }\n"
+                "        if (warpedUV.y > 0.5) {",
+            ),
+        )
+        for old, new in flips:
+            if source.count(old) != 1:
+                raise ValueError("flipMirror canonical vertical mirror pattern changed")
+            source = source.replace(old, new)
+    if effect_id == "filter/glyphMap" and program == "glyphMap":
+        # Upstream c5d26740 draws glyphMap's glyphs upright: the glyph bitmaps
+        # store row 0 as the top row, but localPos.y runs up the cell, so the
+        # row index is mirrored (6 - clamp(...)) instead of clamped only. The
+        # pinned CDN snapshot predates the change; keep the adapted program
+        # byte-identical to the upstream file so a later engine bump
+        # regenerates the same kernel.
+        gy_old = (
+            "    int gy = int(floor(localPos.y * 7.0));\n"
+            "    gx = clamp(gx, 0, 4);\n"
+            "    gy = clamp(gy, 0, 6);"
+        )
+        gy_new = (
+            "    // Glyph row 0 is the top row, while localPos.y runs up the cell.\n"
+            "    int gy = 6 - clamp(int(floor(localPos.y * 7.0)), 0, 6);\n"
+            "    gx = clamp(gx, 0, 4);"
+        )
+        if source.count(gy_old) != 1:
+            raise ValueError("glyphMap canonical glyph row pattern changed")
+        source = source.replace(gy_old, gy_new)
+    if effect_id == "render/render3d" and program == "render3d":
+        # Upstream 700ac32e builds render3d's camera right-handed
+        # (right = cross(forward, worldUp), up = cross(right, forward),
+        # negated orbit angle) and lights it from world -X so the volume is
+        # never mirrored. The pinned CDN snapshot predates the change; keep
+        # the adapted program byte-identical to the upstream file so a later
+        # engine bump regenerates the same kernel.
+        light_old = "vec3 lightDir = normalize(vec3(1.0, 1.0, -1.0));"
+        light_new = "vec3 lightDir = normalize(vec3(-1.0, 1.0, -1.0));"
+        if source.count(light_old) != 2:
+            raise ValueError("render3d canonical light direction pattern changed")
+        source = source.replace(light_old, light_new)
+        camera_old = (
+            "    // Camera setup - orbiting view\n"
+            "    float camDist = 3.5;\n"
+            "    float angle = time * TAU * float(orbitSpeed);"
+        )
+        camera_new = (
+            "    // Camera setup - orbiting view. (right, up, -forward) is right-handed,\n"
+            "    // so screen right is world +X seen from the front and the volume is\n"
+            "    // never mirrored. The orbit runs toward -X, which keeps the on-screen\n"
+            "    // spin of earlier releases.\n"
+            "    float camDist = 3.5;\n"
+            "    float angle = -time * TAU * float(orbitSpeed);"
+        )
+        basis_old = (
+            "    vec3 right = normalize(cross(vec3(0.0, 1.0, 0.0), forward));\n"
+            "    vec3 up = cross(forward, right);"
+        )
+        basis_new = (
+            "    vec3 right = normalize(cross(forward, vec3(0.0, 1.0, 0.0)));\n"
+            "    vec3 up = cross(right, forward);"
+        )
+        if source.count(camera_old) != 1 or source.count(basis_old) != 1:
+            raise ValueError("render3d canonical camera pattern changed")
+        source = source.replace(camera_old, camera_new).replace(basis_old, basis_new)
     return source
 
 

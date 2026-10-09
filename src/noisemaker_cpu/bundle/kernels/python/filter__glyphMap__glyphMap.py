@@ -211,9 +211,8 @@ def run_pixel(ctx, out):
         cellIndex = rt.component_wise("floor", rt.binary("/", pixelCoord, csf, 2, "float"), width=2)
         localPos = rt.component_wise("fract", rt.binary("/", pixelCoord, csf, 2, "float"), width=2)
         gx = rt.construct(1, rt.component_wise("floor", rt.binary("*", rt.swizzle(localPos, "x"), rt.f(5.0), 1, "float"), width=1), base="int")
-        gy = rt.construct(1, rt.component_wise("floor", rt.binary("*", rt.swizzle(localPos, "y"), rt.f(7.0), 1, "float"), width=1), base="int")
+        gy = rt.binary("-", rt.i(6), rt.component_wise("clamp", rt.construct(1, rt.component_wise("floor", rt.binary("*", rt.swizzle(localPos, "y"), rt.f(7.0), 1, "float"), width=1), base="int"), rt.i(0), rt.i(6), width=1), 1, "int")
         gx = rt.component_wise("clamp", gx, rt.i(0), rt.i(4), width=1)
-        gy = rt.component_wise("clamp", gy, rt.i(0), rt.i(6), width=1)
         cellCenter = rt.binary("*", rt.binary("+", cellIndex, rt.f(0.5), 2, "float"), csf, 2, "float")
         sampleUV = rt.binary("/", rt.binary("-", cellCenter, _u_tileOffset, 2, "float"), resolution, 2, "float")
         if isTileRendering:

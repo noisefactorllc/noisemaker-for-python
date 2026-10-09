@@ -168,6 +168,35 @@ ITERATED_PROGRAMS = {
         )
         for func in ("cellularAutomata", "mnca", "navierStokes", "reactionDiffusion")
     },
+    # flipMirror's summary case renders the effect over a default solid input,
+    # which every mirror mode maps onto itself: the vertical mirror modes'
+    # named-half fix (upstream f496735d) is invisible there. Pin it through
+    # the ridged-noise chain the oracle's own default flipMirror case renders
+    # (mode 15 mirrors both axes; modes 13-18 share the named-half rule).
+    "filter/flipMirror": (
+        "search filter, synth\n"
+        "noise(seed: 1, ridges: true).flipMirror().write(o0)\n"
+        "render(o0)\n"
+    ),
+}
+
+
+# Image-effect chains whose delta is invisible at the shared 8x8 case size:
+# each row is (program, width). The declared chain overrides the default
+# single-effect case in scripts/parity-summary at the declared width, like
+# ITERATED_PROGRAMS does at 8x8.
+WIDE_IMAGE_CHAINS = {
+    # glyphMap's summary case draws no glyphs over a solid input, so the
+    # upright-row fix (upstream c5d26740) cannot show at any size; the oracle's
+    # own glyphMap parity case renders a low-scale noise field whose per-cell
+    # brightness draws glyphs, and only at 64x64 do the flipped glyph rows
+    # diverge (the pre-fix kernel is byte-identical there at 8x8).
+    "filter/glyphMap": (
+        "search synth, filter\n"
+        "noise(seed: 1, scaleX: 50, scaleY: 50).glyphMap().write(o0)\n"
+        "render(o0)\n",
+        64,
+    ),
 }
 
 
@@ -182,6 +211,24 @@ def test_iterated_effect_byte_parity(tmp_path, effect_id, program):
         time=0.25,
     )
     py = render_dsl(program, width=8, height=8, seed=1, time=0.25)
+
+    assert _max_diff(js, py) == 0
+
+
+@pytest.mark.parametrize(
+    ("effect_id", "row"), WIDE_IMAGE_CHAINS.items(), ids=WIDE_IMAGE_CHAINS
+)
+def test_wide_image_chain_byte_parity(tmp_path, effect_id, row):
+    program, width = row
+    js = _js_render_dsl(
+        program,
+        str(tmp_path / f"{effect_id.replace('/', '__')}-{width}.png"),
+        width=width,
+        height=width,
+        seed=1,
+        time=0.25,
+    )
+    py = render_dsl(program, width=width, height=width, seed=1, time=0.25)
 
     assert _max_diff(js, py) == 0
 

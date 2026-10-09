@@ -63,8 +63,16 @@ def _build_cases(effects: dict) -> dict:
             # The declared chain is the executable case. It overrides the
             # default single-effect case for non-iterated image effects whose
             # default render never exercises the behavior the chain pins
-            # (points/heightGrid's passthrough never reads its agent's outXYZ).
+            # (points/heightGrid's passthrough never reads its agent's outXYZ;
+            # filter/flipMirror renders a solid input, which every mirror mode
+            # maps onto itself).
             cases[base] = ("dsl", program, 8)
+    for eid, (program, width) in getattr(_tp, "WIDE_IMAGE_CHAINS", {}).items():
+        base = eid.split(":")[0]
+        if base in effects and base not in _parity.EXTERNAL_INPUT_EFFECT_IDS:
+            # Declared chain at its own width, same override rule as above
+            # (filter/glyphMap draws no glyphs over the solid default input).
+            cases[base] = ("dsl", program, width)
     for case_id, program, width, _height in _tp.VOLUME_DSL_CASES:
         base = case_id.split(":")[0]
         if base in effects:
