@@ -12,6 +12,7 @@ the subset needed by the P0 effects (solid, invert) plus the structural hooks
 
 from __future__ import annotations
 
+import itertools
 import os
 from pathlib import Path
 
@@ -52,7 +53,12 @@ def _snap32(v):
     defer rounding (stay float64) so compound expressions round only once here.
     Int vectors pass through unchanged (uvec hash seeds keep full precision)."""
     a = np.asarray(v)
-    return a if np.issubdtype(a.dtype, np.integer) else a.astype(F32)
+    # An already-f32 array needs no rounding, and every caller treats the snap
+    # result as read-only, so skip astype's copy. The kind check is the
+    # hot-path equivalent of np.issubdtype(a.dtype, np.integer).
+    if a.dtype == F32 or a.dtype.kind in "iu":
+        return a
+    return a.astype(F32)
 
 
 def _s32(x) -> int:
@@ -226,6 +232,16 @@ def trunc_scalar_div(x):
 
 
 _SWIZZLE = {"x": 0, "y": 1, "z": 2, "w": 3, "r": 0, "g": 1, "b": 2, "a": 3, "s": 0, "t": 1, "p": 2, "q": 3}
+# Every legal swizzle name (2-4 components) resolved once: kernels re-read the
+# same swizzle strings millions of times per render, and per-call list builds
+# over the name's characters show up in the profile.
+# A list (not tuple) per entry: an ndarray index must be a sequence, since a
+# 2+-element tuple would be multi-axis indexing, not a fancy index.
+_SWIZZLE_INDEX = {
+    "".join(name): [_SWIZZLE[c] for c in name]
+    for length in (1, 2, 3, 4)
+    for name in itertools.product(_SWIZZLE, repeat=length)
+}
 
 
 def _is_scalar(v) -> bool:
@@ -364,6 +380,12 @@ class Runtime:
             return f32(c if _is_scalar(c) else np.asarray(c, dtype=F32).ravel()[0])
         if len(supplied) == 1 and _is_scalar(supplied[0]):
             return np.full(width, F32(supplied[0]), dtype=F32)
+        if len(supplied) == 1 and not _is_scalar(supplied[0]):
+            # Single vector argument of the declared width: round + copy it
+            # directly instead of the flatten-to-Python-lists round trip.
+            arr = np.asarray(supplied[0], dtype=F32).ravel()
+            if arr.shape[0] == width:
+                return arr.copy()
         vals: list = []
         for c in supplied:
             if _is_scalar(c):
@@ -427,9 +449,14 @@ class Runtime:
 
     # ---- swizzles ----
     def swizzle(self, vec, sw: str):
-        idx = [_SWIZZLE[c] for c in sw]
+        idx = _SWIZZLE_INDEX[sw]
         if isinstance(vec, _UIntVector):
             return vec[idx[0]] if len(idx) == 1 else _UIntVector(vec[index] for index in idx)
+        if type(vec) is np.ndarray and vec.dtype == F32:
+            # Hot path: a stored f32 vector. The generic path below would
+            # asarray (no-op), issubdtype (no-op) and astype(F32) (a value-
+            # identical copy); fancy indexing / the element read copy anyway.
+            return float(vec[idx[0]]) if len(idx) == 1 else vec[idx]
         v = np.asarray(vec)  # preserve dtype (int vectors must stay integer)
         if np.issubdtype(v.dtype, np.integer):
             return int(v[idx[0]]) if len(idx) == 1 else v[idx]
@@ -450,8 +477,11 @@ class Runtime:
                 result[index] = values[offset]
             return result
         base = np.asarray(vec)
-        v = np.array(base if np.issubdtype(base.dtype, np.integer) else base.astype(F32))
-        idx = [_SWIZZLE[c] for c in sw]
+        if base.dtype.kind in "iu":
+            v = np.array(base)
+        else:
+            v = np.array(base, dtype=F32)  # one conversion+copy (was astype + copy)
+        idx = _SWIZZLE_INDEX[sw]
         if _is_scalar(value):
             for j in idx:
                 v[j] = value
@@ -481,8 +511,10 @@ class Runtime:
         # storage shape; the canonical path expresses the same op
         # component-wise). Without it, synth/solid's vec4 `color` param leaks
         # its fourth channel and solid alpha diverges from the oracle.
-        av = a if _is_scalar(a) else np.asarray(a, dtype=np.float64)
-        bv = b if _is_scalar(b) else np.asarray(b, dtype=np.float64)
+        a_scalar = _is_scalar(a)
+        b_scalar = _is_scalar(b)
+        av = a if a_scalar else np.asarray(a, dtype=np.float64)
+        bv = b if b_scalar else np.asarray(b, dtype=np.float64)
         if op == "+":
             r = np.add(av, bv)
         elif op == "-":
@@ -495,7 +527,7 @@ class Runtime:
             r = np.fmod(av, bv)
         else:
             raise ValueError(f"unsupported binary op {op!r}")
-        if _is_scalar(av) and _is_scalar(bv):
+        if a_scalar and b_scalar:
             return float(r)
         result = np.asarray(r, dtype=np.float64)
         if width is not None and result.ndim > 0 and result.shape[0] > width:

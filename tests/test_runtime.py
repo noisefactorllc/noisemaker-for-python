@@ -126,6 +126,73 @@ def test_dot_folds_each_accumulated_term_like_the_oracle(monkeypatch):
     assert rt.dot(a2, b2) == 0.563319981098175
 
 
+def test_hot_path_snap_swizzle_and_construct_match_the_generic_rounding():
+    """The f32 fast paths (stored-f32 swizzle reads, identity _snap32, single-
+    vector construct) must produce exactly the values the generic paths round:
+    deferred float64 arithmetic rounds at the same boundaries, only the redundant
+    copies go away. Every input dtype the runtime sees is pinned here."""
+    from noisemaker_cpu.runtime import _SWIZZLE, _SWIZZLE_INDEX, _snap32
+
+    runtime = Runtime()
+    f32v = np.array([0.7645993232727051, -2.686253547668457, 0.4626176953315735], dtype=np.float32)
+    f64v = np.array([0.7645993232727051, -2.686253547668457, 0.4626176953315735], dtype=np.float64)
+    ints = np.array([7, -3, 9], dtype=np.int64)
+    uints = np.array([7, 0xFFFFFFFF, 9], dtype=np.int64)
+    bools = np.array([True, False, True])
+    plain_list = [0.5, -1.25, 3.0]
+
+    # The shared index memo resolves every legal swizzle name the same way the
+    # per-call build did: component order mapped through _SWIZZLE.
+    for sw, idx in _SWIZZLE_INDEX.items():
+        assert idx == [_SWIZZLE[c] for c in sw]
+    f32v4 = np.array([0.7645993232727051, -2.686253547668457, 0.4626176953315735, 1.5], dtype=np.float32)
+    for sw in ("x", "xy", "yx", "zzy", "wxyz"):
+        vec = f32v4 if len(sw) == 4 else f32v
+        fast = runtime.swizzle(vec, sw)
+        slow = runtime.swizzle(vec.astype(np.float64), sw)
+        if isinstance(fast, float):
+            assert fast == float(slow)
+        else:
+            assert np.array_equal(fast.astype(np.float32), np.asarray(slow, dtype=np.float32))
+
+    # _snap32: f32 input passes through value-identically; float64 rounds to
+    # f32; int vectors pass through unchanged (full precision kept); bools
+    # widen to f32 like the generic path.
+    assert _snap32(f32v) is f32v
+    snapped = _snap32(f64v)
+    assert snapped.dtype == np.float32 and np.array_equal(snapped, f32v)
+    assert _snap32(ints) is ints
+    assert _snap32(uints) is uints
+    widened = _snap32(bools)
+    assert widened.dtype == np.float32 and np.array_equal(widened, np.array([1.0, 0.0, 1.0], dtype=np.float32))
+    assert np.array_equal(_snap32(plain_list), np.array(plain_list, dtype=np.float32))
+
+    # construct with one vector argument of the declared width equals the
+    # flatten-and-round generic path (exact-width fast path, list fallback).
+    assert np.array_equal(runtime.construct(3, f64v), f32v)
+    assert np.array_equal(runtime.construct(3, f32v), f32v)
+    assert np.array_equal(runtime.construct(3, plain_list), np.array(plain_list, dtype=np.float32))
+    truncated = runtime.construct(2, f64v)
+    assert np.array_equal(truncated, f32v[:2])
+    padded = runtime.construct(4, [1.0, 2.0])
+    assert np.array_equal(padded, np.array([1.0, 2.0, 2.0, 2.0], dtype=np.float32))
+    # A matrix-style 2-D input flattens row-major exactly as the generic path.
+    mat = np.array([[1.0, 2.0], [3.0, 4.0]], dtype=np.float64)
+    assert np.array_equal(runtime.construct(4, mat), np.array([1.0, 2.0, 3.0, 4.0], dtype=np.float32))
+
+    # assign_swizzle keeps integer dtypes integer and rounds float writes to
+    # the stored f32 vector, with value semantics (the source is untouched).
+    ints2 = np.array([7, -3, 9], dtype=np.int64)
+    out = runtime.assign_swizzle(ints2, "xy", np.array([1, 2], dtype=np.int64))
+    assert out.dtype == np.int64 and np.array_equal(out, np.array([1, 2, 9], dtype=np.int64))
+    assert np.array_equal(ints2, np.array([7, -3, 9], dtype=np.int64))
+    base = np.array([0.5, 0.25, 0.125], dtype=np.float32)
+    out = runtime.assign_swizzle(base, "yz", 0.1)
+    assert out.dtype == np.float32
+    assert float(out[1]) == float(out[2]) == float(np.float32(0.1))
+    assert float(out[0]) == 0.5
+
+
 def test_dot_probe_defaults_to_the_folded_tip(monkeypatch):
     """The published runtime folds by default (standalone/deployed renders with
     no mounted oracle); a mounted pre-fix oracle keeps its published
