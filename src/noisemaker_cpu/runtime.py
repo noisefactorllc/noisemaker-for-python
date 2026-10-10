@@ -13,6 +13,7 @@ the subset needed by the P0 effects (solid, invert) plus the structural hooks
 from __future__ import annotations
 
 import itertools
+import math
 import os
 from pathlib import Path
 
@@ -231,6 +232,63 @@ def trunc_scalar_div(x):
     return _trunc_value(x)
 
 
+def _js_scalar_binary(op, a, b):
+    """Raw-JS scalar semantics for int/uint expressions a kernel's pinned oracle
+    keeps unlowered (normalizeUnsigned strips the uint types; only the scalar
+    ``uint X * <int literal>`` sites become wrapping umul, and the component-form
+    restore passes never touch scalar chains): float64 ``+ - * /``, JS remainder
+    for ``%`` (sign of the dividend), ToInt32 coercion at every bitwise/shift
+    operator with an arithmetic ``>>``, and JS array-indexing semantics for
+    ``None`` (undefined) operands — ToInt32(undefined) is 0."""
+    if op in ("+", "-", "*", "/"):
+        av = float(a)
+        bv = float(b)
+        if op == "+":
+            return av + bv
+        if op == "-":
+            return av - bv
+        if op == "*":
+            return av * bv
+        if bv == 0.0:
+            return float("nan") if av == 0.0 else float("inf") * (1 if av > 0 else -1)
+        return av / bv
+    if op == "%":
+        av = float(a)
+        bv = float(b)
+        if bv == 0.0:
+            return float("nan")
+        return math.fmod(av, bv)
+    av = 0 if a is None else _s32(int(float(a)))
+    if op in ("&", "|", "^"):
+        bv = 0 if b is None else _s32(int(float(b)))
+        if op == "&":
+            return _s32(av & bv)
+        if op == "|":
+            return _s32(av | bv)
+        return _s32(av ^ bv)
+    shift = 0 if b is None else (int(float(b)) & 31)
+    if op == "<<":
+        return _s32(av << shift)
+    if op == ">>":
+        return av >> shift
+    raise ValueError(f"unsupported js scalar op {op!r}")
+
+
+def array_read(arr, idx):
+    """JS array indexing with a numeric index: a fractional, negative, or
+    out-of-range index yields undefined (returned as None)."""
+    try:
+        f = float(idx)
+    except (TypeError, ValueError):
+        return None
+    if f != int(f):
+        return None
+    i = int(f)
+    if i < 0 or i >= len(arr):
+        return None
+    return arr[i]
+
+
 _SWIZZLE = {"x": 0, "y": 1, "z": 2, "w": 3, "r": 0, "g": 1, "b": 2, "a": 3, "s": 0, "t": 1, "p": 2, "q": 3}
 # Every legal swizzle name (2-4 components) resolved once: kernels re-read the
 # same swizzle strings millions of times per render, and per-call list builds
@@ -346,6 +404,15 @@ class Runtime:
     def trunc_scalar_div(self, x):
         """JS ``Math.trunc`` over the scalar/scalar int-division result."""
         return trunc_scalar_div(x)
+
+    def js_scalar_binary(self, op, a, b):
+        """Raw-JS scalar semantics for int/uint expressions (see
+        ``_js_scalar_binary``)."""
+        return _js_scalar_binary(op, a, b)
+
+    def array_read(self, arr, idx):
+        """JS array indexing with a numeric index (see ``array_read``)."""
+        return array_read(arr, idx)
 
     # ---- construction ----
     def construct(self, width: int, *comps, base="float"):

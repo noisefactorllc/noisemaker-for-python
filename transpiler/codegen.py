@@ -582,6 +582,15 @@ class CodeGen:
             n = obj_t["mat"]
             return (f"rt.mat_col({obj_code}, {idx_code}, {n})", {"base": "float", "width": n})
         if obj_t.get("array"):
+            if self.effect_id == "filter/spookyTicker":
+                # GLYPHS[digit * 8 + gy]: the compiled oracle keeps the raw
+                # (possibly fractional or negative) JS array index — a
+                # fractional or out-of-range index reads undefined, which the
+                # following bitwise shift coerces to 0.
+                return (
+                    f"rt.array_read({obj_code}, {idx_code})",
+                    {"base": base_of(obj_t), "width": obj_t["width"]},
+                )
             return (f"{obj_code}[int({idx_code})]", {"base": base_of(obj_t), "width": obj_t["width"]})
         return (f"{obj_code}[int({idx_code})]", {"base": base_of(obj_t), "width": 1})
 
@@ -682,6 +691,25 @@ class CodeGen:
             base = "int"
         else:
             base = "float"
+        if (
+            self.effect_id == "filter/spookyTicker"
+            and width == 1
+            and base in ("int", "uint")
+            and not (base == "uint" and op == "*")
+        ):
+            # The sibling's normalizeUnsigned strips this kernel's scalar
+            # uint types to int and only rewrites scalar ``uint X * <int
+            # literal>`` sites into wrapping umul; no restore pass touches
+            # scalar chains, so the compiled oracle keeps raw JS number
+            # semantics for every other scalar int/uint op: float64
+            # ``+ - * /``, JS remainder (sign of the dividend) for ``%``, and
+            # ToInt32 coercion with an arithmetic ``>>`` at each bitwise op.
+            # The pinned authority capture matches that lowering (the same
+            # measured exemption as restoreIntegerDivision's), so mirror it.
+            # The uint multiply keeps the wrapping rt.binary — Math.imul>>>0
+            # is bit-identical to the port's uint wrap, and the raw f64
+            # product of two uint32s is not exact.
+            return (f"rt.js_scalar_binary({q(op)}, {l_code}, {r_code})", {"base": base, "width": width})
         code = f"rt.binary({q(op)}, {l_code}, {r_code}, {width}, {q(base)})"
         # Round where the oracle's compiled JS rounds (see _vec_kind); otherwise
         # the result stays raw until its next consumption boundary.

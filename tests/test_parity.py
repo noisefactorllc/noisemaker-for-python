@@ -587,6 +587,26 @@ def test_canonical_hash_filters_are_byte_exact(tmp_path, effect_id):
     assert _max_diff(js, py) == 0
 
 
+# The 8x8 whole-catalog gate cannot see spookyTicker's overlay at all (the rows
+# sit off canvas at the default parity size), so the scalar int/uint lowering it
+# pins is only exercised at sizes where the ticker is drawn. The pinned oracle
+# keeps raw-JS number semantics for the kernel's scalar int/uint chains (only
+# the scalar `uint X * <literal>` sites become wrapping umul and the untruncated
+# `cellX = sx / CELL_W` division is its measured authority capture), and the
+# glyph-row array read keeps the raw fractional index. Byte-exact at the first
+# two on-canvas sizes, same DSL/seed/time form as the audit comparison.
+SPOOKY_TICKER_SIZES = (32, 64)
+
+
+@pytest.mark.slow
+@pytest.mark.parametrize("size", SPOOKY_TICKER_SIZES)
+def test_spooky_ticker_overlay_is_byte_exact_at_larger_sizes(tmp_path, size):
+    program = "search synth, filter\nperlin(seed: 0).spookyTicker(seed: 1).write(o0)\nrender(o0)\n"
+    js = _js_render_dsl(program, str(tmp_path / f"spooky-{size}.png"), width=size, height=size, seed=1, time=0.25)
+    py = render_dsl(program, width=size, height=size, seed=1, time=0.25)
+    assert _max_diff(js, py) == 0
+
+
 def test_cpu_upstream_source_lock_pin_integrity():
     """Verify the mounted sibling noisemaker-for-cpu's upstream source lock is
     anchored to its own committed, machine-checkable record instead of a
