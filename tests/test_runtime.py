@@ -3,6 +3,44 @@ import numpy as np
 from noisemaker_cpu.runtime import Runtime
 
 
+def test_to_int_and_to_uint_coerce_non_finite_floats_like_javascript():
+    # The oracle lowers int casts as `(value ?? 0) | 0` per component
+    # (src/csl/glsl-runtime.js #integerVector): truncate toward zero, wrap to
+    # 32 bits, and coerce NaN/Infinity to 0. Python's int() raises on both.
+    runtime = Runtime()
+
+    assert runtime.to_int(float("inf")) == 0
+    assert runtime.to_int(float("-inf")) == 0
+    assert runtime.to_int(float("nan")) == 0
+    assert runtime.to_int(2.7) == 2
+    assert runtime.to_int(-2.7) == -2
+    assert runtime.to_uint(float("inf")) == 0
+    assert runtime.to_uint(float("nan")) == 0
+    assert runtime.to_uint(-1.0) == 0xFFFFFFFF
+    np.testing.assert_array_equal(
+        runtime.to_int(np.array([float("inf"), float("nan"), 2.7, -2.7], dtype=np.float32)),
+        np.array([0, 0, 2, -2], dtype=np.int64),
+    )
+    np.testing.assert_array_equal(
+        runtime.to_uint(np.array([float("inf"), float("nan"), -1.0], dtype=np.float32)),
+        np.array([0, 0, 0xFFFFFFFF], dtype=np.int64),
+    )
+
+
+def test_construct_integer_vectors_coerce_non_finite_components_to_zero():
+    # synth3d/noise3d at scale=0 feeds Infinity through an ivec4/uvec4 chain
+    # (hash4); the oracle's typed-array assignment turns it into 0.
+    runtime = Runtime()
+    np.testing.assert_array_equal(
+        runtime.construct(4, [float("inf"), float("nan"), 1.9, -3.2], base="int"),
+        np.array([0, 0, 1, -3], dtype=np.int64),
+    )
+    np.testing.assert_array_equal(
+        runtime.construct(4, [float("inf"), float("nan"), 1.9, -3.2], base="uint"),
+        np.array([0, 0, 1, 0xFFFFFFFD], dtype=np.int64),
+    )
+
+
 def test_isnan_returns_glsl_boolean_scalar_and_vector_results():
     runtime = Runtime()
 

@@ -1,0 +1,757 @@
+#!/usr/bin/env python
+"""Parameter-matrix parity sweep: render every executable effect of the
+authority manifest with each non-resource parameter explicitly bound, on both
+this port and the pinned noisemaker-for-cpu oracle, and count byte-exact
+agreement.
+
+The default-parameter parity summary (scripts/parity-summary) renders the
+manifest's cases at their metadata defaults only; a codegen or rounding defect
+reachable only through a non-default parameter value stays invisible there.
+This sweep closes that hole (GAP-011, issue #7): for every executable effect
+case it derives one variant per bindable parameter bound at the parameter's
+documented minimum and one at its documented maximum, and renders both engines
+at the manifest settings (8x8, seed 1, time 0.25).
+
+Binding rules
+-------------
+- Domain source: this port's bundled catalog metadata (the parameter surface
+  the port ships and can actually bind), merged with the pinned oracle's
+  upstream-snapshot parameter records where the oracle documents a bound or a
+  choice set the bundle omits (mixer/mashup layers/smoothness,
+  synth/remap bgAlpha/smoothEdge, the palette/channel/oscType choice maps).
+  A parameter whose documented bound is exclusive or unbounded binds at the
+  nearest valid interior value instead (the type rules below).
+- Resource parameters take no variants: `surface`/`volume`/`geometry` params
+  are inputs the harness binds (default solid / external texture).
+  synth/remap's per-zone parameters (zone0_count .. zone7_v31) are excluded
+  as well: the port's pinned CDN bundle does not carry them, so
+  no published port interface can bind them. The structural
+  `iterationCount`/`stateSize`/`volumeSize` scales do take variants: the
+  sweep binds each at its documented extremes (see the counts comment at
+  _RESOURCE_NAMES), including multi-site splicing where an extreme also
+  sizes a downstream node.
+- `seed` params take no variants: both engines thread the render seed into an
+  unbound `seed` param explicitly (bin/noisemaker-cpu.js `withSeed`,
+  renderer.py's seed-param threading), and the shared DSL programs bind
+  `seed:` literally, so every case already carries the explicit threading.
+- Interior values for parameters neither catalog documents: booleans bind
+  false/true; colors bind #000000/#ffffff (the unit-cube corners); vec3 binds
+  the unit vectors [1,0,0]/[0,0,1] (never the zero vector - lightDirection
+  would normalize it to NaN); vec2 binds [8,8]/[64,64]; mat3 binds ±90-degree
+  rotations; strings bind fixed single-token values; remaining ints bind
+  0 and default+1 (the kernels dispatch modes through if-chains, so adjacent
+  integers stay valid on both engines).
+
+Case shapes mirror scripts/parity-summary: plain effects render through the
+oracle `effect` CLI (--param NAME=VALUE) against render_effect; iterated,
+volume, wide-chain and reactive/mesh cases splice the binding into the shared
+DSL program and render the identical program text through `noisemaker-cpu
+render` (or the reactive/mesh driver) against render_dsl.
+
+Output grammar matches scripts/parity-summary - one `EXACT <case>` or
+`FAIL <case> (reason)` verdict line per case, then the provenance line and a
+machine-readable PARITY-SUMMARY line as the last output. Exit code is 0 only
+when expected > 0, executed == expected, exact + strict == expected, and
+near, defer, skip, fail and missing are all zero. A port-side render timeout
+or an oracle-side failure counts as fail and stays visible.
+
+Usage: scripts/parity-matrix [--only effect_id[,effect_id]] [--json out]
+                            [--workers N]
+"""
+
+from __future__ import annotations
+
+import argparse
+import hashlib
+import importlib.util
+import json
+import os
+import re
+import signal
+import subprocess
+import sys
+import tempfile
+from concurrent.futures import ThreadPoolExecutor
+
+_HERE = os.path.dirname(os.path.abspath(__file__))
+_ROOT = os.path.dirname(_HERE)
+
+_spec = importlib.util.spec_from_file_location("_noisemaker_parity", os.path.join(_HERE, "parity.py"))
+_parity = importlib.util.module_from_spec(_spec)
+_spec.loader.exec_module(_parity)
+
+sys.modules.setdefault("tests", importlib.util.module_from_spec(importlib.util.spec_from_loader("tests", None)))
+_tp_spec = importlib.util.spec_from_file_location("tests.test_parity", os.path.join(_ROOT, "tests", "test_parity.py"))
+_tp = importlib.util.module_from_spec(_tp_spec)
+sys.modules["tests.test_parity"] = _tp
+_tp_spec.loader.exec_module(_tp)
+
+from importlib.machinery import SourceFileLoader
+
+_ps_loader = SourceFileLoader("_noisemaker_parity_summary", os.path.join(_HERE, "parity-summary"))
+_ps_spec = importlib.util.spec_from_loader(_ps_loader.name, _ps_loader)
+_ps = importlib.util.module_from_spec(_ps_spec)
+_ps_loader.exec_module(_ps)
+
+import numpy as np  # noqa: E402
+
+CPU_DIR = _parity.CPU_DIR
+CLI = _parity.CLI
+SIZE, SEED, TIME = _parity.SIZE, _parity.SEED, _parity.TIME
+
+_RESOURCE_TYPES = ("surface", "volume", "geometry")
+# `seed` is not bound per-variant: the gap criteria require the render seed to
+# thread into every seed parameter explicitly on both engines, which every
+# case does. Everything else documented in the catalogs is bound at its
+# documented extremes, including the structural iterationCount/stateSize/
+# volumeSize scales: where an extreme makes a render impractically slow the
+# per-render budget fails the case and the failure stays visible.
+_RESOURCE_NAMES = frozenset({"seed"})
+# Fixed interior values for string params neither catalog documents. They are
+# inert in the CLI/DSL render path (the text overlay texture is bound from the
+# input image), so any deterministic single-token value is valid.
+_STRING_INTERIORS = {
+    "text": ("Noisemaker", "parity"),
+    "style": ("bold", "italic"),
+}
+# Per-render budget on both engines. The port's interpreted agent kernels are
+# far slower than the oracle (points/flock takes ~2 minutes per 8x8 render at
+# stateSize 64 where the JS oracle takes under a second), and pointsBillboardRender's
+# alpha blend mode runs the 22-stage depth-merge cascade the shared test suite
+# documents as multiple minutes. A render that still exceeds this budget counts
+# as fail and stays visible.
+_RENDER_TIMEOUT = 900
+_BARE_TOKEN = re.compile(r"^[A-Za-z_][\w.]*$")
+
+
+def oracle_param_records() -> dict:
+    """The pinned oracle's parameter records (upstream-snapshot.js), dumped
+    once through node so the sweep reads the authority's own min/max/choices
+    instead of a vendored copy."""
+    js = (
+        "import('./src/effects/generated/upstream-snapshot.js').then((m) => {"
+        "const out = {};"
+        "for (const r of m.effectRecords) {"
+        "  out[r.id] = {};"
+        "  for (const [pn, ps] of Object.entries(r.params)) {"
+        "    out[r.id][pn] = { type: ps.type, min: ps.min ?? null, max: ps.max ?? null,"
+        "      choices: ps.choices && typeof ps.choices === 'object' ? ps.choices : null };"
+        "  }"
+        "}"
+        "process.stdout.write(JSON.stringify(out));"
+        "})"
+    )
+    run = subprocess.run(["node", "-e", js], cwd=CPU_DIR, check=True, capture_output=True, text=True, timeout=120)
+    return json.loads(run.stdout)
+
+
+def _matrix_values(pname: str, spec: dict, ospec: dict) -> list:
+    """The (label, value) bindings one parameter contributes to the matrix."""
+    ptype = spec.get("type")
+    otype = ospec.get("type") or ptype
+    if pname in _RESOURCE_NAMES or ptype in _RESOURCE_TYPES:
+        return []
+    lo, hi = spec.get("min"), spec.get("max")
+    if lo is None or hi is None:
+        # The oracle's record documents bounds the bundled catalog omits.
+        lo = spec.get("min") if spec.get("min") is not None else ospec.get("min")
+        hi = spec.get("max") if spec.get("max") is not None else ospec.get("max")
+        if lo is None and hi is None and pname == "stateSize":
+            # points/attractor's records omit the bounds every other stateSize
+            # effect documents (64..2048) and the port's own range check
+            # enforces, so the generic 0/1 interior is not a valid binding
+            # here: use that documented domain as the interior.
+            return [("min", 64), ("max", 2048)]
+    if (lo is None) != (hi is None):
+        # Exactly one side is documented (in either catalog): bind that side
+        # explicitly at its documented bound and give the unbounded side a
+        # valid interior just inside it — neither engine enforces an
+        # undocumented bound, so lo+1/hi-1 stays valid there.
+        if lo is not None:
+            hi = lo + 1
+        else:
+            lo = hi - 1
+    if lo is not None and hi is not None:
+        # Vector params document per-component scalar bounds (the oracle
+        # snapshot declares e.g. renderLandscape3d lightDirection as
+        # vec3 with min -1 / max 1): bind the component-wise extremes.
+        if ptype in ("vec2", "vec3", "vec4", "color", "mat3") and not isinstance(lo, list):
+
+            def _components(bound):
+                if isinstance(bound, str):
+                    return [float(part) for part in bound.split(",")]
+                size = {"vec2": 2, "color": 3, "vec3": 3, "vec4": 4, "mat3": 9}[ptype]
+                return [bound] * size
+
+            return [("min", _components(lo)), ("max", _components(hi))]
+        return [("min", lo), ("max", hi)]
+    choices = spec.get("choices") if isinstance(spec.get("choices"), dict) else None
+    if not choices:
+        ochoices = ospec.get("choices")
+        choices = ochoices if isinstance(ochoices, dict) else None
+    if choices:
+        numeric = sorted({v for v in choices.values() if isinstance(v, (int, float)) and not isinstance(v, bool)})
+        strings = sorted({v for v in choices.values() if isinstance(v, str)})
+        if numeric:
+            values = numeric
+        elif strings:
+            values = strings  # choice values are the binding itself (font/justify)
+        else:
+            values = []
+        if len(values) == 1:
+            return [("min", values[0])]
+        if values:
+            return [("min", values[0]), ("max", values[-1])]
+    if ptype in ("bool", "boolean") or otype in ("bool", "boolean"):
+        return [("min", False), ("max", True)]
+    if ptype == "color":
+        return [("min", "#000000"), ("max", "#ffffff")]
+    if ptype == "vec3":
+        return [("min", [1, 0, 0]), ("max", [0, 0, 1])]
+    if ptype == "vec2":
+        return [("min", [8, 8]), ("max", [64, 64])]
+    if ptype == "mat3":
+        return [("min", [0, 0, -1, 0, 1, 0, 1, 0, 0]), ("max", [0, 0, 1, 0, 1, 0, -1, 0, 0])]
+    if ptype == "string":
+        lo_v, hi_v = _STRING_INTERIORS.get(pname, ("Noisemaker", "parity"))
+        return [("min", lo_v), ("max", hi_v)]
+    if ptype in ("int", "enum", "member", "palette"):
+        base = int(spec.get("default") or 0)
+        return [("min", 0), ("max", base + 1)]
+    if ptype == "float":
+        base = float(spec.get("default") or 0.0)
+        step = max(1.0, abs(base) * 0.5)
+        return [("min", base - step), ("max", base + step)]
+    return []
+
+
+def _fmt_number(value) -> str:
+    if isinstance(value, int) or (isinstance(value, float) and value.is_integer()):
+        return str(int(value))
+    return repr(float(value))
+
+
+def _dsl_literal(value) -> str:
+    if isinstance(value, bool):
+        return "true" if value else "false"
+    if isinstance(value, (int, float)):
+        return _fmt_number(value)
+    if isinstance(value, str):
+        if _BARE_TOKEN.match(value) or re.match(r"^#[0-9a-fA-F]{3,8}$", value):
+            return value
+        return "'" + value.replace("\\", "\\\\").replace("'", "\\'") + "'"
+    if isinstance(value, (list, tuple)):
+        return "[" + ", ".join(_dsl_literal(v) for v in value) + "]"
+    raise TypeError(f"no DSL literal for {type(value).__name__}")
+
+
+def _cli_literal(value) -> str:
+    """The VALUE half of a `--param NAME=VALUE` assignment, in the grammar
+    bin/noisemaker-cpu.js parseAssignment accepts."""
+    if isinstance(value, bool):
+        return "true" if value else "false"
+    if isinstance(value, (int, float)):
+        return _fmt_number(value)
+    if isinstance(value, str):
+        return value
+    if isinstance(value, (list, tuple)):
+        return "[" + ",".join(_cli_literal(v) for v in value) + "]"
+    raise TypeError(f"no CLI literal for {type(value).__name__}")
+
+
+def _split_top_level(text: str) -> list:
+    """Split on top-level commas, skipping strings and bracket/paren nesting."""
+    parts, depth, in_str, start = [], 0, None, 0
+    i = 0
+    while i < len(text):
+        c = text[i]
+        if in_str:
+            if c == "\\":
+                i += 2
+                continue
+            if c == in_str:
+                in_str = None
+        elif c in ("'", '"'):
+            in_str = c
+        elif c in "([":
+            depth += 1
+        elif c in ")]":
+            depth -= 1
+        elif c == "," and depth == 0:
+            parts.append(text[start:i])
+            start = i + 1
+        i += 1
+    parts.append(text[start:])
+    return [p.strip() for p in parts if p.strip()]
+
+
+def _arg_key(part: str):
+    """The `key` of a top-level `key: value` arg, or None."""
+    depth, in_str = 0, None
+    i = 0
+    while i < len(part):
+        c = part[i]
+        if in_str:
+            if c == "\\":
+                i += 2
+                continue
+            if c == in_str:
+                in_str = None
+        elif c in ("'", '"'):
+            in_str = c
+        elif c in "([":
+            depth += 1
+        elif c in ")]":
+            depth -= 1
+        elif c == ":" and depth == 0:
+            key = part[:i].strip()
+            return key if _BARE_TOKEN.match(key) else None
+        i += 1
+    return None
+
+
+def splice_param(program: str, func: str, pname: str, value) -> str:
+    """Bind `pname: <value>` inside the program's single `func(...)` call,
+    replacing an existing binding of the same name."""
+    calls = list(re.finditer(r"(?<!\w)" + re.escape(func) + r"\s*\(", program))
+    if len(calls) != 1:
+        raise ValueError(f"expected exactly one {func}() call in the program, found {len(calls)}")
+    open_idx = program.index("(", calls[0].start())
+    depth, in_str, i = 0, None, open_idx
+    while i < len(program):
+        c = program[i]
+        if in_str:
+            if c == "\\":
+                i += 2
+                continue
+            if c == in_str:
+                in_str = None
+        elif c in ("'", '"'):
+            in_str = c
+        elif c == "(":
+            depth += 1
+        elif c == ")":
+            depth -= 1
+            if depth == 0:
+                break
+        i += 1
+    if i >= len(program):
+        raise ValueError("unbalanced program")
+    args = _split_top_level(program[open_idx + 1 : i])
+    lit = _dsl_literal(value)
+    rebuilt, replaced = [], False
+    for arg in args:
+        if _arg_key(arg) == pname:
+            rebuilt.append(f"{pname}: {lit}")
+            replaced = True
+        else:
+            rebuilt.append(arg)
+    if not replaced:
+        rebuilt.append(f"{pname}: {lit}")
+    return program[: open_idx + 1] + ", ".join(rebuilt) + program[i:]
+
+
+def splice_bindings(program: str, func: str, pname: str, value) -> str:
+    """Bind `pname: <value>` in a DSL program. A parameter may be bound on an
+    earlier chain node than the record's own call (a points chain binds
+    stateSize/iterationCount on pointsEmit) or on several nodes at once (a
+    volume generator's volumeSize also sizes the render node's sampling), so
+    every existing binding of the name is rebound; when the program does not
+    bind the name at all it is spliced into the record's own call."""
+    lit = _dsl_literal(value)
+    out, pos, replaced = [], 0, False
+    for call in re.finditer(r"(?<!\w)[A-Za-z_][\w.]*\s*\(", program):
+        open_idx = program.index("(", call.start())
+        depth, in_str, i = 0, None, open_idx
+        while i < len(program):
+            c = program[i]
+            if in_str:
+                if c == "\\":
+                    i += 2
+                    continue
+                if c == in_str:
+                    in_str = None
+            elif c in ("'", '"'):
+                in_str = c
+            elif c == "(":
+                depth += 1
+            elif c == ")":
+                depth -= 1
+                if depth == 0:
+                    break
+            i += 1
+        if i >= len(program):
+            raise ValueError("unbalanced program")
+        args = _split_top_level(program[open_idx + 1 : i])
+        if not any(_arg_key(arg) == pname for arg in args):
+            continue
+        out.append(program[pos : open_idx + 1])
+        out.append(", ".join(f"{pname}: {lit}" if _arg_key(arg) == pname else arg for arg in args))
+        pos = i
+        replaced = True
+    if not replaced:
+        return splice_param(program, func, pname, value)
+    out.append(program[pos:])
+    return "".join(out)
+
+
+def build_matrix(effects: dict, cases: dict, records: dict, only=None):
+    """One matrix case per (executable effect case, bindable parameter, bound)."""
+    matrix = []
+    for eid, spec in effects.items():
+        if only is not None and eid not in only:
+            continue
+        case = cases.get(eid)
+        ospecs = records.get(eid, {})
+        variants = []
+        for pname, ps in spec["params"].items():
+            for label, value in _matrix_values(pname, ps, ospecs.get(pname, {})):
+                variants.append((pname, label, value))
+        if case is None:
+            matrix.append({"case": f"{eid}#@no-parity-case", "eid": eid, "kind": "missing"})
+            continue
+        if not variants:
+            # Every parameter is a resource or the threaded seed: the effect
+            # still renders once, with the seed threading exercised.
+            matrix.append({"case": f"{eid}#@seed-threaded", "eid": eid, "kind": case[0], "payload": case[1], "width": case[2], "params": {}})
+            continue
+        for pname, label, value in variants:
+            matrix.append(
+                {
+                    "case": f"{eid}#{pname}@{label}",
+                    "eid": eid,
+                    "kind": case[0],
+                    "payload": case[1],
+                    "width": case[2],
+                    "params": {pname: value},
+                }
+            )
+    return matrix
+
+
+def _py_render_effect(eid: str, params: dict):
+    """render_effect with the harness's input binding (scripts/parity.py
+    py_render, parameterized)."""
+    effects = _parity._meta()["effects"]
+    spec = effects[eid]
+    kind = spec["kind"]
+    ext = spec.get("externalTexture")
+    if kind == "generator":
+        inputs = {ext: _parity._ext_texture()} if ext else {}
+        return _parity.render_effect(eid, params, inputs, width=SIZE, height=SIZE, seed=SEED, time=TIME)
+    inputs = {"inputTex": _parity._solid()}
+    if ext:
+        inputs[ext] = _parity._ext_texture()
+    surf = [pn for pn, sp in spec["params"].items() if isinstance(sp, dict) and sp.get("type") == "surface"]
+    for i, pname in enumerate(surf):
+        src = _parity._solid("#0cf" if i % 2 else "#f30")
+        sspec = spec["params"][pname]
+        for name in {sspec.get("uniform"), sspec.get("texture"), pname}:
+            if name:
+                inputs[name] = src
+    return _parity.render_effect(eid, params, inputs, width=SIZE, height=SIZE, seed=SEED, time=TIME)
+
+
+def _render_py(entry: dict):
+    kind = entry["kind"]
+    if kind == "missing":
+        raise RuntimeError("no-parity-case")
+    if kind == "effect":
+        return _py_render_effect(entry["eid"], entry["params"])
+    if kind == "external":
+        program_override = _parity._external_case_dsl(entry["payload"])
+    else:
+        program_override = entry["payload"]
+    if entry["params"]:
+        func = _parity._meta()["effects"][entry["eid"]]["func"]
+        for pname, value in entry["params"].items():
+            program_override = splice_bindings(program_override, func, pname, value)
+    from noisemaker_cpu.renderer import render_dsl
+
+    if kind == "external":
+        return render_dsl(
+            program_override,
+            width=entry["width"],
+            height=entry["width"],
+            seed=SEED,
+            time=TIME,
+            external_inputs=_parity.external_inputs_for_case(entry["payload"]),
+        )
+    return render_dsl(program_override, width=entry["width"], height=entry["width"], seed=SEED, time=TIME)
+
+
+def _render_js(entry: dict, out: str):
+    kind = entry["kind"]
+    if kind == "missing":
+        raise RuntimeError("no-parity-case")
+    if kind == "effect":
+        cmd = [
+            "node",
+            CLI,
+            "effect",
+            entry["eid"],
+            "--width",
+            str(SIZE),
+            "--height",
+            str(SIZE),
+            "--seed",
+            str(SEED),
+            "--time",
+            str(TIME),
+            "--output",
+            out,
+        ]
+        for pname, value in entry["params"].items():
+            cmd += ["--param", f"{pname}={_cli_literal(value)}"]
+        if _parity._meta()["effects"][entry["eid"]].get("externalTexture"):
+            cmd += ["--input", _parity.EXT_PNG]
+        subprocess.run(cmd, cwd=CPU_DIR, check=True, capture_output=True, timeout=_RENDER_TIMEOUT)
+    else:
+        if kind == "external":
+            program = _parity._external_case_dsl(entry["payload"])
+        else:
+            program = entry["payload"]
+        if entry["params"]:
+            func = _parity._meta()["effects"][entry["eid"]]["func"]
+            for pname, value in entry["params"].items():
+                program = splice_bindings(program, func, pname, value)
+        if kind == "external":
+            safe = re.sub(r"[^\w-]", "_", entry["case"])
+            dsl_path = os.path.join(_parity._SCRATCH.name, f"matrix-{safe}.dsl")
+            with open(dsl_path, "w", encoding="utf-8") as f:
+                f.write(program)
+            driver = os.path.join(_HERE, "parity-js-driver.mjs")
+            cmd = [
+                "node",
+                driver,
+                entry["payload"],
+                dsl_path,
+                out,
+                "--width",
+                str(entry["width"]),
+                "--height",
+                str(entry["width"]),
+                "--seed",
+                str(SEED),
+                "--time",
+                str(TIME),
+            ]
+            subprocess.run(cmd, cwd=CPU_DIR, check=True, capture_output=True, timeout=_RENDER_TIMEOUT)
+        else:
+            cmd = [
+                "node",
+                CLI,
+                "render",
+                "-",
+                "--width",
+                str(entry["width"]),
+                "--height",
+                str(entry["width"]),
+                "--seed",
+                str(SEED),
+                "--time",
+                str(TIME),
+                "--output",
+                out,
+            ]
+            subprocess.run(cmd, cwd=CPU_DIR, check=True, capture_output=True, timeout=_RENDER_TIMEOUT, input=program.encode())
+    with open(out, "rb") as f:
+        return _parity.decode_png(f.read())
+
+
+def _timeout_guard(fn, seconds=_RENDER_TIMEOUT):
+    def handler(signum, frame):
+        raise TimeoutError(f"port render exceeded {seconds}s")
+
+    old = signal.signal(signal.SIGALRM, handler)
+    signal.alarm(seconds)
+    try:
+        return fn()
+    finally:
+        signal.alarm(0)
+        signal.signal(signal.SIGALRM, old)
+
+
+def py_task(entry):
+    """One port-side matrix render (runs in a fork pool worker; the alarm
+    guard keeps a pathological render bounded and visible)."""
+    try:
+        return entry["case"], _timeout_guard(lambda: _render_py(entry)), None
+    except Exception as e:
+        return entry["case"], None, f"{type(e).__name__}: {str(e).splitlines()[0][:90]}"
+
+
+def main() -> int:
+    parser = argparse.ArgumentParser(add_help=False)
+    parser.add_argument("--only", default=None)
+    parser.add_argument("--json", default=None)
+    parser.add_argument("--resume", default=None)
+    parser.add_argument("--workers", type=int, default=8)
+    parser.add_argument("--py-workers", type=int, default=None)
+    args = parser.parse_args()
+    only = set(args.only.split(",")) if args.only else None
+
+    effects = _parity._meta()["effects"]
+    cases = _ps._build_cases(effects)
+    records = oracle_param_records()
+    all_matrix = build_matrix(effects, cases, records, only)
+    matrix = all_matrix
+    expected = len(matrix)
+    if not expected:
+        print("matrix is empty")
+        return 1
+
+    # A previous run's verdict log lets an interrupted sweep continue instead
+    # of re-rendering everything: EXACT/FAIL lines name their case, so the
+    # remaining cases re-run and the merged counts still cover the full
+    # matrix at this head.
+    prior = {}
+    if args.resume:
+        with open(args.resume, encoding="utf-8") as f:
+            for line in f:
+                m = re.match(r"^(EXACT|FAIL) (\S+)", line.strip())
+                if m:
+                    prior[m.group(2)] = line.strip()
+        prior_ids = {entry["case"] for entry in matrix}
+        prior = {cid: text for cid, text in prior.items() if cid in prior_ids}
+        matrix = [entry for entry in matrix if entry["case"] not in prior]
+        for text in prior.values():
+            print(text, flush=True)
+        print(f"[matrix] resumed {len(prior)} recorded verdicts, {len(matrix)} remain", file=sys.stderr, flush=True)
+    verdicts, max_diffs = {}, {}
+    verdicts.update(prior)
+
+    scratch = tempfile.TemporaryDirectory(prefix="noisemaker-matrix-")
+
+    # Warm the shared fixtures before the parallel phases (they lazy-write the
+    # external-texture PNG on first use).
+    _parity._ext_texture()
+    _parity._solid()
+
+    import time
+
+    started = time.time()
+
+    def _progress(phase, done):
+        print(f"[matrix] {phase} {done}/{expected} {int(time.time() - started)}s", file=sys.stderr, flush=True)
+
+    def oracle_task(indexed_entry):
+        index, entry = indexed_entry
+        out = os.path.join(scratch.name, f"oracle-{index}.png")
+        try:
+            return entry["case"], _render_js(entry, out), None
+        except Exception as e:  # oracle-side failure stays visible
+            return entry["case"], None, f"{type(e).__name__}: {str(e).splitlines()[0][:90]}"
+
+    oracle_surface, oracle_error = {}, {}
+    import concurrent.futures as futures_mod
+
+    with ThreadPoolExecutor(max_workers=max(1, args.workers)) as pool:
+        pending = [pool.submit(oracle_task, pair) for pair in enumerate(matrix)]
+        for done, fut in enumerate(futures_mod.as_completed(pending), 1):
+            case, surface, err = fut.result()
+            if err is not None:
+                oracle_error[case] = err
+            else:
+                oracle_surface[case] = surface
+            if done % 100 == 0 or done == expected:
+                _progress("oracle", done)
+
+    fail = 0
+    exact = 0
+    prior_exact = sum(1 for text in prior.values() if text.startswith("EXACT "))
+    prior_fail = len(prior) - prior_exact
+    default_py = min(6, os.cpu_count() or 1)
+    py_workers = min(max(1, args.py_workers if args.py_workers is not None else default_py), expected)
+    with futures_mod.ProcessPoolExecutor(max_workers=py_workers) as pool:
+        pending = [pool.submit(py_task, entry) for entry in matrix]
+        for done, fut in enumerate(futures_mod.as_completed(pending), 1):
+            cid, py, py_err = fut.result()
+            if py_err is not None:
+                fail += 1
+                verdicts[cid] = f"FAIL {cid} ({py_err})"
+                print(verdicts[cid], flush=True)
+                continue
+            if cid in oracle_error:
+                fail += 1
+                verdicts[cid] = f"FAIL {cid} (oracle: {oracle_error[cid]})"
+                print(verdicts[cid], flush=True)
+                continue
+            js = oracle_surface[cid]
+            ja = np.frombuffer(js.to_rgba8(), np.uint8).astype(int)
+            pa = np.frombuffer(py.to_rgba8(), np.uint8).astype(int)
+            if ja.shape != pa.shape:
+                fail += 1
+                verdicts[cid] = f"FAIL {cid} (shape-mismatch)"
+                print(verdicts[cid], flush=True)
+                continue
+            d = int(np.max(np.abs(ja - pa)))
+            max_diffs[cid] = d
+            if d == 0:
+                exact += 1
+                verdicts[cid] = f"EXACT {cid}"
+            else:
+                fail += 1
+                verdicts[cid] = f"FAIL {cid} (max-diff {d})"
+            print(verdicts[cid], flush=True)
+            if done % 100 == 0 or done == expected:
+                _progress("port", done)
+
+    strict = near = defer = skip = 0
+    exact += prior_exact
+    fail += prior_fail
+    executed = exact + fail  # every case reached a verdict (a timeout is a fail)
+    missing = max(0, expected - executed)
+    head = subprocess.run(["git", "rev-parse", "HEAD"], cwd=_ROOT, capture_output=True, text=True)
+    tree = subprocess.run(["git", "rev-parse", "HEAD^{tree}"], cwd=_ROOT, capture_output=True, text=True)
+    cpu = _parity._cpu_revision()
+    print(
+        "parity-matrix provenance: portHead=%s portTree=%s cpuHead=%s cpuTree=%s upstreamPin=%s sourceDigest=%s"
+        % (
+            head.stdout.strip() if head.returncode == 0 else "unknown",
+            tree.stdout.strip() if tree.returncode == 0 else "unknown",
+            cpu.get("cpuHead") or "unknown",
+            cpu.get("cpuTree") or "unknown",
+            cpu.get("revision") or "unknown",
+            cpu.get("sourceDigest") or "unknown",
+        )
+    )
+    print(
+        'PARITY-SUMMARY {"expected":%d,"executed":%d,"exact":%d,"strict":%d,'
+        '"near":%d,"defer":%d,"skip":%d,"fail":%d,"missing":%d}'
+        % (expected, executed, exact, strict, near, defer, skip, fail, missing)
+    )
+    if args.json:
+        doc = {
+            "settings": {"size": SIZE, "seed": SEED, "time": TIME, "tolerance": 0},
+            "cpu": cpu,
+            "counts": {
+                "expected": expected,
+                "executed": executed,
+                "exact": exact,
+                "strict": strict,
+                "near": near,
+                "defer": defer,
+                "skip": skip,
+                "fail": fail,
+                "missing": missing,
+            },
+            "cases": [
+                {"case": entry["case"], "params": entry.get("params", {}), "verdict": verdicts[entry["case"]], "maxDiff": max_diffs.get(entry["case"])}
+                for entry in all_matrix
+            ],
+        }
+        with open(args.json, "w", encoding="utf-8") as f:
+            json.dump(doc, f, indent=2, sort_keys=True)
+            f.write("\n")
+    complete = (
+        expected > 0
+        and exact == expected
+        and exact + strict == expected
+        and not (near or defer or skip or fail or missing)
+    )
+    return 0 if complete else 1
+
+
+if __name__ == "__main__":
+    sys.exit(main())

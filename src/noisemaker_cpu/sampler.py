@@ -24,8 +24,12 @@ import math
 
 import numpy as np
 
+_F32 = np.float32
+
 
 def _clamp(value, lo, hi):
+    # JS `clamp` is a ternary, not a min/max pair: a NaN compares false on
+    # both sides and passes through unchanged (Math.min/max would too).
     if value < lo:
         return lo
     if value > hi:
@@ -33,13 +37,29 @@ def _clamp(value, lo, hi):
     return value
 
 
+def _floor(value):
+    """JS ``Math.floor`` over a float: NaN/Infinity stay floats (Python's
+    ``math.floor`` raises on them). The caller clamps afterwards, so +/-
+    Infinity land on the edge texel exactly like the oracle's sampler, while
+    a NaN coordinate stays NaN and reads the undefined texel (NaN channels)."""
+    return float(np.floor(value))
+
+
+def _undefined_texel() -> np.ndarray:
+    """A NaN uv reads `data[NaN]` in the oracle: every channel is `undefined`,
+    which a Float32Array assignment coerces to NaN."""
+    return np.array([np.nan, np.nan, np.nan, np.nan], dtype=_F32)
+
+
 def sample_nearest(surface, u: float, v: float) -> np.ndarray:
     """Nearest-neighbor sample, addressing storage rows top-down (no flip)."""
     width = surface.width
     height = surface.height
-    x = _clamp(math.floor(u * width), 0, width - 1)
-    y = _clamp(math.floor(v * height), 0, height - 1)
-    source = (y * width + x) * 4
+    x = _clamp(_floor(u * width), 0, width - 1)
+    y = _clamp(_floor(v * height), 0, height - 1)
+    if not (math.isfinite(x) and math.isfinite(y)):
+        return _undefined_texel()
+    source = (int(y) * width + int(x)) * 4
     return surface.data[source : source + 4].astype(np.float32)
 
 
@@ -52,10 +72,12 @@ def sample_nearest_bottom_left(surface, u: float, v: float) -> np.ndarray:
     """
     width = surface.width
     height = surface.height
-    x = _clamp(math.floor(u * width), 0, width - 1)
-    shader_y = _clamp(math.floor(v * height), 0, height - 1)
-    y = height - 1 - shader_y
-    source = (y * width + x) * 4
+    x = _clamp(_floor(u * width), 0, width - 1)
+    shader_y = _clamp(_floor(v * height), 0, height - 1)
+    if not (math.isfinite(x) and math.isfinite(shader_y)):
+        return _undefined_texel()
+    y = height - 1 - int(shader_y)
+    source = (y * width + int(x)) * 4
     return surface.data[source : source + 4].astype(np.float32)
 
 
@@ -68,8 +90,12 @@ def sample_bilinear(surface, u: float, v: float) -> np.ndarray:
 
     px = _clamp(u * width - 0.5, 0, width - 1)
     py = _clamp(v * height - 0.5, 0, height - 1)
-    x0 = math.floor(px)
-    y0 = math.floor(py)
+    if not (math.isfinite(px) and math.isfinite(py)):
+        # A NaN uv reads undefined taps on both engines (the clamp above
+        # passes NaN through; +/-Infinity clamps to the edge before this).
+        return _undefined_texel()
+    x0 = int(_floor(px))
+    y0 = int(_floor(py))
     x1 = min(x0 + 1, width - 1)
     y1 = min(y0 + 1, height - 1)
     tx = px - x0

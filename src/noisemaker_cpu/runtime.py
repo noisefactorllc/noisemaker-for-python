@@ -477,7 +477,7 @@ class Runtime:
         supplied = [c for c in comps if c is not None]
         if base in ("int", "uint"):
             if len(supplied) == 1 and _is_scalar(supplied[0]) and width > 1:
-                iv = int(supplied[0])
+                iv = uintmath._int_operand(supplied[0])
                 iv = (iv & _U32) if base == "uint" else _s32(iv)
                 if base == "uint" and self.js_uvec_numbers:
                     return _UIntVector([iv] * width)
@@ -485,9 +485,9 @@ class Runtime:
             ivals = []
             for c in supplied:
                 if _is_scalar(c):
-                    ivals.append(int(c))
+                    ivals.append(uintmath._int_operand(c))
                 else:
-                    ivals.extend(int(x) for x in np.asarray(c).ravel())
+                    ivals.extend(uintmath._int_operand(x) for x in np.asarray(c).ravel())
             ivals = [(v & _U32) if base == "uint" else _s32(v) for v in ivals]
             if width == 1:
                 return ivals[0]
@@ -793,14 +793,24 @@ class Runtime:
         return np.asarray(uintmath.unpack_half_2x16(int(u) & _U32), dtype=F32)
 
     def to_int(self, x):
+        # JS lowering is `(value ?? 0) | 0` per component: truncate toward
+        # zero, wrap to signed 32-bit, and coerce NaN/Infinity to 0
+        # (uintmath._int_operand), matching src/csl/glsl-runtime.js
+        # #integerVector.
         if _is_scalar(x):
-            return _s32(int(x))  # GLSL int(float) truncates toward zero, then wraps
-        return np.asarray(x).astype(np.int64)
+            return _s32(uintmath._int_operand(x))
+        arr = np.asarray(x)
+        if arr.dtype.kind in "iu":
+            return arr.astype(np.int64, copy=False)
+        return np.array([_s32(uintmath._int_operand(v)) for v in arr.ravel()], dtype=np.int64)
 
     def to_uint(self, x):
         if _is_scalar(x):
-            return int(x) & _U32
-        return np.asarray(x).astype(np.int64) & _U32
+            return uintmath._int_operand(x) & _U32
+        arr = np.asarray(x)
+        if arr.dtype.kind in "iu":
+            return arr.astype(np.int64, copy=False) & _U32
+        return np.array([uintmath._int_operand(v) & _U32 for v in arr.ravel()], dtype=np.int64)
 
     # ---- vector geometry (snap args to f32; dot folds each accumulated term
     # when the oracle carries the fma chain, else accumulates float64 and

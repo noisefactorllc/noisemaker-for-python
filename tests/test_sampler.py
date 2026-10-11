@@ -63,6 +63,36 @@ def test_sample_nearest_clamps_without_wraparound():
     np.testing.assert_array_equal(sample_nearest(s, 2.0, 2.0), BOTTOM_RIGHT)
 
 
+def test_sample_nearest_and_bottom_left_map_nan_uv_to_the_undefined_texel():
+    # JS `Math.floor(NaN)` stays NaN and the ternary clamp passes it through,
+    # so the oracle reads data[NaN] — undefined — and Float32Array assignment
+    # coerces every channel to NaN. Python's math.floor would raise instead.
+    s = make_surface()
+    undefined = np.array([np.nan, np.nan, np.nan, np.nan], dtype=np.float32)
+    for sample in (sample_nearest, sample_nearest_bottom_left):
+        np.testing.assert_array_equal(sample(s, float("nan"), 0.5), undefined)
+        np.testing.assert_array_equal(sample(s, 0.5, float("nan")), undefined)
+        np.testing.assert_array_equal(sample(s, float("nan"), float("nan")), undefined)
+
+
+def test_infinity_uv_clamps_to_a_real_edge_texel_like_the_oracle():
+    # JS clamps +Infinity onto the last texel and -Infinity onto the first;
+    # only NaN reads the undefined texel.
+    s = make_surface()
+    np.testing.assert_array_equal(sample_nearest(s, float("inf"), float("-inf")), TOP_RIGHT)
+    np.testing.assert_array_equal(sample_nearest(s, float("-inf"), float("inf")), BOTTOM_LEFT)
+    np.testing.assert_array_equal(sample_nearest_bottom_left(s, float("inf"), float("-inf")), BOTTOM_RIGHT)
+    np.testing.assert_array_equal(sample_nearest_bottom_left(s, float("-inf"), float("inf")), TOP_LEFT)
+    # Bilinear: the clamped px/py land on the corner tap exactly (v=1 is the
+    # shader's top, which storage keeps in row 0).
+    np.testing.assert_array_equal(sample_bilinear(s, float("inf"), float("inf")), TOP_RIGHT)
+    np.testing.assert_array_equal(sample_bilinear(s, float("-inf"), float("-inf")), BOTTOM_LEFT)
+    np.testing.assert_array_equal(
+        sample_bilinear(s, float("nan"), 0.5),
+        np.array([np.nan, np.nan, np.nan, np.nan], dtype=np.float32),
+    )
+
+
 def test_sample_bilinear_center_averages_all_four_texels():
     # sample_bilinear never flips rows, so uv=(0.5, 0.5) sits exactly at the
     # shared corner of all four texels regardless of naming/orientation.
