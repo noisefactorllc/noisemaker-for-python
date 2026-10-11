@@ -433,7 +433,16 @@ def _repeat_count(render_pass, uniforms):
 def _canonical_uniforms(width, height, time, seed, effect_uniforms, frame=0, delta_time=0):
     """Match noisemaker-cpu src/csl/glsl-kernel.js createCanonicalBindings."""
     res = np.array([float(width), float(height)], dtype=F32)
-    aspect = f32(width / height)
+    # createCanonicalBindings computes the aspect and its reciprocal from
+    # completeResolution (fullResolution ?? resolution) — the render's own
+    # dimensions, not a pass destination's. Upstream's Pipeline computes these
+    # scalar reciprocals on the CPU and uploads them as uniforms instead of
+    # dividing in-shader (relaxed-math backends lower a division to an
+    # approximate reciprocal multiply), so the transpiled kernels read them as
+    # plain bindings built the same way: the reciprocal uses the unrounded
+    # double quotient, each value rounds once.
+    aspect_value = float(width) / float(height)
+    aspect = f32(aspect_value)
     u = {
         "renderScale": f32(1.0),
         "speed": 0,
@@ -451,6 +460,10 @@ def _canonical_uniforms(width, height, time, seed, effect_uniforms, frame=0, del
             "tileOffset": np.zeros(2, dtype=F32),
             "aspectRatio": aspect,
             "aspect": aspect,
+            "aspectInv": f32(1.0 / aspect_value),
+            "invFullResolution": np.array(
+                [f32(1.0 / float(width)), f32(1.0 / float(height))], dtype=F32
+            ),
             "time": f32(time),
             "globalTime": f32(time),
             "frame": int(frame),
@@ -685,14 +698,12 @@ def _render_effect_once(
                     {**inputs, **attachments},
                 )
             pass_resolution = np.array([float(pass_width), float(pass_height)], dtype=F32)
-            pass_aspect = f32(pass_width / pass_height)
-            pass_uniforms.update(
-                {
-                    "resolution": pass_resolution,
-                    "aspectRatio": pass_aspect,
-                    "aspect": pass_aspect,
-                }
-            )
+            # `resolution` is the pass destination's size, but the aspect and
+            # its reciprocal stay bound to the render's own dimensions:
+            # createCanonicalBindings derives them from completeResolution
+            # (fullResolution ?? resolution), and the per-pass bindCanonicalKernel
+            # call always passes the render's fullResolution.
+            pass_uniforms.update({"resolution": pass_resolution})
             mesh_op = get_mesh_op(effect_id, p["program"]) if p.get("drawMode") == "triangles" else None
             draw_op = mesh_op or (get_draw_op(effect_id, p["program"]) if p.get("drawMode") else None)
             produced = []

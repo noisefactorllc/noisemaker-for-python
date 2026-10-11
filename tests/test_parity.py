@@ -274,6 +274,11 @@ VOLUME_DSL_CASES = [
     ("synth3d/cellularAutomata3d:iter2", "search synth3d, render\nnoise3d(volumeSize: 4, seed: 0).cellularAutomata3d(volumeSize: 4, iterationCount: 2).render3d(volumeSize: 4).write(o0)\nrender(o0)\n", 2, 2),
     ("synth3d/reactionDiffusion3d", "search synth3d, render\nnoise3d(volumeSize: 4, seed: 0).reactionDiffusion3d(volumeSize: 4, iterationCount: 0).render3d(volumeSize: 4).write(o0)\nrender(o0)\n", 2, 2),
     ("synth3d/reactionDiffusion3d:iter2", "search synth3d, render\nnoise3d(volumeSize: 4, seed: 0).reactionDiffusion3d(volumeSize: 4, iterationCount: 2).render3d(volumeSize: 4).write(o0)\nrender(o0)\n", 2, 2),
+    # The authority's renderLit3d fixture (specular highlights make the camera
+    # visible): at the default-volume chain below the render is a solid frame,
+    # which no camera or light change can move — this case is the one that
+    # fails if renderLit3d's camera math regresses.
+    ("render/renderLit3d:authority", "search synth3d, filter3d, render\nnoise3d(seed: 0, volumeSize: 8).renderLit3d(volumeSize: 8, specularIntensity: 2, shininess: 256).write(o0)\nrender(o0)\n", 8, 8),
     # Volume renderers over noise3d.
     ("render/render3d", "search synth3d, render\nnoise3d(volumeSize: 4, seed: 0).render3d(volumeSize: 4).write(o0)\nrender(o0)\n", 2, 2),
     ("render/renderCubemap3d", "search synth3d, render\nnoise3d(volumeSize: 4, seed: 0).renderCubemap3d(volumeSize: 4).write(o0)\nrender(o0)\n", 2, 2),

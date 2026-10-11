@@ -237,7 +237,7 @@ def run_pixel(ctx, out):
             (fullRes.__setitem__(0, rt.f(1024.0)), fullRes.__setitem__(1, rt.f(1024.0)), fullRes)[-1]
         globalCoord = rt.construct(2, rt.binary("+", rt.swizzle(ctx.frag_coord, "xy"), _u_tileOffset, 2, 'float'))
         uv = rt.construct(2, rt.binary("/", rt.binary("-", globalCoord, rt.binary("*", rt.f(0.5), fullRes, 2, 'float'), 2, 'float'), rt.swizzle(fullRes, "y"), 2, 'float'))
-        ro = rt.construct(3, rt.binary("*", rt.binary("*", _u_cameraPosition, rt.construct_raw(3, rt.unary("-", rt.f(1.0)), rt.f(1.0), rt.f(1.0)), 3, 'float'), rt.f(3.5), 3, 'float'))
+        ro = rt.construct(3, rt.binary("*", _u_cameraPosition, rt.f(3.5), 3, 'float'))
         forward = rt.construct(3, 0.0)
         if rt.binary("<", rt.length(ro), rt.f(0.001)):
             (forward.__setitem__(0, rt.f(0.0)), forward.__setitem__(1, rt.f(0.0)), forward.__setitem__(2, rt.unary("-", rt.f(1.0))), forward)[-1]
@@ -245,12 +245,12 @@ def run_pixel(ctx, out):
             forward[:] = rt.normalize(rt.unary("-", ro))
         worldUp = rt.construct(3, rt.f(0.0), rt.f(1.0), rt.f(0.0))
         if rt.binary(">", rt.component_wise("abs", rt.dot(forward, worldUp), width=1), rt.f(0.999)):
-            (worldUp.__setitem__(0, rt.f(0.0)), worldUp.__setitem__(1, rt.f(0.0)), worldUp.__setitem__(2, rt.f(1.0)), worldUp)[-1]
-        right = rt.normalize(rt.cross(worldUp, forward))
-        up = rt.cross(forward, right)
+            (worldUp.__setitem__(0, rt.f(0.0)), worldUp.__setitem__(1, rt.f(0.0)), worldUp.__setitem__(2, rt.component_wise("sign", rt.swizzle(forward, "y"), width=1)), worldUp)[-1]
+        right = rt.normalize(rt.cross(forward, worldUp))
+        up = rt.cross(right, forward)
         rd = rt.normalize(rt.binary("+", rt.binary("+", forward, rt.binary("*", rt.swizzle(uv, "x"), right, 3, 'float'), 3, 'float'), rt.binary("*", rt.swizzle(uv, "y"), up, 3, 'float'), 3, 'float'))
-        worldLightDir = rt.normalize(rt.binary("*", _u_lightDirection, rt.construct_raw(3, rt.unary("-", rt.f(1.0)), rt.f(1.0), rt.f(1.0)), 3, 'float'))
-        angle = rt.binary("*", rt.binary("*", _u_time, g.TAU, 1, "float"), rt.construct(1, _u_orbitSpeed), 1, "float")
+        worldLightDir = rt.normalize(_u_lightDirection)
+        angle = rt.binary("*", rt.binary("*", rt.unary("-", _u_time), g.TAU, 1, "float"), rt.construct(1, _u_orbitSpeed), 1, "float")
         c = rt.component_wise("cos", angle, width=1)
         s = rt.component_wise("sin", angle, width=1)
         roVol = rt.construct(3, rt.binary("+", rt.binary("*", rt.swizzle(ro, "x"), c, 1, "float"), rt.binary("*", rt.swizzle(ro, "z"), s, 1, "float"), 1, "float"), rt.swizzle(ro, "y"), rt.binary("+", rt.binary("*", rt.unary("-", rt.swizzle(ro, "x")), s, 1, "float"), rt.binary("*", rt.swizzle(ro, "z"), c, 1, "float"), 1, "float"))

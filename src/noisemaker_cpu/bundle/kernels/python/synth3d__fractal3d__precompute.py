@@ -14,8 +14,6 @@ def run_pixel(ctx, out):
     _u_juliaY = U.get("juliaY", rt.f(0.0))
     _u_juliaZ = U.get("juliaZ", rt.f(0.0))
     _u_colorMode = U.get("colorMode", 0)
-    _u_tileOffset = U.get("tileOffset", rt.construct(2, 0.0))
-    _u_renderScale = U.get("renderScale", rt.f(0.0))
     g.fragColor = rt.construct(4, 0.0)
     g.geoOut = rt.construct(4, 0.0)
     g.PI = rt.f(3.141592653589793)
@@ -182,18 +180,16 @@ def run_pixel(ctx, out):
                     return juliaCube__vec3_vec3_float_int_float(p, juliaC, scale, _u_iterations, _u_bailout)
     def main__void():
         volSize = _u_volumeSize
-        scaledVolSize = rt.construct(1, rt.binary("*", rt.construct(1, volSize), _u_renderScale, 1, "float"), base="int")
-        scaledVolSizeF = rt.construct(1, scaledVolSize)
-        globalPixelCoord = rt.construct(2, rt.binary("+", rt.swizzle(ctx.frag_coord, "xy"), _u_tileOffset, 2, 'float'))
-        pixelCoord = rt.construct(2, globalPixelCoord, base="int")
-        x = rt.construct(1, rt.component_wise("mod", rt.construct(1, rt.swizzle(pixelCoord, "x")), scaledVolSizeF, width=1), base="int")
-        y = rt.binary("%", rt.swizzle(pixelCoord, "y"), scaledVolSize, 1, "int")
-        z = rt.trunc64(rt.binary("/", rt.swizzle(pixelCoord, "y"), scaledVolSize, 1, "int"))
-        if (bool((bool(rt.binary(">=", x, scaledVolSize)) or bool(rt.binary(">=", y, scaledVolSize)))) or bool(rt.binary(">=", z, scaledVolSize))):
+        volSizeF = rt.construct(1, volSize)
+        pixelCoord = rt.construct(2, rt.swizzle(ctx.frag_coord, "xy"), base="int")
+        x = rt.swizzle(pixelCoord, "x")
+        y = rt.binary("%", rt.swizzle(pixelCoord, "y"), volSize, 1, "int")
+        z = rt.trunc64(rt.binary("/", rt.swizzle(pixelCoord, "y"), volSize, 1, "int"))
+        if (bool((bool(rt.binary(">=", x, volSize)) or bool(rt.binary(">=", y, volSize)))) or bool(rt.binary(">=", z, volSize))):
             g.fragColor[:] = rt.construct(4, rt.f(0.0))
             g.geoOut[:] = rt.construct(4, rt.f(0.5), rt.f(0.5), rt.f(0.5), rt.f(0.0))
             return
-        p = rt.construct(3, rt.binary("*", rt.binary("-", rt.binary("*", rt.binary("/", rt.construct_raw(3, rt.construct(1, x), rt.construct(1, y), rt.construct(1, z)), rt.binary("-", scaledVolSizeF, rt.f(1.0), 1, "float"), 3, 'float'), rt.f(2.0), 3, 'float'), rt.f(1.0), 3, 'float'), rt.f(1.5), 3, 'float'))
+        p = rt.construct(3, rt.binary("*", rt.binary("-", rt.binary("*", rt.binary("/", rt.construct_raw(3, rt.construct(1, x), rt.construct(1, y), rt.construct(1, z)), rt.binary("-", volSizeF, rt.f(1.0), 1, "float"), 3, 'float'), rt.f(2.0), 3, 'float'), rt.f(1.0), 3, 'float'), rt.f(1.5), 3, 'float'))
         juliaC = rt.construct(3, rt.binary("*", rt.construct_raw(3, _u_juliaX, _u_juliaY, _u_juliaZ), rt.f(0.01), 3, 'float'))
         result = computeFractal__vec3_vec3(p, juliaC)
         dist = rt.swizzle(result, "x")

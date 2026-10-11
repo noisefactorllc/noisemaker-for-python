@@ -214,37 +214,6 @@ def test_bundled_octave_warp_kernel_matches_negative_seed_oracle_render():
     assert surface.to_rgba8() == oracle_rgba8
 
 
-def test_heightgrid_top_row_negative_z_source_adaptation():
-    """Upstream 6b2d5d6d flips points/heightGrid's agent Z mapping so the
-    image's top row lies at -Z (a top-down view along -Y shows the image as
-    authored, not mirrored). The pinned CDN snapshot predates the fix, so a
-    regeneration without the adaptation silently reverts the kernel to the
-    pre-6b2d5d6d behavior."""
-    source = (
-        "    // XZ ground plane, Y elevation. These are world coordinates, not UVs.\n"
-        "    outXYZ = vec4((uv.x - 0.5) * gridScale,\n"
-        "        elevation * heightScale + heightOffset,\n"
-        "        (uv.y - 0.5) * gridScale, 1.0);\n"
-    )
-
-    adapted = build_module._adapt_source("points/heightGrid", "agent", source)
-    assert "(0.5 - uv.y) * gridScale, 1.0);" in adapted
-    assert "(uv.y - 0.5) * gridScale, 1.0);" not in adapted
-    assert "    // The image's top row lies at -Z, so a view from above along -Y with\n" in adapted
-
-    # The patterns are mandatory: a changed canonical form must fail the build
-    # loudly instead of silently keeping the stale lowering.
-    with pytest.raises(ValueError, match="heightGrid canonical Z pattern changed"):
-        build_module._adapt_source(
-            "points/heightGrid",
-            "agent",
-            source.replace("(uv.y - 0.5) * gridScale, 1.0);", "(0.5 - uv.y) * gridScale, 1.0);"),
-        )
-
-    # Other programs pass through unmodified.
-    assert build_module._adapt_source("points/heightGrid", "passthrough", source) == source
-
-
 def test_bundled_heightgrid_kernel_carries_top_row_negative_z():
     kernel = (
         Path(build_module.BUNDLE) / "kernels" / "python" / "points__heightGrid__agent.py"
@@ -253,104 +222,6 @@ def test_bundled_heightgrid_kernel_carries_top_row_negative_z():
     # outXYZ[2] maps uv.y to Z as (0.5 - uv.y) * gridScale, not (uv.y - 0.5).
     assert 'rt.binary("*", rt.binary("-", rt.f(0.5), rt.swizzle(uv, "y"), 1, "float"), _u_gridScale, 1, "float")' in kernel
     assert 'rt.binary("*", rt.binary("-", rt.swizzle(uv, "y"), rt.f(0.5), 1, "float"), _u_gridScale, 1, "float")' not in kernel
-
-
-def test_flipmirror_vertical_mirror_keeps_named_half_source_adaptation():
-    """Upstream f496735d keeps the named half in flipMirror's vertical mirror
-    modes (warpedUV.y runs up the frame, so mode 13 keeps the top half, mode
-    14 the bottom, and modes 15-18 follow the same named-half rule). The
-    pinned CDN snapshot predates the fix, so a regeneration without the
-    adaptation silently reverts the kernel to the pre-f496735d behavior."""
-    x_flip = (
-        "        if (warpedUV.x > 0.5) {\n"
-        "            warpedUV.x = 1.0 - warpedUV.x;\n"
-        "        }\n"
-    )
-    source = (
-        "    } else if (flipMode == 13) {\n"
-        "        // mirror up to down\n"
-        "        if (warpedUV.y > 0.5) {\n"
-        "            warpedUV.y = 1.0 - warpedUV.y;\n"
-        "        }\n"
-        "    } else if (flipMode == 14) {\n"
-        "        // mirror down to up\n"
-        "        if (warpedUV.y < 0.5) {\n"
-        "            warpedUV.y = 1.0 - warpedUV.y;\n"
-        "        }\n"
-        "    } else if (flipMode == 15) {\n"
-        "        // mirror left to right, up to down\n" + x_flip +
-        "        if (warpedUV.y > 0.5) {\n"
-        "            warpedUV.y = 1.0 - warpedUV.y;\n"
-        "        }\n"
-        "    } else if (flipMode == 16) {\n"
-        "        // mirror left to right, down to up\n" + x_flip +
-        "        if (warpedUV.y < 0.5) {\n"
-        "            warpedUV.y = 1.0 - warpedUV.y;\n"
-        "        }\n"
-        "    } else if (flipMode == 17) {\n"
-        "        // mirror right to left, up to down\n"
-        "        if (warpedUV.x < 0.5) {\n"
-        "            warpedUV.x = 1.0 - warpedUV.x;\n"
-        "        }\n"
-        "        if (warpedUV.y > 0.5) {\n"
-        "            warpedUV.y = 1.0 - warpedUV.y;\n"
-        "        }\n"
-        "    } else if (flipMode == 18) {\n"
-        "        // mirror right to left, down to up\n"
-        "        if (warpedUV.x < 0.5) {\n"
-        "            warpedUV.x = 1.0 - warpedUV.x;\n"
-        "        }\n"
-        "        if (warpedUV.y < 0.5) {\n"
-        "            warpedUV.y = 1.0 - warpedUV.y;\n"
-        "        }\n"
-        "    }\n"
-    )
-
-    adapted = build_module._adapt_source("filter/flipMirror", "flipMirror", source)
-
-    # Mode 13 keeps the top half; the comment explains the named-half rule.
-    assert "        // mirror up to down. warpedUV.y runs up the frame, so the top half\n" in adapted
-    assert (
-        "        // is warpedUV.y > 0.5 and the bottom half samples its reflection.\n"
-        "        if (warpedUV.y < 0.5) {\n"
-    ) in adapted
-    # Mode 14 keeps the bottom half.
-    assert "        // mirror down to up\n        if (warpedUV.y > 0.5) {" in adapted
-    # Modes 15-18 keep the named half on y.
-    assert (
-        "        // mirror left to right, up to down\n" + x_flip +
-        "        if (warpedUV.y < 0.5) {\n"
-    ) in adapted
-    assert (
-        "        // mirror left to right, down to up\n" + x_flip +
-        "        if (warpedUV.y > 0.5) {\n"
-    ) in adapted
-    assert (
-        "        // mirror right to left, up to down\n"
-        "        if (warpedUV.x < 0.5) {\n"
-        "            warpedUV.x = 1.0 - warpedUV.x;\n"
-        "        }\n"
-        "        if (warpedUV.y < 0.5) {\n"
-    ) in adapted
-    assert (
-        "        // mirror right to left, down to up\n"
-        "        if (warpedUV.x < 0.5) {\n"
-        "            warpedUV.x = 1.0 - warpedUV.x;\n"
-        "        }\n"
-        "        if (warpedUV.y > 0.5) {\n"
-    ) in adapted
-
-    # The patterns are mandatory: a changed canonical form must fail the build
-    # loudly instead of silently keeping the stale lowering.
-    with pytest.raises(ValueError, match="flipMirror canonical vertical mirror pattern changed"):
-        build_module._adapt_source(
-            "filter/flipMirror",
-            "flipMirror",
-            source.replace("        if (warpedUV.y > 0.5) {", "        if (warpedUV.y >= 0.5) {", 1),
-        )
-
-    # Other programs pass through unmodified.
-    assert build_module._adapt_source("filter/flipMirror", "passthrough", source) == source
 
 
 def test_bundled_flipmirror_kernel_keeps_named_vertical_half():
@@ -367,39 +238,6 @@ def test_bundled_flipmirror_kernel_keeps_named_vertical_half():
     assert 'rt.binary(">", rt.swizzle(warpedUV, "y"), rt.f(0.5))' in mode14[:mode14.index('rt.i(15)')]
 
 
-def test_glyphmap_glyph_rows_draw_upright_source_adaptation():
-    """Upstream c5d26740 draws glyphMap's glyphs upright: the bitmaps store
-    row 0 as the top row while localPos.y runs up the cell, so the row index
-    is mirrored (6 - clamp(...)) instead of clamped only. The pinned CDN
-    snapshot predates the fix, so a regeneration without the adaptation
-    silently reverts the kernel to the pre-c5d26740 behavior."""
-    source = (
-        "    vec2 localPos = fract(pixelCoord / csf);\n"
-        "    int gx = int(floor(localPos.x * 5.0));\n"
-        "    int gy = int(floor(localPos.y * 7.0));\n"
-        "    gx = clamp(gx, 0, 4);\n"
-        "    gy = clamp(gy, 0, 6);\n"
-    )
-
-    adapted = build_module._adapt_source("filter/glyphMap", "glyphMap", source)
-    assert "    // Glyph row 0 is the top row, while localPos.y runs up the cell.\n" in adapted
-    assert "    int gy = 6 - clamp(int(floor(localPos.y * 7.0)), 0, 6);\n" in adapted
-    assert "    int gy = int(floor(localPos.y * 7.0));\n" not in adapted
-    assert "    gy = clamp(gy, 0, 6);\n" not in adapted
-
-    # The patterns are mandatory: a changed canonical form must fail the build
-    # loudly instead of silently keeping the stale lowering.
-    with pytest.raises(ValueError, match="glyphMap canonical glyph row pattern changed"):
-        build_module._adapt_source(
-            "filter/glyphMap",
-            "glyphMap",
-            source.replace("int gy = int(floor(localPos.y * 7.0));", "int gy = int(floor(localPos.y * 6.0));"),
-        )
-
-    # Other programs pass through unmodified.
-    assert build_module._adapt_source("filter/glyphMap", "passthrough", source) == source
-
-
 def test_bundled_glyphmap_kernel_mirrors_glyph_rows():
     kernel = (
         Path(build_module.BUNDLE) / "kernels" / "python" / "filter__glyphMap__glyphMap.py"
@@ -409,62 +247,6 @@ def test_bundled_glyphmap_kernel_mirrors_glyph_rows():
     # gy clamp gone.
     assert 'rt.binary("-", rt.i(6), rt.component_wise("clamp", rt.construct(1, rt.component_wise("floor", rt.binary("*", rt.swizzle(localPos, "y"), rt.f(7.0), 1, "float"), width=1), base="int"), rt.i(0), rt.i(6), width=1), 1, "int")' in kernel
     assert 'gy = rt.component_wise("clamp", gy, rt.i(0), rt.i(6), width=1)' not in kernel
-
-
-def test_render3d_right_handed_camera_source_adaptation():
-    """Upstream 700ac32e builds render3d's camera right-handed (right =
-    cross(forward, worldUp), up = cross(right, forward), negated orbit angle)
-    and lights it from world -X so the volume is never mirrored. The pinned
-    CDN snapshot predates the fix, so a regeneration without the adaptation
-    silently reverts the kernel to the pre-700ac32e behavior."""
-    source = (
-        "    vec3 n = calcNormal(p);\n"
-        "    vec3 lightDir = normalize(vec3(1.0, 1.0, -1.0));\n"
-        "    float diff = max(dot(n, lightDir), 0.0);\n"
-        "    float amb = 0.15;\n"
-        "    vec3 lightDir = normalize(vec3(1.0, 1.0, -1.0));\n"
-        "    float diff = max(dot(n, lightDir), 0.0);\n"
-        "    // Camera setup - orbiting view\n"
-        "    float camDist = 3.5;\n"
-        "    float angle = time * TAU * float(orbitSpeed);\n"
-        "    vec3 forward = normalize(lookAt - ro);\n"
-        "    vec3 right = normalize(cross(vec3(0.0, 1.0, 0.0), forward));\n"
-        "    vec3 up = cross(forward, right);\n"
-    )
-
-    adapted = build_module._adapt_source("render/render3d", "render3d", source)
-    assert "vec3 lightDir = normalize(vec3(-1.0, 1.0, -1.0));" in adapted
-    assert "vec3 lightDir = normalize(vec3(1.0, 1.0, -1.0));" not in adapted
-    assert (
-        "    // Camera setup - orbiting view. (right, up, -forward) is right-handed,\n"
-        "    // so screen right is world +X seen from the front and the volume is\n"
-        "    // never mirrored. The orbit runs toward -X, which keeps the on-screen\n"
-        "    // spin of earlier releases.\n"
-    ) in adapted
-    assert "    float angle = -time * TAU * float(orbitSpeed);\n" in adapted
-    assert "    float angle = time * TAU * float(orbitSpeed);\n" not in adapted
-    assert "    vec3 right = normalize(cross(forward, vec3(0.0, 1.0, 0.0)));\n" in adapted
-    assert "    vec3 up = cross(right, forward);\n" in adapted
-    assert "    vec3 right = normalize(cross(vec3(0.0, 1.0, 0.0), forward));\n" not in adapted
-    assert "    vec3 up = cross(forward, right);\n" not in adapted
-
-    # The patterns are mandatory: a changed canonical form must fail the build
-    # loudly instead of silently keeping the stale lowering.
-    with pytest.raises(ValueError, match="render3d canonical light direction pattern changed"):
-        build_module._adapt_source(
-            "render/render3d",
-            "render3d",
-            source.replace("vec3 lightDir = normalize(vec3(1.0, 1.0, -1.0));", "vec3 lightDir = normalize(vec3(2.0, 1.0, -1.0));", 1),
-        )
-    with pytest.raises(ValueError, match="render3d canonical camera pattern changed"):
-        build_module._adapt_source(
-            "render/render3d",
-            "render3d",
-            source.replace("float angle = time * TAU * float(orbitSpeed);", "float angle = 2.0 * time * TAU * float(orbitSpeed);"),
-        )
-
-    # Other programs pass through unmodified.
-    assert build_module._adapt_source("render/render3d", "passthrough", source) == source
 
 
 def test_bundled_render3d_kernel_carries_right_handed_camera():
