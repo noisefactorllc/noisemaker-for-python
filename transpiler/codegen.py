@@ -170,12 +170,16 @@ class CodeGen:
         """The sibling lowering's ``intNames`` set: file-global names collected
         by scanning the ORIGINAL GLSL for ``uniform int X``, ``int X =`` /
         ``int X;`` (scalar declarations only — an array declarator does not
-        match the sibling's regex), and ``ivecN X`` (no terminator
-        requirement, arrays included). Mirrored as an AST walk over the parsed
-        program so the set matches the regex semantics exactly: function
-        parameters stay excluded (the regex requires ``=`` or ``;`` after the
-        name), while struct fields, for-init declarations, and globals stay
-        included."""
+        match the sibling's regex), ``ivecN X`` (no terminator
+        requirement, arrays included), and — since b68fdb8d1013 — ``int X``
+        function parameters (the ``(?:,|\\))`` terminator regex matches every
+        ``int X,`` / ``int X)`` parameter list, prototypes included). Mirrored
+        as an AST walk over the parsed program so the set matches the regex
+        semantics exactly: struct fields, for-init declarations, and globals
+        stay included. ``self.int_base_names`` keeps the pre-b68fdb8 set (the
+        regexes before the parameter rule could not match a parameter) so the
+        division restores can pick the guard each site's operands actually
+        need; ``self.int_param_names`` holds the parameter rule's additions."""
         names = set()
 
         def walk(node):
@@ -199,11 +203,28 @@ class CodeGen:
                     walk(item)
 
         walk(self.program["decls"])
+        base = set(names)
         for fields in self.structs.values():
             for ftype, fname in fields:
                 t = TYPE.get(ftype)
                 if t and t["base"] == "int":
                     names.add(fname)
+                    base.add(fname)
+        # `int X,` / `int X)` parameter lists (b68fdb8d1013): every scalar int
+        # parameter of every declared or prototyped function is an int-typed
+        # GLSL identifier for the division restores. Qualifiers and vector
+        # parameters stay out (the regex needs `int` immediately before the
+        # name, and `ivecN` never matches `\bint\s+`).
+        for d in self.program["decls"]:
+            if d.get("k") not in ("func", "proto"):
+                continue
+            for p in d.get("params") or []:
+                t = TYPE.get(p[0])
+                if t and t["base"] == "int" and t["width"] == 1:
+                    names.add(p[1])
+        self.int_names = names
+        self.int_base_names = base
+        self.int_param_names = names - base
         return names
 
     def type_of_name(self, tname, array=None):
@@ -632,8 +653,14 @@ class CodeGen:
         ddf8b1931b3 — the scalar/scalar form ``IDENT / IDENT;`` where BOTH
         operands are provably int-typed scalars and distinct (synth3d/shape3d's
         ``int z = yAtlas / volumeSize;``), EXEMPT for filter/spookyTicker whose
-        pinned authority capture matches the untruncated lowering. Larger
-        expressions, non-literal indices, multi-component swizzles, and
+        pinned authority capture matches the untruncated lowering. Since
+        b68fdb8d1013 the intNames set also collects ``int X,`` / ``int X)``
+        function parameters, so sample_glyph's ``int gx = localX / iScale;``
+        (filter/osd) truncates too; sites whose operands only the parameter
+        rule recognizes take the parameter-rule guards (``rt.trunc_param64`` /
+        ``rt.trunc_param_div``), so version-mismatched comparisons against a
+        pre-b68fdb8 mounted oracle keep the pre-rule fractional lowering.
+        Larger expressions, non-literal indices, multi-component swizzles, and
         assignment statements do not match the -cpu rewrite and stay
         fractional. ``rt.trunc64``/``rt.trunc_scalar_div`` apply the
         truncation only when the mounted oracle carries the respective
@@ -653,19 +680,26 @@ class CodeGen:
             entry = scope.resolve(r["name"])
             if entry is None or base_of(entry["type"]) != "int" or width_of(entry["type"]) != 1:
                 return code
+            if r["name"] in self.int_param_names:
+                return f"rt.trunc_param64({code})"
             return f"rt.trunc64({code})"
         if l.get("k") == "id":
             # Statement-level scalar/scalar form (ddf8b1931b3): both operands
             # must be in the sibling's file-global intNames set (int uniform,
-            # int scalar declaration, or ivec — never function parameters), so
-            # GLSL truncates toward zero. filter/spookyTicker stays EXEMPT
-            # exactly like the sibling's lowering.
+            # int scalar declaration, ivec — and, since b68fdb8d1013, scalar
+            # int function parameters), so GLSL truncates toward zero.
+            # filter/spookyTicker stays EXEMPT exactly like the sibling's
+            # lowering. Operands the pre-b68fdb8 intNames regexes could not
+            # match (int function parameters only) take the parameter rule's
+            # guard so pre-rule mounted oracles keep their fractional result.
             if self.effect_id == "filter/spookyTicker":
                 return code
             if l["name"] == r["name"]:
                 return code
             if l["name"] not in self.int_names or r["name"] not in self.int_names:
                 return code
+            if l["name"] in self.int_param_names or r["name"] in self.int_param_names:
+                return f"rt.trunc_param_div({code})"
             return f"rt.trunc_scalar_div({code})"
         return code
 

@@ -30,8 +30,8 @@ def run_pixel(ctx, out):
     def hash3__uint_uint_uint(a, b, c):
         return pcg__uint(rt.binary("^", hash2__uint_uint(a, b), rt.binary("+", rt.binary("*", c, rt.i(2496678331), 1, "uint"), rt.i(1542469173), 1, "uint"), 1, "uint"))
     def sample_glyph__int_int_int_int(digit, localX, localY, iScale):
-        gx = rt.binary("/", localX, iScale, 1, "int")
-        gy = rt.binary("/", localY, iScale, 1, "int")
+        gx = rt.trunc_param_div(rt.binary("/", localX, iScale, 1, "int"))
+        gy = rt.trunc_param_div(rt.binary("/", localY, iScale, 1, "int"))
         if (bool((bool((bool(rt.binary("<", gx, rt.i(0))) or bool(rt.binary(">=", gx, g.GLYPH_W)))) or bool(rt.binary("<", gy, rt.i(0))))) or bool(rt.binary(">=", gy, g.GLYPH_H))):
             return rt.f(0.0)
         row = g.GLYPHS[int(rt.binary("+", rt.binary("*", digit, rt.i(8), 1, "int"), gy, 1, "int"))]

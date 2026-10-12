@@ -77,6 +77,20 @@ def test_trunc_scalar_div_follows_the_oracle_probe(monkeypatch):
     assert runtime.trunc_scalar_div(-7.5) == -7.5
 
 
+def test_trunc_param_div_follows_the_oracle_probe(monkeypatch):
+    """The b68fdb8d1013 intNames parameter rule (see runtime) truncates by
+    default — standalone/deployed renders with no mounted oracle — and passes
+    the raw division through when the mounted oracle predates the rule."""
+    from noisemaker_cpu import runtime
+
+    monkeypatch.setattr(runtime, "_ORACLE_INT_PARAM_DIVISION", True)
+    assert runtime.trunc_param_div(-7.5) == -7.0
+    assert runtime.trunc_param64(np.array([-7.5, 7.5])).tolist() == [-7.0, 7.0]
+    monkeypatch.setattr(runtime, "_ORACLE_INT_PARAM_DIVISION", False)
+    assert runtime.trunc_param_div(-7.5) == -7.5
+    assert runtime.trunc_param64(np.array([-7.5, 7.5])).tolist() == [-7.5, 7.5]
+
+
 def test_normalize_divides_by_the_f32_length():
     # glsl-runtime normalize divides by length(), F32(sqrt(dot)), and dot is
     # F32(sum): the squared magnitude rounds to f32 before the sqrt. Expected

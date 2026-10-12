@@ -276,8 +276,8 @@ def test_indexed_vector_conditional_assignment_matches_js_true_branch_noop():
 def test_scalar_int_division_declarations_mirror_the_sibling_lowering():
     """ddf8b19-era restoreIntegerDivision scalar/scalar form (see codegen):
     both operands must be in the sibling's file-global intNames set (int
-    uniform, int scalar declaration, or ivec — never function parameters,
-    which the sibling's regexes cannot match), and filter/spookyTicker is
+    uniform, int scalar declaration, ivec — and, since b68fdb8d1013, scalar
+    int function parameters), and filter/spookyTicker is
     exempt entirely."""
     from transpiler.codegen import emit_python
     from transpiler.parser import parse
@@ -304,13 +304,57 @@ def test_scalar_int_division_declarations_mirror_the_sibling_lowering():
 
     generated = emit("synth3d/shape3d")
     assert 'trunc_scalar_div(rt.binary("/", yAtlas, _u_volSize, 1, "int"))' in generated
-    # function parameters are not in intNames; the self-division stays live
+    # the b68fdb8d1013 intNames parameter rule: sample_glyph-style scalar/scalar
+    # divisions between int parameters truncate toward zero too, through the
+    # parameter-rule guard (pre-rule mounted oracles keep the fractional form)
+    assert 'trunc_param_div(rt.binary("/", localX, iScale, 1, "int"))' in generated
     assert 'trunc_scalar_div(rt.binary("/", localX, iScale' not in generated
     assert 'trunc_scalar_div(rt.binary("/", _u_volSize, _u_volSize' not in generated
     # the sibling exempts filter/spookyTicker from the scalar/scalar rewrite
-    assert "trunc_scalar_div" not in emit("filter/spookyTicker")
+    spooky = emit("filter/spookyTicker")
+    assert "trunc_scalar_div" not in spooky
+    assert "trunc_param_div" not in spooky
     # larger expressions, non-identifier operands, and assignments stay fractional
     assert 'trunc_scalar_div(rt.binary("/", yAtlas, rt.i(2)' not in generated
+
+
+def test_param_int_division_takes_the_parameter_rule_guards():
+    """b68fdb8d1013: only the intNames parameter rule recognizes `int gx =
+    localX / iScale;`, so those sites carry the parameter-rule guards while
+    uniform-operand sites keep the ddf8b19 guards."""
+    from transpiler.codegen import emit_python
+    from transpiler.parser import parse
+    from transpiler.preprocess import normalize
+
+    source = """
+        out vec4 fragColor;
+        uniform int volSize;
+        uniform ivec4 pixelRow;
+        int sample(int localX, int iScale) {
+            int g = localX / iScale;
+            int row = pixelRow[2] / iScale;
+            return g + row;
+        }
+        void main() {
+            int yAtlas = int(gl_FragCoord.y);
+            int z = yAtlas / volSize;
+            fragColor = vec4(float(z + sample(3, 2)), 0.0, 0.0, 1.0);
+        }
+    """
+    normalized = normalize(source, {})
+
+    def emit(effect_id):
+        return emit_python(parse(normalized["source"]), normalized["outputs"], normalized["varyings"], effect_id=effect_id)
+
+    generated = emit("synth3d/shape3d")
+    # scalar/scalar with a parameter operand: the parameter-rule guard
+    assert 'trunc_param_div(rt.binary("/", localX, iScale, 1, "int"))' in generated
+    # component-indexed form with a parameter divisor: the parameter-rule guard
+    assert 'trunc_param64(rt.binary("/", _u_pixelRow[int(rt.i(2))], iScale, 1, "int"))' in generated
+    # uniform-operand sites keep the ddf8b19-era guards
+    assert 'trunc_scalar_div(rt.binary("/", yAtlas, _u_volSize, 1, "int"))' in generated
+    assert "trunc_param64(rt.binary(\"/\", yAtlas" not in generated
+    assert 'trunc_param_div(rt.binary("/", yAtlas' not in generated
 
 
 def test_scalar_int_division_declarations_truncate_toward_zero_at_runtime(monkeypatch):

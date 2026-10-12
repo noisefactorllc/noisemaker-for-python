@@ -69,6 +69,7 @@ def _s32(x) -> int:
 
 _ORACLE_INTEGER_DIVISION: bool | None = None
 _ORACLE_SCALAR_INT_DIVISION: bool | None = None
+_ORACLE_INT_PARAM_DIVISION: bool | None = None
 _ORACLE_ALIASED_DECLARATION_COPY: bool | None = None
 _ORACLE_PASS_REPEAT_CLAMP: bool | None = None
 _ORACLE_DOT_FMA: bool | None = None
@@ -228,6 +229,47 @@ def trunc_scalar_div(x):
     standalone/deployed renders with no mounted oracle, truncates.
     """
     if not _oracle_scalar_int_division_trunc():
+        return x
+    return _trunc_value(x)
+
+
+def _oracle_int_param_division_trunc() -> bool:
+    """Whether int-typed GLSL function parameters count as int identifiers.
+
+    ``noisemaker-for-cpu`` scripts/upstream/compile-glsl.js grew the intNames
+    parameter rule (collecting ``int X,`` / ``int X)`` parameter lists) in
+    b68fdb8d1013: filter/osd's ``int gx = localX / iScale;`` truncates there
+    where pre-rule oracles emit a fractional float64 division that indexes the
+    glyph table as undefined. The published runtime carries the CURRENT
+    (post-``b68fdb8d1013``) semantics, so this defaults to True — a
+    standalone/deployed render with no mounted oracle truncates. A mounted
+    sibling oracle's transpiler is probed once per process so
+    version-mismatched comparisons still work: pre-rule oracles keep their
+    published fractional behavior at parameter-operand sites.
+    """
+    global _ORACLE_INT_PARAM_DIVISION
+    if _ORACLE_INT_PARAM_DIVISION is None:
+        text = _mounted_oracle_text(os.path.join("scripts", "upstream", "compile-glsl.js"))
+        # The parameter rule's distinctive terminator alternation — the
+        # b68fdb8d1013 line that adds `int X,` / `int X)` matches to intNames.
+        _ORACLE_INT_PARAM_DIVISION = text is None or "(?:,|\\))" in text
+    return _ORACLE_INT_PARAM_DIVISION
+
+
+def trunc_param64(x):
+    """``trunc64`` for the sites only the b68fdb8d1013 intNames parameter rule
+    recognizes: pass-through when a mounted oracle predates the rule, so
+    version-mismatched comparisons keep the pre-rule fractional semantics."""
+    if not _oracle_int_param_division_trunc():
+        return x
+    return _trunc_value(x)
+
+
+def trunc_param_div(x):
+    """``trunc_scalar_div`` for the scalar/scalar sites only the
+    b68fdb8d1013 intNames parameter rule recognizes; see
+    ``_oracle_int_param_division_trunc``."""
+    if not _oracle_int_param_division_trunc():
         return x
     return _trunc_value(x)
 
@@ -404,6 +446,16 @@ class Runtime:
     def trunc_scalar_div(self, x):
         """JS ``Math.trunc`` over the scalar/scalar int-division result."""
         return trunc_scalar_div(x)
+
+    def trunc_param64(self, x):
+        """``trunc64`` at the sites only the b68fdb8d1013 intNames parameter
+        rule recognizes (see runtime)."""
+        return trunc_param64(x)
+
+    def trunc_param_div(self, x):
+        """``trunc_scalar_div`` at the sites only the b68fdb8d1013 intNames
+        parameter rule recognizes (see runtime)."""
+        return trunc_param_div(x)
 
     def js_scalar_binary(self, op, a, b):
         """Raw-JS scalar semantics for int/uint expressions (see
