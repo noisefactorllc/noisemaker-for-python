@@ -398,7 +398,8 @@ def run_pixel(ctx, out):
             color = rt.assign_swizzle(color, "z", apply_vignette__float_float_float_float(rt.swizzle(color, "z"), rt.f(0.0), vignette_mask, vignette_alpha))
         local_mean = rt.binary("*", rt.binary("+", rt.binary("+", rt.swizzle(color, "x"), rt.swizzle(color, "y"), 1, "float"), rt.swizzle(color, "z"), 1, "float"), g.INV_THREE, 1, "float")
         color[:] = rt.component_wise("clamp", rt.binary("+", rt.binary("*", rt.binary("-", color, local_mean, 3, 'float'), rt.f(1.25), 3, 'float'), local_mean, 3, 'float'), rt.construct(3, rt.f(0.0)), rt.construct(3, rt.f(1.0)), width=3)
-        color[:] = rt.component_wise("mix", base_color, color, alphaVal, width=3)
+        effectColor8 = rt.construct(3, rt.binary("/", rt.component_wise("floor", rt.construct(3, rt.binary("+", rt.construct(3, rt.binary("*", rt.component_wise("clamp", color, rt.f(0.0), rt.f(1.0), width=3), rt.f(255.0), 3, 'float')), rt.f(0.5), 3, 'float')), width=3), rt.f(255.0), 3, 'float'))
+        color[:] = rt.component_wise("mix", base_color, effectColor8, alphaVal, width=3)
         g.fragColor[:] = rt.construct(4, color, rt.swizzle(base_sample, "w"))
     main__void()
     _c = g.fragColor

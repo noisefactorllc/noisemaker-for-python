@@ -157,6 +157,7 @@ def run_pixel(ctx, out):
         color = rt.construct(4, rt.f(0.0))
         blendy = periodicFunction__float(rt.binary("-", _u_time, offsets__vec2(uv), 1, "float"))
         color[:] = glitch__vec2(uv)
+        color = rt.assign_swizzle(color, "rgb", rt.construct(3, rt.binary("/", rt.component_wise("floor", rt.construct(3, rt.binary("+", rt.construct(3, rt.binary("*", rt.component_wise("clamp", rt.swizzle(color, "rgb"), rt.f(0.0), rt.f(1.0), width=3), rt.f(255.0), 3, 'float')), rt.f(0.5), 3, 'float')), width=3), rt.f(255.0), 3, 'float')))
         if rt.binary("!=", _u_scanlinesAmt, rt.f(0.0)):
             color[:] = scanlines__vec4_vec2(color, uv)
         if rt.binary("!=", _u_snowAmt, rt.f(0.0)):
