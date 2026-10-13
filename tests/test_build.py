@@ -278,6 +278,26 @@ def test_hash_returns_take_the_sibling_float_casts_in_every_effect_but_scatter()
     assert build_module._adapt_source("filter/scatter", "scatter", source) == source
 
 
+def test_transpiler_applies_the_upstream_8bit_output_quantization():
+    # Upstream a1a3fa2a quantizes canonical effect output to 8-bit color in
+    # classicNoisedeck/glitch (before scanlines/snow) and filter/crt (before
+    # the base_color blend). The locked CDN build in bundle-lock.json predates
+    # that revision, so the transpiler injects the same statements.
+    glitch = build_module._adapt_source("classicNoisedeck/glitch", "glitch", "color = glitch(uv);")
+    assert glitch == (
+        "color = glitch(uv);\n"
+        "    color.rgb = floor(clamp(color.rgb, 0.0, 1.0) * 255.0 + 0.5) / 255.0;"
+    )
+    crt = build_module._adapt_source("filter/crt", "crt", "color = mix(base_color, color, alphaVal);")
+    assert crt == (
+        "vec3 effectColor8 = floor(clamp(color, 0.0, 1.0) * 255.0 + 0.5) / 255.0;\n"
+        "    color = mix(base_color, effectColor8, alphaVal);"
+    )
+    # Other effects and programs are untouched.
+    assert build_module._adapt_source("classicNoisedeck/glitch", "scanlines", "color = glitch(uv);") == "color = glitch(uv);"
+    assert build_module._adapt_source("filter/crt", "depthKeys", "color = mix(base_color, color, alphaVal);") == "color = mix(base_color, color, alphaVal);"
+
+
 def test_bundled_artifact_sets_match():
     bundle_dir = Path(build_module.BUNDLE)
     metadata = json.loads((bundle_dir / "metadata.json").read_text())

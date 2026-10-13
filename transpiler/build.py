@@ -57,6 +57,28 @@ def _adapt_source(effect_id: str, program: str, source: str) -> str:
         if source.count(pigment) != 1:
             raise ValueError("strokes canonical pigment pattern changed")
         source = source.replace(pigment, "pigmentSum += vec3(srcSample(centerUV).rgb * mark);")
+    if effect_id == "classicNoisedeck/glitch" and program == "glitch":
+        # Upstream Noisemaker a1a3fa2a quantizes the glitch result's rgb
+        # channels to 8-bit color before the scanlines/snow stages. The
+        # locked CDN build in bundle-lock.json predates that revision, so
+        # the transpiler applies the same statement here.
+        glitch_call = "color = glitch(uv);"
+        quantize = "color.rgb = floor(clamp(color.rgb, 0.0, 1.0) * 255.0 + 0.5) / 255.0;"
+        if source.count(glitch_call) != 1:
+            raise ValueError("glitch canonical call pattern changed")
+        source = source.replace(glitch_call, glitch_call + "\n    " + quantize)
+    if effect_id == "filter/crt" and program == "crt":
+        # Upstream a1a3fa2a quantizes the foreground color to 8-bit before
+        # blending it with base_color; same locked-build constraint as
+        # classicNoisedeck/glitch above.
+        crt_mix = "color = mix(base_color, color, alphaVal);"
+        if source.count(crt_mix) != 1:
+            raise ValueError("crt canonical mix pattern changed")
+        source = source.replace(
+            crt_mix,
+            "vec3 effectColor8 = floor(clamp(color, 0.0, 1.0) * 255.0 + 0.5) / 255.0;\n"
+            "    color = mix(base_color, effectColor8, alphaVal);",
+        )
     return source
 
 
