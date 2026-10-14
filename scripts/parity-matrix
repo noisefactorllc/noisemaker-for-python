@@ -162,6 +162,18 @@ def _matrix_values(pname: str, spec: dict, ospec: dict) -> list:
             # enforces, so the generic 0/1 interior is not a valid binding
             # here: use that documented domain as the interior.
             return [("min", 64), ("max", 2048)]
+        if lo is None and hi is None and pname == "volumeSize" and not (
+            isinstance(spec.get("choices"), dict) or isinstance(ospec.get("choices"), dict)
+        ):
+            # volumeSize=0 is invalid on both engines (the volume atlas check
+            # rejects a 0-wide atlas), so the generic int interior of 0 is not
+            # a valid binding. Only volumeSize parameters whose catalogs
+            # document neither bounds nor a choice set take this interior;
+            # a documented choice domain (the 16..128 of most volumeSize
+            # params) still binds through the choices path below so its
+            # documented extremes stay covered.
+            base = int(spec.get("default") or 64)
+            return [("min", 1), ("max", base + 1)]
     if (lo is None) != (hi is None):
         # Exactly one side is documented (in either catalog): bind that side
         # explicitly at its documented bound and give the unbounded side a
