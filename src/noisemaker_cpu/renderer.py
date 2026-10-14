@@ -919,7 +919,14 @@ def _run_effect_step(step, current, surfaces, external_textures, width, height, 
 
 
 def _run_iterated_group(group, current, surfaces, external_textures, effects, width, height, seed, time, external_inputs=None):
-    first_step = group["steps"][0]
+    # The group's iteration count comes from its owner step (the authority picks
+    # the first `iterated` definition in the group; a joined non-iterated step
+    # only owns a group alone — the flow3d/noise3d pairing — where the rule falls
+    # back to group.steps[0]).
+    first_step = next(
+        (step for step in group["steps"] if effects[step["effect_id"]].get("iterated")),
+        group["steps"][0],
+    )
     first_effect = effects[first_step["effect_id"]]
     # Upstream (shaders/src/runtime/pipeline.js render()) executes each pass exactly
     # resolveRepeatCount(pass) times per frame — there is no group-level multiplier.

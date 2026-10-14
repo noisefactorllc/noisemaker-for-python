@@ -67,6 +67,20 @@ def compute_iteration_groups(steps, effects):
         if open_group is not None and _references_particle_state(step, effects):
             open_group["steps"].append(step)
             continue
+        # The authority re-runs animated noise3d before every flow3d tick.
+        previous = groups[-1] if groups else None
+        if (
+            open_group is None
+            and step["effect_id"] == "filter3d/flow3d"
+            and int(step.get("params", {}).get("iterationCount") or 0) > 0
+            and previous is not None
+            and len(previous["steps"]) == 1
+            and previous["steps"][0].get("effect_id") == "synth3d/noise3d"
+            and int(previous["steps"][0].get("params", {}).get("speed") or 0) != 0
+        ):
+            groups.pop()
+            groups.append({"steps": [previous["steps"][0], step], "iterated": True})
+            continue
         close_open_group()
         groups.append({"steps": [step], "iterated": definition.get("iterated") is True})
     if open_loop is not None:

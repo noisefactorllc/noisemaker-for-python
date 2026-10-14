@@ -111,3 +111,43 @@ def test_balanced_loop_region_forms_one_iteration_group():
         {"steps": steps[1:4], "iterated": True, "loop": True},
         {"steps": [steps[4]], "iterated": False},
     ]
+
+
+def test_flow3d_absorbs_the_preceding_animated_noise3d_group():
+    # The authority re-runs animated noise3d before every flow3d tick: a
+    # single-step synth3d/noise3d group immediately before a positive-iteration
+    # flow3d joins flow3d's iterated group. A static noise3d (speed 0) and a
+    # zero-iteration flow3d both keep the chains independent.
+    effects = {
+        "synth3d/noise3d": {"passes": [], "textures": {}},
+        "filter3d/flow3d": {"iterated": True, "passes": [], "textures": {}},
+    }
+
+    def noise(speed):
+        step = _effect("synth3d/noise3d")
+        step["params"] = {"speed": speed}
+        return step
+
+    def flow(iteration_count):
+        step = _effect("filter3d/flow3d")
+        step["params"] = {"iterationCount": iteration_count}
+        return step
+
+    animated, flow_step = noise(1), flow(2)
+    assert compute_iteration_groups([animated, flow_step], effects) == [
+        {"steps": [animated, flow_step], "iterated": True},
+    ]
+
+    static, slow_flow = noise(0), flow(2)
+    assert compute_iteration_groups([static, slow_flow], effects) == [
+        {"steps": [static], "iterated": False},
+        {"steps": [slow_flow], "iterated": True},
+    ]
+
+    zero_flow = flow(0)
+    static_case = _effect("synth3d/noise3d")
+    static_case["params"] = {"speed": 1}
+    assert compute_iteration_groups([static_case, zero_flow], effects) == [
+        {"steps": [static_case], "iterated": False},
+        {"steps": [zero_flow], "iterated": True},
+    ]
