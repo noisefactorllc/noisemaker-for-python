@@ -298,6 +298,26 @@ def test_transpiler_applies_the_upstream_8bit_output_quantization():
     assert build_module._adapt_source("filter/crt", "depthKeys", "color = mix(base_color, color, alphaVal);") == "color = mix(base_color, color, alphaVal);"
 
 
+def test_transpiler_mirrors_the_sibling_testPattern_digit_division_fix():
+    # Mirror of the sibling's compile-glsl.js restoreIntegerDivision addition:
+    # testPattern's numbered checkerboard divides its int digit accumulator in
+    # place. Raw JS `/=` leaves a fractional digit and drops glyph-table
+    # lookups; the lowered form truncates. Same exact source guards as the
+    # sibling's pass — a changed canonical source must hard-fail, not silently
+    # skip the rewrite.
+    source = "int temp = number;\n        digits[i] = temp % 10;\n        temp /= 10;\n"
+    adapted = build_module._adapt_source("synth/testPattern", "testPattern", source)
+    assert "temp = int(temp / 10.0);" in adapted
+    assert "temp /= 10;" not in adapted
+
+    # Guards: a changed canonical source raises instead of skipping.
+    import pytest
+    with pytest.raises(ValueError):
+        build_module._adapt_source("synth/testPattern", "testPattern", "int temp = number;\ntemp = temp - 10;")
+    # Other effects keep the raw form.
+    assert build_module._adapt_source("synth/pattern", "pattern", source) == source
+
+
 def test_bundled_artifact_sets_match():
     bundle_dir = Path(build_module.BUNDLE)
     metadata = json.loads((bundle_dir / "metadata.json").read_text())

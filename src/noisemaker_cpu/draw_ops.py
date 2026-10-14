@@ -309,16 +309,24 @@ def flow3d_deposit(inputs, destination, uniforms, render_pass):
         position = texel_fetch_agent(state1, state_x, state_y)
         color = texel_fetch_agent(state2, state_x, state_y)
         atlas_x = position[0]
-        atlas_y = position[1] + math.floor(position[2]) * volume_size
-        offset = scatter_point_pixel(
-            atlas_x / volume_size * 2 - 1,
-            atlas_y / atlas_height * 2 - 1,
-            1,
-            destination.width,
-            destination.height,
-        )
-        if offset is None:
+        # Math.fround on the atlas-y addition: the sibling's adapter rounds the
+        # flattened atlas row to f32 before it feeds rasterization.
+        atlas_y = _f32(position[1] + math.floor(position[2]) * volume_size)
+        # The sibling's flow3d adapter no longer routes through
+        # scatterPointPixel. Its vertex projection is a plain atlas mapping,
+        # and the M4/Metal point rasterizer it emulates snaps window positions
+        # to a 1/256-pixel grid, assigns an integer boundary to the LOWER GL
+        # pixel (ceil-of-snap), and produces no fragment within half a subpixel
+        # step of the left or bottom edge. (flow3d-deposit.js, GAP-003.)
+        if atlas_x <= 1 / 512 or atlas_y <= 1 / 512:
             continue
+        gl_col = math.ceil(round(atlas_x * 256) / 256) - 1
+        gl_row = math.ceil(round(atlas_y * 256) / 256) - 1
+        if not math.isfinite(gl_col) or not math.isfinite(gl_row):
+            continue
+        if gl_col < 0 or gl_col >= volume_size or gl_row < 0 or gl_row >= atlas_height:
+            continue
+        offset = ((atlas_height - 1 - gl_row) * volume_size + gl_col) * 4
         destination.data[offset : offset + 3] += np.asarray(color[:3], dtype=F32)
         destination.data[offset + 3] += 1
 

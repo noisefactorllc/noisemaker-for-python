@@ -43,7 +43,7 @@ def run_pixel(ctx, out):
             if not (rt.binary("<", i, rt.i(3))):
                 break
             digits[int(i)] = rt.binary("%", temp, rt.i(10), 1, "int")
-            temp = rt.binary("/", temp, rt.i(10), 1, "int")
+            temp = rt.construct(1, rt.binary("/", temp, rt.f(10.0), 1, "float"), base="int")
         d = rt.i(0)
         _for1_first = True
         for _for1 in range(1048576):

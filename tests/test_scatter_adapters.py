@@ -110,10 +110,116 @@ def test_flow3d_deposit_flattens_voxel_z_into_volume_atlas():
 
     flow3d_deposit(inputs, destination, {"density": 100.0, "volumeSize": 4}, {"count": 1})
 
-    shader_y = 2 + 3 * 4
-    storage_y = destination.height - 1 - shader_y
-    offset = (storage_y * destination.width + 1) * 4
+    # M4/Metal rasterization (GAP-003 alignment): atlasY = 2 + 3*4 = 14.
+    # The 1/256 subpixel snap assigns an integer boundary to the LOWER GL
+    # pixel, so an exact boundary lands at gl_row 13 / gl_col 0 — storage row
+    # 16-1-13 = 2, col 0. (The pre-alignment floor mapping placed it at row 1,
+    # col 1; the sibling's own updated fixture asserts the new placement.)
+    storage_y = 2
+    offset = (storage_y * destination.width + 0) * 4
     assert np.array_equal(destination.data[offset : offset + 4], np.array([0.25, 0.5, 0.75, 1.0], dtype=np.float32))
+    # The pre-alignment location must stay untouched.
+    assert np.count_nonzero(destination.data[0 * destination.width * 4 : (storage_y) * destination.width * 4]) == 0
+
+
+def _flow3d_poke(surface, sx, sy, rgba):
+    row = surface.height - 1 - sy
+    offset = (row * surface.width + sx) * 4
+    surface.data[offset : offset + 4] = np.array(rgba, dtype=np.float32)
+
+
+def _flow3d_pixel(surface, row, col):
+    offset = (row * surface.width + col) * 4
+    return [float(value) for value in surface.data[offset : offset + 4]]
+
+
+def test_flow3d_deposit_places_integer_atlas_boundaries_in_the_lower_gl_pixel():
+    # The M4/Metal point rasterizer snaps window positions to 1/256 pixel and
+    # assigns an integer boundary to the lower GL pixel. Mirrors the sibling's
+    # scatter-adapters coverage of the GAP-003 rasterization alignment.
+    state1 = _surface(2, 1, [[0.0, 0.0, 0.0, 0.0], [0.0, 0.0, 0.0, 0.0]])
+    state2 = _surface(2, 1, [[0.0, 0.0, 0.0, 0.0], [0.0, 0.0, 0.0, 0.0]])
+    _flow3d_poke(state1, 0, 0, [20, 1.9599609375, 5.7421875, 0])
+    _flow3d_poke(state1, 1, 0, [20.71875, 17, 29.671875, 0])
+    _flow3d_poke(state2, 0, 0, [0.5, 0, 0, 1])
+    _flow3d_poke(state2, 1, 0, [0.25, 0, 0, 1])
+    destination = Surface(32, 1024)
+
+    flow3d_deposit(
+        {"stateTex1": state1, "stateTex2": state2},
+        destination,
+        {"density": 100.0, "volumeSize": 32},
+        {"count": 2},
+    )
+
+    assert _flow3d_pixel(destination, 862, 19) == [0.5, 0.0, 0.0, 1.0]
+    assert _flow3d_pixel(destination, 862, 20) == [0.0, 0.0, 0.0, 0.0]
+    assert _flow3d_pixel(destination, 79, 20) == [0.25, 0.0, 0.0, 1.0]
+    assert _flow3d_pixel(destination, 78, 20) == [0.0, 0.0, 0.0, 0.0]
+
+
+def test_flow3d_deposit_rounds_atlas_addition_as_gsl_float_before_raster():
+    # atlasY is rounded through Math.fround (f32) BEFORE raster placement:
+    # 0.0001220703125 + 4032 must round to exactly 4032 in f32, placing the
+    # deposit at GL row 4031 (storage row 64), not row 4032 (storage row 63).
+    state1 = _surface(1, 1, [[1.25, 0.0001220703125, 63, 0]])
+    state2 = _surface(1, 1, [[0.5, 0, 0, 1]])
+    destination = Surface(64, 4096)
+
+    flow3d_deposit(
+        {"stateTex1": state1, "stateTex2": state2},
+        destination,
+        {"density": 100.0, "volumeSize": 64},
+        {"count": 1},
+    )
+
+    assert _flow3d_pixel(destination, 64, 1) == [0.5, 0.0, 0.0, 1.0]
+    assert _flow3d_pixel(destination, 63, 1) == [0.0, 0.0, 0.0, 0.0]
+
+
+def test_flow3d_deposit_culls_points_inside_the_m4_viewport_subpixel_edge():
+    # A center within half a subpixel step of the left or bottom edge produces
+    # no fragment under the M4 rasterization model.
+    for volume_size, position in (
+        (32, [0.00032138824462890625, 22.546875, 13.6015625, 0]),
+        (32, [1 / 512, 22.546875, 13.6015625, 0]),
+        (64, [1.25, 0.00006103515625, 0, 0]),
+        (64, [1.25, 1 / 512, 0, 0]),
+    ):
+        state1 = _surface(1, 1, [position])
+        state2 = _surface(1, 1, [[0.5, 0, 0, 1]])
+        destination = Surface(volume_size, volume_size**2)
+
+        flow3d_deposit(
+            {"stateTex1": state1, "stateTex2": state2},
+            destination,
+            {"density": 100.0, "volumeSize": volume_size},
+            {"count": 1},
+        )
+
+        assert np.count_nonzero(destination.data) == 0, (volume_size, position)
+
+
+def test_flow3d_deposit_snaps_near_integer_atlas_positions_to_the_subpixel_grid():
+    state1 = _surface(2, 1, [[0.0, 0.0, 0.0, 0.0], [0.0, 0.0, 0.0, 0.0]])
+    state2 = _surface(2, 1, [[0.0, 0.0, 0.0, 0.0], [0.0, 0.0, 0.0, 0.0]])
+    _flow3d_poke(state1, 0, 0, [1.0009765625, 0.25, 1.1, 0])
+    _flow3d_poke(state1, 1, 0, [2.25, 1.0009765625, 1.1, 0])
+    _flow3d_poke(state2, 0, 0, [0.5, 0, 0, 1])
+    _flow3d_poke(state2, 1, 0, [0.25, 0, 0, 1])
+    destination = Surface(32, 1024)
+
+    flow3d_deposit(
+        {"stateTex1": state1, "stateTex2": state2},
+        destination,
+        {"density": 100.0, "volumeSize": 32},
+        {"count": 2},
+    )
+
+    assert _flow3d_pixel(destination, 991, 0) == [0.5, 0.0, 0.0, 1.0]
+    assert _flow3d_pixel(destination, 991, 1) == [0.0, 0.0, 0.0, 0.0]
+    assert _flow3d_pixel(destination, 991, 2) == [0.25, 0.0, 0.0, 1.0]
+    assert _flow3d_pixel(destination, 990, 2) == [0.0, 0.0, 0.0, 0.0]
 
 
 def test_billboard_additive_pass_rasterizes_procedural_shape():

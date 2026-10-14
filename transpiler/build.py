@@ -67,6 +67,17 @@ def _adapt_source(effect_id: str, program: str, source: str) -> str:
         if source.count(glitch_call) != 1:
             raise ValueError("glitch canonical call pattern changed")
         source = source.replace(glitch_call, glitch_call + "\n    " + quantize)
+    if effect_id == "synth/testPattern" and program == "testPattern":
+        # Mirror the sibling's compile-glsl.js restoreIntegerDivision addition
+        # (GAP-035): testPattern's numbered checkerboard divides an int digit
+        # accumulator in place. Raw JS `/=` leaves a fractional digit and
+        # drops glyph-table lookups; the lowered form truncates. Same exact
+        # source guards as the sibling's pass.
+        digit_decl = "int temp = number;"
+        digit_step = "temp /= 10;"
+        if digit_decl not in source or digit_step not in source:
+            raise ValueError("testPattern digit division source changed")
+        source = source.replace(digit_step, "temp = int(temp / 10.0);", 1)
     if effect_id == "filter/crt" and program == "crt":
         # Upstream a1a3fa2a quantizes the foreground color to 8-bit before
         # blending it with base_color; same locked-build constraint as
