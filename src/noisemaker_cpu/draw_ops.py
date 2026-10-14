@@ -289,7 +289,10 @@ def points_render_deposit(inputs, destination, uniforms, _render_pass):
     rgba_tex = inputs["rgbaTex"]
     threshold = uniforms["density"] / 100
     for vertex in range(xyz_tex.width * xyz_tex.height):
-        if _fract(vertex * GOLDEN_RATIO_CONJUGATE) > threshold:
+        # Math.fround on the golden-ratio cull value: the sibling's adapter
+        # rounds the product to f32 (highp float) before the fract
+        # (points-deposit.js pointsRenderDepositAdapter, M4 parity).
+        if _fract(_f32(vertex * _f32(GOLDEN_RATIO_CONJUGATE))) > threshold:
             continue
         sx = vertex % xyz_tex.width
         sy = vertex // xyz_tex.width

@@ -88,6 +88,36 @@ def test_lenia_and_points_render_deposit_alive_agents():
     assert np.allclose(points_destination.data, rgba.data)
 
 
+def test_points_render_density_cull_rounds_cull_value_to_f32_at_65536_agents():
+    # The sibling's pointsRenderDepositAdapter frounds the golden-ratio cull
+    # product to f32 (highp float) before the fract (points-deposit.js, M4
+    # parity); expected values are noisemaker-for-cpu's scatter-adapters.test.js
+    # on the same inputs. float64 arithmetic culls only 65 of the 65536 agents.
+    xyz = _surface(256, 256, [[0.5, 0.5, 0.0, 1.0]] * (256 * 256))
+    rgba = _surface(256, 256, [[1.0, 0.0, 0.0, 1.0]] * (256 * 256))
+    destination = Surface(8, 8)
+
+    points_render_deposit(
+        {"xyzTex": xyz, "rgbaTex": rgba},
+        destination,
+        {
+            "density": 0.1,
+            "viewMode": 0,
+            "rotateX": 0.0,
+            "rotateY": 0.0,
+            "rotateZ": 0.0,
+            "viewScale": 1.0,
+            "posX": 0.0,
+            "posY": 0.0,
+        },
+        {},
+    )
+
+    offset = (3 * 8 + 4) * 4
+    assert [float(c) for c in destination.data[offset:offset + 4]] == [142.0, 0.0, 0.0, 142.0]
+    assert float(destination.data.sum()) == 284.0
+
+
 def test_lenia_deposit_rounds_each_additive_blend_into_an_rgba16f_target():
     # The sibling's leniaDepositAdapter rounds every additive write back into
     # an rgba16f attachment (truncation to half after each point); expected
