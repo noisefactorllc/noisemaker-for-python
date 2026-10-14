@@ -318,6 +318,123 @@ def test_transpiler_mirrors_the_sibling_testPattern_digit_division_fix():
     assert build_module._adapt_source("synth/pattern", "pattern", source) == source
 
 
+def test_transpiler_mirrors_the_sibling_tile_aware_effect_stack():
+    # Upstream Noisemaker 6cb1a3c3 makes classicNoisedeck/effects tile-aware:
+    # block grids anchor to fullResolution, convolution steps measure one
+    # full-image texel, input taps map through the tile mapping, and the
+    # radial zoom clamps its tap under tiling. The locked CDN build predates
+    # that revision, so the transpiler applies the same statements here.
+    source = (
+        "    float dx = size * (1.0 / resolution.x);\n"
+        "    float dy = size * (1.0 / resolution.y);\n"
+        "    return texture(inputTex, coord).rgb;\n"
+        "    vec2 steps = 1.0 / resolution;\n"
+        "    float amount = resolution.x / size;\n"
+        "\tvec4 base = texture( inputTex, vec2( sx, sy ) );\n"
+        "    if( mod( gl_FragCoord.x, dSize ) > size ) {\n"
+        "        if( mod( gl_FragCoord.y, dSize ) > size ) {\n"
+        "        if( mod( gl_FragCoord.y, dSize ) > size ) {\n"
+        "    st *= resolution;\n"
+        "    vec3 orig = texture(inputTex, st).rgb;\n"
+        "    sum += texture(inputTex, st + vec2(j, i) * 0.004).rgb * strength;\n"
+        "        vec4 tex = texture(inputTex, st + tapB);\n"
+        "    vec2 imageSize = resolution;\n"
+    )
+    adapted = build_module._adapt_source("classicNoisedeck/effects", "effects", source)
+    assert "float dx = size * (1.0 / fullResolution.x);" in adapted
+    assert "float dy = size * (1.0 / fullResolution.y);" in adapted
+    assert (
+        "return texture(inputTex, (coord * fullResolution - tileOffset)"
+        " / vec2(textureSize(inputTex, 0))).rgb;" in adapted
+    )
+    assert "vec2 steps = 1.0 / fullResolution;" in adapted
+    assert "float amount = fullResolution.x / size;" in adapted
+    assert (
+        "vec4 base = texture( inputTex, (vec2( sx, sy ) * fullResolution"
+        " - tileOffset) / vec2(textureSize(inputTex, 0)) );" in adapted
+    )
+    assert "mod( gl_FragCoord.x + tileOffset.x, dSize )" in adapted
+    assert adapted.count("mod( gl_FragCoord.y + tileOffset.y, dSize )") == 2
+    assert "st *= fullResolution;" in adapted
+    assert (
+        "vec3 orig = texture(inputTex, (st * fullResolution - tileOffset)"
+        " / vec2(textureSize(inputTex, 0))).rgb;" in adapted
+    )
+    assert (
+        "sum += texture(inputTex, ((st + vec2(j, i) * 0.004) * fullResolution"
+        " - tileOffset) / vec2(textureSize(inputTex, 0))).rgb * strength;" in adapted
+    )
+    assert (
+        "if (tileOffset.x != 0.0 || tileOffset.y != 0.0) {\n"
+        "            vec2 tapBudget = vec2(256.0) * invFullResolution;\n"
+        "            tapB = min(max(tapB, -tapBudget), tapBudget);\n"
+        "        }" in adapted
+    )
+    assert (
+        "vec4 tex = texture(inputTex, ((st + tapB) * fullResolution"
+        " - tileOffset) / vec2(textureSize(inputTex, 0)));" in adapted
+    )
+    assert "vec2 imageSize = fullResolution;" in adapted
+    # Guards: a changed canonical source raises instead of skipping.
+    import pytest
+    with pytest.raises(ValueError):
+        build_module._adapt_source("classicNoisedeck/effects", "effects", "st *= resolution;")
+    # Other effects keep the raw form.
+    assert build_module._adapt_source("synth/pattern", "pattern", source) == source
+
+
+def test_transpiler_mirrors_the_sibling_glyphmap_tiling_detection():
+    # Upstream Noisemaker 6cb1a3c3 detects glyphMap tiling from the
+    # full-image size differing from the local render size instead of from
+    # tileOffset: the origin tile's offset is (0, 0), the same value the
+    # runtime writes when not tiling.
+    source = "bool isTileRendering = length(tileOffset) > 0.0;\n"
+    adapted = build_module._adapt_source("filter/glyphMap", "glyphMap", source)
+    assert adapted == (
+        "bool isTileRendering = any(notEqual(fullResolution, resolution));\n"
+    )
+    # Guards: a changed canonical source raises instead of skipping.
+    import pytest
+    with pytest.raises(ValueError):
+        build_module._adapt_source("filter/glyphMap", "glyphMap", "bool isTileRendering = false;")
+    # Other effects keep the raw form.
+    assert build_module._adapt_source("filter/glyphMap", "preview", source) == source
+
+
+def test_bundled_effects_kernel_carries_the_tile_mapping():
+    kernel = (
+        Path(build_module.BUNDLE) / "kernels" / "python"
+        / "classicNoisedeck__effects__effects.py"
+    ).read_text()
+    # Every input tap maps through the tile mapping and the block grids
+    # anchor to fullResolution; the radial zoom clamps its tap under tiling.
+    assert (
+        "rt.binary(\"-\", rt.binary(\"*\", st, _u_fullResolution, 2, 'float'),"
+        " _u_tileOffset, 2, 'float')" in kernel
+    )
+    assert (
+        "tapBudget = rt.construct(2, rt.binary(\"*\","
+        " rt.construct_raw(2, rt.f(256.0)), _u_invFullResolution, 2, 'float'))" in kernel
+    )
+    assert "rt.swizzle(_u_fullResolution, \"x\"), size, 1, \"float\")" in kernel
+    # The untiled identity is exact: the old resolution-based form is gone.
+    assert "rt.binary(\"*\", st, _u_resolution, 2, \"float\")" not in kernel
+
+
+def test_bundled_glyphmap_kernel_detects_tiling_from_the_full_resolution():
+    kernel = (
+        Path(build_module.BUNDLE) / "kernels" / "python" / "filter__glyphMap__glyphMap.py"
+    ).read_text()
+    # Tiling is detected from the full-image size differing from the local
+    # render size; the origin tile's tileOffset is (0, 0), the same value the
+    # runtime writes when not tiling.
+    assert (
+        "rt.component_wise(\"any\", rt.component_wise(\"notEqual\","
+        " _u_fullResolution, resolution, width=2), width=2)" in kernel
+    )
+    assert "rt.length(_u_tileOffset)" not in kernel
+
+
 def test_bundled_artifact_sets_match():
     bundle_dir = Path(build_module.BUNDLE)
     metadata = json.loads((bundle_dir / "metadata.json").read_text())

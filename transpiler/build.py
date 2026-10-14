@@ -90,6 +90,84 @@ def _adapt_source(effect_id: str, program: str, source: str) -> str:
             "vec3 effectColor8 = floor(clamp(color, 0.0, 1.0) * 255.0 + 0.5) / 255.0;\n"
             "    color = mix(base_color, effectColor8, alphaVal);",
         )
+    if effect_id == "classicNoisedeck/effects" and program == "effects":
+        # Upstream Noisemaker 6cb1a3c3 makes the classicNoisedeck effect stack
+        # tile-aware: the block grids (pixellate, checkerboard dither, stripe
+        # mask) anchor to fullResolution, one convolution step measures one
+        # full-image texel, input taps map through the tile mapping
+        # ((st * fullResolution - tileOffset) / textureSize), the radial zoom
+        # clamps each tap to a 256 px budget under tiling, and the checker
+        # phase advances by tileOffset. Untiled the two resolutions are equal
+        # and tileOffset is zero, so untiled output is unchanged. The locked
+        # CDN build in bundle-lock.json predates that revision, so the
+        # transpiler applies the same statements here.
+        tile_rules = [
+            # pixellate: the block grid anchors to the full image
+            ("float dx = size * (1.0 / resolution.x);",
+             "float dx = size * (1.0 / fullResolution.x);", 1),
+            ("float dy = size * (1.0 / resolution.y);",
+             "float dy = size * (1.0 / fullResolution.y);", 1),
+            ("return texture(inputTex, coord).rgb;",
+             "return texture(inputTex, (coord * fullResolution - tileOffset)"
+             " / vec2(textureSize(inputTex, 0))).rgb;", 1),
+            # convolve: one kernel step is one full-image pixel
+            ("vec2 steps = 1.0 / resolution;",
+             "vec2 steps = 1.0 / fullResolution;", 1),
+            # dither: the block count uses the full resolution and the snapped
+            # block center is a full-image coordinate
+            ("float amount = resolution.x / size;",
+             "float amount = fullResolution.x / size;", 1),
+            ("vec4 base = texture( inputTex, vec2( sx, sy ) );",
+             "vec4 base = texture( inputTex, (vec2( sx, sy ) * fullResolution"
+             " - tileOffset) / vec2(textureSize(inputTex, 0)) );", 1),
+            # checker phase anchored to the full image
+            ("mod( gl_FragCoord.x, dSize )",
+             "mod( gl_FragCoord.x + tileOffset.x, dSize )", 1),
+            ("mod( gl_FragCoord.y, dSize )",
+             "mod( gl_FragCoord.y + tileOffset.y, dSize )", 2),
+            # stripes anchored to full-image pixels
+            ("st *= resolution;",
+             "st *= fullResolution;", 1),
+            # bloom: every tap maps through the tile mapping
+            ("vec3 orig = texture(inputTex, st).rgb;",
+             "vec3 orig = texture(inputTex, (st * fullResolution - tileOffset)"
+             " / vec2(textureSize(inputTex, 0))).rgb;", 1),
+            ("sum += texture(inputTex, st + vec2(j, i) * 0.004).rgb * strength;",
+             "sum += texture(inputTex, ((st + vec2(j, i) * 0.004)"
+             " * fullResolution - tileOffset) / vec2(textureSize(inputTex, 0)))"
+             ".rgb * strength;", 1),
+            # radial zoom: clamp each tap to a 256 px budget under tiling
+            ("vec4 tex = texture(inputTex, st + tapB);",
+             "if (tileOffset.x != 0.0 || tileOffset.y != 0.0) {\n"
+             "            vec2 tapBudget = vec2(256.0) * invFullResolution;\n"
+             "            tapB = min(max(tapB, -tapBudget), tapBudget);\n"
+             "        }\n"
+             "        vec4 tex = texture(inputTex, ((st + tapB)"
+             " * fullResolution - tileOffset) / vec2(textureSize(inputTex, 0)));", 1),
+            # the zoom center anchors to the full image
+            ("vec2 imageSize = resolution;",
+             "vec2 imageSize = fullResolution;", 1),
+        ]
+        for old, new, count in tile_rules:
+            if source.count(old) != count:
+                raise ValueError(
+                    f"classicNoisedeck/effects tile-awareness source changed: {old!r}"
+                )
+            source = source.replace(old, new)
+    if effect_id == "filter/glyphMap" and program == "glyphMap":
+        # Upstream Noisemaker 6cb1a3c3 detects tiling from the full-image size
+        # differing from the local render size instead of from tileOffset:
+        # the origin tile's offset is (0, 0), the same value the runtime
+        # writes when not tiling. Untiled the two resolutions are equal, so
+        # output is unchanged. Same locked-build constraint as
+        # classicNoisedeck/effects above.
+        is_tile = "bool isTileRendering = length(tileOffset) > 0.0;"
+        if source.count(is_tile) != 1:
+            raise ValueError("glyphMap tiling detection source changed")
+        source = source.replace(
+            is_tile,
+            "bool isTileRendering = any(notEqual(fullResolution, resolution));",
+        )
     return source
 
 
