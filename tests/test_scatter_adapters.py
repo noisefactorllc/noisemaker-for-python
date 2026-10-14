@@ -200,6 +200,28 @@ def test_flow3d_deposit_culls_points_inside_the_m4_viewport_subpixel_edge():
         assert np.count_nonzero(destination.data) == 0, (volume_size, position)
 
 
+def test_flow3d_deposit_snaps_half_subpixel_inputs_with_js_round_ties():
+    # A position exactly half a subpixel step past an integer must round UP
+    # like JS Math.round (ties toward +infinity), not like Python round()'s
+    # ties-to-even: x*256 = 512.5 rounds to 512 under banker's rounding but
+    # 513 under Math.round. input 2.001953125 (f32-exact) * 256 = 512.5.
+    state1 = _surface(1, 1, [[2.001953125, 1.25, 0, 0]])
+    state2 = _surface(1, 1, [[0.5, 0, 0, 1]])
+    destination = Surface(32, 1024)
+
+    flow3d_deposit(
+        {"stateTex1": state1, "stateTex2": state2},
+        destination,
+        {"density": 100.0, "volumeSize": 32},
+        {"count": 1},
+    )
+
+    # Math.round(512.5)=513 -> ceil(513/256)-1 = 2. Banker's rounding would
+    # give ceil(512/256)-1 = 1. atlasY = 1.25 -> gl_row 1 -> storage row 1022.
+    assert _flow3d_pixel(destination, 1022, 2) == [0.5, 0.0, 0.0, 1.0]
+    assert _flow3d_pixel(destination, 1022, 1) == [0.0, 0.0, 0.0, 0.0]
+
+
 def test_flow3d_deposit_snaps_near_integer_atlas_positions_to_the_subpixel_grid():
     state1 = _surface(2, 1, [[0.0, 0.0, 0.0, 0.0], [0.0, 0.0, 0.0, 0.0]])
     state2 = _surface(2, 1, [[0.0, 0.0, 0.0, 0.0], [0.0, 0.0, 0.0, 0.0]])

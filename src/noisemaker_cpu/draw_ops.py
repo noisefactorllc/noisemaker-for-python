@@ -11,6 +11,7 @@ import math
 
 import numpy as np
 
+from .automation import _js_round
 from .sampler import sample_bilinear, sample_nearest_bottom_left
 from .texture_format import _float16_truncate
 
@@ -320,8 +321,11 @@ def flow3d_deposit(inputs, destination, uniforms, render_pass):
         # step of the left or bottom edge. (flow3d-deposit.js, GAP-003.)
         if atlas_x <= 1 / 512 or atlas_y <= 1 / 512:
             continue
-        gl_col = math.ceil(round(atlas_x * 256) / 256) - 1
-        gl_row = math.ceil(round(atlas_y * 256) / 256) - 1
+        # JS Math.round semantics (exact .5 ties toward +infinity), not Python
+        # round()'s ties-to-even: a half-subpixel input must round up exactly
+        # as the oracle does, or the snapped pixel shifts by one.
+        gl_col = math.ceil(_js_round(atlas_x * 256) / 256) - 1
+        gl_row = math.ceil(_js_round(atlas_y * 256) / 256) - 1
         if not math.isfinite(gl_col) or not math.isfinite(gl_row):
             continue
         if gl_col < 0 or gl_col >= volume_size or gl_row < 0 or gl_row >= atlas_height:
