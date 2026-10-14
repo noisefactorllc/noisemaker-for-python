@@ -719,6 +719,9 @@ def _render_effect_once(
                 prior = attachments.get(out_names[0]) if out_names else None
                 if prior is not None and prior.data.shape == destination.data.shape:
                     destination.data[:] = prior.data
+                # The adapter sees the attachment's declared format like the
+                # sibling's destination.format (set at surface creation).
+                destination.format = _texture_format(eff, out_names[0]) if out_names else "rgba16f"
                 draw_op(textures, destination, pass_uniforms, p)
                 produced = [destination]
             else:

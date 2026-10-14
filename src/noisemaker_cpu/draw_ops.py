@@ -232,6 +232,10 @@ def dla_deposit_grid(inputs, destination, uniforms, _render_pass):
 
 def lenia_deposit(inputs, destination, uniforms, _render_pass):
     xyz_tex = inputs["xyzTex"]
+    deposit_amount = float(uniforms["depositAmount"])
+    # Additive blending writes back to the half-float attachment after every
+    # point when the destination is rgba16f (leniaDepositAdapter).
+    half_float_blend = destination.format in ("rgba16f", "rgba16float")
     for vertex in range(xyz_tex.width * xyz_tex.height):
         sx = vertex % xyz_tex.width
         sy = vertex // xyz_tex.width
@@ -247,7 +251,14 @@ def lenia_deposit(inputs, destination, uniforms, _render_pass):
         )
         if offset is None:
             continue
-        _accumulate(destination.data, offset, (float(uniforms["depositAmount"]), 0.0, 0.0, 1.0))
+        if half_float_blend:
+            # float16Truncate frounds the float64 sum to f32, then truncates
+            # the mantissa to half — exactly _float16_truncate's contract.
+            data = destination.data
+            data[offset] = _float16_truncate(np.array([float(data[offset]) + deposit_amount]))[0]
+            data[offset + 3] = _float16_truncate(np.array([float(data[offset + 3]) + 1.0]))[0]
+        else:
+            _accumulate(destination.data, offset, (deposit_amount, 0.0, 0.0, 1.0))
 
 
 def physarum_deposit(inputs, destination, uniforms, _render_pass):

@@ -88,6 +88,22 @@ def test_lenia_and_points_render_deposit_alive_agents():
     assert np.allclose(points_destination.data, rgba.data)
 
 
+def test_lenia_deposit_rounds_each_additive_blend_into_an_rgba16f_target():
+    # The sibling's leniaDepositAdapter rounds every additive write back into
+    # an rgba16f attachment (truncation to half after each point); expected
+    # values are noisemaker-for-cpu's scatter-adapters.test.js on the same
+    # inputs. r grows by one half-ULP per deposit until 4096, where a 3.6
+    # addend truncates away; alpha stops at 2048 the same way.
+    xyz = _surface(64, 64, [[0.5, 0.5, 0.0, 1.0]] * (64 * 64))
+    destination = Surface(4, 4)
+    destination.format = "rgba16f"
+
+    lenia_deposit({"xyzTex": xyz}, destination, {"depositAmount": 3.6}, {})
+
+    offset = (1 * 4 + 2) * 4
+    assert [float(c) for c in destination.data[offset:offset + 4]] == [4096.0, 0.0, 0.0, 2048.0]
+
+
 def test_catalog_scatter_programs_are_registered():
     for key in (
         ("filter/wormhole", "deposit"),

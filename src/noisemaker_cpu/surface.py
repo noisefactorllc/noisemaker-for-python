@@ -28,7 +28,7 @@ def _surface_length(width: int, height: int) -> int:
 
 
 class Surface:
-    __slots__ = ("data", "filter", "height", "width")
+    __slots__ = ("data", "filter", "format", "height", "width")
 
     def __init__(self, width: int, height: int, data: np.ndarray | None = None):
         length = _surface_length(width, height)
@@ -43,6 +43,9 @@ class Surface:
         self.data = data
         # "nearest" (canonical internal default) or "linear" (external images).
         self.filter = "nearest"
+        # The attachment's declared texture format, assigned by the renderer
+        # like the sibling sets `surface.format` (None until then).
+        self.format = None
 
     @staticmethod
     def from_rgba8(width: int, height: int, byts) -> Surface:
