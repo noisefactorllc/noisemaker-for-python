@@ -66,3 +66,77 @@ def test_documented_min_max_bind_the_documented_bounds():
 def test_generic_int_binds_zero_and_default_plus_one():
     spec = {"type": "int", "default": 3}
     assert _values("mode", spec) == [("min", 0), ("max", 4)]
+
+
+def _cache_entry(**over):
+    entry = {
+        "case": "synth/test#mode@max",
+        "kind": "effect",
+        "eid": "synth/test",
+        "params": {"mode": 4},
+        "payload": None,
+    }
+    entry.update(over)
+    return entry
+
+
+def test_oracle_cache_key_binds_the_case_definition():
+    # The same case id at a different bound value must not share a cache key:
+    # a stale hit would feed the wrong oracle surface into the comparison.
+    assert _pmx._oracle_cache_key(_cache_entry()) == _pmx._oracle_cache_key(_cache_entry())
+    assert _pmx._oracle_cache_key(_cache_entry()) != _pmx._oracle_cache_key(_cache_entry(params={"mode": 3}))
+    assert _pmx._oracle_cache_key(_cache_entry()) != _pmx._oracle_cache_key(_cache_entry(eid="synth/other"))
+    # The case-id label alone never moves the key: identical oracle inputs
+    # (same effect id, same bindings) are the same oracle render.
+    assert _pmx._oracle_cache_key(_cache_entry()) == _pmx._oracle_cache_key(_cache_entry(case="renamed#mode@max"))
+
+
+def test_oracle_cache_key_binds_the_spliced_program_text():
+    # A graph case's oracle render is the final spliced DSL text, so the key
+    # must change when the text changes even if the payload label is equal.
+    def _fake_splice(program, func, pname, value):
+        return f"{program}|{func}:{pname}={value}"
+
+    real_splice = _pmx.splice_bindings
+    _pmx.splice_bindings = _fake_splice
+    try:
+        bound = _pmx._oracle_cache_key(
+            _cache_entry(kind="graph", eid="filter/grade", payload="a().b().write(o0)", params={"blacks": 1})
+        )
+        other = _pmx._oracle_cache_key(
+            _cache_entry(kind="graph", eid="filter/grade", payload="a().b().write(o0)", params={"blacks": 0})
+        )
+        assert bound != other
+    finally:
+        _pmx.splice_bindings = real_splice
+
+
+def test_oracle_cache_corrupt_or_missing_entry_falls_back(tmp_path):
+    from noisemaker_cpu.png import encode_png
+    from noisemaker_cpu.surface import Surface
+
+    good = tmp_path / "good.png"
+    good.write_bytes(encode_png(Surface(2, 2)))
+    assert _pmx._load_oracle_cache(str(good)) is not None
+
+    bad = tmp_path / "bad.png"
+    bad.write_bytes(b"not a png")
+    assert _pmx._load_oracle_cache(str(bad)) is None
+
+    assert _pmx._load_oracle_cache(str(tmp_path / "missing.png")) is None
+
+
+def test_port_cache_key_binds_engine_and_case():
+    assert _pmx._port_cache_key(_cache_entry()) == _pmx._port_cache_key(_cache_entry())
+    assert _pmx._port_cache_key(_cache_entry()) != _pmx._port_cache_key(_cache_entry(params={"mode": 3}))
+    digest = _pmx._port_inputs_digest()
+    assert len(digest) == 40
+    assert digest == _pmx._port_inputs_digest()
+
+
+def test_port_cache_roundtrip(tmp_path):
+    raw = bytes(range(256))
+    path = tmp_path / "case.rgba"
+    path.write_bytes(raw)
+    wrapped = _pmx._CachedRGBA(path.read_bytes())
+    assert wrapped.to_rgba8() == raw

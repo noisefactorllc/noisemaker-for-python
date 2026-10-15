@@ -56,7 +56,8 @@ near, defer, skip, fail and missing are all zero. A port-side render timeout
 or an oracle-side failure counts as fail and stays visible.
 
 Usage: scripts/parity-matrix [--only effect_id[,effect_id]] [--json out]
-                            [--workers N]
+                            [--workers N] [--resume LOG]
+                            [--oracle-cache DIR] [--port-cache DIR]
 """
 
 from __future__ import annotations
@@ -67,6 +68,7 @@ import importlib.util
 import json
 import os
 import re
+import shutil
 import signal
 import subprocess
 import sys
@@ -492,6 +494,144 @@ def _render_py(entry: dict):
     return render_dsl(program_override, width=entry["width"], height=entry["width"], seed=SEED, time=TIME)
 
 
+def _spliced_program(entry: dict) -> str:
+    """The DSL text the oracle renders for a graph-kind case."""
+    if entry["kind"] == "external":
+        program = _parity._external_case_dsl(entry["payload"])
+    else:
+        program = entry["payload"]
+    if entry["params"]:
+        func = _parity._meta()["effects"][entry["eid"]]["func"]
+        for pname, value in entry["params"].items():
+            program = splice_bindings(program, func, pname, value)
+    return program
+
+
+def _oracle_cache_key(entry: dict) -> str:
+    """Digest of everything the pinned oracle consumes for one case.
+
+    The oracle render depends on the case definition, not the case id alone:
+    for an effect case that is the effect id plus the bound parameter values,
+    and for a graph case it is the final spliced DSL text. The port tree can
+    change the splice outcome, so the digest covers the rendered program text
+    itself. The cache directory binds the pinned oracle head.
+    """
+    if entry["kind"] == "effect":
+        basis = {"kind": "effect", "eid": entry["eid"], "params": entry["params"]}
+    elif entry["kind"] == "missing":
+        basis = {"kind": "missing"}
+    else:
+        basis = {"kind": entry["kind"], "program": _spliced_program(entry)}
+    blob = json.dumps(basis, sort_keys=True, default=str)
+    return hashlib.sha1(blob.encode("utf-8")).hexdigest()[:16]
+
+
+def _load_oracle_cache(path: str):
+    """Decode a cached oracle PNG. None means re-render."""
+    try:
+        with open(path, "rb") as f:
+            return _parity.decode_png(f.read())
+    except Exception:
+        return None
+
+
+# The port render depends on the whole port engine, not only the case
+# definition, so the port cache key binds a digest over every source file the
+# engine loads (src/noisemaker_cpu plus the parity harness scripts). Any port
+# change therefore misses every cached port render; an unchanged tree reuses
+# the stored renders byte-identically. Failed renders (timeouts, errors) are
+# cached as one-line error markers so a resumed pass does not pay their cost
+# again while the tree stays unchanged.
+_PORT_INPUTS_DIGEST = None
+_PORT_CACHE_DIR = None
+
+
+def _port_inputs_digest() -> str:
+    global _PORT_INPUTS_DIGEST
+    if _PORT_INPUTS_DIGEST is None:
+        h = hashlib.sha1()
+        for rel in ("scripts/parity", "scripts/parity-matrix"):
+            path = os.path.join(_ROOT, rel)
+            if os.path.isdir(path):
+                for dirpath, dirnames, filenames in os.walk(path):
+                    dirnames.sort()
+                    for name in sorted(filenames):
+                        sub = os.path.join(dirpath, name)
+                        h.update(os.path.relpath(sub, _ROOT).encode("utf-8"))
+                        with open(sub, "rb") as f:
+                            h.update(f.read())
+            else:
+                h.update(rel.encode("utf-8"))
+                with open(path, "rb") as f:
+                    h.update(f.read())
+        base = os.path.join(_ROOT, "src", "noisemaker_cpu")
+        for dirpath, dirnames, filenames in os.walk(base):
+            dirnames.sort()
+            for name in sorted(filenames):
+                path = os.path.join(dirpath, name)
+                h.update(os.path.relpath(path, _ROOT).encode("utf-8"))
+                with open(path, "rb") as f:
+                    h.update(f.read())
+        _PORT_INPUTS_DIGEST = h.hexdigest()
+    return _PORT_INPUTS_DIGEST
+
+
+def _port_cache_key(entry: dict) -> str:
+    blob = json.dumps(
+        {name: entry.get(name) for name in ("kind", "eid", "params", "payload", "width")},
+        sort_keys=True,
+        default=str,
+    )
+    return hashlib.sha1((_port_inputs_digest() + blob).encode("utf-8")).hexdigest()[:16]
+
+
+class _CachedRGBA:
+    """Stand-in for a rendered surface when the parent only reads to_rgba8()."""
+
+    def __init__(self, raw):
+        self._raw = raw
+
+    def to_rgba8(self):
+        return self._raw
+
+
+def py_task(entry):
+    """One port-side matrix render (runs in a fork pool worker; the alarm
+    guard keeps a pathological render bounded and visible)."""
+    cache_path = None
+    if _PORT_CACHE_DIR is not None:
+        safe = re.sub(r"[^\w.-]", "_", entry["case"])
+        cache_path = os.path.join(_PORT_CACHE_DIR, f"{safe}-{_port_cache_key(entry)}")
+        try:
+            with open(cache_path + ".rgba", "rb") as f:
+                return entry["case"], _CachedRGBA(f.read()), None
+        except Exception:
+            pass
+        try:
+            with open(cache_path + ".err", encoding="utf-8") as f:
+                return entry["case"], None, f.read()
+        except Exception:
+            pass
+    try:
+        surface = _timeout_guard(lambda: _render_py(entry))
+    except Exception as e:
+        err = f"{type(e).__name__}: {str(e).splitlines()[0][:90]}"
+        if cache_path is not None:
+            try:
+                with open(cache_path + ".err", "w", encoding="utf-8") as f:
+                    f.write(err)
+            except OSError:
+                pass  # caching is best-effort; the failure stays visible
+        return entry["case"], None, err
+    if cache_path is not None:
+        try:
+            with open(cache_path + ".rgba", "wb") as f:
+                f.write(surface.to_rgba8())
+        except Exception:
+            pass  # caching is best-effort; the render itself already succeeded
+    return entry["case"], surface, None
+
+
 def _render_js(entry: dict, out: str):
     kind = entry["kind"]
     if kind == "missing":
@@ -519,14 +659,7 @@ def _render_js(entry: dict, out: str):
             cmd += ["--input", _parity.EXT_PNG]
         subprocess.run(cmd, cwd=CPU_DIR, check=True, capture_output=True, timeout=_RENDER_TIMEOUT)
     else:
-        if kind == "external":
-            program = _parity._external_case_dsl(entry["payload"])
-        else:
-            program = entry["payload"]
-        if entry["params"]:
-            func = _parity._meta()["effects"][entry["eid"]]["func"]
-            for pname, value in entry["params"].items():
-                program = splice_bindings(program, func, pname, value)
+        program = _spliced_program(entry)
         if kind == "external":
             safe = re.sub(r"[^\w-]", "_", entry["case"])
             dsl_path = os.path.join(_parity._SCRATCH.name, f"matrix-{safe}.dsl")
@@ -584,20 +717,21 @@ def _timeout_guard(fn, seconds=_RENDER_TIMEOUT):
         signal.signal(signal.SIGALRM, old)
 
 
-def py_task(entry):
-    """One port-side matrix render (runs in a fork pool worker; the alarm
-    guard keeps a pathological render bounded and visible)."""
-    try:
-        return entry["case"], _timeout_guard(lambda: _render_py(entry)), None
-    except Exception as e:
-        return entry["case"], None, f"{type(e).__name__}: {str(e).splitlines()[0][:90]}"
-
-
 def main() -> int:
     parser = argparse.ArgumentParser(add_help=False)
     parser.add_argument("--only", default=None)
     parser.add_argument("--json", default=None)
     parser.add_argument("--resume", default=None)
+    parser.add_argument(
+        "--oracle-cache",
+        default=None,
+        help="directory caching oracle PNG renders across resumes, keyed by the pinned oracle head",
+    )
+    parser.add_argument(
+        "--port-cache",
+        default=None,
+        help="directory caching port renders across resumes, keyed by the port engine inputs",
+    )
     parser.add_argument("--workers", type=int, default=8)
     parser.add_argument("--py-workers", type=int, default=None)
     args = parser.parse_args()
@@ -635,6 +769,21 @@ def main() -> int:
 
     scratch = tempfile.TemporaryDirectory(prefix="noisemaker-matrix-")
 
+    # Oracle renders are the expensive phase and --resume re-runs them for
+    # every case that has no verdict yet, so an interrupted sweep kept paying
+    # the full oracle cost per attempt. --oracle-cache persists the oracle PNG
+    # renders (keyed by case id inside a directory bound to the pinned oracle
+    # head) so later attempts reuse them byte-identically.
+    cache_dir = None
+    if args.oracle_cache:
+        cpu_head = (_parity._cpu_revision().get("cpuHead") or "unknown").strip()
+        cache_dir = os.path.join(args.oracle_cache, cpu_head)
+        os.makedirs(cache_dir, exist_ok=True)
+    global _PORT_CACHE_DIR
+    if args.port_cache:
+        _PORT_CACHE_DIR = os.path.join(args.port_cache, "port")
+        os.makedirs(_PORT_CACHE_DIR, exist_ok=True)
+
     # Warm the shared fixtures before the parallel phases (they lazy-write the
     # external-texture PNG on first use).
     _parity._ext_texture()
@@ -650,10 +799,23 @@ def main() -> int:
     def oracle_task(indexed_entry):
         index, entry = indexed_entry
         out = os.path.join(scratch.name, f"oracle-{index}.png")
+        cache_path = None
+        if cache_dir is not None:
+            safe = re.sub(r"[^\w.-]", "_", entry["case"])
+            cache_path = os.path.join(cache_dir, f"{safe}-{_oracle_cache_key(entry)}.png")
+            cached = _load_oracle_cache(cache_path)
+            if cached is not None:
+                return entry["case"], cached, None
         try:
-            return entry["case"], _render_js(entry, out), None
+            surface = _render_js(entry, out)
         except Exception as e:  # oracle-side failure stays visible
             return entry["case"], None, f"{type(e).__name__}: {str(e).splitlines()[0][:90]}"
+        if cache_path is not None:
+            try:
+                shutil.copyfile(out, cache_path)
+            except OSError:
+                pass  # caching is best-effort; the render itself already succeeded
+        return entry["case"], surface, None
 
     oracle_surface, oracle_error = {}, {}
     import concurrent.futures as futures_mod

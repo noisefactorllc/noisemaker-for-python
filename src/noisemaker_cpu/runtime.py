@@ -487,7 +487,17 @@ class Runtime:
                 if _is_scalar(c):
                     ivals.append(uintmath._int_operand(c))
                 else:
-                    ivals.extend(uintmath._int_operand(x) for x in np.asarray(c).ravel())
+                    arr = np.asarray(c)
+                    if arr.dtype.kind == "f":
+                        # The oracle materializes a float vector argument as a
+                        # pooled Float32Array before an integer cast
+                        # (canonical-kernels.js: `new PooledFloat32Array([...])
+                        # ` feeds cpu_ivecN), so each component rounds to f32
+                        # first and the cast truncates the f32 value. A scalar
+                        # argument reaches cpu_ivecN directly as a plain float
+                        # and truncates unrounded — keep scalars exact.
+                        arr = arr.astype(F32)
+                    ivals.extend(uintmath._int_operand(x) for x in arr.ravel())
             ivals = [(v & _U32) if base == "uint" else _s32(v) for v in ivals]
             if width == 1:
                 return ivals[0]
