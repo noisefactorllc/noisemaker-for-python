@@ -632,8 +632,16 @@ class Runtime:
         # its fourth channel and solid alpha diverges from the oracle.
         a_scalar = _is_scalar(a)
         b_scalar = _is_scalar(b)
-        av = a if a_scalar else np.asarray(a, dtype=np.float64)
-        bv = b if b_scalar else np.asarray(b, dtype=np.float64)
+        # JS scalars are plain float64 numbers: an element read from a stored
+        # Float32Array is f32-EXACT but participates in later arithmetic at
+        # float64 precision. NumPy scalar operands (np.float32 element reads)
+        # would instead promote the whole op to float32 and round every
+        # intermediate — a rounding JS never does (grade's srgbToLinear chain,
+        # where f32((x+0.055)) then f32(/1.055) fed pow a different argument
+        # than the oracle). Convert numpy scalars to Python floats; real f32
+        # storage still rounds at the vector consumption boundaries.
+        av = float(a) if a_scalar else np.asarray(a, dtype=np.float64)
+        bv = float(b) if b_scalar else np.asarray(b, dtype=np.float64)
         if op == "+":
             r = np.add(av, bv)
         elif op == "-":
@@ -735,7 +743,10 @@ class Runtime:
         # diverges enough to blow the +/-2 tolerance in noise chains.
         # Snap vector args to f32 first (JS applies these to stored Float32Array
         # values), then compute in float64 and round the result to f32.
-        arrs = [a if _is_scalar(a) else np.asarray(_snap32(a), dtype=np.float64) for a in args]
+        # Scalar args become Python floats: numpy scalars (np.float32 element
+        # reads) would promote the whole ufunc to float32 and round before the
+        # float64 computation the JS Math.* helpers perform.
+        arrs = [float(a) if _is_scalar(a) else np.asarray(_snap32(a), dtype=np.float64) for a in args]
         fn = _COMPONENT.get(name)
         if fn is None:
             raise ValueError(f"unsupported builtin {name!r}")

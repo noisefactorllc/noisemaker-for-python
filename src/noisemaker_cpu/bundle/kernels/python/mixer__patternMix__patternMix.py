@@ -51,7 +51,7 @@ def run_pixel(ctx, out):
     def hexDist__vec2(p):
         p = rt.copy(p, "float")
         p[:] = rt.component_wise("abs", p, width=2)
-        return rt.component_wise("max", rt.binary("+", rt.binary("*", rt.swizzle(p, "x"), rt.f(0.5), 1, "float"), rt.binary("*", rt.swizzle(p, "y"), rt.binary("/", rt.f(1.7320508075688772), rt.f(2.0), 1, "float"), 1, "float"), 1, "float"), rt.swizzle(p, "x"), width=1)
+        return rt.component_wise("max", rt.binary("+", rt.binary("*", rt.swizzle(p, "x"), rt.f(0.5), 1, "float"), rt.binary("*", rt.swizzle(p, "y"), rt.f(0.8660254037844386), 1, "float"), 1, "float"), rt.swizzle(p, "x"), width=1)
     def hexagons__vec2_float(p, t):
         p = rt.copy(p, "float")
         s = rt.construct(2, rt.f(1.0), rt.f(1.7320508075688772))
@@ -73,8 +73,8 @@ def run_pixel(ctx, out):
         lineCount = rt.component_wise("max", rt.f(1.0), rt.component_wise("floor", rt.binary("*", rt.f(20.0), t, 1, "float"), width=1), width=1)
         angle = rt.component_wise("atan", rt.swizzle(p, "y"), rt.swizzle(p, "x"), width=1)
         d = rt.component_wise("fract", rt.binary("*", rt.binary("/", angle, rt.f(6.28318530718), 1, "float"), lineCount, 1, "float"), width=1)
-        edge1 = rt.component_wise("smoothstep", rt.binary("-", rt.binary("-", rt.f(0.5), rt.f(0.25), 1, "float"), _u_smoothness, 1, "float"), rt.binary("+", rt.binary("-", rt.f(0.5), rt.f(0.25), 1, "float"), _u_smoothness, 1, "float"), d, width=1)
-        edge2 = rt.component_wise("smoothstep", rt.binary("-", rt.binary("+", rt.f(0.5), rt.f(0.25), 1, "float"), _u_smoothness, 1, "float"), rt.binary("+", rt.binary("+", rt.f(0.5), rt.f(0.25), 1, "float"), _u_smoothness, 1, "float"), d, width=1)
+        edge1 = rt.component_wise("smoothstep", rt.binary("-", rt.f(0.25), _u_smoothness, 1, "float"), rt.binary("+", rt.f(0.25), _u_smoothness, 1, "float"), d, width=1)
+        edge2 = rt.component_wise("smoothstep", rt.binary("-", rt.f(0.75), _u_smoothness, 1, "float"), rt.binary("+", rt.f(0.75), _u_smoothness, 1, "float"), d, width=1)
         return rt.binary("-", edge1, edge2, 1, "float")
     def triangularGrid__vec2_float(p, t):
         p = rt.copy(p, "float")

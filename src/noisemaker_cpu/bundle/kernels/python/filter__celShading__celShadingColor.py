@@ -22,7 +22,7 @@ def run_pixel(ctx, out):
     def linear_to_srgb_component__float(value):
         if rt.binary("<=", value, rt.f(0.0031308)):
             return rt.binary("*", value, rt.f(12.92), 1, "float")
-        return rt.binary("-", rt.binary("*", rt.f(1.055), rt.component_wise("pow", value, rt.binary("/", rt.f(1.0), rt.f(2.4), 1, "float"), width=1), 1, "float"), rt.f(0.055), 1, "float")
+        return rt.binary("-", rt.binary("*", rt.f(1.055), rt.component_wise("pow", value, rt.f(0.4166666666666667), width=1), 1, "float"), rt.f(0.055), 1, "float")
     def srgb_to_linear_rgb__vec3(rgb):
         rgb = rt.copy(rgb, "float")
         return rt.construct(3, srgb_to_linear_component__float(rt.swizzle(rgb, "x")), srgb_to_linear_component__float(rt.swizzle(rgb, "y")), srgb_to_linear_component__float(rt.swizzle(rgb, "z")))

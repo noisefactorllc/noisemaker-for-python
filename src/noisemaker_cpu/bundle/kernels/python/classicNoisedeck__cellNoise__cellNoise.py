@@ -62,22 +62,22 @@ def run_pixel(ctx, out):
         x = rt.binary("*", c, rt.binary("-", rt.f(1.0), rt.component_wise("abs", rt.binary("-", rt.component_wise("mod", rt.binary("*", h, rt.f(6.0), 1, "float"), rt.f(2.0), width=1), rt.f(1.0), 1, "float"), width=1), 1, "float"), 1, "float")
         m = rt.binary("-", v, c, 1, "float")
         rgb = rt.construct(3, 0.0)
-        if (bool(rt.binary("<=", rt.f(0.0), h)) and bool(rt.binary("<", h, rt.binary("/", rt.f(1.0), rt.f(6.0), 1, "float")))):
+        if (bool(rt.binary("<=", rt.f(0.0), h)) and bool(rt.binary("<", h, rt.f(0.16666666666666666)))):
             (rgb.__setitem__(0, c), rgb.__setitem__(1, x), rgb.__setitem__(2, rt.f(0.0)), rgb)[-1]
         else:
-            if (bool(rt.binary("<=", rt.binary("/", rt.f(1.0), rt.f(6.0), 1, "float"), h)) and bool(rt.binary("<", h, rt.binary("/", rt.f(2.0), rt.f(6.0), 1, "float")))):
+            if (bool(rt.binary("<=", rt.f(0.16666666666666666), h)) and bool(rt.binary("<", h, rt.f(0.3333333333333333)))):
                 (rgb.__setitem__(0, x), rgb.__setitem__(1, c), rgb.__setitem__(2, rt.f(0.0)), rgb)[-1]
             else:
-                if (bool(rt.binary("<=", rt.binary("/", rt.f(2.0), rt.f(6.0), 1, "float"), h)) and bool(rt.binary("<", h, rt.binary("/", rt.f(3.0), rt.f(6.0), 1, "float")))):
+                if (bool(rt.binary("<=", rt.f(0.3333333333333333), h)) and bool(rt.binary("<", h, rt.f(0.5)))):
                     (rgb.__setitem__(0, rt.f(0.0)), rgb.__setitem__(1, c), rgb.__setitem__(2, x), rgb)[-1]
                 else:
-                    if (bool(rt.binary("<=", rt.binary("/", rt.f(3.0), rt.f(6.0), 1, "float"), h)) and bool(rt.binary("<", h, rt.binary("/", rt.f(4.0), rt.f(6.0), 1, "float")))):
+                    if (bool(rt.binary("<=", rt.f(0.5), h)) and bool(rt.binary("<", h, rt.f(0.6666666666666666)))):
                         (rgb.__setitem__(0, rt.f(0.0)), rgb.__setitem__(1, x), rgb.__setitem__(2, c), rgb)[-1]
                     else:
-                        if (bool(rt.binary("<=", rt.binary("/", rt.f(4.0), rt.f(6.0), 1, "float"), h)) and bool(rt.binary("<", h, rt.binary("/", rt.f(5.0), rt.f(6.0), 1, "float")))):
+                        if (bool(rt.binary("<=", rt.f(0.6666666666666666), h)) and bool(rt.binary("<", h, rt.f(0.8333333333333334)))):
                             (rgb.__setitem__(0, x), rgb.__setitem__(1, rt.f(0.0)), rgb.__setitem__(2, c), rgb)[-1]
                         else:
-                            if (bool(rt.binary("<=", rt.binary("/", rt.f(5.0), rt.f(6.0), 1, "float"), h)) and bool(rt.binary("<", h, rt.f(1.0)))):
+                            if (bool(rt.binary("<=", rt.f(0.8333333333333334), h)) and bool(rt.binary("<", h, rt.f(1.0)))):
                                 (rgb.__setitem__(0, c), rgb.__setitem__(1, rt.f(0.0)), rgb.__setitem__(2, x), rgb)[-1]
                             else:
                                 (rgb.__setitem__(0, rt.f(0.0)), rgb.__setitem__(1, rt.f(0.0)), rgb.__setitem__(2, rt.f(0.0)), rgb)[-1]
@@ -117,7 +117,7 @@ def run_pixel(ctx, out):
             if rt.binary("<=", linear[int(i)], rt.f(0.0031308)):
                 srgb[int(i)] = rt.f32(rt.binary("*", linear[int(i)], rt.f(12.92), 1, "float"))
             else:
-                srgb[int(i)] = rt.f32(rt.binary("-", rt.binary("*", rt.f(1.055), rt.component_wise("pow", linear[int(i)], rt.binary("/", rt.f(1.0), rt.f(2.4), 1, "float"), width=1), 1, "float"), rt.f(0.055), 1, "float"))
+                srgb[int(i)] = rt.f32(rt.binary("-", rt.binary("*", rt.f(1.055), rt.component_wise("pow", linear[int(i)], rt.f(0.4166666666666667), width=1), 1, "float"), rt.f(0.055), 1, "float"))
         return srgb
     def oklab_from_linear_srgb__vec3(c):
         c = rt.copy(c, "float")
@@ -195,7 +195,7 @@ def run_pixel(ctx, out):
         if rt.binary("==", k, rt.f(0.0)):
             return rt.component_wise("min", a, b, width=1)
         h = rt.binary("/", rt.component_wise("max", rt.binary("-", k, rt.component_wise("abs", rt.binary("-", a, b, 1, "float"), width=1), 1, "float"), rt.f(0.0), width=1), k, 1, "float")
-        return rt.binary("-", rt.component_wise("min", a, b, width=1), rt.binary("*", rt.binary("*", rt.binary("*", h, h, 1, "float"), k, 1, "float"), rt.binary("/", rt.f(1.0), rt.f(4.0), 1, "float"), 1, "float"), 1, "float")
+        return rt.binary("-", rt.component_wise("min", a, b, width=1), rt.binary("*", rt.binary("*", rt.binary("*", h, h, 1, "float"), k, 1, "float"), rt.f(0.25), 1, "float"), 1, "float")
     def cells__vec2_float_float_int(st, freq, cellSize, sides):
         st = rt.copy(st, "float")
         st[:] = rt.binary("-", st, rt.construct(2, rt.binary("/", rt.binary("*", rt.f(0.5), rt.swizzle(_u_fullResolution, "x"), 1, "float"), rt.swizzle(_u_fullResolution, "y"), 1, "float"), rt.f(0.5)), 2, "float")

@@ -41,7 +41,7 @@ def run_pixel(ctx, out):
                     break
                 p = rt.construct(2, rt.binary("+", centerPx, rt.binary("*", rt.construct_raw(2, rt.construct(1, i), rt.construct(1, j)), sp, 2, 'float'), 2, 'float'))
                 sum[:] = rt.binary("+", sum, rt.texture(_u_inputTex, toSampleUV__vec2(p)), 4, "float")
-        return rt.construct(4, rt.binary("*", sum, rt.binary("/", rt.f(1.0), rt.f(9.0), 1, "float"), 4, 'float'))
+        return rt.construct(4, rt.binary("*", sum, rt.f(0.1111111111111111), 4, 'float'))
     def main__void():
         globalCoord = rt.construct(2, rt.binary("+", rt.swizzle(ctx.frag_coord, "xy"), _u_tileOffset, 2, 'float'))
         uv = rt.construct(2, rt.binary("/", rt.swizzle(ctx.frag_coord, "xy"), _u_resolution, 2, 'float'))

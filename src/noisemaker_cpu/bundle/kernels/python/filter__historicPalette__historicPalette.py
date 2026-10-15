@@ -50,7 +50,7 @@ def run_pixel(ctx, out):
         inputColor = rt.texture(_u_inputTex, uv)
         idx = rt.component_wise("clamp", _u_paletteIndex, rt.i(0), rt.binary("-", g.PALETTE_COUNT, rt.i(1), 1, "int"), width=1)
         lum = rt.dot(rt.swizzle(inputColor, "rgb"), rt.construct(3, rt.f(0.299), rt.f(0.587), rt.f(0.114)))
-        t = rt.binary("+", rt.binary("*", rt.binary("*", lum, rt.binary("-", rt.f(1.0), rt.f(0.0001), 1, "float"), 1, "float"), _u_repeat, 1, "float"), rt.binary("*", _u_offset, rt.f(0.01), 1, "float"), 1, "float")
+        t = rt.binary("+", rt.binary("*", rt.binary("*", lum, rt.f(0.9999), 1, "float"), _u_repeat, 1, "float"), rt.binary("*", _u_offset, rt.f(0.01), 1, "float"), 1, "float")
         if rt.binary("==", _u_rotation, rt.unary("-", rt.i(1))):
             t = rt.binary("+", t, _u_time, 1, "float")
         else:

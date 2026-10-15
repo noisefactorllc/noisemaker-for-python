@@ -52,7 +52,7 @@ def run_pixel(ctx, out):
             if rt.binary("<=", linear[int(i)], rt.f(0.0031308)):
                 srgb[int(i)] = rt.f32(rt.binary("*", linear[int(i)], rt.f(12.92), 1, "float"))
             else:
-                srgb[int(i)] = rt.f32(rt.binary("-", rt.binary("*", rt.f(1.055), rt.component_wise("pow", linear[int(i)], rt.binary("/", rt.f(1.0), rt.f(2.4), 1, "float"), width=1), 1, "float"), rt.f(0.055), 1, "float"))
+                srgb[int(i)] = rt.f32(rt.binary("-", rt.binary("*", rt.f(1.055), rt.component_wise("pow", linear[int(i)], rt.f(0.4166666666666667), width=1), 1, "float"), rt.f(0.055), 1, "float"))
         return srgb
     def rgbToHsl__vec3(rgb):
         rgb = rt.copy(rgb, "float")
@@ -93,14 +93,14 @@ def run_pixel(ctx, out):
                 break
             t = rt.binary("+", h, rt.binary("/", rt.binary("-", rt.f(1.0), rt.construct(1, i), 1, "float"), rt.f(3.0), 1, "float"), 1, "float")
             t = rt.component_wise("fract", t, width=1)
-            if rt.binary("<", t, rt.binary("/", rt.f(1.0), rt.f(6.0), 1, "float")):
+            if rt.binary("<", t, rt.f(0.16666666666666666)):
                 rgb[int(i)] = rt.f32(rt.binary("+", p, rt.binary("*", rt.binary("*", rt.binary("-", q, p, 1, "float"), rt.f(6.0), 1, "float"), t, 1, "float"), 1, "float"))
             else:
                 if rt.binary("<", t, rt.f(0.5)):
                     rgb[int(i)] = rt.f32(q)
                 else:
-                    if rt.binary("<", t, rt.binary("/", rt.f(2.0), rt.f(3.0), 1, "float")):
-                        rgb[int(i)] = rt.f32(rt.binary("+", p, rt.binary("*", rt.binary("*", rt.binary("-", q, p, 1, "float"), rt.binary("-", rt.binary("/", rt.f(2.0), rt.f(3.0), 1, "float"), t, 1, "float"), 1, "float"), rt.f(6.0), 1, "float"), 1, "float"))
+                    if rt.binary("<", t, rt.f(0.6666666666666666)):
+                        rgb[int(i)] = rt.f32(rt.binary("+", p, rt.binary("*", rt.binary("*", rt.binary("-", q, p, 1, "float"), rt.binary("-", rt.f(0.6666666666666666), t, 1, "float"), 1, "float"), rt.f(6.0), 1, "float"), 1, "float"))
                     else:
                         rgb[int(i)] = rt.f32(p)
         return rgb

@@ -47,7 +47,7 @@ def run_pixel(ctx, out):
         outerR = r
         innerR = rt.binary("*", r, rt.f(0.45), 1, "float")
         a = rt.binary("+", rt.component_wise("atan", rt.swizzle(p, "x"), rt.swizzle(p, "y"), width=1), rt.f(3.14159265359), 1, "float")
-        seg = rt.binary("/", rt.f(6.28318530718), rt.f(5.0), 1, "float")
+        seg = rt.f(1.256637061436)
         halfSeg = rt.binary("*", seg, rt.f(0.5), 1, "float")
         segAngle = rt.component_wise("mod", a, seg, width=1)
         t = rt.binary("/", rt.component_wise("abs", rt.binary("-", segAngle, halfSeg, 1, "float"), width=1), halfSeg, 1, "float")

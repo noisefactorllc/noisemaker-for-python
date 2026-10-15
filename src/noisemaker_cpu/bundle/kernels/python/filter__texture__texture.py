@@ -17,7 +17,7 @@ def run_pixel(ctx, out):
     _u_fullResolution = U.get("fullResolution", rt.construct(2, 0.0))
     g.fragColor = rt.construct(4, 0.0)
     g.PI = rt.f(3.14159265359)
-    g.INV_UINT32_MAX = rt.binary("/", rt.f(1.0), rt.f(4294967295.0), 1, "float")
+    g.INV_UINT32_MAX = rt.f(2.3283064370807974e-10)
     g.Z_LOOP = rt.i(2)
     g.SHADE_GAIN = rt.f(4.4)
     def clamp01__float(value):
@@ -176,7 +176,7 @@ def run_pixel(ctx, out):
     def material_gradient__ivec2_uint_uint(p, salt, layer):
         p = rt.copy(p, "int")
         h = material_hash__ivec2_uint_uint(p, salt, layer)
-        gradient = rt.construct(2, rt.binary("-", rt.binary("*", rt.construct_raw(2, rt.construct(1, rt.binary("&", h, rt.i(65535), 1, "uint")), rt.construct(1, rt.binary(">>", h, rt.i(16), 1, "uint"))), rt.binary("/", rt.f(2.0), rt.f(65535.0), 1, "float"), 2, 'float'), rt.f(1.0), 2, 'float'))
+        gradient = rt.construct(2, rt.binary("-", rt.binary("*", rt.construct_raw(2, rt.construct(1, rt.binary("&", h, rt.i(65535), 1, "uint")), rt.construct(1, rt.binary(">>", h, rt.i(16), 1, "uint"))), rt.f(3.0518043793392844e-05), 2, 'float'), rt.f(1.0), 2, 'float'))
         return rt.construct(2, rt.binary("*", gradient, rt.component_wise("inversesqrt", rt.component_wise("max", rt.dot(gradient, gradient), rt.f(1e-06), width=1), width=1), 2, 'float'))
     def material_fade__vec2(t):
         t = rt.copy(t, "float")

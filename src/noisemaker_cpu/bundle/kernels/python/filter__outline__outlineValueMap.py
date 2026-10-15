@@ -15,7 +15,7 @@ def run_pixel(ctx, out):
         value = rt.copy(value, "float")
         return rt.construct(3, srgbToLinear__float(rt.swizzle(value, "r")), srgbToLinear__float(rt.swizzle(value, "g")), srgbToLinear__float(rt.swizzle(value, "b")))
     def cubeRoot__float(value):
-        return (rt.unary("-", rt.component_wise("pow", rt.unary("-", value), rt.binary("/", rt.f(1.0), rt.f(3.0), 1, "float"), width=1)) if rt.binary("<", value, rt.f(0.0)) else rt.component_wise("pow", value, rt.binary("/", rt.f(1.0), rt.f(3.0), 1, "float"), width=1))
+        return (rt.unary("-", rt.component_wise("pow", rt.unary("-", value), rt.f(0.3333333333333333), width=1)) if rt.binary("<", value, rt.f(0.0)) else rt.component_wise("pow", value, rt.f(0.3333333333333333), width=1))
     def oklabLComponent__vec3(rgb):
         rgb = rt.copy(rgb, "float")
         linear = srgbToLinear__vec3(rt.component_wise("clamp", rgb, rt.construct(3, rt.f(0.0)), rt.construct(3, rt.f(1.0)), width=3))

@@ -299,7 +299,7 @@ def run_pixel(ctx, out):
             else:
                 color[:] = _u_bgColor
                 alpha = _u_bgAlpha
-        color[:] = rt.component_wise("pow", color, rt.construct(3, rt.binary("/", rt.f(1.0), rt.f(2.2), 1, "float")), width=3)
+        color[:] = rt.component_wise("pow", color, rt.construct(3, rt.f(0.45454545454545453)), width=3)
         g.fragColor[:] = rt.construct(4, color, alpha)
         g.geoOut[:] = rt.construct(4, rt.binary("+", rt.binary("*", normal, rt.f(0.5), 3, 'float'), rt.f(0.5), 3, 'float'), depth)
     main__void()

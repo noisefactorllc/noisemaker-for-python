@@ -52,7 +52,7 @@ def run_pixel(ctx, out):
             if rt.binary("<=", linear[int(i)], rt.f(0.0031308)):
                 srgb[int(i)] = rt.f32(rt.binary("*", linear[int(i)], rt.f(12.92), 1, "float"))
             else:
-                srgb[int(i)] = rt.f32(rt.binary("-", rt.binary("*", rt.f(1.055), rt.component_wise("pow", linear[int(i)], rt.binary("/", rt.f(1.0), rt.f(2.4), 1, "float"), width=1), 1, "float"), rt.f(0.055), 1, "float"))
+                srgb[int(i)] = rt.f32(rt.binary("-", rt.binary("*", rt.f(1.055), rt.component_wise("pow", linear[int(i)], rt.f(0.4166666666666667), width=1), 1, "float"), rt.f(0.055), 1, "float"))
         return srgb
     def applyWhiteBalance__vec3_float_float(rgb, temp, tint):
         rgb = rt.copy(rgb, "float")

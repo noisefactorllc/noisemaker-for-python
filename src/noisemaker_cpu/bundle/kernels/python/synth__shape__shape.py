@@ -150,10 +150,10 @@ def run_pixel(ctx, out):
         return rt.component_wise("mix", a, b, rt.component_wise("smoothstep", rt.f(0.0), rt.f(1.0), amount, width=1), width=1)
     def mod289__vec3(x):
         x = rt.copy(x, "float")
-        return rt.construct(3, rt.binary("-", x, rt.construct(3, rt.binary("*", rt.component_wise("floor", rt.binary("*", x, rt.binary("/", rt.f(1.0), rt.f(289.0), 1, "float"), 3, 'float'), width=3), rt.f(289.0), 3, 'float')), 3, 'float'))
+        return rt.construct(3, rt.binary("-", x, rt.construct(3, rt.binary("*", rt.component_wise("floor", rt.binary("*", x, rt.f(0.0034602076124567475), 3, 'float'), width=3), rt.f(289.0), 3, 'float')), 3, 'float'))
     def mod289__vec2(x):
         x = rt.copy(x, "float")
-        return rt.construct(2, rt.binary("-", x, rt.construct(2, rt.binary("*", rt.component_wise("floor", rt.binary("*", x, rt.binary("/", rt.f(1.0), rt.f(289.0), 1, "float"), 2, 'float'), width=2), rt.f(289.0), 2, 'float')), 2, 'float'))
+        return rt.construct(2, rt.binary("-", x, rt.construct(2, rt.binary("*", rt.component_wise("floor", rt.binary("*", x, rt.f(0.0034602076124567475), 2, 'float'), width=2), rt.f(289.0), 2, 'float')), 2, 'float'))
     def permute__vec3(x):
         x = rt.copy(x, "float")
         return mod289__vec3(rt.construct(3, rt.binary("*", rt.binary("+", rt.binary("*", x, rt.f(34.0), 3, 'float'), rt.f(1.0), 3, 'float'), x, 3, 'float')))

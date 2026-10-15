@@ -28,7 +28,7 @@ def run_pixel(ctx, out):
         return rt.construct(4, rt.binary("-", rt.f(1.79284291400159), rt.binary("*", rt.f(0.85373472095314), r, 4, 'float'), 4, 'float'))
     def simplex3D__vec3(v):
         v = rt.copy(v, "float")
-        C = rt.construct(2, rt.binary("/", rt.f(1.0), rt.f(6.0), 1, "float"), rt.binary("/", rt.f(1.0), rt.f(3.0), 1, "float"))
+        C = rt.construct(2, rt.f(0.16666666666666666), rt.f(0.3333333333333333))
         D = rt.construct(4, rt.f(0.0), rt.f(0.5), rt.f(1.0), rt.f(2.0))
         v[:] = rt.binary("+", v, rt.binary("*", rt.construct(1, _u_seed), rt.f(0.1271), 1, "float"), 3, "float")
         i = rt.component_wise("floor", rt.binary("+", v, rt.dot(v, rt.swizzle(C, "yyy")), 3, 'float'), width=3)

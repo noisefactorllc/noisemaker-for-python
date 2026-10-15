@@ -35,8 +35,8 @@ def run_pixel(ctx, out):
     g.PALETTE_ZX_SPECTRUM = rt.i(7)
     g.PALETTE_APPLE_II = rt.i(8)
     g.PALETTE_EGA = rt.i(9)
-    g.bayer2x2 = rt.construct(16, rt.binary("/", rt.f(0.0), rt.f(4.0), 1, "float"), rt.binary("/", rt.f(2.0), rt.f(4.0), 1, "float"), rt.binary("/", rt.f(0.0), rt.f(4.0), 1, "float"), rt.binary("/", rt.f(2.0), rt.f(4.0), 1, "float"), rt.binary("/", rt.f(3.0), rt.f(4.0), 1, "float"), rt.binary("/", rt.f(1.0), rt.f(4.0), 1, "float"), rt.binary("/", rt.f(3.0), rt.f(4.0), 1, "float"), rt.binary("/", rt.f(1.0), rt.f(4.0), 1, "float"), rt.binary("/", rt.f(0.0), rt.f(4.0), 1, "float"), rt.binary("/", rt.f(2.0), rt.f(4.0), 1, "float"), rt.binary("/", rt.f(0.0), rt.f(4.0), 1, "float"), rt.binary("/", rt.f(2.0), rt.f(4.0), 1, "float"), rt.binary("/", rt.f(3.0), rt.f(4.0), 1, "float"), rt.binary("/", rt.f(1.0), rt.f(4.0), 1, "float"), rt.binary("/", rt.f(3.0), rt.f(4.0), 1, "float"), rt.binary("/", rt.f(1.0), rt.f(4.0), 1, "float"))
-    g.bayer4x4 = rt.construct(16, rt.binary("/", rt.f(0.0), rt.f(16.0), 1, "float"), rt.binary("/", rt.f(8.0), rt.f(16.0), 1, "float"), rt.binary("/", rt.f(2.0), rt.f(16.0), 1, "float"), rt.binary("/", rt.f(10.0), rt.f(16.0), 1, "float"), rt.binary("/", rt.f(12.0), rt.f(16.0), 1, "float"), rt.binary("/", rt.f(4.0), rt.f(16.0), 1, "float"), rt.binary("/", rt.f(14.0), rt.f(16.0), 1, "float"), rt.binary("/", rt.f(6.0), rt.f(16.0), 1, "float"), rt.binary("/", rt.f(3.0), rt.f(16.0), 1, "float"), rt.binary("/", rt.f(11.0), rt.f(16.0), 1, "float"), rt.binary("/", rt.f(1.0), rt.f(16.0), 1, "float"), rt.binary("/", rt.f(9.0), rt.f(16.0), 1, "float"), rt.binary("/", rt.f(15.0), rt.f(16.0), 1, "float"), rt.binary("/", rt.f(7.0), rt.f(16.0), 1, "float"), rt.binary("/", rt.f(13.0), rt.f(16.0), 1, "float"), rt.binary("/", rt.f(5.0), rt.f(16.0), 1, "float"))
+    g.bayer2x2 = rt.construct(16, rt.f(0.0), rt.f(0.5), rt.f(0.0), rt.f(0.5), rt.f(0.75), rt.f(0.25), rt.f(0.75), rt.f(0.25), rt.f(0.0), rt.f(0.5), rt.f(0.0), rt.f(0.5), rt.f(0.75), rt.f(0.25), rt.f(0.75), rt.f(0.25))
+    g.bayer4x4 = rt.construct(16, rt.f(0.0), rt.f(0.5), rt.f(0.125), rt.f(0.625), rt.f(0.75), rt.f(0.25), rt.f(0.875), rt.f(0.375), rt.f(0.1875), rt.f(0.6875), rt.f(0.0625), rt.f(0.5625), rt.f(0.9375), rt.f(0.4375), rt.f(0.8125), rt.f(0.3125))
     g.DOT_MATRIX = rt.array([rt.construct(3, rt.f(0.06), rt.f(0.22), rt.f(0.06)), rt.construct(3, rt.f(0.19), rt.f(0.38), rt.f(0.19)), rt.construct(3, rt.f(0.55), rt.f(0.67), rt.f(0.06)), rt.construct(3, rt.f(0.61), rt.f(0.74), rt.f(0.06))])
     g.AMBER = rt.array([rt.construct(3, rt.f(0.0), rt.f(0.0), rt.f(0.0)), rt.construct(3, rt.f(0.4), rt.f(0.2), rt.f(0.0)), rt.construct(3, rt.f(0.8), rt.f(0.4), rt.f(0.0)), rt.construct(3, rt.f(1.0), rt.f(0.6), rt.f(0.0))])
     g.PICO8 = rt.array([rt.construct(3, rt.f(0.0), rt.f(0.0), rt.f(0.0)), rt.construct(3, rt.f(0.114), rt.f(0.169), rt.f(0.325)), rt.construct(3, rt.f(0.494), rt.f(0.145), rt.f(0.325)), rt.construct(3, rt.f(0.0), rt.f(0.529), rt.f(0.318)), rt.construct(3, rt.f(0.671), rt.f(0.322), rt.f(0.212)), rt.construct(3, rt.f(0.373), rt.f(0.341), rt.f(0.31)), rt.construct(3, rt.f(0.761), rt.f(0.765), rt.f(0.78)), rt.construct(3, rt.f(1.0), rt.f(0.945), rt.f(0.91)), rt.construct(3, rt.f(1.0), rt.f(0.0), rt.f(0.302)), rt.construct(3, rt.f(1.0), rt.f(0.639), rt.f(0.0)), rt.construct(3, rt.f(1.0), rt.f(0.925), rt.f(0.153)), rt.construct(3, rt.f(0.0), rt.f(0.894), rt.f(0.212)), rt.construct(3, rt.f(0.161), rt.f(0.678), rt.f(1.0)), rt.construct(3, rt.f(0.514), rt.f(0.463), rt.f(0.612)), rt.construct(3, rt.f(1.0), rt.f(0.467), rt.f(0.659)), rt.construct(3, rt.f(1.0), rt.f(0.8), rt.f(0.667))])
@@ -55,131 +55,131 @@ def run_pixel(ctx, out):
         y = rt.binary("&", y, rt.i(7), 1, "int")
         if rt.binary("==", y, rt.i(0)):
             if rt.binary("==", x, rt.i(0)):
-                return rt.binary("/", rt.f(0.0), rt.f(64.0), 1, "float")
+                return rt.f(0.0)
             if rt.binary("==", x, rt.i(1)):
-                return rt.binary("/", rt.f(32.0), rt.f(64.0), 1, "float")
+                return rt.f(0.5)
             if rt.binary("==", x, rt.i(2)):
-                return rt.binary("/", rt.f(8.0), rt.f(64.0), 1, "float")
+                return rt.f(0.125)
             if rt.binary("==", x, rt.i(3)):
-                return rt.binary("/", rt.f(40.0), rt.f(64.0), 1, "float")
+                return rt.f(0.625)
             if rt.binary("==", x, rt.i(4)):
-                return rt.binary("/", rt.f(2.0), rt.f(64.0), 1, "float")
+                return rt.f(0.03125)
             if rt.binary("==", x, rt.i(5)):
-                return rt.binary("/", rt.f(34.0), rt.f(64.0), 1, "float")
+                return rt.f(0.53125)
             if rt.binary("==", x, rt.i(6)):
-                return rt.binary("/", rt.f(10.0), rt.f(64.0), 1, "float")
-            return rt.binary("/", rt.f(42.0), rt.f(64.0), 1, "float")
+                return rt.f(0.15625)
+            return rt.f(0.65625)
         if rt.binary("==", y, rt.i(1)):
             if rt.binary("==", x, rt.i(0)):
-                return rt.binary("/", rt.f(48.0), rt.f(64.0), 1, "float")
+                return rt.f(0.75)
             if rt.binary("==", x, rt.i(1)):
-                return rt.binary("/", rt.f(16.0), rt.f(64.0), 1, "float")
+                return rt.f(0.25)
             if rt.binary("==", x, rt.i(2)):
-                return rt.binary("/", rt.f(56.0), rt.f(64.0), 1, "float")
+                return rt.f(0.875)
             if rt.binary("==", x, rt.i(3)):
-                return rt.binary("/", rt.f(24.0), rt.f(64.0), 1, "float")
+                return rt.f(0.375)
             if rt.binary("==", x, rt.i(4)):
-                return rt.binary("/", rt.f(50.0), rt.f(64.0), 1, "float")
+                return rt.f(0.78125)
             if rt.binary("==", x, rt.i(5)):
-                return rt.binary("/", rt.f(18.0), rt.f(64.0), 1, "float")
+                return rt.f(0.28125)
             if rt.binary("==", x, rt.i(6)):
-                return rt.binary("/", rt.f(58.0), rt.f(64.0), 1, "float")
-            return rt.binary("/", rt.f(26.0), rt.f(64.0), 1, "float")
+                return rt.f(0.90625)
+            return rt.f(0.40625)
         if rt.binary("==", y, rt.i(2)):
             if rt.binary("==", x, rt.i(0)):
-                return rt.binary("/", rt.f(12.0), rt.f(64.0), 1, "float")
+                return rt.f(0.1875)
             if rt.binary("==", x, rt.i(1)):
-                return rt.binary("/", rt.f(44.0), rt.f(64.0), 1, "float")
+                return rt.f(0.6875)
             if rt.binary("==", x, rt.i(2)):
-                return rt.binary("/", rt.f(4.0), rt.f(64.0), 1, "float")
+                return rt.f(0.0625)
             if rt.binary("==", x, rt.i(3)):
-                return rt.binary("/", rt.f(36.0), rt.f(64.0), 1, "float")
+                return rt.f(0.5625)
             if rt.binary("==", x, rt.i(4)):
-                return rt.binary("/", rt.f(14.0), rt.f(64.0), 1, "float")
+                return rt.f(0.21875)
             if rt.binary("==", x, rt.i(5)):
-                return rt.binary("/", rt.f(46.0), rt.f(64.0), 1, "float")
+                return rt.f(0.71875)
             if rt.binary("==", x, rt.i(6)):
-                return rt.binary("/", rt.f(6.0), rt.f(64.0), 1, "float")
-            return rt.binary("/", rt.f(38.0), rt.f(64.0), 1, "float")
+                return rt.f(0.09375)
+            return rt.f(0.59375)
         if rt.binary("==", y, rt.i(3)):
             if rt.binary("==", x, rt.i(0)):
-                return rt.binary("/", rt.f(60.0), rt.f(64.0), 1, "float")
+                return rt.f(0.9375)
             if rt.binary("==", x, rt.i(1)):
-                return rt.binary("/", rt.f(28.0), rt.f(64.0), 1, "float")
+                return rt.f(0.4375)
             if rt.binary("==", x, rt.i(2)):
-                return rt.binary("/", rt.f(52.0), rt.f(64.0), 1, "float")
+                return rt.f(0.8125)
             if rt.binary("==", x, rt.i(3)):
-                return rt.binary("/", rt.f(20.0), rt.f(64.0), 1, "float")
+                return rt.f(0.3125)
             if rt.binary("==", x, rt.i(4)):
-                return rt.binary("/", rt.f(62.0), rt.f(64.0), 1, "float")
+                return rt.f(0.96875)
             if rt.binary("==", x, rt.i(5)):
-                return rt.binary("/", rt.f(30.0), rt.f(64.0), 1, "float")
+                return rt.f(0.46875)
             if rt.binary("==", x, rt.i(6)):
-                return rt.binary("/", rt.f(54.0), rt.f(64.0), 1, "float")
-            return rt.binary("/", rt.f(22.0), rt.f(64.0), 1, "float")
+                return rt.f(0.84375)
+            return rt.f(0.34375)
         if rt.binary("==", y, rt.i(4)):
             if rt.binary("==", x, rt.i(0)):
-                return rt.binary("/", rt.f(3.0), rt.f(64.0), 1, "float")
+                return rt.f(0.046875)
             if rt.binary("==", x, rt.i(1)):
-                return rt.binary("/", rt.f(35.0), rt.f(64.0), 1, "float")
+                return rt.f(0.546875)
             if rt.binary("==", x, rt.i(2)):
-                return rt.binary("/", rt.f(11.0), rt.f(64.0), 1, "float")
+                return rt.f(0.171875)
             if rt.binary("==", x, rt.i(3)):
-                return rt.binary("/", rt.f(43.0), rt.f(64.0), 1, "float")
+                return rt.f(0.671875)
             if rt.binary("==", x, rt.i(4)):
-                return rt.binary("/", rt.f(1.0), rt.f(64.0), 1, "float")
+                return rt.f(0.015625)
             if rt.binary("==", x, rt.i(5)):
-                return rt.binary("/", rt.f(33.0), rt.f(64.0), 1, "float")
+                return rt.f(0.515625)
             if rt.binary("==", x, rt.i(6)):
-                return rt.binary("/", rt.f(9.0), rt.f(64.0), 1, "float")
-            return rt.binary("/", rt.f(41.0), rt.f(64.0), 1, "float")
+                return rt.f(0.140625)
+            return rt.f(0.640625)
         if rt.binary("==", y, rt.i(5)):
             if rt.binary("==", x, rt.i(0)):
-                return rt.binary("/", rt.f(51.0), rt.f(64.0), 1, "float")
+                return rt.f(0.796875)
             if rt.binary("==", x, rt.i(1)):
-                return rt.binary("/", rt.f(19.0), rt.f(64.0), 1, "float")
+                return rt.f(0.296875)
             if rt.binary("==", x, rt.i(2)):
-                return rt.binary("/", rt.f(59.0), rt.f(64.0), 1, "float")
+                return rt.f(0.921875)
             if rt.binary("==", x, rt.i(3)):
-                return rt.binary("/", rt.f(27.0), rt.f(64.0), 1, "float")
+                return rt.f(0.421875)
             if rt.binary("==", x, rt.i(4)):
-                return rt.binary("/", rt.f(49.0), rt.f(64.0), 1, "float")
+                return rt.f(0.765625)
             if rt.binary("==", x, rt.i(5)):
-                return rt.binary("/", rt.f(17.0), rt.f(64.0), 1, "float")
+                return rt.f(0.265625)
             if rt.binary("==", x, rt.i(6)):
-                return rt.binary("/", rt.f(57.0), rt.f(64.0), 1, "float")
-            return rt.binary("/", rt.f(25.0), rt.f(64.0), 1, "float")
+                return rt.f(0.890625)
+            return rt.f(0.390625)
         if rt.binary("==", y, rt.i(6)):
             if rt.binary("==", x, rt.i(0)):
-                return rt.binary("/", rt.f(15.0), rt.f(64.0), 1, "float")
+                return rt.f(0.234375)
             if rt.binary("==", x, rt.i(1)):
-                return rt.binary("/", rt.f(47.0), rt.f(64.0), 1, "float")
+                return rt.f(0.734375)
             if rt.binary("==", x, rt.i(2)):
-                return rt.binary("/", rt.f(7.0), rt.f(64.0), 1, "float")
+                return rt.f(0.109375)
             if rt.binary("==", x, rt.i(3)):
-                return rt.binary("/", rt.f(39.0), rt.f(64.0), 1, "float")
+                return rt.f(0.609375)
             if rt.binary("==", x, rt.i(4)):
-                return rt.binary("/", rt.f(13.0), rt.f(64.0), 1, "float")
+                return rt.f(0.203125)
             if rt.binary("==", x, rt.i(5)):
-                return rt.binary("/", rt.f(45.0), rt.f(64.0), 1, "float")
+                return rt.f(0.703125)
             if rt.binary("==", x, rt.i(6)):
-                return rt.binary("/", rt.f(5.0), rt.f(64.0), 1, "float")
-            return rt.binary("/", rt.f(37.0), rt.f(64.0), 1, "float")
+                return rt.f(0.078125)
+            return rt.f(0.578125)
         if rt.binary("==", x, rt.i(0)):
-            return rt.binary("/", rt.f(63.0), rt.f(64.0), 1, "float")
+            return rt.f(0.984375)
         if rt.binary("==", x, rt.i(1)):
-            return rt.binary("/", rt.f(31.0), rt.f(64.0), 1, "float")
+            return rt.f(0.484375)
         if rt.binary("==", x, rt.i(2)):
-            return rt.binary("/", rt.f(55.0), rt.f(64.0), 1, "float")
+            return rt.f(0.859375)
         if rt.binary("==", x, rt.i(3)):
-            return rt.binary("/", rt.f(23.0), rt.f(64.0), 1, "float")
+            return rt.f(0.359375)
         if rt.binary("==", x, rt.i(4)):
-            return rt.binary("/", rt.f(61.0), rt.f(64.0), 1, "float")
+            return rt.f(0.953125)
         if rt.binary("==", x, rt.i(5)):
-            return rt.binary("/", rt.f(29.0), rt.f(64.0), 1, "float")
+            return rt.f(0.453125)
         if rt.binary("==", x, rt.i(6)):
-            return rt.binary("/", rt.f(53.0), rt.f(64.0), 1, "float")
-        return rt.binary("/", rt.f(21.0), rt.f(64.0), 1, "float")
+            return rt.f(0.828125)
+        return rt.f(0.328125)
     def pcg__uvec3(v):
         v = rt.copy(v, "uint")
         v[:] = rt.binary("+", rt.binary("*", v, rt.i(1664525), 3, "uint"), rt.i(1013904223), 3, "uint")
@@ -410,10 +410,10 @@ def run_pixel(ctx, out):
                     src = fsFetchCell__ivec2_float_ivec2(rt.binary("+", blockOrigin, rt.construct(2, c, r, base="int"), 2, "int"), cellSize, texSize)
                     v = rt.component_wise("clamp", rt.binary("+", rt.binary("+", rt.binary("+", src, errRow[int(rt.binary("+", rt.binary("+", c, g.FS_APRON_MAX, 1, "int"), rt.i(1), 1, "int"))], 3, 'float'), rightErr, 3, 'float'), bias, 3, 'float'), rt.f(0.0), rt.f(1.0), width=3)
                     err = rt.construct(3, rt.binary("-", v, fsQuantize__vec3(v), 3, 'float'))
-                    rightErr[:] = rt.binary("*", err, rt.binary("/", rt.f(7.0), rt.f(16.0), 1, "float"), 3, 'float')
-                    errRow[int(rt.binary("+", c, g.FS_APRON_MAX, 1, "int"))] = rt.construct(3, rt.binary("+", errRow[int(rt.binary("+", c, g.FS_APRON_MAX, 1, "int"))], rt.binary("*", err, rt.binary("/", rt.f(3.0), rt.f(16.0), 1, "float"), 3, 'float'), 3, "float"))
-                    errRow[int(rt.binary("+", rt.binary("+", c, g.FS_APRON_MAX, 1, "int"), rt.i(1), 1, "int"))] = rt.construct(3, rt.binary("+", diag, rt.binary("*", err, rt.binary("/", rt.f(5.0), rt.f(16.0), 1, "float"), 3, 'float'), 3, 'float'))
-                    diag[:] = rt.binary("*", err, rt.binary("/", rt.f(1.0), rt.f(16.0), 1, "float"), 3, 'float')
+                    rightErr[:] = rt.binary("*", err, rt.f(0.4375), 3, 'float')
+                    errRow[int(rt.binary("+", c, g.FS_APRON_MAX, 1, "int"))] = rt.construct(3, rt.binary("+", errRow[int(rt.binary("+", c, g.FS_APRON_MAX, 1, "int"))], rt.binary("*", err, rt.f(0.1875), 3, 'float'), 3, "float"))
+                    errRow[int(rt.binary("+", rt.binary("+", c, g.FS_APRON_MAX, 1, "int"), rt.i(1), 1, "int"))] = rt.construct(3, rt.binary("+", diag, rt.binary("*", err, rt.f(0.3125), 3, 'float'), 3, 'float'))
+                    diag[:] = rt.binary("*", err, rt.f(0.0625), 3, 'float')
             incoming = rt.construct(3, 0.0)
             if lastRow:
                 incoming = errRow[int(rt.binary("+", g.FS_APRON_MAX, rt.i(1), 1, "int"))]

@@ -35,7 +35,7 @@ def run_pixel(ctx, out):
         if rt.binary("==", _u_sides, rt.i(3)):
             st[:] = rt.construct(2, rt.swizzle(st, "y"), rt.unary("-", rt.swizzle(st, "x")))
         d = rt.binary("/", polygon__vec2_float(st, sidesF), rt.component_wise("cos", rt.binary("/", rt.f(3.14159265359), sidesF, 1, "float"), width=1), 1, "float")
-        m = rt.component_wise("smoothstep", _u_radius, rt.binary("-", _u_radius, _u_smoothing, 1, "float"), d, width=1)
+        m = ((rt.f(1.0) if rt.binary("<=", d, _u_radius) else rt.f(0.0)) if rt.binary("==", _u_smoothing, rt.f(0.0)) else rt.component_wise("smoothstep", _u_radius, rt.binary("-", _u_radius, _u_smoothing, 1, "float"), d, width=1))
         fgMask = rt.binary("*", m, _u_fgAlpha, 1, "float")
         bgMask = rt.binary("*", rt.binary("-", rt.f(1.0), m, 1, "float"), _u_bgAlpha, 1, "float")
         totalAlpha = rt.binary("+", fgMask, bgMask, 1, "float")

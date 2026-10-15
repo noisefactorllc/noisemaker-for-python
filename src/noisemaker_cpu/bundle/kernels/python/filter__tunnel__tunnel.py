@@ -47,7 +47,7 @@ def run_pixel(ctx, out):
             else:
                 if rt.binary("==", _u_shape, rt.i(2)):
                     p = rt.construct(2, rt.binary("*", rt.binary("*", rt.binary("*", rt.binary("*", rt.binary("*", rt.binary("*", rt.binary("*", centered, centered, 2, 'float'), centered, 2, 'float'), centered, 2, 'float'), centered, 2, 'float'), centered, 2, 'float'), centered, 2, 'float'), centered, 2, 'float'))
-                    r = rt.component_wise("pow", rt.binary("+", rt.swizzle(p, "x"), rt.swizzle(p, "y"), 1, "float"), rt.binary("/", rt.f(1.0), rt.f(8.0), 1, "float"), width=1)
+                    r = rt.component_wise("pow", rt.binary("+", rt.swizzle(p, "x"), rt.swizzle(p, "y"), 1, "float"), rt.f(0.125), width=1)
                 else:
                     if rt.binary("==", _u_shape, rt.i(3)):
                         r = polygonShape__vec2_int(rt.construct(2, rt.binary("*", centered, rt.f(2.0), 2, 'float')), rt.i(4))

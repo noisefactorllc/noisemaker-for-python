@@ -94,10 +94,10 @@ def run_pixel(ctx, out):
         return rt.construct(3, rt.component_wise("sqrt", res, width=2), rt.component_wise("abs", id, width=1))
     def mod289__vec3(x):
         x = rt.copy(x, "float")
-        return rt.construct(3, rt.binary("-", x, rt.construct(3, rt.binary("*", rt.component_wise("floor", rt.binary("*", x, rt.binary("/", rt.f(1.0), rt.f(289.0), 1, "float"), 3, 'float'), width=3), rt.f(289.0), 3, 'float')), 3, 'float'))
+        return rt.construct(3, rt.binary("-", x, rt.construct(3, rt.binary("*", rt.component_wise("floor", rt.binary("*", x, rt.f(0.0034602076124567475), 3, 'float'), width=3), rt.f(289.0), 3, 'float')), 3, 'float'))
     def mod7__vec3(x):
         x = rt.copy(x, "float")
-        return rt.construct(3, rt.binary("-", x, rt.construct(3, rt.binary("*", rt.component_wise("floor", rt.binary("*", x, rt.binary("/", rt.f(1.0), rt.f(7.0), 1, "float"), 3, 'float'), width=3), rt.f(7.0), 3, 'float')), 3, 'float'))
+        return rt.construct(3, rt.binary("-", x, rt.construct(3, rt.binary("*", rt.component_wise("floor", rt.binary("*", x, rt.f(0.14285714285714285), 3, 'float'), width=3), rt.f(7.0), 3, 'float')), 3, 'float'))
     def permute__vec3(x):
         x = rt.copy(x, "float")
         return mod289__vec3(rt.construct(3, rt.binary("*", rt.binary("+", rt.binary("*", rt.f(34.0), x, 3, 'float'), rt.f(10.0), 3, 'float'), x, 3, 'float')))
@@ -215,7 +215,7 @@ def run_pixel(ctx, out):
         return rt.component_wise("sqrt", rt.swizzle(d11, "xy"), width=2)
     def mod289__vec4(x):
         x = rt.copy(x, "float")
-        return rt.construct(4, rt.binary("-", x, rt.construct(4, rt.binary("*", rt.component_wise("floor", rt.binary("*", x, rt.binary("/", rt.f(1.0), rt.f(289.0), 1, "float"), 4, 'float'), width=4), rt.f(289.0), 4, 'float')), 4, 'float'))
+        return rt.construct(4, rt.binary("-", x, rt.construct(4, rt.binary("*", rt.component_wise("floor", rt.binary("*", x, rt.f(0.0034602076124567475), 4, 'float'), width=4), rt.f(289.0), 4, 'float')), 4, 'float'))
     def permute__vec4(x):
         x = rt.copy(x, "float")
         return mod289__vec4(rt.construct(4, rt.binary("*", rt.binary("+", rt.binary("*", x, rt.f(34.0), 4, 'float'), rt.f(10.0), 4, 'float'), x, 4, 'float')))
@@ -224,7 +224,7 @@ def run_pixel(ctx, out):
         return rt.construct(4, rt.binary("-", rt.f(1.79284291400159), rt.binary("*", rt.f(0.85373472095314), r, 4, 'float'), 4, 'float'))
     def snoise__vec3(v):
         v = rt.copy(v, "float")
-        C = rt.construct(2, rt.binary("/", rt.f(1.0), rt.f(6.0), 1, "float"), rt.binary("/", rt.f(1.0), rt.f(3.0), 1, "float"))
+        C = rt.construct(2, rt.f(0.16666666666666666), rt.f(0.3333333333333333))
         D = rt.construct(4, rt.f(0.0), rt.f(0.5), rt.f(1.0), rt.f(2.0))
         i = rt.component_wise("floor", rt.binary("+", v, rt.dot(v, rt.swizzle(C, "yyy")), 3, 'float'), width=3)
         x0 = rt.construct(3, rt.binary("+", rt.binary("-", v, i, 3, 'float'), rt.dot(i, rt.swizzle(C, "xxx")), 3, 'float'))
@@ -271,7 +271,7 @@ def run_pixel(ctx, out):
         return st
     def smin__float_float_float(a, b, k):
         h = rt.binary("/", rt.component_wise("max", rt.binary("-", k, rt.component_wise("abs", rt.binary("-", a, b, 1, "float"), width=1), 1, "float"), rt.f(0.0), width=1), k, 1, "float")
-        return rt.binary("-", rt.component_wise("min", a, b, width=1), rt.binary("*", rt.binary("*", rt.binary("*", h, h, 1, "float"), k, 1, "float"), rt.binary("/", rt.f(1.0), rt.f(4.0), 1, "float"), 1, "float"), 1, "float")
+        return rt.binary("-", rt.component_wise("min", a, b, width=1), rt.binary("*", rt.binary("*", rt.binary("*", h, h, 1, "float"), k, 1, "float"), rt.f(0.25), 1, "float"), 1, "float")
     def smax__float_float_float(a, b, k):
         return rt.binary("/", rt.component_wise("log", rt.binary("+", rt.component_wise("exp", rt.binary("*", k, a, 1, "float"), width=1), rt.component_wise("exp", rt.binary("*", k, b, 1, "float"), width=1), 1, "float"), width=1), k, 1, "float")
     def smoothabs__float_float(v, m):
@@ -388,22 +388,22 @@ def run_pixel(ctx, out):
         x = rt.binary("*", c, rt.binary("-", rt.f(1.0), rt.component_wise("abs", rt.binary("-", rt.component_wise("mod", rt.binary("*", h, rt.f(6.0), 1, "float"), rt.f(2.0), width=1), rt.f(1.0), 1, "float"), width=1), 1, "float"), 1, "float")
         m = rt.binary("-", v, c, 1, "float")
         rgb = rt.construct(3, 0.0)
-        if (bool(rt.binary("<=", rt.f(0.0), h)) and bool(rt.binary("<", h, rt.binary("/", rt.f(1.0), rt.f(6.0), 1, "float")))):
+        if (bool(rt.binary("<=", rt.f(0.0), h)) and bool(rt.binary("<", h, rt.f(0.16666666666666666)))):
             (rgb.__setitem__(0, c), rgb.__setitem__(1, x), rgb.__setitem__(2, rt.f(0.0)), rgb)[-1]
         else:
-            if (bool(rt.binary("<=", rt.binary("/", rt.f(1.0), rt.f(6.0), 1, "float"), h)) and bool(rt.binary("<", h, rt.binary("/", rt.f(2.0), rt.f(6.0), 1, "float")))):
+            if (bool(rt.binary("<=", rt.f(0.16666666666666666), h)) and bool(rt.binary("<", h, rt.f(0.3333333333333333)))):
                 (rgb.__setitem__(0, x), rgb.__setitem__(1, c), rgb.__setitem__(2, rt.f(0.0)), rgb)[-1]
             else:
-                if (bool(rt.binary("<=", rt.binary("/", rt.f(2.0), rt.f(6.0), 1, "float"), h)) and bool(rt.binary("<", h, rt.binary("/", rt.f(3.0), rt.f(6.0), 1, "float")))):
+                if (bool(rt.binary("<=", rt.f(0.3333333333333333), h)) and bool(rt.binary("<", h, rt.f(0.5)))):
                     (rgb.__setitem__(0, rt.f(0.0)), rgb.__setitem__(1, c), rgb.__setitem__(2, x), rgb)[-1]
                 else:
-                    if (bool(rt.binary("<=", rt.binary("/", rt.f(3.0), rt.f(6.0), 1, "float"), h)) and bool(rt.binary("<", h, rt.binary("/", rt.f(4.0), rt.f(6.0), 1, "float")))):
+                    if (bool(rt.binary("<=", rt.f(0.5), h)) and bool(rt.binary("<", h, rt.f(0.6666666666666666)))):
                         (rgb.__setitem__(0, rt.f(0.0)), rgb.__setitem__(1, x), rgb.__setitem__(2, c), rgb)[-1]
                     else:
-                        if (bool(rt.binary("<=", rt.binary("/", rt.f(4.0), rt.f(6.0), 1, "float"), h)) and bool(rt.binary("<", h, rt.binary("/", rt.f(5.0), rt.f(6.0), 1, "float")))):
+                        if (bool(rt.binary("<=", rt.f(0.6666666666666666), h)) and bool(rt.binary("<", h, rt.f(0.8333333333333334)))):
                             (rgb.__setitem__(0, x), rgb.__setitem__(1, rt.f(0.0)), rgb.__setitem__(2, c), rgb)[-1]
                         else:
-                            if (bool(rt.binary("<=", rt.binary("/", rt.f(5.0), rt.f(6.0), 1, "float"), h)) and bool(rt.binary("<", h, rt.f(1.0)))):
+                            if (bool(rt.binary("<=", rt.f(0.8333333333333334), h)) and bool(rt.binary("<", h, rt.f(1.0)))):
                                 (rgb.__setitem__(0, c), rgb.__setitem__(1, rt.f(0.0)), rgb.__setitem__(2, x), rgb)[-1]
                             else:
                                 (rgb.__setitem__(0, rt.f(0.0)), rgb.__setitem__(1, rt.f(0.0)), rgb.__setitem__(2, rt.f(0.0)), rgb)[-1]

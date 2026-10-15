@@ -41,7 +41,7 @@ def run_pixel(ctx, out):
             if rt.binary("<=", linear[int(i)], rt.f(0.0031308)):
                 srgb[int(i)] = rt.f32(rt.binary("*", linear[int(i)], rt.f(12.92), 1, "float"))
             else:
-                srgb[int(i)] = rt.f32(rt.binary("-", rt.binary("*", rt.f(1.055), rt.component_wise("pow", linear[int(i)], rt.binary("/", rt.f(1.0), rt.f(2.4), 1, "float"), width=1), 1, "float"), rt.f(0.055), 1, "float"))
+                srgb[int(i)] = rt.f32(rt.binary("-", rt.binary("*", rt.f(1.055), rt.component_wise("pow", linear[int(i)], rt.f(0.4166666666666667), width=1), 1, "float"), rt.f(0.055), 1, "float"))
         return srgb
     def rgbToHsl__vec3(rgb):
         rgb = rt.copy(rgb, "float")
@@ -67,12 +67,12 @@ def run_pixel(ctx, out):
             t = rt.binary("+", t, rt.f(1.0), 1, "float")
         if rt.binary(">", t, rt.f(1.0)):
             t = rt.binary("-", t, rt.f(1.0), 1, "float")
-        if rt.binary("<", t, rt.binary("/", rt.f(1.0), rt.f(6.0), 1, "float")):
+        if rt.binary("<", t, rt.f(0.16666666666666666)):
             return rt.binary("+", p, rt.binary("*", rt.binary("*", rt.binary("-", q, p, 1, "float"), rt.f(6.0), 1, "float"), t, 1, "float"), 1, "float")
-        if rt.binary("<", t, rt.binary("/", rt.f(1.0), rt.f(2.0), 1, "float")):
+        if rt.binary("<", t, rt.f(0.5)):
             return q
-        if rt.binary("<", t, rt.binary("/", rt.f(2.0), rt.f(3.0), 1, "float")):
-            return rt.binary("+", p, rt.binary("*", rt.binary("*", rt.binary("-", q, p, 1, "float"), rt.binary("-", rt.binary("/", rt.f(2.0), rt.f(3.0), 1, "float"), t, 1, "float"), 1, "float"), rt.f(6.0), 1, "float"), 1, "float")
+        if rt.binary("<", t, rt.f(0.6666666666666666)):
+            return rt.binary("+", p, rt.binary("*", rt.binary("*", rt.binary("-", q, p, 1, "float"), rt.binary("-", rt.f(0.6666666666666666), t, 1, "float"), 1, "float"), rt.f(6.0), 1, "float"), 1, "float")
         return p
     def hslToRgb__vec3(hsl):
         hsl = rt.copy(hsl, "float")
@@ -80,7 +80,7 @@ def run_pixel(ctx, out):
             return rt.construct(3, rt.swizzle(hsl, "z"))
         q = (rt.binary("*", rt.swizzle(hsl, "z"), rt.binary("+", rt.f(1.0), rt.swizzle(hsl, "y"), 1, "float"), 1, "float") if rt.binary("<", rt.swizzle(hsl, "z"), rt.f(0.5)) else rt.binary("-", rt.binary("+", rt.swizzle(hsl, "z"), rt.swizzle(hsl, "y"), 1, "float"), rt.binary("*", rt.swizzle(hsl, "z"), rt.swizzle(hsl, "y"), 1, "float"), 1, "float"))
         p = rt.binary("-", rt.binary("*", rt.f(2.0), rt.swizzle(hsl, "z"), 1, "float"), q, 1, "float")
-        return rt.construct(3, hue2rgb__float_float_float(p, q, rt.binary("+", rt.swizzle(hsl, "x"), rt.binary("/", rt.f(1.0), rt.f(3.0), 1, "float"), 1, "float")), hue2rgb__float_float_float(p, q, rt.swizzle(hsl, "x")), hue2rgb__float_float_float(p, q, rt.binary("-", rt.swizzle(hsl, "x"), rt.binary("/", rt.f(1.0), rt.f(3.0), 1, "float"), 1, "float")))
+        return rt.construct(3, hue2rgb__float_float_float(p, q, rt.binary("+", rt.swizzle(hsl, "x"), rt.f(0.3333333333333333), 1, "float")), hue2rgb__float_float_float(p, q, rt.swizzle(hsl, "x")), hue2rgb__float_float_float(p, q, rt.binary("-", rt.swizzle(hsl, "x"), rt.f(0.3333333333333333), 1, "float")))
     def luma__vec3(rgb):
         rgb = rt.copy(rgb, "float")
         return rt.dot(rgb, rt.construct(3, rt.f(0.2126), rt.f(0.7152), rt.f(0.0722)))

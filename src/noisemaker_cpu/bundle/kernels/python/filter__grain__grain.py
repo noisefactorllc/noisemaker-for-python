@@ -15,7 +15,7 @@ def run_pixel(ctx, out):
     _u_pause = U.get("pause", rt.f(0.0))
     g.PI = rt.f(3.141592653589793)
     g.TAU = rt.f(6.283185307179586)
-    g.UINT32_TO_FLOAT = rt.binary("/", rt.f(1.0), rt.f(4294967296.0), 1, "float")
+    g.UINT32_TO_FLOAT = rt.f(2.3283064365386963e-10)
     g.CHANNEL_COUNT = rt.i(4)
     g.INTERPOLATION_CONSTANT = rt.i(0)
     g.INTERPOLATION_LINEAR = rt.i(1)

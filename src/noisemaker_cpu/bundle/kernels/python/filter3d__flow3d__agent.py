@@ -62,7 +62,7 @@ def run_pixel(ctx, out):
         if rt.binary("==", value, rt.f(0.0)):
             return rt.f(0.0)
         sign_value = (rt.f(1.0) if rt.binary(">=", value, rt.f(0.0)) else rt.unary("-", rt.f(1.0)))
-        return rt.binary("*", sign_value, rt.component_wise("pow", rt.component_wise("abs", value, width=1), rt.binary("/", rt.f(1.0), rt.f(3.0), 1, "float"), width=1), 1, "float")
+        return rt.binary("*", sign_value, rt.component_wise("pow", rt.component_wise("abs", value, width=1), rt.f(0.3333333333333333), width=1), 1, "float")
     def oklab_l__vec3(rgb):
         rgb = rt.copy(rgb, "float")
         r_lin = srgb_to_linear__float(rt.component_wise("clamp", rt.swizzle(rgb, "x"), rt.f(0.0), rt.f(1.0), width=1))

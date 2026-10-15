@@ -63,7 +63,7 @@ def run_pixel(ctx, out):
     def linear2srgb__vec3(linear):
         linear = rt.copy(linear, "float")
         low = rt.construct(3, rt.binary("*", linear, rt.f(12.92), 3, 'float'))
-        high = rt.construct(3, rt.binary("-", rt.construct(3, rt.binary("*", rt.f(1.055), rt.component_wise("pow", linear, rt.construct(3, rt.binary("/", rt.f(1.0), rt.f(2.4), 1, "float")), width=3), 3, 'float')), rt.f(0.055), 3, 'float'))
+        high = rt.construct(3, rt.binary("-", rt.construct(3, rt.binary("*", rt.f(1.055), rt.component_wise("pow", linear, rt.construct(3, rt.f(0.4166666666666667)), width=3), 3, 'float')), rt.f(0.055), 3, 'float'))
         return rt.component_wise("mix", high, low, rt.component_wise("step", linear, rt.construct(3, rt.f(0.0031308)), width=3), width=3)
     def oklab2rgb__vec3(lab):
         lab = rt.copy(lab, "float")

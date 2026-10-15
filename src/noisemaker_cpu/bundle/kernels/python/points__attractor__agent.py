@@ -26,7 +26,7 @@ def run_pixel(ctx, out):
         p = rt.copy(p, "float")
         sigma = rt.f(10.0)
         rho = rt.f(28.0)
-        beta = rt.binary("/", rt.f(8.0), rt.f(3.0), 1, "float")
+        beta = rt.f(2.6666666666666665)
         return rt.construct(3, rt.binary("*", sigma, rt.binary("-", rt.swizzle(p, "y"), rt.swizzle(p, "x"), 1, "float"), 1, "float"), rt.binary("-", rt.binary("*", rt.swizzle(p, "x"), rt.binary("-", rho, rt.swizzle(p, "z"), 1, "float"), 1, "float"), rt.swizzle(p, "y"), 1, "float"), rt.binary("-", rt.binary("*", rt.swizzle(p, "x"), rt.swizzle(p, "y"), 1, "float"), rt.binary("*", beta, rt.swizzle(p, "z"), 1, "float"), 1, "float"))
     def rossler__vec3(p):
         p = rt.copy(p, "float")

@@ -17,9 +17,9 @@ def run_pixel(ctx, out):
         l = rt.binary("+", rt.binary("+", rt.binary("*", rt.f(0.412165612), r, 1, "float"), rt.binary("*", rt.f(0.536275208), _g, 1, "float"), 1, "float"), rt.binary("*", rt.f(0.0514575653), b, 1, "float"), 1, "float")
         m = rt.binary("+", rt.binary("+", rt.binary("*", rt.f(0.211859107), r, 1, "float"), rt.binary("*", rt.f(0.6807189584), _g, 1, "float"), 1, "float"), rt.binary("*", rt.f(0.107406579), b, 1, "float"), 1, "float")
         s = rt.binary("+", rt.binary("+", rt.binary("*", rt.f(0.0883097947), r, 1, "float"), rt.binary("*", rt.f(0.2818474174), _g, 1, "float"), 1, "float"), rt.binary("*", rt.f(0.6302613616), b, 1, "float"), 1, "float")
-        l_c = rt.component_wise("pow", rt.component_wise("abs", l, width=1), rt.binary("/", rt.f(1.0), rt.f(3.0), 1, "float"), width=1)
-        m_c = rt.component_wise("pow", rt.component_wise("abs", m, width=1), rt.binary("/", rt.f(1.0), rt.f(3.0), 1, "float"), width=1)
-        s_c = rt.component_wise("pow", rt.component_wise("abs", s, width=1), rt.binary("/", rt.f(1.0), rt.f(3.0), 1, "float"), width=1)
+        l_c = rt.component_wise("pow", rt.component_wise("abs", l, width=1), rt.f(0.3333333333333333), width=1)
+        m_c = rt.component_wise("pow", rt.component_wise("abs", m, width=1), rt.f(0.3333333333333333), width=1)
+        s_c = rt.component_wise("pow", rt.component_wise("abs", s, width=1), rt.f(0.3333333333333333), width=1)
         return rt.binary("-", rt.binary("+", rt.binary("*", rt.f(0.2104542553), l_c, 1, "float"), rt.binary("*", rt.f(0.793617785), m_c, 1, "float"), 1, "float"), rt.binary("*", rt.f(0.0040720468), s_c, 1, "float"), 1, "float")
     def main__void():
         coord = rt.construct(2, rt.swizzle(ctx.frag_coord, "xy"), base="int")

@@ -222,7 +222,14 @@ def _coerce(spec: dict, value, name: str | None = None):
     if t == "float":
         number = float(value)
         _check_param_range(spec, name, number)
-        return f32(number)
+        # Keep the full double like the JS oracle: canonical kernels bind
+        # uniforms as plain JS numbers (csl/glsl-runtime.js stores Float32Array
+        # results, never the uniform itself), so scalar arithmetic that reads a
+        # float uniform runs at double precision until the next f32 boundary.
+        # An f32-rounded bind collapsed the e1-e0 denominator in degenerate
+        # smoothstep bands (filter/colorReplace smoothing=0) to +0 where JS
+        # computes a negative zero-width remainder.
+        return number
     if t in ("int", "enum", "member"):
         if isinstance(value, str):
             choices = spec.get("choices") or {}

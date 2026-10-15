@@ -107,9 +107,9 @@ def run_pixel(ctx, out):
             _for3_first = False
             if not (rt.binary("<", k, rt.i(6))):
                 break
-            angle = rt.binary("+", rt.binary("/", rt.binary("*", rt.construct(1, k), rt.f(3.14159265359), 1, "float"), rt.f(3.0), 1, "float"), rt.binary("/", rt.f(3.14159265359), rt.f(6.0), 1, "float"), 1, "float")
-            centers[int(rt.binary("+", rt.i(7), k, 1, "int"))] = rt.construct(2, rt.binary("*", rt.binary("*", rt.f(2.0), rt.f(1.7320508075688772), 1, "float"), rt.construct_raw(2, rt.component_wise("cos", angle, width=1), rt.component_wise("sin", angle, width=1)), 2, 'float'))
-        maxCircleDist = rt.binary("*", rt.f(2.0), rt.f(1.7320508075688772), 1, "float")
+            angle = rt.binary("+", rt.binary("/", rt.binary("*", rt.construct(1, k), rt.f(3.14159265359), 1, "float"), rt.f(3.0), 1, "float"), rt.f(0.5235987755983333), 1, "float")
+            centers[int(rt.binary("+", rt.i(7), k, 1, "int"))] = rt.construct(2, rt.binary("*", rt.f(3.4641016151377544), rt.construct_raw(2, rt.component_wise("cos", angle, width=1), rt.component_wise("sin", angle, width=1)), 2, 'float'))
+        maxCircleDist = rt.f(3.4641016151377544)
         circleUnfoldRange = (rt.f(0.6) if drawLines else rt.f(1.0))
         m = rt.f(0.0)
         i = rt.i(0)
@@ -185,16 +185,16 @@ def run_pixel(ctx, out):
         p[:] = rt.binary("*", p, rt.f(0.3), 2, 'float')
         r = rt.f(2.25)
         dist = rt.binary("/", r, rt.f(1.7320508075688772), 1, "float")
-        C0 = rt.construct(2, rt.binary("*", dist, rt.construct_raw(2, rt.component_wise("cos", rt.binary("*", rt.f(3.14159265359), rt.f(0.5), 1, "float"), width=1), rt.component_wise("sin", rt.binary("*", rt.f(3.14159265359), rt.f(0.5), 1, "float"), width=1)), 2, 'float'))
-        C1 = rt.construct(2, rt.binary("*", dist, rt.construct_raw(2, rt.component_wise("cos", rt.binary("+", rt.binary("*", rt.f(3.14159265359), rt.f(0.5), 1, "float"), rt.binary("/", rt.f(6.28318530718), rt.f(3.0), 1, "float"), 1, "float"), width=1), rt.component_wise("sin", rt.binary("+", rt.binary("*", rt.f(3.14159265359), rt.f(0.5), 1, "float"), rt.binary("/", rt.f(6.28318530718), rt.f(3.0), 1, "float"), 1, "float"), width=1)), 2, 'float'))
-        C2 = rt.construct(2, rt.binary("*", dist, rt.construct_raw(2, rt.component_wise("cos", rt.binary("+", rt.binary("*", rt.f(3.14159265359), rt.f(0.5), 1, "float"), rt.binary("/", rt.binary("*", rt.f(2.0), rt.f(6.28318530718), 1, "float"), rt.f(3.0), 1, "float"), 1, "float"), width=1), rt.component_wise("sin", rt.binary("+", rt.binary("*", rt.f(3.14159265359), rt.f(0.5), 1, "float"), rt.binary("/", rt.binary("*", rt.f(2.0), rt.f(6.28318530718), 1, "float"), rt.f(3.0), 1, "float"), 1, "float"), width=1)), 2, 'float'))
+        C0 = rt.construct(2, rt.binary("*", dist, rt.construct_raw(2, rt.component_wise("cos", rt.f(1.570796326795), width=1), rt.component_wise("sin", rt.f(1.570796326795), width=1)), 2, 'float'))
+        C1 = rt.construct(2, rt.binary("*", dist, rt.construct_raw(2, rt.component_wise("cos", rt.f(3.6651914291883334), width=1), rt.component_wise("sin", rt.f(3.6651914291883334), width=1)), 2, 'float'))
+        C2 = rt.construct(2, rt.binary("*", dist, rt.construct_raw(2, rt.component_wise("cos", rt.f(5.759586531581666), width=1), rt.component_wise("sin", rt.f(5.759586531581666), width=1)), 2, 'float'))
         r0 = r
         r1 = r
         r2 = r
         if rt.binary("==", _u_animation, rt.i(4)):
             r0 = rt.binary("*", r0, ripplePulse__float(rt.f(0.0)), 1, "float")
-            r1 = rt.binary("*", r1, ripplePulse__float(rt.binary("/", rt.f(6.28318530718), rt.f(3.0), 1, "float")), 1, "float")
-            r2 = rt.binary("*", r2, ripplePulse__float(rt.binary("/", rt.binary("*", rt.f(2.0), rt.f(6.28318530718), 1, "float"), rt.f(3.0), 1, "float")), 1, "float")
+            r1 = rt.binary("*", r1, ripplePulse__float(rt.f(2.0943951023933334)), 1, "float")
+            r2 = rt.binary("*", r2, ripplePulse__float(rt.f(4.188790204786667)), 1, "float")
         d0 = rt.binary("-", rt.length(rt.binary("-", p, C0, 2, 'float')), r0, 1, "float")
         d1 = rt.binary("-", rt.length(rt.binary("-", p, C1, 2, 'float')), r1, 1, "float")
         d2 = rt.binary("-", rt.length(rt.binary("-", p, C2, 2, 'float')), r2, 1, "float")
@@ -225,7 +225,7 @@ def run_pixel(ctx, out):
             _for7_first = False
             if not (rt.binary("<", i, rt.i(3))):
                 break
-            angle = rt.binary("+", rt.binary("/", rt.binary("*", rt.construct(1, i), rt.f(6.28318530718), 1, "float"), rt.f(3.0), 1, "float"), rt.binary("*", rt.f(3.14159265359), rt.f(0.5), 1, "float"), 1, "float")
+            angle = rt.binary("+", rt.binary("/", rt.binary("*", rt.construct(1, i), rt.f(6.28318530718), 1, "float"), rt.f(3.0), 1, "float"), rt.f(1.570796326795), 1, "float")
             c = rt.construct(2, rt.binary("*", dist, rt.construct_raw(2, rt.component_wise("cos", angle, width=1), rt.component_wise("sin", angle, width=1)), 2, 'float'))
             circleR = r
             if rt.binary("==", _u_animation, rt.i(4)):
@@ -255,8 +255,8 @@ def run_pixel(ctx, out):
             if rt.binary(">=", i, n):
                 break
             j = rt.binary("-", rt.binary("+", i, rt.i(2), 1, "int"), rt.binary("*", rt.binary("/", rt.binary("+", i, rt.i(2), 1, "int"), n, 1, "int"), n, 1, "int"), 1, "int")
-            angle1 = rt.binary("+", rt.binary("/", rt.binary("*", rt.construct(1, i), rt.f(6.28318530718), 1, "float"), rt.construct(1, n), 1, "float"), rt.binary("*", rt.f(3.14159265359), rt.f(0.5), 1, "float"), 1, "float")
-            angle2 = rt.binary("+", rt.binary("/", rt.binary("*", rt.construct(1, j), rt.f(6.28318530718), 1, "float"), rt.construct(1, n), 1, "float"), rt.binary("*", rt.f(3.14159265359), rt.f(0.5), 1, "float"), 1, "float")
+            angle1 = rt.binary("+", rt.binary("/", rt.binary("*", rt.construct(1, i), rt.f(6.28318530718), 1, "float"), rt.construct(1, n), 1, "float"), rt.f(1.570796326795), 1, "float")
+            angle2 = rt.binary("+", rt.binary("/", rt.binary("*", rt.construct(1, j), rt.f(6.28318530718), 1, "float"), rt.construct(1, n), 1, "float"), rt.f(1.570796326795), 1, "float")
             a = rt.construct(2, rt.binary("*", radius, rt.construct_raw(2, rt.component_wise("cos", angle1, width=1), rt.component_wise("sin", angle1, width=1)), 2, 'float'))
             b = rt.construct(2, rt.binary("*", radius, rt.construct_raw(2, rt.component_wise("cos", angle2, width=1), rt.component_wise("sin", angle2, width=1)), 2, 'float'))
             dL = lineSegmentSDF__vec2_vec2_vec2(p, a, b)

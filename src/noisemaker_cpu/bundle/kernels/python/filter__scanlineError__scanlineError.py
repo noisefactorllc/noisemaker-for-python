@@ -27,10 +27,10 @@ def run_pixel(ctx, out):
         return rt.component_wise("clamp", value, rt.f(0.0), rt.f(1.0), width=1)
     def mod289_vec3__vec3(x):
         x = rt.copy(x, "float")
-        return rt.construct(3, rt.binary("-", x, rt.construct(3, rt.binary("*", rt.component_wise("floor", rt.binary("*", x, rt.binary("/", rt.f(1.0), rt.f(289.0), 1, "float"), 3, 'float'), width=3), rt.f(289.0), 3, 'float')), 3, 'float'))
+        return rt.construct(3, rt.binary("-", x, rt.construct(3, rt.binary("*", rt.component_wise("floor", rt.binary("*", x, rt.f(0.0034602076124567475), 3, 'float'), width=3), rt.f(289.0), 3, 'float')), 3, 'float'))
     def mod289_vec4__vec4(x):
         x = rt.copy(x, "float")
-        return rt.construct(4, rt.binary("-", x, rt.construct(4, rt.binary("*", rt.component_wise("floor", rt.binary("*", x, rt.binary("/", rt.f(1.0), rt.f(289.0), 1, "float"), 4, 'float'), width=4), rt.f(289.0), 4, 'float')), 4, 'float'))
+        return rt.construct(4, rt.binary("-", x, rt.construct(4, rt.binary("*", rt.component_wise("floor", rt.binary("*", x, rt.f(0.0034602076124567475), 4, 'float'), width=4), rt.f(289.0), 4, 'float')), 4, 'float'))
     def permute__vec4(x):
         x = rt.copy(x, "float")
         return mod289_vec4__vec4(rt.construct(4, rt.binary("*", rt.binary("+", rt.binary("*", x, rt.f(34.0), 4, 'float'), rt.f(1.0), 4, 'float'), x, 4, 'float')))
@@ -39,7 +39,7 @@ def run_pixel(ctx, out):
         return rt.construct(4, rt.binary("-", rt.f(1.79284291400159), rt.binary("*", rt.f(0.85373472095314), r, 4, 'float'), 4, 'float'))
     def simplex_noise__vec3(v):
         v = rt.copy(v, "float")
-        c = rt.construct(2, rt.binary("/", rt.f(1.0), rt.f(6.0), 1, "float"), rt.binary("/", rt.f(1.0), rt.f(3.0), 1, "float"))
+        c = rt.construct(2, rt.f(0.16666666666666666), rt.f(0.3333333333333333))
         d = rt.construct(4, rt.f(0.0), rt.f(0.5), rt.f(1.0), rt.f(2.0))
         i0 = rt.component_wise("floor", rt.binary("+", v, rt.dot(v, rt.construct(3, rt.swizzle(c, "y"))), 3, 'float'), width=3)
         x0 = rt.construct(3, rt.binary("+", rt.binary("-", v, i0, 3, 'float'), rt.dot(i0, rt.construct(3, rt.swizzle(c, "x"))), 3, 'float'))

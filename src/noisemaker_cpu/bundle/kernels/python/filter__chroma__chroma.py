@@ -14,7 +14,7 @@ def run_pixel(ctx, out):
     g.fragColor = rt.construct(4, 0.0)
     def rgb2hsv__vec3(c):
         c = rt.copy(c, "float")
-        K = rt.construct(4, rt.f(0.0), rt.binary("/", rt.unary("-", rt.f(1.0)), rt.f(3.0), 1, "float"), rt.binary("/", rt.f(2.0), rt.f(3.0), 1, "float"), rt.unary("-", rt.f(1.0)))
+        K = rt.construct(4, rt.f(0.0), rt.f(-0.3333333333333333), rt.f(0.6666666666666666), rt.unary("-", rt.f(1.0)))
         p = rt.component_wise("mix", rt.construct(4, rt.swizzle(c, "bg"), rt.swizzle(K, "wz")), rt.construct(4, rt.swizzle(c, "gb"), rt.swizzle(K, "xy")), rt.component_wise("step", rt.swizzle(c, "b"), rt.swizzle(c, "g"), width=1), width=4)
         q = rt.component_wise("mix", rt.construct(4, rt.swizzle(p, "xyw"), rt.swizzle(c, "r")), rt.construct(4, rt.swizzle(c, "r"), rt.swizzle(p, "yzx")), rt.component_wise("step", rt.swizzle(p, "x"), rt.swizzle(c, "r"), width=1), width=4)
         d = rt.binary("-", rt.swizzle(q, "x"), rt.component_wise("min", rt.swizzle(q, "w"), rt.swizzle(q, "y"), width=1), 1, "float")

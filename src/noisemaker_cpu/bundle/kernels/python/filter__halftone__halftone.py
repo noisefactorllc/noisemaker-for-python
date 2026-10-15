@@ -88,7 +88,7 @@ def run_pixel(ctx, out):
             inkRadius = rt.component_wise("mix", g.MID_DOT_RADIUS, g.MAX_DOT_RADIUS, rt.binary("/", rt.binary("-", inkAmount, g.DOT_AREA_CAP, 1, "float"), rt.binary("-", rt.f(1.0), g.DOT_AREA_CAP, 1, "float"), 1, "float"), width=1)
         softness = rt.binary("-", rt.f(1.0), rt.component_wise("clamp", rt.binary("/", sharpnessPct, rt.f(100.0), 1, "float"), rt.f(0.0), rt.f(1.0), width=1), 1, "float")
         centerAA = rt.component_wise("max", rt.component_wise("mix", rt.binary("*", rt.fwidth(centerDistance), rt.f(1.5), 1, "float"), rt.f(0.35), softness, width=1), rt.f(1e-05), width=1)
-        resolvedInk = rt.component_wise("smoothstep", rt.f(0.0), rt.binary("/", rt.f(1.0), rt.f(255.0), 1, "float"), value, width=1)
+        resolvedInk = rt.component_wise("smoothstep", rt.f(0.0), rt.f(0.00392156862745098), value, width=1)
         return rt.binary("*", rt.binary("-", rt.f(1.0), rt.component_wise("smoothstep", rt.unary("-", centerAA), centerAA, rt.binary("-", centerDistance, inkRadius, 1, "float"), width=1), 1, "float"), resolvedInk, 1, "float")
     def main__void():
         globalCoord = rt.construct(2, rt.binary("+", rt.swizzle(ctx.frag_coord, "xy"), _u_tileOffset, 2, 'float'))

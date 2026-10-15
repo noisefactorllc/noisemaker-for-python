@@ -46,7 +46,7 @@ def run_pixel(ctx, out):
     def mandalaMask__vec2(p):
         p = rt.copy(p, "float")
         r = rt.length(p)
-        theta = rt.binary("-", rt.component_wise("atan", rt.swizzle(p, "y"), rt.swizzle(p, "x"), width=1), rt.binary("*", rt.f(3.14159265359), rt.f(0.5), 1, "float"), 1, "float")
+        theta = rt.binary("-", rt.component_wise("atan", rt.swizzle(p, "y"), rt.swizzle(p, "x"), width=1), rt.f(1.570796326795), 1, "float")
         wedge = rt.binary("/", rt.f(6.28318530718), rt.construct(1, _u_symmetry), 1, "float")
         twistRad = rt.binary("/", rt.binary("*", _u_twist, rt.f(3.14159265359), 1, "float"), rt.f(180.0), 1, "float")
         baseSize = rt.binary("+", rt.f(0.25), rt.binary("*", _u_thickness, rt.f(0.65), 1, "float"), 1, "float")

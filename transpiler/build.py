@@ -168,6 +168,20 @@ def _adapt_source(effect_id: str, program: str, source: str) -> str:
             is_tile,
             "bool isTileRendering = any(notEqual(fullResolution, resolution));",
         )
+    if effect_id == "synth/polygon" and program == "shape":
+        # Upstream Noisemaker 6cb1a3c3 special-cases the degenerate
+        # smoothing=0 edge: GLSL smoothstep is undefined when edge0 == edge1,
+        # so the reference picks foreground/background by d <= radius instead
+        # of the undefined smoothstep. Same locked-build constraint as
+        # classicNoisedeck/effects above.
+        degenerate = "float m = smoothstep(radius, radius - smoothing, d);"
+        if source.count(degenerate) != 1:
+            raise ValueError("polygon degenerate smoothing source changed")
+        source = source.replace(
+            degenerate,
+            "float m = smoothing == 0.0 ? (d <= radius ? 1.0 : 0.0)"
+            " : smoothstep(radius, radius - smoothing, d);",
+        )
     return source
 
 

@@ -81,7 +81,7 @@ def run_pixel(ctx, out):
     def linear2srgb__vec3(lin):
         lin = rt.copy(lin, "float")
         low = rt.construct(3, rt.binary("*", lin, rt.f(12.92), 3, 'float'))
-        high = rt.construct(3, rt.binary("-", rt.construct(3, rt.binary("*", rt.f(1.055), rt.component_wise("pow", rt.component_wise("max", lin, rt.construct(3, rt.f(0.0)), width=3), rt.construct(3, rt.binary("/", rt.f(1.0), rt.f(2.4), 1, "float")), width=3), 3, 'float')), rt.f(0.055), 3, 'float'))
+        high = rt.construct(3, rt.binary("-", rt.construct(3, rt.binary("*", rt.f(1.055), rt.component_wise("pow", rt.component_wise("max", lin, rt.construct(3, rt.f(0.0)), width=3), rt.construct(3, rt.f(0.4166666666666667)), width=3), 3, 'float')), rt.f(0.055), 3, 'float'))
         return rt.component_wise("mix", high, low, rt.component_wise("step", lin, rt.construct(3, rt.f(0.0031308)), width=3), width=3)
     def srgb2linear__vec3(c):
         c = rt.copy(c, "float")
@@ -102,9 +102,9 @@ def run_pixel(ctx, out):
         l = rt.binary("+", rt.binary("+", rt.binary("*", rt.f(0.4122214708), rt.swizzle(lin, "r"), 1, "float"), rt.binary("*", rt.f(0.5363325363), rt.swizzle(lin, "g"), 1, "float"), 1, "float"), rt.binary("*", rt.f(0.0514459929), rt.swizzle(lin, "b"), 1, "float"), 1, "float")
         m = rt.binary("+", rt.binary("+", rt.binary("*", rt.f(0.2119034982), rt.swizzle(lin, "r"), 1, "float"), rt.binary("*", rt.f(0.6806995451), rt.swizzle(lin, "g"), 1, "float"), 1, "float"), rt.binary("*", rt.f(0.1073969566), rt.swizzle(lin, "b"), 1, "float"), 1, "float")
         s = rt.binary("+", rt.binary("+", rt.binary("*", rt.f(0.0883024619), rt.swizzle(lin, "r"), 1, "float"), rt.binary("*", rt.f(0.2817188376), rt.swizzle(lin, "g"), 1, "float"), 1, "float"), rt.binary("*", rt.f(0.6299787005), rt.swizzle(lin, "b"), 1, "float"), 1, "float")
-        l_ = rt.component_wise("pow", rt.component_wise("max", l, rt.f(0.0), width=1), rt.binary("/", rt.f(1.0), rt.f(3.0), 1, "float"), width=1)
-        m_ = rt.component_wise("pow", rt.component_wise("max", m, rt.f(0.0), width=1), rt.binary("/", rt.f(1.0), rt.f(3.0), 1, "float"), width=1)
-        s_ = rt.component_wise("pow", rt.component_wise("max", s, rt.f(0.0), width=1), rt.binary("/", rt.f(1.0), rt.f(3.0), 1, "float"), width=1)
+        l_ = rt.component_wise("pow", rt.component_wise("max", l, rt.f(0.0), width=1), rt.f(0.3333333333333333), width=1)
+        m_ = rt.component_wise("pow", rt.component_wise("max", m, rt.f(0.0), width=1), rt.f(0.3333333333333333), width=1)
+        s_ = rt.component_wise("pow", rt.component_wise("max", s, rt.f(0.0), width=1), rt.f(0.3333333333333333), width=1)
         return rt.construct(3, rt.binary("-", rt.binary("+", rt.binary("*", rt.f(0.2104542553), l_, 1, "float"), rt.binary("*", rt.f(0.793617785), m_, 1, "float"), 1, "float"), rt.binary("*", rt.f(0.0040720468), s_, 1, "float"), 1, "float"), rt.binary("+", rt.binary("-", rt.binary("*", rt.f(1.9779984951), l_, 1, "float"), rt.binary("*", rt.f(2.428592205), m_, 1, "float"), 1, "float"), rt.binary("*", rt.f(0.4505937099), s_, 1, "float"), 1, "float"), rt.binary("-", rt.binary("+", rt.binary("*", rt.f(0.0259040371), l_, 1, "float"), rt.binary("*", rt.f(0.7827717662), m_, 1, "float"), 1, "float"), rt.binary("*", rt.f(0.808675766), s_, 1, "float"), 1, "float"))
     def oklab2rgb__vec3(lab):
         lab = rt.copy(lab, "float")
@@ -256,7 +256,7 @@ def run_pixel(ctx, out):
         uv = rt.construct(2, rt.binary("/", rt.swizzle(ctx.frag_coord, "xy"), texSize, 2, 'float'))
         inputColor = rt.texture(_u_inputTex, uv)
         lum = rt.dot(rt.swizzle(inputColor, "rgb"), rt.construct(3, rt.f(0.299), rt.f(0.587), rt.f(0.114)))
-        t = rt.binary("+", rt.binary("*", rt.binary("*", lum, rt.binary("-", rt.f(1.0), rt.f(0.0001), 1, "float"), 1, "float"), _u_repeat, 1, "float"), _u_offset, 1, "float")
+        t = rt.binary("+", rt.binary("*", rt.binary("*", lum, rt.f(0.9999), 1, "float"), _u_repeat, 1, "float"), _u_offset, 1, "float")
         if rt.binary("==", _u_rotation, rt.unary("-", rt.i(1))):
             t = rt.binary("+", t, _u_time, 1, "float")
         else:

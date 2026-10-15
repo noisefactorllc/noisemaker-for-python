@@ -703,8 +703,72 @@ class CodeGen:
             return f"rt.trunc_scalar_div({code})"
         return code
 
+    def _const_scalar(self, node):
+        """Evaluate a pure-constant scalar arithmetic subtree to a float64
+        value. The oracle's kernel generator folds constant expressions and
+        emits them as float32 literals (scripts/upstream/compile-glsl.js
+        lowerFloatLiterals frounds every literal it prints): the GLSL
+        ``pow(x, 1.0 / 2.4)`` compiles to ``pow(x, 0.4166666567325592)``,
+        not a runtime division by f32(2.4). Fold the same subtrees here —
+        literals parsed as float64, arithmetic in float64, the caller emits
+        one rt.f literal so the runtime rounds the result to f32 once.
+        Returns None for anything non-foldable: identifiers, calls, or
+        integer-only subtrees (GLSL int arithmetic keeps its runtime path).
+
+        Returns (value, saw_float) or None.
+        """
+        k = node["k"]
+        if k == "num":
+            raw = node["value"]
+            low = raw.lower()
+            if low.endswith("u"):
+                return None
+            if ". " in raw:  # defensive; never produced by the parser
+                return None
+            try:
+                if "." in raw or "e" in low or low.endswith("f"):
+                    return (float(raw.rstrip("fF")), True)
+                if low.startswith("0x"):
+                    return None
+                return (float(int(raw)), False)
+            except ValueError:
+                return None
+        if k == "unary" and node["op"] in ("+", "-"):
+            v = self._const_scalar(node["x"])
+            if v is None:
+                return None
+            return ((-v[0] if node["op"] == "-" else v[0]), v[1])
+        if k == "binary" and node["op"] in ("+", "-", "*", "/"):
+            lv = self._const_scalar(node["l"])
+            if lv is None:
+                return None
+            rv = self._const_scalar(node["r"])
+            if rv is None:
+                return None
+            if not (lv[1] or rv[1]):
+                return None  # integer-only subtree keeps GLSL int semantics
+            a, b = lv[0], rv[0]
+            if node["op"] == "+":
+                r = a + b
+            elif node["op"] == "-":
+                r = a - b
+            elif node["op"] == "*":
+                r = a * b
+            else:
+                r = a / b
+            if r != r or r in (float("inf"), float("-inf")):
+                return None  # keep the runtime NaN/Inf semantics
+            return (r, True)
+        return None
+
     def _e_binary(self, node, scope):
         op = node["op"]
+        if op in ("+", "-", "*", "/"):
+            folded = self._const_scalar(node)
+            if folded is not None:
+                # One f32 rounding at emission, matching the oracle's folded
+                # float32 literal (fround of the float64 fold result).
+                return (f"rt.f({folded[0]!r})", FLOAT)
         l_code, l_t = self.expr(node["l"], scope)
         r_code, r_t = self.expr(node["r"], scope)
         if op in ("==", "!=", "<", ">", "<=", ">=", "&&", "||"):
