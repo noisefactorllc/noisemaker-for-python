@@ -300,23 +300,91 @@ def main():
     # as skipped here — they are covered by the committed-reference pytest cases
     # and by scripts/parity-summary at a current authority.
     oracle_supports_external = os.path.exists(os.path.join(CPU_DIR, "scripts", "parity", "reactive-fixtures.js"))
+
+    # Phase 1 — oracle renders, batched. Each CLI spawn pays interpreter +
+    # module load, so render every case through one node process
+    # (scripts/parity-js-batch.mjs): it reuses the CLI's own effect→DSL
+    # helpers imported from the pinned checkout. Per-job failures come back as
+    # "<out>.err" markers and map to oracle errors exactly like a failed spawn.
+    # A batch that cannot run at all (no node) falls back to per-effect spawns.
+    batch_jobs = []
+    _ext_texture()
+    for eid in ids:
+        if eid in EXTERNAL_INPUT_EFFECT_IDS:
+            if not oracle_supports_external:
+                continue
+            batch_jobs.append(
+                {
+                    "id": eid,
+                    "out": os.path.join(_SCRATCH.name, f"oracle-{eid.replace('/', '__')}.png"),
+                    "program": _external_case_dsl(eid),
+                    "externalInputs": True,
+                }
+            )
+            continue
+        ext = effects[eid].get("externalTexture")
+        job = {"id": eid, "out": os.path.join(_SCRATCH.name, f"oracle-{eid.replace('/', '__')}.png")}
+        if ext:
+            job["input"] = EXT_PNG
+        batch_jobs.append(job)
+    jobs_path = os.path.join(_SCRATCH.name, "jobs.json")
+    import json
+
+    with open(jobs_path, "w", encoding="utf-8") as f:
+        json.dump(batch_jobs, f)
+    batch_env = dict(os.environ)
+    batch_env["NOISEMAKER_CPU_DIR"] = CPU_DIR
+    driver = os.path.join(os.path.dirname(os.path.abspath(__file__)), "parity-js-batch.mjs")
+    oracle_failed = set()
+    oracle_results = {}
+    try:
+        subprocess.run(
+            ["node", driver, jobs_path],
+            cwd=CPU_DIR,
+            check=True,
+            capture_output=True,
+            timeout=120 * max(1, len(batch_jobs)),
+            env=batch_env,
+        )
+    except Exception:
+        # Batch unavailable: fall back to the per-effect CLI spawns.
+        for eid in ids:
+            try:
+                ext = effects[eid].get("externalTexture")
+                input_png = _ext_texture() and EXT_PNG if ext else None
+                out = os.path.join(_SCRATCH.name, f"oracle-{eid.replace('/', '__')}.png")
+                if eid in EXTERNAL_INPUT_EFFECT_IDS:
+                    js = js_effect_external(eid, out)
+                else:
+                    js = js_effect(eid, out, input_png)
+                with open(out, "rb") as f:
+                    oracle_results[eid] = (js, _sha256_file(out))
+            except Exception:
+                oracle_failed.add(eid)
+    else:
+        for job in batch_jobs:
+            eid = job["id"]
+            err_path = job["out"] + ".err"
+            if os.path.exists(err_path):
+                oracle_failed.add(eid)
+                continue
+            with open(job["out"], "rb") as f:
+                oracle_results[eid] = (decode_png(f.read()), _sha256_file(job["out"]))
+    if not oracle_supports_external:
+        oracle_failed.update(eid for eid in EXTERNAL_INPUT_EFFECT_IDS if eid in ids)
+
+    # Phase 2 — port renders and comparison, sequential and in candidate order.
     for eid in ids:
         kind = effects[eid]["kind"]
         ext = effects[eid].get("externalTexture")
-        input_png = _ext_texture() and EXT_PNG if ext else None
         if eid in EXTERNAL_INPUT_EFFECT_IDS:
             if not oracle_supports_external:
                 skipped.append(eid)
                 continue
-            # Reactive/mesh effects need their external-input fixtures on both
-            # sides; the CLI binds none, so render through the DSL fixture path
-            # (same programs the oracle's own gate uses).
-            try:
-                js = js_effect_external(eid, JS_PNG)
-                js_png_sha = _sha256_file(JS_PNG)
-            except Exception:
+            if eid in oracle_failed:
                 oracle_err.append(eid)
                 continue
+            js, js_png_sha = oracle_results[eid]
             try:
                 py = render_dsl(
                     _external_case_dsl(eid),
@@ -350,12 +418,10 @@ def main():
             else:
                 diffs.append((eid, d))
             continue
-        try:
-            js = js_effect(eid, JS_PNG, input_png)
-            js_png_sha = _sha256_file(JS_PNG)
-        except Exception:
+        if eid in oracle_failed:
             oracle_err.append(eid)
             continue
+        js, js_png_sha = oracle_results[eid]
         try:
             py = py_render(eid, kind, ext)
         except Exception as e:

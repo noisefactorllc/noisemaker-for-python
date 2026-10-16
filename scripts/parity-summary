@@ -101,6 +101,90 @@ def main() -> int:
 
     exact: list[str] = []
     fail = 0
+
+    def _oracle_job(eid):
+        case = cases.get(eid)
+        if case is None:
+            return None
+        out = os.path.join(_parity._SCRATCH.name, f"oracle-{eid.replace('/', '__')}.png")
+        if case[0] == "effect":
+            ext = effects[eid].get("externalTexture")
+            job = {"id": eid, "out": out}
+            if ext:
+                _parity._ext_texture()
+                job["input"] = _parity.EXT_PNG
+            return job
+        if case[0] == "external":
+            _, case_id, width = case
+            return {
+                "id": eid,
+                "out": out,
+                "program": _parity._external_case_dsl(case_id),
+                "externalInputs": True,
+                "width": width,
+            }
+        _, program, width = case
+        return {"id": eid, "out": out, "program": program, "width": width}
+
+    # Phase 1 — oracle renders, batched. Each CLI spawn pays interpreter +
+    # module load, so render every case through one node process
+    # (scripts/parity-js-batch.mjs), which reuses the CLI's own effect→DSL
+    # helpers imported from the pinned checkout. Per-job failures come back as
+    # "<out>.err" markers. A batch that cannot run at all (no node) falls back
+    # to per-case CLI spawns.
+    import json
+    import subprocess
+
+    oracle_jobs = {}
+    _parity._ext_texture()
+    for eid in selected:
+        job = _oracle_job(eid)
+        if job is not None:
+            oracle_jobs[eid] = job
+    jobs_path = os.path.join(_parity._SCRATCH.name, "parity-summary-jobs.json")
+    with open(jobs_path, "w", encoding="utf-8") as f:
+        json.dump(list(oracle_jobs.values()), f)
+    batch_env = dict(os.environ)
+    batch_env["NOISEMAKER_CPU_DIR"] = _parity.CPU_DIR
+    driver = os.path.join(os.path.dirname(os.path.abspath(__file__)), "parity-js-batch.mjs")
+    oracle_results = {}
+    oracle_failed = set()
+    try:
+        subprocess.run(
+            ["node", driver, jobs_path],
+            cwd=_parity.CPU_DIR,
+            check=True,
+            capture_output=True,
+            timeout=120 * max(1, len(oracle_jobs)),
+            env=batch_env,
+        )
+        for eid, job in oracle_jobs.items():
+            err_path = job["out"] + ".err"
+            if os.path.exists(err_path):
+                oracle_failed.add(eid)
+                continue
+            from noisemaker_cpu.png import decode_png
+
+            with open(job["out"], "rb") as f:
+                oracle_results[eid] = decode_png(f.read())
+    except Exception:
+        oracle_results = {}
+        for eid, job in oracle_jobs.items():
+            case = cases.get(eid)
+            try:
+                if case[0] == "effect":
+                    ext = effects[eid].get("externalTexture")
+                    input_png = _parity._ext_texture() and _parity.EXT_PNG if ext else None
+                    oracle_results[eid] = _parity.js_effect(eid, job["out"], input_png)
+                elif case[0] == "external":
+                    _, case_id, width = case
+                    oracle_results[eid] = _parity.js_effect_external(case_id, job["out"], width=width)
+                else:
+                    _, program, width = case
+                    oracle_results[eid] = _tp._js_render_dsl(program, job["out"], width=width, height=width, seed=_parity.SEED, time=_parity.TIME)
+            except Exception:
+                oracle_failed.add(eid)
+
     for eid in selected:
         case = cases.get(eid)
         if case is None:
@@ -108,17 +192,17 @@ def main() -> int:
             print(f"FAIL {eid} (no-parity-case)")
             continue
         try:
+            if eid in oracle_failed:
+                raise RuntimeError(f"oracle render failed")
+            js = oracle_results[eid]
             if case[0] == "effect":
                 kind = effects[eid]["kind"]
                 ext = effects[eid].get("externalTexture")
-                input_png = _parity._ext_texture() and _parity.EXT_PNG if ext else None
-                js = _parity.js_effect(eid, _parity.JS_PNG, input_png)
                 py = _parity.py_render(eid, kind, ext)
             elif case[0] == "external":
-                _, case_id, width = case
-                js = _parity.js_effect_external(case_id, _parity.JS_PNG, width=width)
                 from noisemaker_cpu.renderer import render_dsl
 
+                _, case_id, width = case
                 py = render_dsl(
                     _parity._external_case_dsl(case_id),
                     width=width,
@@ -128,12 +212,11 @@ def main() -> int:
                     external_inputs=_parity.external_inputs_for_case(case_id),
                 )
             else:
+                from noisemaker_cpu.renderer import render_dsl
+
                 _, program, width = case
                 if effects[eid].get("externalTexture"):
                     raise RuntimeError("external-texture effect needs an effect-path case")
-                js = _tp._js_render_dsl(program, _parity.JS_PNG, width=width, height=width, seed=_parity.SEED, time=_parity.TIME)
-                from noisemaker_cpu.renderer import render_dsl
-
                 py = render_dsl(program, width=width, height=width, seed=_parity.SEED, time=_parity.TIME)
         except Exception as e:
             fail += 1
