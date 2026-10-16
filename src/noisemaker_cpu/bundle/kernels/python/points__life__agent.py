@@ -149,7 +149,7 @@ def run_pixel(ctx, out):
                 if not (rt.binary("<=", dx, rt.i(1))):
                     break
                 checkCell = rt.binary("+", myCell, rt.construct(2, dx, dy, base="int"), 2, "int")
-                checkCell[:] = rt.binary("%", rt.binary("+", checkCell, g.GRID_SIZE, 2, "int"), g.GRID_SIZE, 2, "int")
+                (checkCell.__setitem__(0, rt.binary("%", rt.binary("+", rt.swizzle(checkCell, "x"), g.GRID_SIZE, 1, "int"), g.GRID_SIZE, 1, "int")), checkCell.__setitem__(1, rt.binary("%", rt.binary("+", rt.swizzle(checkCell, "y"), g.GRID_SIZE, 1, "int"), g.GRID_SIZE, 1, "int")), checkCell)[-1]
                 cellSeed = rt.construct(1, rt.binary("+", rt.binary("*", rt.swizzle(checkCell, "y"), g.GRID_SIZE, 1, "int"), rt.swizzle(checkCell, "x"), 1, "int"), base="uint")
                 s = rt.i(0)
                 _for2_first = True

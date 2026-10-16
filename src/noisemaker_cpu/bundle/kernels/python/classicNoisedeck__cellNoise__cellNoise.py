@@ -38,11 +38,11 @@ def run_pixel(ctx, out):
         return rt.binary("+", outMin, rt.binary("/", rt.binary("*", rt.binary("-", outMax, outMin, 1, "float"), rt.binary("-", value, inMin, 1, "float"), 1, "float"), rt.binary("-", inMax, inMin, 1, "float"), 1, "float"), 1, "float")
     def pcg__uvec3(v):
         v = rt.copy(v, "uint")
-        v[:] = rt.binary("+", rt.binary("*", v, rt.construct(1, rt.i(1664525), base="uint"), 3, "uint"), rt.construct(1, rt.i(1013904223), base="uint"), 3, "uint")
+        (v.__setitem__(0, rt.binary("+", rt.binary("*", rt.swizzle(v, "x"), rt.construct(1, rt.i(1664525), base="uint"), 1, "uint"), rt.construct(1, rt.i(1013904223), base="uint"), 1, "uint")), v.__setitem__(1, rt.binary("+", rt.binary("*", rt.swizzle(v, "y"), rt.construct(1, rt.i(1664525), base="uint"), 1, "uint"), rt.construct(1, rt.i(1013904223), base="uint"), 1, "uint")), v.__setitem__(2, rt.binary("+", rt.binary("*", rt.swizzle(v, "z"), rt.construct(1, rt.i(1664525), base="uint"), 1, "uint"), rt.construct(1, rt.i(1013904223), base="uint"), 1, "uint")), v)[-1]
         v = rt.assign_swizzle(v, "x", rt.binary("+", rt.swizzle(v, "x"), rt.binary("*", rt.swizzle(v, "y"), rt.swizzle(v, "z"), 1, "uint"), 1, "uint"))
         v = rt.assign_swizzle(v, "y", rt.binary("+", rt.swizzle(v, "y"), rt.binary("*", rt.swizzle(v, "z"), rt.swizzle(v, "x"), 1, "uint"), 1, "uint"))
         v = rt.assign_swizzle(v, "z", rt.binary("+", rt.swizzle(v, "z"), rt.binary("*", rt.swizzle(v, "x"), rt.swizzle(v, "y"), 1, "uint"), 1, "uint"))
-        v[:] = rt.binary("^", v, rt.binary(">>", v, rt.construct(1, rt.i(16), base="uint"), 3, "uint"), 3, "uint")
+        (v.__setitem__(0, rt.binary("^", rt.swizzle(v, "x"), rt.binary(">>", rt.swizzle(v, "x"), rt.construct(1, rt.i(16), base="uint"), 1, "uint"), 1, "uint")), v.__setitem__(1, rt.binary("^", rt.swizzle(v, "y"), rt.binary(">>", rt.swizzle(v, "y"), rt.construct(1, rt.i(16), base="uint"), 1, "uint"), 1, "uint")), v.__setitem__(2, rt.binary("^", rt.swizzle(v, "z"), rt.binary(">>", rt.swizzle(v, "z"), rt.construct(1, rt.i(16), base="uint"), 1, "uint"), 1, "uint")), v)[-1]
         v = rt.assign_swizzle(v, "x", rt.binary("+", rt.swizzle(v, "x"), rt.binary("*", rt.swizzle(v, "y"), rt.swizzle(v, "z"), 1, "uint"), 1, "uint"))
         v = rt.assign_swizzle(v, "y", rt.binary("+", rt.swizzle(v, "y"), rt.binary("*", rt.swizzle(v, "z"), rt.swizzle(v, "x"), 1, "uint"), 1, "uint"))
         v = rt.assign_swizzle(v, "z", rt.binary("+", rt.swizzle(v, "z"), rt.binary("*", rt.swizzle(v, "x"), rt.swizzle(v, "y"), 1, "uint"), 1, "uint"))
@@ -151,7 +151,8 @@ def run_pixel(ctx, out):
         rot = map__float_float_float_float_float(rot, rt.f(0.0), rt.f(360.0), rt.f(0.0), rt.f(2.0))
         angle = rt.binary("*", rot, rt.f(3.14159265359), 1, "float")
         st[:] = rt.binary("-", st, rt.construct(2, rt.binary("/", rt.binary("*", rt.f(0.5), rt.swizzle(_u_fullResolution, "x"), 1, "float"), rt.swizzle(_u_fullResolution, "y"), 1, "float"), rt.f(0.5)), 2, "float")
-        st[:] = rt.matrix_mult(rt.construct(4, rt.component_wise("cos", angle, width=1), rt.unary("-", rt.component_wise("sin", angle, width=1)), rt.component_wise("sin", angle, width=1), rt.component_wise("cos", angle, width=1)), st, 2)
+        cpu_matrix_assignment_0 = rt.construct(2, rt.matrix_mult(rt.construct(4, rt.component_wise("cos", angle, width=1), rt.unary("-", rt.component_wise("sin", angle, width=1)), rt.component_wise("sin", angle, width=1), rt.component_wise("cos", angle, width=1)), st, 2))
+        st[:] = cpu_matrix_assignment_0
         st[:] = rt.binary("+", st, rt.construct(2, rt.binary("/", rt.binary("*", rt.f(0.5), rt.swizzle(_u_fullResolution, "x"), 1, "float"), rt.swizzle(_u_fullResolution, "y"), 1, "float"), rt.f(0.5)), 2, "float")
         return st
     def polarShape__vec2_int(st, sides):

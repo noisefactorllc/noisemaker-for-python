@@ -26,7 +26,7 @@ def run_pixel(ctx, out):
         center = rt.construct(2, rt.f(0.5))
         uv[:] = rt.binary("-", uv, center, 2, "float")
         uv = rt.assign_swizzle(uv, "x", rt.binary("*", rt.swizzle(uv, "x"), aspect, 1, "float"))
-        uv[:] = rt.matrix_mult(rotate2D__float(rt.binary("/", rt.binary("*", rt.unary("-", angle), g.TAU, 1, "float"), rt.f(360.0), 1, "float")), uv, 2)
+        (uv.__setitem__(0, rt.swizzle(rt.matrix_mult(rotate2D__float(rt.binary("/", rt.binary("*", rt.unary("-", angle), g.TAU, 1, "float"), rt.f(360.0), 1, "float")), uv, 2), "x")), uv.__setitem__(1, rt.swizzle(rt.matrix_mult(rotate2D__float(rt.binary("/", rt.binary("*", rt.unary("-", angle), g.TAU, 1, "float"), rt.f(360.0), 1, "float")), uv, 2), "y")), uv)[-1]
         uv = rt.assign_swizzle(uv, "x", rt.binary("/", rt.swizzle(uv, "x"), aspect, 1, "float"))
         uv[:] = rt.binary("+", uv, center, 2, "float")
         if rt.binary("==", _u_wrap, rt.i(0)):

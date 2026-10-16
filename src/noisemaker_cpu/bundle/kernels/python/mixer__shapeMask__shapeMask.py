@@ -39,7 +39,7 @@ def run_pixel(ctx, out):
         p = rt.assign_swizzle(p, "x", rt.binary("-", rt.component_wise("abs", rt.swizzle(p, "x"), width=1), r, 1, "float"))
         p = rt.assign_swizzle(p, "y", rt.binary("+", rt.swizzle(p, "y"), rt.binary("/", r, k, 1, "float"), 1, "float"))
         if rt.binary(">", rt.binary("+", rt.swizzle(p, "x"), rt.binary("*", k, rt.swizzle(p, "y"), 1, "float"), 1, "float"), rt.f(0.0)):
-            p[:] = rt.binary("/", rt.construct_raw(2, rt.binary("-", rt.swizzle(p, "x"), rt.binary("*", k, rt.swizzle(p, "y"), 1, "float"), 1, "float"), rt.binary("-", rt.binary("*", rt.unary("-", k), rt.swizzle(p, "x"), 1, "float"), rt.swizzle(p, "y"), 1, "float")), rt.f(2.0), 2, 'float')
+            (p.__setitem__(0, rt.binary("/", rt.binary("-", rt.swizzle(p, "x"), rt.binary("*", k, rt.swizzle(p, "y"), 1, "float"), 1, "float"), rt.f(2.0), 1, "float")), p.__setitem__(1, rt.binary("/", rt.binary("-", rt.binary("*", rt.unary("-", k), rt.swizzle(p, "x"), 1, "float"), rt.swizzle(p, "y"), 1, "float"), rt.f(2.0), 1, "float")), p)[-1]
         p = rt.assign_swizzle(p, "x", rt.binary("-", rt.swizzle(p, "x"), rt.component_wise("clamp", rt.swizzle(p, "x"), rt.binary("*", rt.unary("-", rt.f(2.0)), r, 1, "float"), rt.f(0.0), width=1), 1, "float"))
         return rt.binary("*", rt.unary("-", rt.length(p)), rt.component_wise("sign", rt.swizzle(p, "y"), width=1), 1, "float")
     def sdfFlower__vec2_float(p, r):
@@ -59,8 +59,8 @@ def run_pixel(ctx, out):
         k1 = rt.construct(2, rt.f(0.809016994375), rt.unary("-", rt.f(0.587785252292)))
         k2 = rt.construct(2, rt.unary("-", rt.swizzle(k1, "x")), rt.swizzle(k1, "y"))
         p = rt.assign_swizzle(p, "x", rt.component_wise("abs", rt.swizzle(p, "x"), width=1))
-        p[:] = rt.binary("-", p, rt.binary("*", rt.binary("*", rt.f(2.0), rt.component_wise("max", rt.dot(k1, p), rt.f(0.0), width=1), 1, "float"), k1, 2, 'float'), 2, "float")
-        p[:] = rt.binary("-", p, rt.binary("*", rt.binary("*", rt.f(2.0), rt.component_wise("max", rt.dot(k2, p), rt.f(0.0), width=1), 1, "float"), k2, 2, 'float'), 2, "float")
+        (p.__setitem__(0, rt.binary("-", rt.swizzle(p, "x"), rt.binary("*", rt.binary("*", rt.f(2.0), rt.component_wise("max", rt.dot(k1, p), rt.f(0.0), width=1), 1, "float"), rt.swizzle(k1, "x"), 1, "float"), 1, "float")), p.__setitem__(1, rt.binary("-", rt.swizzle(p, "y"), rt.binary("*", rt.binary("*", rt.f(2.0), rt.component_wise("max", rt.dot(k1, p), rt.f(0.0), width=1), 1, "float"), rt.swizzle(k1, "y"), 1, "float"), 1, "float")), p)[-1]
+        (p.__setitem__(0, rt.binary("-", rt.swizzle(p, "x"), rt.binary("*", rt.binary("*", rt.f(2.0), rt.component_wise("max", rt.dot(k2, p), rt.f(0.0), width=1), 1, "float"), rt.swizzle(k2, "x"), 1, "float"), 1, "float")), p.__setitem__(1, rt.binary("-", rt.swizzle(p, "y"), rt.binary("*", rt.binary("*", rt.f(2.0), rt.component_wise("max", rt.dot(k2, p), rt.f(0.0), width=1), 1, "float"), rt.swizzle(k2, "y"), 1, "float"), 1, "float")), p)[-1]
         p = rt.assign_swizzle(p, "x", rt.component_wise("abs", rt.swizzle(p, "x"), width=1))
         p = rt.assign_swizzle(p, "y", rt.binary("-", rt.swizzle(p, "y"), r, 1, "float"))
         ba = rt.construct(2, rt.binary("-", rt.binary("*", rf, rt.construct_raw(2, rt.unary("-", rt.swizzle(k1, "y")), rt.swizzle(k1, "x")), 2, 'float'), rt.construct_raw(2, rt.f(0.0), rt.f(1.0)), 2, 'float'))

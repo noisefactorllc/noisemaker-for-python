@@ -22,7 +22,8 @@ def run_pixel(ctx, out):
         st = rt.assign_swizzle(st, "x", rt.binary("*", rt.swizzle(st, "x"), aspectRatio, 1, "float"))
         angle = rt.binary("*", rot, rt.f(3.14159265359), 1, "float")
         st[:] = rt.binary("-", st, rt.construct(2, rt.binary("*", rt.f(0.5), aspectRatio, 1, "float"), rt.f(0.5)), 2, "float")
-        st[:] = rt.matrix_mult(rt.construct(4, rt.component_wise("cos", angle, width=1), rt.unary("-", rt.component_wise("sin", angle, width=1)), rt.component_wise("sin", angle, width=1), rt.component_wise("cos", angle, width=1)), st, 2)
+        cpu_matrix_assignment_0 = rt.construct(2, rt.matrix_mult(rt.construct(4, rt.component_wise("cos", angle, width=1), rt.unary("-", rt.component_wise("sin", angle, width=1)), rt.component_wise("sin", angle, width=1), rt.component_wise("cos", angle, width=1)), st, 2))
+        st[:] = cpu_matrix_assignment_0
         st[:] = rt.binary("+", st, rt.construct(2, rt.binary("*", rt.f(0.5), aspectRatio, 1, "float"), rt.f(0.5)), 2, "float")
         st = rt.assign_swizzle(st, "x", rt.binary("/", rt.swizzle(st, "x"), aspectRatio, 1, "float"))
         return st

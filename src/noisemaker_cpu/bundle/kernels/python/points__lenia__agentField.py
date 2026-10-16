@@ -53,7 +53,7 @@ def run_pixel(ctx, out):
         force = rt.construct(2, rt.binary("-", gradG, gradR, 2, 'float'))
         forceMag = rt.length(force)
         if rt.binary(">", forceMag, rt.f(10.0)):
-            force[:] = rt.binary("*", rt.binary("/", force, forceMag, 2, 'float'), rt.f(10.0), 2, 'float')
+            (force.__setitem__(0, rt.binary("*", rt.binary("/", rt.swizzle(force, "x"), forceMag, 1, "float"), rt.f(10.0), 1, "float")), force.__setitem__(1, rt.binary("*", rt.binary("/", rt.swizzle(force, "y"), forceMag, 1, "float"), rt.f(10.0), 1, "float")), force)[-1]
         newPos = rt.construct(2, rt.binary("+", uv, rt.binary("*", rt.binary("*", force, _u_dt, 2, 'float'), rt.f(0.01), 2, 'float'), 2, 'float'))
         newPos[:] = rt.component_wise("fract", rt.binary("+", newPos, rt.f(1.0), 2, 'float'), width=2)
         velocity = rt.construct(2, rt.binary("*", rt.binary("*", force, _u_dt, 2, 'float'), rt.f(0.01), 2, 'float'))

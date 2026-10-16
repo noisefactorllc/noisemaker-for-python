@@ -122,7 +122,7 @@ def run_pixel(ctx, out):
                     centerWeight = rt.binary("-", centerWeight, w, 1, "float")
             centerSample = rt.swizzle(origColor, "rgb")
             if useLuma:
-                centerSample[:] = rt.construct(3, rt.dot(centerSample, g.LUMA))
+                (centerSample.__setitem__(0, rt.dot(centerSample, g.LUMA)), centerSample.__setitem__(1, rt.dot(centerSample, g.LUMA)), centerSample.__setitem__(2, rt.dot(centerSample, g.LUMA)), centerSample)[-1]
             conv[:] = rt.binary("+", conv, rt.binary("*", centerSample, centerWeight, 3, 'float'), 3, "float")
         conv[:] = rt.binary("*", conv, rt.binary("/", _u_amount, rt.f(50.0), 1, "float"), 3, "float")
         conv[:] = rt.component_wise("clamp", conv, rt.f(0.0), rt.f(1.0), width=3)
@@ -139,7 +139,7 @@ def run_pixel(ctx, out):
             mask = rt.component_wise("smoothstep", rt.binary("-", thresh, rt.f(0.01), 1, "float"), rt.binary("+", thresh, rt.f(0.01), 1, "float"), edge, width=1)
             conv[:] = rt.binary("*", conv, mask, 3, "float")
         if doInvert:
-            conv[:] = rt.binary("-", rt.f(1.0), conv, 3, 'float')
+            (conv.__setitem__(0, rt.binary("-", rt.f(1.0), rt.swizzle(conv, "x"), 1, "float")), conv.__setitem__(1, rt.binary("-", rt.f(1.0), rt.swizzle(conv, "y"), 1, "float")), conv.__setitem__(2, rt.binary("-", rt.f(1.0), rt.swizzle(conv, "z"), 1, "float")), conv)[-1]
         edgeColor = rt.construct(4, conv, rt.swizzle(origColor, "a"))
         blended = applyBlend__vec4_vec4_int(edgeColor, origColor, blendMode)
         m = rt.binary("/", _u_mixAmt, rt.f(100.0), 1, "float")

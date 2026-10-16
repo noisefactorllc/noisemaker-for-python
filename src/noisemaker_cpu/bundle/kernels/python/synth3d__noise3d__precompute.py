@@ -23,12 +23,12 @@ def run_pixel(ctx, out):
         p = rt.copy(p, "float")
         ps = rt.construct(4, rt.binary("+", p, rt.binary("*", rt.construct(1, _u_seed), rt.f(0.1), 1, "float"), 4, 'float'))
         q = rt.construct(4, rt.binary("+", rt.construct(4, rt.construct(4, rt.binary("*", ps, rt.f(1000.0), 4, 'float')), base="int"), rt.i(65536), 4, "int"), base="uint")
-        q[:] = rt.binary("+", rt.binary("*", q, rt.i(1664525), 4, "uint"), rt.i(1013904223), 4, "uint")
+        (q.__setitem__(0, rt.binary("+", rt.binary("*", rt.swizzle(q, "x"), rt.i(1664525), 1, "uint"), rt.i(1013904223), 1, "uint")), q.__setitem__(1, rt.binary("+", rt.binary("*", rt.swizzle(q, "y"), rt.i(1664525), 1, "uint"), rt.i(1013904223), 1, "uint")), q.__setitem__(2, rt.binary("+", rt.binary("*", rt.swizzle(q, "z"), rt.i(1664525), 1, "uint"), rt.i(1013904223), 1, "uint")), q.__setitem__(3, rt.binary("+", rt.binary("*", rt.swizzle(q, "w"), rt.i(1664525), 1, "uint"), rt.i(1013904223), 1, "uint")), q)[-1]
         q = rt.assign_swizzle(q, "x", rt.binary("+", rt.swizzle(q, "x"), rt.binary("*", rt.swizzle(q, "y"), rt.swizzle(q, "z"), 1, "uint"), 1, "uint"))
         q = rt.assign_swizzle(q, "y", rt.binary("+", rt.swizzle(q, "y"), rt.binary("*", rt.swizzle(q, "z"), rt.swizzle(q, "w"), 1, "uint"), 1, "uint"))
         q = rt.assign_swizzle(q, "z", rt.binary("+", rt.swizzle(q, "z"), rt.binary("*", rt.swizzle(q, "w"), rt.swizzle(q, "x"), 1, "uint"), 1, "uint"))
         q = rt.assign_swizzle(q, "w", rt.binary("+", rt.swizzle(q, "w"), rt.binary("*", rt.swizzle(q, "x"), rt.swizzle(q, "y"), 1, "uint"), 1, "uint"))
-        q[:] = rt.binary("^", q, rt.binary(">>", q, rt.i(16), 4, "uint"), 4, "uint")
+        (q.__setitem__(0, rt.binary("^", rt.swizzle(q, "x"), rt.binary(">>", rt.swizzle(q, "x"), rt.i(16), 1, "uint"), 1, "uint")), q.__setitem__(1, rt.binary("^", rt.swizzle(q, "y"), rt.binary(">>", rt.swizzle(q, "y"), rt.i(16), 1, "uint"), 1, "uint")), q.__setitem__(2, rt.binary("^", rt.swizzle(q, "z"), rt.binary(">>", rt.swizzle(q, "z"), rt.i(16), 1, "uint"), 1, "uint")), q.__setitem__(3, rt.binary("^", rt.swizzle(q, "w"), rt.binary(">>", rt.swizzle(q, "w"), rt.i(16), 1, "uint"), 1, "uint")), q)[-1]
         q = rt.assign_swizzle(q, "x", rt.binary("+", rt.swizzle(q, "x"), rt.binary("*", rt.swizzle(q, "y"), rt.swizzle(q, "z"), 1, "uint"), 1, "uint"))
         q = rt.assign_swizzle(q, "y", rt.binary("+", rt.swizzle(q, "y"), rt.binary("*", rt.swizzle(q, "z"), rt.swizzle(q, "w"), 1, "uint"), 1, "uint"))
         q = rt.assign_swizzle(q, "z", rt.binary("+", rt.swizzle(q, "z"), rt.binary("*", rt.swizzle(q, "w"), rt.swizzle(q, "x"), 1, "uint"), 1, "uint"))

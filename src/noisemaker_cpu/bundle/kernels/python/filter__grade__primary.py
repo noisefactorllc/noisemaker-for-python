@@ -121,7 +121,7 @@ def run_pixel(ctx, out):
         straight = rt.construct(3, (rt.binary("/", rt.swizzle(color, "rgb"), rt.swizzle(color, "a"), 3, 'float') if rt.binary(">", rt.swizzle(color, "a"), rt.f(0.0)) else rt.construct(3, rt.f(0.0))))
         rgb = srgbToLinear__vec3(straight)
         rgb[:] = applyWhiteBalance__vec3_float_float(rgb, _u_temperature, _u_tint)
-        rgb[:] = rt.binary("*", rgb, rt.component_wise("pow", rt.f(2.0), _u_exposure, width=1), 3, 'float')
+        (rgb.__setitem__(0, rt.binary("*", rt.swizzle(rgb, "x"), rt.component_wise("pow", rt.f(2.0), _u_exposure, width=1), 1, "float")), rgb.__setitem__(1, rt.binary("*", rt.swizzle(rgb, "y"), rt.component_wise("pow", rt.f(2.0), _u_exposure, width=1), 1, "float")), rgb.__setitem__(2, rt.binary("*", rt.swizzle(rgb, "z"), rt.component_wise("pow", rt.f(2.0), _u_exposure, width=1), 1, "float")), rgb)[-1]
         rgb[:] = applyContrast__vec3_float(rgb, _u_contrast)
         rgb[:] = applyTonalRanges__vec3_float_float_float_float(rgb, _u_highlights, _u_shadows, _u_whites, _u_blacks)
         rgb[:] = applyCurve__vec3_float_float_float(rgb, _u_curveShadows, _u_curveMidtones, _u_curveHighlights)

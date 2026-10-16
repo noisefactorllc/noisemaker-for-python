@@ -54,6 +54,25 @@ def q(s):
     return json.dumps(str(s))
 
 
+def _contains_target_read(node, name):
+    """True when the expression reads the assignment target: a bare
+    identifier, a swizzle/member read, or an indexed read of it. Only
+    self-reading compound assignments need the oracle's component-wise
+    in-place expansion; independent right sides keep the materialized
+    reduce form, whose float32 rounding points differ."""
+    if isinstance(node, dict):
+        if node.get("k") == "id" and node.get("name") == name:
+            return True
+        if node.get("k") == "member" and node.get("obj", {}).get("k") == "id" and node["obj"].get("name") == name:
+            return True
+        if node.get("k") == "index" and node.get("base", {}).get("k") == "id" and node["base"].get("name") == name:
+            return True
+        return any(_contains_target_read(value, name) for value in node.values())
+    if isinstance(node, list):
+        return any(_contains_target_read(value, name) for value in node)
+    return False
+
+
 def _contains_member_read(node, name):
     if isinstance(node, dict):
         if node.get("k") == "member" and node.get("obj", {}).get("k") == "id" and node["obj"].get("name") == name:
@@ -131,8 +150,9 @@ class Scope:
 
 
 class CodeGen:
-    def __init__(self, program, outputs, varyings, js_vector_storage=False, effect_id=""):
+    def __init__(self, program, outputs, varyings, js_vector_storage=False, effect_id="", atomic_compound=False):
         self.program = program
+        self.atomic_compound = atomic_compound
         self.outputs = outputs or ["fragColor"]
         self.varyings = set(varyings or [])
         self.root = Scope()
@@ -960,6 +980,50 @@ class CodeGen:
             return f"rt.unary('-', {self._fused_operand(node['x'], scope)})"
         return code
 
+    def _select_node(self, node, scope, index):
+        """AST for component `index` of a vector-valued expression.
+
+        Lowers selection into arithmetic trees so scalar chains stay float64.
+        Leaves that materialize stored values (identifiers, calls, swizzled
+        reads) become single-component member reads, which round through
+        float32 exactly like the oracle's pooled element reads.
+        """
+        k = node["k"]
+        if k == "construct":
+            comps = []
+            for arg in node["args"]:
+                _code, arg_t = self.expr(arg, scope)
+                width = width_of(arg_t)
+                if width == 1:
+                    comps.append(arg)
+                else:
+                    for part in range(width):
+                        comps.append({"k": "member", "obj": arg, "field": "xyzw"[part]})
+            return comps[index if index < len(comps) else -1]
+        if k == "member":
+            field = node["field"]
+            return {**node, "field": field[index % len(field)]}
+        if k == "binary":
+            _lc, lt = self.expr(node["l"], scope)
+            _rc, rt_ = self.expr(node["r"], scope)
+            if lt.get("mat") or rt_.get("mat"):
+                return {"k": "member", "obj": node, "field": "xyzw"[index]}
+            left_vec = width_of(lt) > 1
+            right_vec = width_of(rt_) > 1
+            if left_vec and right_vec:
+                # vec-op-vec compiles to a materializing vecN.op call in the
+                # oracle: the operands store through Float32Arrays before the
+                # outer op reads them (noise3d's `1 - abs(x) - abs(y)` chain).
+                return {"k": "member", "obj": node, "field": "xyzw"[index]}
+            left = node["l"] if not left_vec else self._select_node(node["l"], scope, index)
+            right = node["r"] if not right_vec else self._select_node(node["r"], scope, index)
+            return {"k": "binary", "op": node["op"], "l": left, "r": right}
+        if k == "unary":
+            _xc, xt = self.expr(node["x"], scope)
+            operand = node["x"] if width_of(xt) == 1 else self._select_node(node["x"], scope, index)
+            return {"k": "unary", "op": node["op"], "x": operand}
+        return {"k": "member", "obj": node, "field": "xyzw"[index]}
+
     def _e_assign(self, node, scope):
         op = node["op"]
         target = node["target"]
@@ -996,6 +1060,36 @@ class CodeGen:
                 ]
                 return (f"({', '.join([*assignments, tcode])})[-1]", tt)
         v_code, _v_t = self.expr(value, scope)
+        # The oracle expands vector compound assignments component by component
+        # when the right side is not a plain call: `p -= 2*max(dot(k1,p),0)*k1`
+        # emits `(p[0] -= ..., p[1] -= ..., p)` where each component re-evaluates
+        # the shared subexpression against the already-stored earlier ones
+        # (shapeMask's star SDF). Component selection lowers into the expression
+        # tree so scalar chains keep float64 precision; only stored-array reads
+        # and call results round through float32, matching the oracle's pooled
+        # element reads. Call-shaped right sides keep the reduce form: the whole
+        # right side evaluates once before any store.
+        if (
+            target["k"] == "id"
+            and "." not in tcode
+            and width_of(tt) > 1
+            and width_of(_v_t) > 1
+            and not _v_t.get("mat")
+            and value["k"] not in ("call", "cond")
+            and not self.atomic_compound
+            and _contains_target_read(value, target["name"])
+        ):
+            b = "uint" if base_of(tt) == "uint" else ("int" if base_of(tt) == "int" else "float")
+            assignments = []
+            for index in range(width_of(tt)):
+                comp_code, _comp_t = self.expr(self._select_node(value, scope, index), scope)
+                if base_op:
+                    comp_code = (
+                        f"rt.binary({q(base_op)}, rt.swizzle({tcode}, {q('xyzw'[index])}), "
+                        f"{comp_code}, 1, {q(b)})"
+                    )
+                assignments.append(f"{tcode}.__setitem__({index}, {comp_code})")
+            return (f"({', '.join([*assignments, tcode])})[-1]", tt)
         if target["k"] == "id" or target["k"] == "index":
             if base_op:
                 b = "uint" if base_of(tt) == "uint" else ("int" if base_of(tt) == "int" else "float")
@@ -1204,8 +1298,8 @@ _ROUTED = {
 _SKIP_FUNCS = {"cpu_umul", "cpu_ivec2", "cpu_ivec3", "cpu_ivec4", "cpu_uvec2", "cpu_uvec3", "cpu_uvec4", "cpu_float"}
 
 
-def emit_python(program, outputs=None, varyings=None, js_vector_storage=False, effect_id=""):
-    gen = CodeGen(program, outputs, varyings, js_vector_storage=js_vector_storage, effect_id=effect_id)
+def emit_python(program, outputs=None, varyings=None, js_vector_storage=False, effect_id="", atomic_compound=False):
+    gen = CodeGen(program, outputs, varyings, js_vector_storage=js_vector_storage, effect_id=effect_id, atomic_compound=atomic_compound)
     gen.funcs_filter = _SKIP_FUNCS
     # drop overridden helper functions before emit
     program["decls"] = [d for d in program["decls"] if not (d.get("k") == "func" and d.get("name") in _SKIP_FUNCS)]

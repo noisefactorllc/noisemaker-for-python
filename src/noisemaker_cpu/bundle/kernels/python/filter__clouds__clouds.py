@@ -34,8 +34,8 @@ def run_pixel(ctx, out):
         i[:] = mod289__vec2(i)
         p = permute__vec3(rt.construct(3, rt.binary("+", rt.construct(3, rt.binary("+", permute__vec3(rt.construct(3, rt.binary("+", rt.swizzle(i, "y"), rt.construct_raw(3, rt.f(0.0), rt.swizzle(i1, "y"), rt.f(1.0)), 3, 'float'))), rt.swizzle(i, "x"), 3, 'float')), rt.construct(3, rt.f(0.0), rt.swizzle(i1, "x"), rt.f(1.0)), 3, 'float')))
         m = rt.component_wise("max", rt.binary("-", rt.f(0.5), rt.construct_raw(3, rt.dot(x0, x0), rt.dot(rt.swizzle(x12, "xy"), rt.swizzle(x12, "xy")), rt.dot(rt.swizzle(x12, "zw"), rt.swizzle(x12, "zw"))), 3, 'float'), rt.f(0.0), width=3)
-        m[:] = rt.binary("*", m, m, 3, 'float')
-        m[:] = rt.binary("*", m, m, 3, 'float')
+        (m.__setitem__(0, rt.swizzle(rt.binary("*", m, m, 3, 'float'), "x")), m.__setitem__(1, rt.swizzle(rt.binary("*", m, m, 3, 'float'), "y")), m.__setitem__(2, rt.swizzle(rt.binary("*", m, m, 3, 'float'), "z")), m)[-1]
+        (m.__setitem__(0, rt.swizzle(rt.binary("*", m, m, 3, 'float'), "x")), m.__setitem__(1, rt.swizzle(rt.binary("*", m, m, 3, 'float'), "y")), m.__setitem__(2, rt.swizzle(rt.binary("*", m, m, 3, 'float'), "z")), m)[-1]
         x = rt.construct(3, rt.binary("-", rt.construct(3, rt.binary("*", rt.f(2.0), rt.component_wise("fract", rt.binary("*", p, rt.swizzle(C, "www"), 3, 'float'), width=3), 3, 'float')), rt.f(1.0), 3, 'float'))
         h = rt.construct(3, rt.binary("-", rt.component_wise("abs", x, width=3), rt.f(0.5), 3, 'float'))
         ox = rt.component_wise("floor", rt.binary("+", x, rt.f(0.5), 3, 'float'), width=3)

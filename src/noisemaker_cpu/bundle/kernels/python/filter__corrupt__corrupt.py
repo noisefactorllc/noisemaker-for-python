@@ -23,11 +23,11 @@ def run_pixel(ctx, out):
     g.fragColor = rt.construct(4, 0.0)
     def pcg__uvec3(v):
         v = rt.copy(v, "uint")
-        v[:] = rt.binary("+", rt.binary("*", v, rt.i(1664525), 3, "uint"), rt.i(1013904223), 3, "uint")
+        (v.__setitem__(0, rt.binary("+", rt.binary("*", rt.swizzle(v, "x"), rt.i(1664525), 1, "uint"), rt.i(1013904223), 1, "uint")), v.__setitem__(1, rt.binary("+", rt.binary("*", rt.swizzle(v, "y"), rt.i(1664525), 1, "uint"), rt.i(1013904223), 1, "uint")), v.__setitem__(2, rt.binary("+", rt.binary("*", rt.swizzle(v, "z"), rt.i(1664525), 1, "uint"), rt.i(1013904223), 1, "uint")), v)[-1]
         v = rt.assign_swizzle(v, "x", rt.binary("+", rt.swizzle(v, "x"), rt.binary("*", rt.swizzle(v, "y"), rt.swizzle(v, "z"), 1, "uint"), 1, "uint"))
         v = rt.assign_swizzle(v, "y", rt.binary("+", rt.swizzle(v, "y"), rt.binary("*", rt.swizzle(v, "z"), rt.swizzle(v, "x"), 1, "uint"), 1, "uint"))
         v = rt.assign_swizzle(v, "z", rt.binary("+", rt.swizzle(v, "z"), rt.binary("*", rt.swizzle(v, "x"), rt.swizzle(v, "y"), 1, "uint"), 1, "uint"))
-        v[:] = rt.binary("^", v, rt.binary(">>", v, rt.i(16), 3, "uint"), 3, "uint")
+        (v.__setitem__(0, rt.binary("^", rt.swizzle(v, "x"), rt.binary(">>", rt.swizzle(v, "x"), rt.i(16), 1, "uint"), 1, "uint")), v.__setitem__(1, rt.binary("^", rt.swizzle(v, "y"), rt.binary(">>", rt.swizzle(v, "y"), rt.i(16), 1, "uint"), 1, "uint")), v.__setitem__(2, rt.binary("^", rt.swizzle(v, "z"), rt.binary(">>", rt.swizzle(v, "z"), rt.i(16), 1, "uint"), 1, "uint")), v)[-1]
         v = rt.assign_swizzle(v, "x", rt.binary("+", rt.swizzle(v, "x"), rt.binary("*", rt.swizzle(v, "y"), rt.swizzle(v, "z"), 1, "uint"), 1, "uint"))
         v = rt.assign_swizzle(v, "y", rt.binary("+", rt.swizzle(v, "y"), rt.binary("*", rt.swizzle(v, "z"), rt.swizzle(v, "x"), 1, "uint"), 1, "uint"))
         v = rt.assign_swizzle(v, "z", rt.binary("+", rt.swizzle(v, "z"), rt.binary("*", rt.swizzle(v, "x"), rt.swizzle(v, "y"), 1, "uint"), 1, "uint"))
@@ -71,7 +71,7 @@ def run_pixel(ctx, out):
         uv = rt.copy(uv, "float")
         bh = lineHash__float_float(rt.binary("+", row, rt.f(400.0), 1, "float"), _rt)
         levels = rt.component_wise("mix", rt.f(256.0), rt.f(2.0), rt.binary("*", bitAmt, bitAmt, 1, "float"), width=1)
-        color[:] = rt.construct(3, rt.binary("/", rt.component_wise("floor", rt.binary("+", rt.binary("*", color, levels, 3, 'float'), rt.f(0.5), 3, 'float'), width=3), levels, 3, 'float'))
+        (color.__setitem__(0, rt.binary("/", rt.swizzle(rt.component_wise("floor", rt.binary("+", rt.binary("*", color, levels, 3, 'float'), rt.f(0.5), 3, 'float'), width=3), "x"), levels, 1, "float")), color.__setitem__(1, rt.binary("/", rt.swizzle(rt.component_wise("floor", rt.binary("+", rt.binary("*", color, levels, 3, 'float'), rt.f(0.5), 3, 'float'), width=3), "y"), levels, 1, "float")), color.__setitem__(2, rt.binary("/", rt.swizzle(rt.component_wise("floor", rt.binary("+", rt.binary("*", color, levels, 3, 'float'), rt.f(0.5), 3, 'float'), width=3), "z"), levels, 1, "float")), color)[-1]
         xorStrength = rt.f(0.0)
         px = rt.f(0.0)
         xorHash = rt.construct(3, 0.0)

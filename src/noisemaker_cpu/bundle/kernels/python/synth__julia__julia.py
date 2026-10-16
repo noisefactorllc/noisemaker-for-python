@@ -124,7 +124,8 @@ def run_pixel(ctx, out):
         angle = rt.binary("/", rt.binary("*", rt.unary("-", _u_rotation), g.TAU, 1, "float"), rt.f(360.0), 1, "float")
         cs = rt.component_wise("cos", angle, width=1)
         sn = rt.component_wise("sin", angle, width=1)
-        uv[:] = rt.matrix_mult(rt.construct(4, cs, rt.unary("-", sn), sn, cs), uv, 2)
+        cpu_matrix_assignment_0 = rt.construct(2, rt.matrix_mult(rt.construct(4, cs, rt.unary("-", sn), sn, cs), uv, 2))
+        uv[:] = cpu_matrix_assignment_0
         scale = rt.binary("/", rt.f(2.5), zm, 1, "float")
         reDF[:] = df64_add__vec2_vec2(df64_mul_f__vec2_float(df64_from__float(rt.swizzle(uv, "x")), scale), df64_from__float(_u_centerX))
         imDF[:] = df64_add__vec2_vec2(df64_mul_f__vec2_float(df64_from__float(rt.swizzle(uv, "y")), scale), df64_from__float(_u_centerY))

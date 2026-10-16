@@ -48,7 +48,7 @@ def run_pixel(ctx, out):
             perp = rt.construct(2, 0.0)
             if rt.binary(">", gradLen, rt.f(1e-05)):
                 perp = rt.construct(2, rt.binary("/", rt.construct_raw(2, rt.unary("-", rt.swizzle(grad, "y")), rt.swizzle(grad, "x")), gradLen, 2, 'float'))
-                offset[:] = rt.binary("*", rt.dot(offset, perp), perp, 2, 'float')
+                (offset.__setitem__(0, rt.binary("*", rt.dot(offset, perp), rt.swizzle(perp, "x"), 1, "float")), offset.__setitem__(1, rt.binary("*", rt.dot(offset, perp), rt.swizzle(perp, "y"), 1, "float")), offset)[-1]
         sampleUV = rt.component_wise("clamp", rt.binary("/", rt.binary("+", rt.swizzle(ctx.frag_coord, "xy"), offset, 2, 'float'), _u_resolution, 2, 'float'), rt.f(0.0), rt.f(1.0), width=2)
         src = rt.texture(_u_inputTex, uv)
         samp = rt.texture(_u_inputTex, sampleUV)

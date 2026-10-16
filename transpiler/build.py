@@ -38,6 +38,26 @@ BUNDLE = os.path.normpath(os.path.join(_HERE, "..", "src", "noisemaker_cpu", "bu
 # These canonical JS kernels materialize vector declarations in Float32Array
 # storage before later hash conversions or pigment calculations.
 _JS_VECTOR_STORAGE_KEYS = frozenset({"synth3d/noise3d:precompute", "filter/strokes:stkSmear"})
+# Effects whose canonical CPU implementation is a hand-written adapter with
+# scalar temporaries (scripts/upstream compile-glsl adapters): every vector
+# assignment there reads pre-assignment values, so compound assignments keep
+# the atomic reduce form instead of the transpiler's component-wise expansion.
+_ATOMIC_COMPOUND_KEYS = frozenset(
+    {
+        "classicNoisedeck/bitEffects:bitEffects",
+        "classicNoisedeck/fractal:fractal",
+        "filter/crt:crt",
+        "filter/historicPalette:historicPalette",
+        "filter/median:median",
+        "filter/palette:palette",
+        "filter/pixelSort:luminance",
+        "filter/reindex:nmReindexApply",
+        "filter/reindex:nmReindexStats",
+        "filter/snow:snow",
+        "synth/julia:julia",
+        "synth/remap:remap",
+    }
+)
 
 
 def _adapt_source(effect_id: str, program: str, source: str) -> str:
@@ -183,6 +203,10 @@ def _adapt_source(effect_id: str, program: str, source: str) -> str:
             "float m = smoothing == 0.0 ? (d <= radius ? 1.0 : 0.0)"
             " : smoothstep(radius, radius - smoothing, d);",
         )
+    # The sibling's adaptCanonicalSource also temps matrix self-assignments
+    # (`v = matN(...) * v;`) before the transpiler sees them, so the multiply
+    # reads the pre-assignment vector.
+    source = preserve_matrix_self_assignments(source)
     # The sibling's adaptCanonicalSource ends with preserveVectorAssignmentReads:
     # a single-line `v = vecN(...);` whose arguments swizzle-read `v` compiles
     # from a temporary, so the assignment is atomic. Multi-line constructor
@@ -196,6 +220,28 @@ _VECTOR_ASSIGNMENT = re.compile(
     r"^(\s*)([A-Za-z_]\w*)\s*=\s*((?:[biu]?vec[234])\s*\([^;\n]*\)[^;\n]*)\s*;$",
     re.M,
 )
+
+
+_MATRIX_SELF_ASSIGNMENT = re.compile(
+    r"^(\s*)([A-Za-z_]\w*)\s*=\s*(mat([234])\s*\([^;\n]*\)\s*\*\s*\2)\s*;$",
+    re.M,
+)
+
+
+def preserve_matrix_self_assignments(source: str) -> str:
+    counter = 0
+
+    def replace(match: re.Match) -> str:
+        nonlocal counter
+        indent, target, expression, width = match.groups()
+        temporary = f"cpu_matrix_assignment_{counter}"
+        counter += 1
+        return (
+            f"{indent}vec{width} {temporary} = {expression};\n"
+            f"{indent}{target} = {temporary};"
+        )
+
+    return _MATRIX_SELF_ASSIGNMENT.sub(replace, source)
 
 
 def preserve_vector_assignment_reads(source: str) -> str:
@@ -417,6 +463,7 @@ def build(ids, out_dir=BUNDLE, update_lock=False):
                         norm.get("outputs"),
                         norm.get("varyings"),
                         js_vector_storage=key in _JS_VECTOR_STORAGE_KEYS,
+                        atomic_compound=key in _ATOMIC_COMPOUND_KEYS,
                         effect_id=eid,
                     )
                 except Exception as e:

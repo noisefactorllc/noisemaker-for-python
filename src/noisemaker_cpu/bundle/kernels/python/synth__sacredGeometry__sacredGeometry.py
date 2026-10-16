@@ -46,7 +46,7 @@ def run_pixel(ctx, out):
         p = rt.copy(p, "float")
         lineWidth = rt.binary("+", rt.f(0.04), rt.binary("*", _u_thickness, rt.f(0.12), 1, "float"), 1, "float")
         circleRadius = rt.f(1.0)
-        p[:] = rt.binary("*", p, figureScale, 2, 'float')
+        (p.__setitem__(0, rt.binary("*", rt.swizzle(p, "x"), figureScale, 1, "float")), p.__setitem__(1, rt.binary("*", rt.swizzle(p, "y"), figureScale, 1, "float")), p)[-1]
         m = rt.f(0.0)
         q = rt.unary("-", rt.i(6))
         _for0_first = True
@@ -86,7 +86,7 @@ def run_pixel(ctx, out):
     def fruitMask__vec2_bool(p, drawLines):
         p = rt.copy(p, "float")
         lineWidth = rt.binary("+", rt.f(0.04), rt.binary("*", _u_thickness, rt.f(0.12), 1, "float"), 1, "float")
-        p[:] = rt.binary("*", p, rt.f(0.5), 2, 'float')
+        (p.__setitem__(0, rt.binary("*", rt.swizzle(p, "x"), rt.f(0.5), 1, "float")), p.__setitem__(1, rt.binary("*", rt.swizzle(p, "y"), rt.f(0.5), 1, "float")), p)[-1]
         centers = rt.new_array(rt.i(13), 2)
         centers[int(rt.i(0))] = rt.construct(2, rt.construct(2, rt.f(0.0), rt.f(0.0)))
         k = rt.i(0)
@@ -160,7 +160,7 @@ def run_pixel(ctx, out):
     def vesicaMask__vec2(p):
         p = rt.copy(p, "float")
         lineWidth = rt.binary("+", rt.f(0.04), rt.binary("*", _u_thickness, rt.f(0.12), 1, "float"), 1, "float")
-        p[:] = rt.binary("*", p, rt.f(0.25), 2, 'float')
+        (p.__setitem__(0, rt.binary("*", rt.swizzle(p, "x"), rt.f(0.25), 1, "float")), p.__setitem__(1, rt.binary("*", rt.swizzle(p, "y"), rt.f(0.25), 1, "float")), p)[-1]
         r = rt.f(1.5)
         sep = rt.binary("*", r, rt.f(0.5), 1, "float")
         rA = r
@@ -182,7 +182,7 @@ def run_pixel(ctx, out):
     def triquetraMask__vec2(p):
         p = rt.copy(p, "float")
         lineWidth = rt.binary("+", rt.f(0.04), rt.binary("*", _u_thickness, rt.f(0.12), 1, "float"), 1, "float")
-        p[:] = rt.binary("*", p, rt.f(0.3), 2, 'float')
+        (p.__setitem__(0, rt.binary("*", rt.swizzle(p, "x"), rt.f(0.3), 1, "float")), p.__setitem__(1, rt.binary("*", rt.swizzle(p, "y"), rt.f(0.3), 1, "float")), p)[-1]
         r = rt.f(2.25)
         dist = rt.binary("/", r, rt.f(1.7320508075688772), 1, "float")
         C0 = rt.construct(2, rt.binary("*", dist, rt.construct_raw(2, rt.component_wise("cos", rt.f(1.570796326795), width=1), rt.component_wise("sin", rt.f(1.570796326795), width=1)), 2, 'float'))
@@ -213,7 +213,7 @@ def run_pixel(ctx, out):
     def borromeanMask__vec2(p):
         p = rt.copy(p, "float")
         lineWidth = rt.binary("+", rt.f(0.04), rt.binary("*", _u_thickness, rt.f(0.12), 1, "float"), 1, "float")
-        p[:] = rt.binary("*", p, rt.f(0.32), 2, 'float')
+        (p.__setitem__(0, rt.binary("*", rt.swizzle(p, "x"), rt.f(0.32), 1, "float")), p.__setitem__(1, rt.binary("*", rt.swizzle(p, "y"), rt.f(0.32), 1, "float")), p)[-1]
         r = rt.f(1.5)
         dist = rt.f(1.4)
         m = rt.f(0.0)
@@ -239,7 +239,7 @@ def run_pixel(ctx, out):
     def starPolygonMask__vec2_int(p, n):
         p = rt.copy(p, "float")
         lineWidth = rt.binary("+", rt.f(0.04), rt.binary("*", _u_thickness, rt.f(0.12), 1, "float"), 1, "float")
-        p[:] = rt.binary("*", p, rt.f(0.32), 2, 'float')
+        (p.__setitem__(0, rt.binary("*", rt.swizzle(p, "x"), rt.f(0.32), 1, "float")), p.__setitem__(1, rt.binary("*", rt.swizzle(p, "y"), rt.f(0.32), 1, "float")), p)[-1]
         radius = rt.f(2.8)
         if rt.binary("==", _u_animation, rt.i(4)):
             radius = rt.binary("*", radius, ripplePulse__float(rt.f(0.0)), 1, "float")
@@ -268,7 +268,7 @@ def run_pixel(ctx, out):
     def main__void():
         globalCoord = rt.construct(2, rt.binary("+", rt.swizzle(ctx.frag_coord, "xy"), _u_tileOffset, 2, 'float'))
         st = rt.construct(2, rt.binary("/", globalCoord, _u_fullResolution, 2, 'float'))
-        st[:] = rt.binary("*", rt.binary("-", st, rt.f(0.5), 2, 'float'), rt.f(2.0), 2, 'float')
+        (st.__setitem__(0, rt.binary("*", rt.binary("-", rt.swizzle(st, "x"), rt.f(0.5), 1, "float"), rt.f(2.0), 1, "float")), st.__setitem__(1, rt.binary("*", rt.binary("-", rt.swizzle(st, "y"), rt.f(0.5), 1, "float"), rt.f(2.0), 1, "float")), st)[-1]
         st = rt.assign_swizzle(st, "x", rt.binary("*", rt.swizzle(st, "x"), _u_aspect, 1, "float"))
         rad = rt.binary("/", rt.binary("*", _u_rotation, rt.f(3.14159265359), 1, "float"), rt.f(180.0), 1, "float")
         st[:] = rotate2D__vec2_float(st, rad)

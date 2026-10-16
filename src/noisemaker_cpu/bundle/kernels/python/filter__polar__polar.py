@@ -37,7 +37,7 @@ def run_pixel(ctx, out):
         if _u_aspectLens:
             uv = rt.assign_swizzle(uv, "x", rt.binary("*", rt.swizzle(uv, "x"), aspect, 1, "float"))
         r2 = rt.binary("-", rt.dot(uv, uv), rt.binary("*", _u_scale, rt.f(0.01), 1, "float"), 1, "float")
-        uv[:] = rt.binary("/", uv, r2, 2, 'float')
+        (uv.__setitem__(0, rt.binary("/", rt.swizzle(uv, "x"), r2, 1, "float")), uv.__setitem__(1, rt.binary("/", rt.swizzle(uv, "y"), r2, 1, "float")), uv)[-1]
         uv = rt.assign_swizzle(uv, "x", smod__float_float(rt.binary("+", rt.swizzle(uv, "x"), rt.binary("*", _u_time, rt.unary("-", _u_rotation), 1, "float"), 1, "float"), rt.f(1.0)))
         uv = rt.assign_swizzle(uv, "y", smod__float_float(rt.binary("+", rt.swizzle(uv, "y"), rt.binary("*", _u_time, _u_speed, 1, "float"), 1, "float"), rt.f(1.0)))
         return uv

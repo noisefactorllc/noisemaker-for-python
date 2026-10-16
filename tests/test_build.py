@@ -576,7 +576,13 @@ def test_build_enables_javascript_vector_storage_for_noise3d(tmp_path, monkeypat
 
     build_module.build([effect["id"]], out_dir=tmp_path)
 
-    assert calls == [{"js_vector_storage": True, "effect_id": "synth3d/noise3d"}]
+    assert calls == [
+        {
+            "js_vector_storage": True,
+            "atomic_compound": False,
+            "effect_id": "synth3d/noise3d",
+        }
+    ]
 
 
 def test_build_failure_preserves_existing_bundle(tmp_path, monkeypatch):

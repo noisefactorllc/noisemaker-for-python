@@ -107,11 +107,11 @@ def run_pixel(ctx, out):
         return rt.binary("+", outMin, rt.binary("/", rt.binary("*", rt.binary("-", outMax, outMin, 1, "float"), rt.binary("-", value, inMin, 1, "float"), 1, "float"), rt.binary("-", inMax, inMin, 1, "float"), 1, "float"), 1, "float")
     def pcg__uvec3(v):
         v = rt.copy(v, "uint")
-        v[:] = rt.binary("+", rt.binary("*", v, rt.construct(1, rt.i(1664525), base="uint"), 3, "uint"), rt.construct(1, rt.i(1013904223), base="uint"), 3, "uint")
+        (v.__setitem__(0, rt.binary("+", rt.binary("*", rt.swizzle(v, "x"), rt.construct(1, rt.i(1664525), base="uint"), 1, "uint"), rt.construct(1, rt.i(1013904223), base="uint"), 1, "uint")), v.__setitem__(1, rt.binary("+", rt.binary("*", rt.swizzle(v, "y"), rt.construct(1, rt.i(1664525), base="uint"), 1, "uint"), rt.construct(1, rt.i(1013904223), base="uint"), 1, "uint")), v.__setitem__(2, rt.binary("+", rt.binary("*", rt.swizzle(v, "z"), rt.construct(1, rt.i(1664525), base="uint"), 1, "uint"), rt.construct(1, rt.i(1013904223), base="uint"), 1, "uint")), v)[-1]
         v = rt.assign_swizzle(v, "x", rt.binary("+", rt.swizzle(v, "x"), rt.binary("*", rt.swizzle(v, "y"), rt.swizzle(v, "z"), 1, "uint"), 1, "uint"))
         v = rt.assign_swizzle(v, "y", rt.binary("+", rt.swizzle(v, "y"), rt.binary("*", rt.swizzle(v, "z"), rt.swizzle(v, "x"), 1, "uint"), 1, "uint"))
         v = rt.assign_swizzle(v, "z", rt.binary("+", rt.swizzle(v, "z"), rt.binary("*", rt.swizzle(v, "x"), rt.swizzle(v, "y"), 1, "uint"), 1, "uint"))
-        v[:] = rt.binary("^", v, rt.binary(">>", v, rt.construct(1, rt.i(16), base="uint"), 3, "uint"), 3, "uint")
+        (v.__setitem__(0, rt.binary("^", rt.swizzle(v, "x"), rt.binary(">>", rt.swizzle(v, "x"), rt.construct(1, rt.i(16), base="uint"), 1, "uint"), 1, "uint")), v.__setitem__(1, rt.binary("^", rt.swizzle(v, "y"), rt.binary(">>", rt.swizzle(v, "y"), rt.construct(1, rt.i(16), base="uint"), 1, "uint"), 1, "uint")), v.__setitem__(2, rt.binary("^", rt.swizzle(v, "z"), rt.binary(">>", rt.swizzle(v, "z"), rt.construct(1, rt.i(16), base="uint"), 1, "uint"), 1, "uint")), v)[-1]
         v = rt.assign_swizzle(v, "x", rt.binary("+", rt.swizzle(v, "x"), rt.binary("*", rt.swizzle(v, "y"), rt.swizzle(v, "z"), 1, "uint"), 1, "uint"))
         v = rt.assign_swizzle(v, "y", rt.binary("+", rt.swizzle(v, "y"), rt.binary("*", rt.swizzle(v, "z"), rt.swizzle(v, "x"), 1, "uint"), 1, "uint"))
         v = rt.assign_swizzle(v, "z", rt.binary("+", rt.swizzle(v, "z"), rt.binary("*", rt.swizzle(v, "x"), rt.swizzle(v, "y"), 1, "uint"), 1, "uint"))
@@ -418,9 +418,9 @@ def run_pixel(ctx, out):
             if rt.binary("==", lev, rt.f(1.0)):
                 lev = rt.f(2.0)
         color[:] = rt.component_wise("clamp", color, rt.f(0.0), rt.f(0.99), width=3)
-        color[:] = rt.binary("*", color, lev, 3, 'float')
-        color[:] = rt.construct(3, rt.binary("+", rt.component_wise("floor", color, width=3), rt.f(0.5), 3, 'float'))
-        color[:] = rt.binary("/", color, lev, 3, 'float')
+        (color.__setitem__(0, rt.binary("*", rt.swizzle(color, "x"), lev, 1, "float")), color.__setitem__(1, rt.binary("*", rt.swizzle(color, "y"), lev, 1, "float")), color.__setitem__(2, rt.binary("*", rt.swizzle(color, "z"), lev, 1, "float")), color)[-1]
+        (color.__setitem__(0, rt.binary("+", rt.swizzle(rt.component_wise("floor", color, width=3), "x"), rt.f(0.5), 1, "float")), color.__setitem__(1, rt.binary("+", rt.swizzle(rt.component_wise("floor", color, width=3), "y"), rt.f(0.5), 1, "float")), color.__setitem__(2, rt.binary("+", rt.swizzle(rt.component_wise("floor", color, width=3), "z"), rt.f(0.5), 1, "float")), color)[-1]
+        (color.__setitem__(0, rt.binary("/", rt.swizzle(color, "x"), lev, 1, "float")), color.__setitem__(1, rt.binary("/", rt.swizzle(color, "y"), lev, 1, "float")), color.__setitem__(2, rt.binary("/", rt.swizzle(color, "z"), lev, 1, "float")), color)[-1]
         return color
     def pixellate__vec2_float(localUV, size):
         localUV = rt.copy(localUV, "float")

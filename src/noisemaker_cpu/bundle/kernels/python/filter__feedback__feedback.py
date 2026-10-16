@@ -137,7 +137,7 @@ def run_pixel(ctx, out):
         color = rt.copy(color, "float")
         bright = map__float_float_float_float_float(rt.binary("*", _u_intensity, rt.f(0.1), 1, "float"), rt.unary("-", rt.f(100.0)), rt.f(100.0), rt.unary("-", rt.f(0.5)), rt.f(0.5))
         cont = map__float_float_float_float_float(rt.binary("*", _u_intensity, rt.f(0.1), 1, "float"), rt.unary("-", rt.f(100.0)), rt.f(100.0), rt.f(0.5), rt.f(1.5))
-        color[:] = rt.binary("+", rt.binary("+", rt.binary("*", rt.binary("-", color, rt.f(0.5), 3, 'float'), cont, 3, 'float'), rt.f(0.5), 3, 'float'), bright, 3, 'float')
+        (color.__setitem__(0, rt.binary("+", rt.binary("+", rt.binary("*", rt.binary("-", rt.swizzle(color, "x"), rt.f(0.5), 1, "float"), cont, 1, "float"), rt.f(0.5), 1, "float"), bright, 1, "float")), color.__setitem__(1, rt.binary("+", rt.binary("+", rt.binary("*", rt.binary("-", rt.swizzle(color, "y"), rt.f(0.5), 1, "float"), cont, 1, "float"), rt.f(0.5), 1, "float"), bright, 1, "float")), color.__setitem__(2, rt.binary("+", rt.binary("+", rt.binary("*", rt.binary("-", rt.swizzle(color, "z"), rt.f(0.5), 1, "float"), cont, 1, "float"), rt.f(0.5), 1, "float"), bright, 1, "float")), color)[-1]
         return color
     def rotate2D__vec2_float(st, rot):
         st = rt.copy(st, "float")
@@ -145,7 +145,8 @@ def run_pixel(ctx, out):
         rot = map__float_float_float_float_float(rot, rt.f(0.0), rt.f(360.0), rt.f(0.0), rt.f(2.0))
         angle = rt.binary("*", rot, rt.f(3.14159265359), 1, "float")
         st[:] = rt.binary("-", st, rt.construct(2, rt.binary("*", rt.f(0.5), rt.binary("/", rt.swizzle(_u_resolution, "x"), rt.swizzle(_u_resolution, "y"), 1, "float"), 1, "float"), rt.f(0.5)), 2, "float")
-        st[:] = rt.matrix_mult(rt.construct(4, rt.component_wise("cos", angle, width=1), rt.unary("-", rt.component_wise("sin", angle, width=1)), rt.component_wise("sin", angle, width=1), rt.component_wise("cos", angle, width=1)), st, 2)
+        cpu_matrix_assignment_0 = rt.construct(2, rt.matrix_mult(rt.construct(4, rt.component_wise("cos", angle, width=1), rt.unary("-", rt.component_wise("sin", angle, width=1)), rt.component_wise("sin", angle, width=1), rt.component_wise("cos", angle, width=1)), st, 2))
+        st[:] = cpu_matrix_assignment_0
         st[:] = rt.binary("+", st, rt.construct(2, rt.binary("*", rt.f(0.5), rt.binary("/", rt.swizzle(_u_resolution, "x"), rt.swizzle(_u_resolution, "y"), 1, "float"), 1, "float"), rt.f(0.5)), 2, "float")
         st = rt.assign_swizzle(st, "x", rt.binary("/", rt.swizzle(st, "x"), rt.binary("/", rt.swizzle(_u_resolution, "x"), rt.swizzle(_u_resolution, "y"), 1, "float"), 1, "float"))
         return st
@@ -212,7 +213,7 @@ def run_pixel(ctx, out):
         else:
             distort = map__float_float_float_float_float(_u_distortion, rt.f(0.0), rt.f(100.0), rt.f(0.0), rt.f(2.0))
             zoom = map__float_float_float_float_float(_u_distortion, rt.f(0.0), rt.f(100.0), rt.f(0.0), rt.unary("-", rt.f(1.0)))
-        st[:] = rt.binary("-", rt.binary("-", st, rt.binary("*", diff, zoom, 2, 'float'), 2, 'float'), rt.binary("*", rt.binary("*", rt.binary("*", diff, centerDist, 2, 'float'), centerDist, 2, 'float'), distort, 2, 'float'), 2, 'float')
+        (st.__setitem__(0, rt.swizzle(rt.binary("-", rt.binary("-", st, rt.binary("*", diff, zoom, 2, 'float'), 2, 'float'), rt.binary("*", rt.binary("*", rt.binary("*", diff, centerDist, 2, 'float'), centerDist, 2, 'float'), distort, 2, 'float'), 2, 'float'), "x")), st.__setitem__(1, rt.swizzle(rt.binary("-", rt.binary("-", st, rt.binary("*", diff, zoom, 2, 'float'), 2, 'float'), rt.binary("*", rt.binary("*", rt.binary("*", diff, centerDist, 2, 'float'), centerDist, 2, 'float'), distort, 2, 'float'), 2, 'float'), "y")), st)[-1]
         scale = rt.binary("/", rt.f(100.0), _u_scaleAmt, 1, "float")
         if rt.binary("==", scale, rt.f(0.0)):
             scale = rt.f(1.0)

@@ -26,7 +26,8 @@ def run_pixel(ctx, out):
         angle = rt.binary("/", rt.binary("*", _u_rotation, g.PI, 1, "float"), rt.f(180.0), 1, "float")
         c = rt.component_wise("cos", angle, width=1)
         s = rt.component_wise("sin", angle, width=1)
-        st[:] = rt.matrix_mult(rt.construct(4, c, rt.unary("-", s), s, c), st, 2)
+        cpu_matrix_assignment_0 = rt.construct(2, rt.matrix_mult(rt.construct(4, c, rt.unary("-", s), s, c), st, 2))
+        st[:] = cpu_matrix_assignment_0
         maxSkew = rt.binary("/", rt.f(512.0), rt.swizzle(_u_fullResolution, "y"), 1, "float")
         effectiveSkewAmt = rt.component_wise("clamp", _u_skewAmt, rt.unary("-", maxSkew), maxSkew, width=1)
         st = rt.assign_swizzle(st, "x", rt.binary("+", rt.swizzle(st, "x"), rt.binary("*", rt.swizzle(st, "y"), rt.unary("-", effectiveSkewAmt), 1, "float"), 1, "float"))

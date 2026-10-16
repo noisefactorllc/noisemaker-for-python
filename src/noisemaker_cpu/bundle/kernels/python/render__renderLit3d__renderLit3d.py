@@ -209,7 +209,7 @@ def run_pixel(ctx, out):
         lightDir = rt.normalize(worldLightDir)
         viewDir = rt.construct(3, rt.unary("-", rd))
         if rt.binary("<", rt.dot(n, viewDir), rt.f(0.0)):
-            n[:] = rt.unary("-", n)
+            (n.__setitem__(0, rt.unary("-", rt.swizzle(n, "x"))), n.__setitem__(1, rt.unary("-", rt.swizzle(n, "y"))), n.__setitem__(2, rt.unary("-", rt.swizzle(n, "z"))), n)[-1]
         ambient = rt.construct(3, rt.binary("*", _u_ambientColor, baseColor, 3, 'float'))
         diffuseFactor = rt.component_wise("max", rt.dot(n, lightDir), rt.f(0.0), width=1)
         diffuse = rt.construct(3, rt.binary("*", rt.binary("*", rt.binary("*", _u_diffuseColor, diffuseFactor, 3, 'float'), baseColor, 3, 'float'), _u_diffuseIntensity, 3, 'float'))

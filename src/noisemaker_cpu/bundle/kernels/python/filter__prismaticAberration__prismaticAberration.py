@@ -73,7 +73,7 @@ def run_pixel(ctx, out):
         color = rt.copy(color, "float")
         sat = map__float_float_float_float_float(_u_saturation, rt.unary("-", rt.f(100.0)), rt.f(100.0), rt.unary("-", rt.f(1.0)), rt.f(1.0))
         avg = rt.binary("/", rt.binary("+", rt.binary("+", rt.swizzle(color, "r"), rt.swizzle(color, "g"), 1, "float"), rt.swizzle(color, "b"), 1, "float"), rt.f(3.0), 1, "float")
-        color[:] = rt.binary("-", color, rt.binary("*", rt.binary("-", avg, color, 3, 'float'), sat, 3, 'float'), 3, "float")
+        (color.__setitem__(0, rt.binary("-", rt.swizzle(color, "x"), rt.binary("*", rt.binary("-", avg, rt.swizzle(color, "x"), 1, "float"), sat, 1, "float"), 1, "float")), color.__setitem__(1, rt.binary("-", rt.swizzle(color, "y"), rt.binary("*", rt.binary("-", avg, rt.swizzle(color, "y"), 1, "float"), sat, 1, "float"), 1, "float")), color.__setitem__(2, rt.binary("-", rt.swizzle(color, "z"), rt.binary("*", rt.binary("-", avg, rt.swizzle(color, "z"), 1, "float"), sat, 1, "float"), 1, "float")), color)[-1]
         return color
     def main__void():
         globalCoord = rt.construct(2, rt.binary("+", rt.swizzle(ctx.frag_coord, "xy"), _u_tileOffset, 2, 'float'))

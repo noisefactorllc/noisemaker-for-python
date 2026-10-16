@@ -59,13 +59,13 @@ def run_pixel(ctx, out):
         effectiveScale = rt.f(0.0)
         if rt.binary("==", _u_symmetry, rt.i(3)):
             local = hexCoord__vec2(rt.construct(2, rt.binary("*", rt.binary("+", st, rt.construct_raw(2, _u_offsetX, _u_offsetY), 2, 'float'), rep, 2, 'float')))
-            local[:] = rt.binary("/", local, _u_scale, 2, 'float')
+            (local.__setitem__(0, rt.binary("/", rt.swizzle(local, "x"), _u_scale, 1, "float")), local.__setitem__(1, rt.binary("/", rt.swizzle(local, "y"), _u_scale, 1, "float")), local)[-1]
             st[:] = rotationalFold__vec2_int(rt.construct(2, rt.binary("+", local, rt.f(0.5), 2, 'float')), rt.i(6))
         else:
-            st[:] = rt.binary("*", st, rep, 2, 'float')
+            (st.__setitem__(0, rt.swizzle(rt.binary("*", st, rep, 2, 'float'), "x")), st.__setitem__(1, rt.swizzle(rt.binary("*", st, rep, 2, 'float'), "y")), st)[-1]
             st[:] = rt.component_wise("fract", st, width=2)
             effectiveScale = (rt.binary("*", _u_scale, rt.f(0.5), 1, "float") if rt.binary("==", _u_symmetry, rt.i(0)) else _u_scale)
-            st[:] = rt.binary("/", rt.binary("-", st, rt.f(0.5), 2, 'float'), effectiveScale, 2, 'float')
+            (st.__setitem__(0, rt.binary("/", rt.binary("-", rt.swizzle(st, "x"), rt.f(0.5), 1, "float"), effectiveScale, 1, "float")), st.__setitem__(1, rt.binary("/", rt.binary("-", rt.swizzle(st, "y"), rt.f(0.5), 1, "float"), effectiveScale, 1, "float")), st)[-1]
             st[:] = rt.binary("+", st, rt.binary("+", rt.f(0.5), rt.construct_raw(2, _u_offsetX, _u_offsetY), 2, 'float'), 2, "float")
             if rt.binary("==", _u_symmetry, rt.i(0)):
                 st = rt.assign_swizzle(st, "x", mirrorFold__float(rt.swizzle(st, "x")))

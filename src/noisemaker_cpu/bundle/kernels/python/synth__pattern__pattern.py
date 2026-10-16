@@ -133,7 +133,7 @@ def run_pixel(ctx, out):
     def main__void():
         globalCoord = rt.construct(2, rt.binary("+", rt.swizzle(ctx.frag_coord, "xy"), _u_tileOffset, 2, 'float'))
         st = rt.construct(2, rt.binary("/", globalCoord, _u_fullResolution, 2, 'float'))
-        st[:] = rt.binary("*", rt.binary("-", st, rt.f(0.5), 2, 'float'), rt.f(2.0), 2, 'float')
+        (st.__setitem__(0, rt.binary("*", rt.binary("-", rt.swizzle(st, "x"), rt.f(0.5), 1, "float"), rt.f(2.0), 1, "float")), st.__setitem__(1, rt.binary("*", rt.binary("-", rt.swizzle(st, "y"), rt.f(0.5), 1, "float"), rt.f(2.0), 1, "float")), st)[-1]
         st = rt.assign_swizzle(st, "x", rt.binary("*", rt.swizzle(st, "x"), _u_aspect, 1, "float"))
         rad = rt.binary("/", rt.binary("*", _u_rotation, rt.f(3.14159265359), 1, "float"), rt.f(180.0), 1, "float")
         st[:] = rotate2D__vec2_float(st, rad)

@@ -38,7 +38,7 @@ def run_pixel(ctx, out):
         p = rt.copy(p, "float")
         i = rt.component_wise("floor", p, width=2)
         f = rt.component_wise("fract", p, width=2)
-        f[:] = rt.binary("*", rt.binary("*", f, f, 2, 'float'), rt.binary("-", rt.f(3.0), rt.binary("*", rt.f(2.0), f, 2, 'float'), 2, 'float'), 2, 'float')
+        (f.__setitem__(0, rt.swizzle(rt.binary("*", rt.binary("*", f, f, 2, 'float'), rt.binary("-", rt.f(3.0), rt.binary("*", rt.f(2.0), f, 2, 'float'), 2, 'float'), 2, 'float'), "x")), f.__setitem__(1, rt.swizzle(rt.binary("*", rt.binary("*", f, f, 2, 'float'), rt.binary("-", rt.f(3.0), rt.binary("*", rt.f(2.0), f, 2, 'float'), 2, 'float'), 2, 'float'), "y")), f)[-1]
         n = rt.binary("+", rt.swizzle(i, "x"), rt.binary("*", rt.swizzle(i, "y"), rt.f(57.0), 1, "float"), 1, "float")
         return rt.binary("-", rt.binary("*", rt.component_wise("mix", rt.component_wise("mix", hashFloat__float(n), hashFloat__float(rt.binary("+", n, rt.f(1.0), 1, "float")), rt.swizzle(f, "x"), width=1), rt.component_wise("mix", hashFloat__float(rt.binary("+", n, rt.f(57.0), 1, "float")), hashFloat__float(rt.binary("+", n, rt.f(58.0), 1, "float")), rt.swizzle(f, "x"), width=1), rt.swizzle(f, "y"), width=1), rt.f(2.0), 1, "float"), rt.f(1.0), 1, "float")
     def wrapPosition__vec2_vec2(position, bounds):
@@ -118,7 +118,7 @@ def run_pixel(ctx, out):
                     break
                 checkCell = rt.binary("+", myCell, rt.construct(2, dx, dy, base="int"), 2, "int")
                 if rt.binary("==", _u_boundaryMode, rt.i(0)):
-                    checkCell[:] = rt.binary("%", rt.binary("+", checkCell, g.GRID_SIZE, 2, "int"), g.GRID_SIZE, 2, "int")
+                    (checkCell.__setitem__(0, rt.binary("%", rt.binary("+", rt.swizzle(checkCell, "x"), g.GRID_SIZE, 1, "int"), g.GRID_SIZE, 1, "int")), checkCell.__setitem__(1, rt.binary("%", rt.binary("+", rt.swizzle(checkCell, "y"), g.GRID_SIZE, 1, "int"), g.GRID_SIZE, 1, "int")), checkCell)[-1]
                 else:
                     checkCell[:] = rt.component_wise("clamp", checkCell, rt.construct(2, rt.i(0), base="int"), rt.construct(2, rt.binary("-", g.GRID_SIZE, rt.i(1), 1, "int"), base="int"), width=2)
                 cellSeed = rt.construct(1, rt.binary("+", rt.binary("*", rt.swizzle(checkCell, "y"), g.GRID_SIZE, 1, "int"), rt.swizzle(checkCell, "x"), 1, "int"), base="uint")

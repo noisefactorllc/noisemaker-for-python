@@ -29,7 +29,8 @@ def run_pixel(ctx, out):
         p[:] = rt.binary("-", p, c, 2, "float")
         s = rt.component_wise("sin", angle, width=1)
         co = rt.component_wise("cos", angle, width=1)
-        p[:] = rt.matrix_mult(rt.construct(4, co, rt.unary("-", s), s, co), p, 2)
+        cpu_matrix_assignment_0 = rt.construct(2, rt.matrix_mult(rt.construct(4, co, rt.unary("-", s), s, co), p, 2))
+        p[:] = cpu_matrix_assignment_0
         p[:] = rt.binary("+", p, c, 2, "float")
         p = rt.assign_swizzle(p, "x", rt.binary("/", rt.swizzle(p, "x"), aspectRatio, 1, "float"))
         return p

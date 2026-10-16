@@ -78,7 +78,7 @@ def run_pixel(ctx, out):
         st = rt.copy(st, "float")
         if rt.binary("==", _u_wrap, rt.i(0)):
             st[:] = rt.component_wise("abs", rt.construct(2, rt.binary("-", rt.component_wise("mod", st, rt.f(2.0), width=2), rt.f(1.0), 2, 'float')), width=2)
-            st[:] = rt.binary("-", rt.f(1.0), st, 2, 'float')
+            (st.__setitem__(0, rt.binary("-", rt.f(1.0), rt.swizzle(st, "x"), 1, "float")), st.__setitem__(1, rt.binary("-", rt.f(1.0), rt.swizzle(st, "y"), 1, "float")), st)[-1]
         else:
             if rt.binary("==", _u_wrap, rt.i(1)):
                 st[:] = rt.component_wise("fract", st, width=2)

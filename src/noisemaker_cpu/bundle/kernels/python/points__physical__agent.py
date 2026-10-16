@@ -30,7 +30,7 @@ def run_pixel(ctx, out):
         p = rt.copy(p, "float")
         i = rt.component_wise("floor", p, width=2)
         f = rt.component_wise("fract", p, width=2)
-        f[:] = rt.binary("*", rt.binary("*", f, f, 2, 'float'), rt.binary("-", rt.f(3.0), rt.binary("*", rt.f(2.0), f, 2, 'float'), 2, 'float'), 2, 'float')
+        (f.__setitem__(0, rt.swizzle(rt.binary("*", rt.binary("*", f, f, 2, 'float'), rt.binary("-", rt.f(3.0), rt.binary("*", rt.f(2.0), f, 2, 'float'), 2, 'float'), 2, 'float'), "x")), f.__setitem__(1, rt.swizzle(rt.binary("*", rt.binary("*", f, f, 2, 'float'), rt.binary("-", rt.f(3.0), rt.binary("*", rt.f(2.0), f, 2, 'float'), 2, 'float'), 2, 'float'), "y")), f)[-1]
         n = rt.binary("+", rt.construct(1, rt.swizzle(i, "x"), base="uint"), rt.binary("*", rt.construct(1, rt.swizzle(i, "y"), base="uint"), rt.i(57), 1, "uint"), 1, "uint")
         a = hash__uint(n)
         b = hash__uint(rt.binary("+", n, rt.i(1), 1, "uint"))
