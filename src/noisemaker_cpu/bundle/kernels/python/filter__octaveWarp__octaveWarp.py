@@ -107,7 +107,7 @@ def run_pixel(ctx, out):
             displaceScale = rt.binary("/", displaceBase, multiplier, 1, "float")
             offset = rt.construct(2, rt.binary("*", rt.binary("*", refX, displaceScale, 1, "float"), width, 1, "float"), rt.binary("*", rt.binary("*", refY, displaceScale, 1, "float"), height, 1, "float"))
             sampleCoord[:] = rt.binary("+", sampleCoord, offset, 2, "float")
-            sampleCoord[:] = rt.construct(2, wrapFloat__float_float_int(rt.swizzle(sampleCoord, "x"), width, rt.construct(1, _u_wrap, base="int")), wrapFloat__float_float_int(rt.swizzle(sampleCoord, "y"), height, rt.construct(1, _u_wrap, base="int")))
+            (sampleCoord.__setitem__(0, wrapFloat__float_float_int(rt.swizzle(sampleCoord, "x"), width, rt.construct(1, _u_wrap, base="int"))), sampleCoord.__setitem__(1, wrapFloat__float_float_int(rt.swizzle(sampleCoord, "y"), height, rt.construct(1, _u_wrap, base="int"))), sampleCoord)[-1]
         finalUV = rt.construct(2, rt.binary("/", rt.construct_raw(2, wrapFloat__float_float_int(rt.swizzle(sampleCoord, "x"), width, rt.construct(1, _u_wrap, base="int")), wrapFloat__float_float_int(rt.swizzle(sampleCoord, "y"), height, rt.construct(1, _u_wrap, base="int"))), dims, 2, 'float'))
         dx = rt.construct(2, 0.0)
         dy = rt.construct(2, 0.0)

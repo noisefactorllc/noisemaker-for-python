@@ -587,13 +587,15 @@ def run_pixel(ctx, out):
                 xRef = rt.f(0.0)
                 yRef = rt.f(0.0)
                 ref = rt.f(0.0)
+                cpu_vector_assignment_0 = rt.construct(2, 0.0)
                 if rt.binary("!=", _u_refractAmt, rt.f(0.0)):
                     xRefractFreq = rt.construct(2, rt.swizzle(baseFreq, "x"), nominalBase)
                     yRefractFreq = rt.construct(2, nominalBase, rt.swizzle(baseFreq, "y"))
                     xRef = rt.binary("-", value__vec2_vec2_float_float(st, xRefractFreq, rt.binary("+", s, rt.binary("*", rt.f(10.0), rt.construct(1, i), 1, "float"), 1, "float"), blend), rt.f(0.5), 1, "float")
                     yRef = rt.binary("-", value__vec2_vec2_float_float(st, yRefractFreq, rt.binary("+", s, rt.binary("*", rt.f(20.0), rt.construct(1, i), 1, "float"), 1, "float"), blend), rt.f(0.5), 1, "float")
                     ref = rt.binary("/", map__float_float_float_float_float(_u_refractAmt, rt.f(0.0), rt.f(100.0), rt.f(0.0), rt.f(1.0)), multiplier, 1, "float")
-                    st[:] = rt.construct(2, rt.binary("+", rt.swizzle(st, "x"), rt.binary("*", xRef, ref, 1, "float"), 1, "float"), rt.binary("+", rt.swizzle(st, "y"), rt.binary("*", yRef, ref, 1, "float"), 1, "float"))
+                    cpu_vector_assignment_0 = rt.construct(2, rt.binary("+", rt.swizzle(st, "x"), rt.binary("*", xRef, ref, 1, "float"), 1, "float"), rt.binary("+", rt.swizzle(st, "y"), rt.binary("*", yRef, ref, 1, "float"), 1, "float"))
+                    st[:] = cpu_vector_assignment_0
             layer = generate_octave__vec2_vec2_float_float_float(st, baseFreq, rt.binary("+", s, rt.binary("*", rt.f(10.0), rt.construct(1, i), 1, "float"), 1, "float"), blend, rt.construct(1, i))
             if (bool(rt.binary("==", _u_REFRACT_MODE, rt.i(0))) or bool(rt.binary("==", _u_REFRACT_MODE, rt.i(2)))):
                 xOff = rt.f(0.0)

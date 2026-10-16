@@ -99,7 +99,8 @@ def run_pixel(ctx, out):
         blue = rt.texture(_u_inputTex, blueLocalUV)
         hsv = rt.construct(3, rt.f(1.0))
         t = (_u_time if _u_modulate else rt.f(0.0))
-        color[:] = rt.binary("*", rt.construct_raw(4, rt.length(rt.binary("-", rt.construct_raw(4, rt.swizzle(red, "r"), rt.swizzle(green, "g"), rt.swizzle(blue, "b"), rt.swizzle(color, "a")), green, 4, 'float'))), green, 4, 'float')
+        cpu_vector_assignment_0 = rt.construct(4, rt.binary("*", rt.construct_raw(4, rt.length(rt.binary("-", rt.construct_raw(4, rt.swizzle(red, "r"), rt.swizzle(green, "g"), rt.swizzle(blue, "b"), rt.swizzle(color, "a")), green, 4, 'float'))), green, 4, 'float'))
+        color[:] = cpu_vector_assignment_0
         color = rt.assign_swizzle(color, "a", rt.swizzle(green, "a"))
         hsv[:] = rgb2hsv__vec3(rt.swizzle(color, "rgb"))
         hsv[int(rt.i(0))] = rt.f32(rt.component_wise("fract", rt.binary("+", rt.binary("*", rt.binary("+", rt.binary("+", hsv[int(rt.i(0))], rt.f(0.125), 1, "float"), rt.binary("-", rt.f(1.0), rt.binary("/", _u_hueRotation, rt.f(360.0), 1, "float"), 1, "float"), 1, "float"), rt.binary("+", rt.f(2.0), rt.binary("*", _u_hueRange, rt.f(0.05), 1, "float"), 1, "float"), 1, "float"), t, 1, "float"), width=1))

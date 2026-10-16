@@ -37,8 +37,10 @@ def run_pixel(ctx, out):
         k = rt.f(1.7320508075688772)
         p = rt.assign_swizzle(p, "x", rt.binary("-", rt.component_wise("abs", rt.swizzle(p, "x"), width=1), r, 1, "float"))
         p = rt.assign_swizzle(p, "y", rt.binary("+", rt.swizzle(p, "y"), rt.binary("/", r, k, 1, "float"), 1, "float"))
+        cpu_vector_assignment_0 = rt.construct(2, 0.0)
         if rt.binary(">", rt.binary("+", rt.swizzle(p, "x"), rt.binary("*", k, rt.swizzle(p, "y"), 1, "float"), 1, "float"), rt.f(0.0)):
-            p[:] = rt.binary("/", rt.construct_raw(2, rt.binary("-", rt.swizzle(p, "x"), rt.binary("*", k, rt.swizzle(p, "y"), 1, "float"), 1, "float"), rt.binary("-", rt.binary("*", rt.unary("-", k), rt.swizzle(p, "x"), 1, "float"), rt.swizzle(p, "y"), 1, "float")), rt.f(2.0), 2, 'float')
+            cpu_vector_assignment_0 = rt.construct(2, rt.binary("/", rt.construct_raw(2, rt.binary("-", rt.swizzle(p, "x"), rt.binary("*", k, rt.swizzle(p, "y"), 1, "float"), 1, "float"), rt.binary("-", rt.binary("*", rt.unary("-", k), rt.swizzle(p, "x"), 1, "float"), rt.swizzle(p, "y"), 1, "float")), rt.f(2.0), 2, 'float'))
+            p[:] = cpu_vector_assignment_0
         p = rt.assign_swizzle(p, "x", rt.binary("-", rt.swizzle(p, "x"), rt.component_wise("clamp", rt.swizzle(p, "x"), rt.binary("*", rt.unary("-", rt.f(2.0)), r, 1, "float"), rt.f(0.0), width=1), 1, "float"))
         return rt.binary("*", rt.unary("-", rt.length(p)), rt.component_wise("sign", rt.swizzle(p, "y"), width=1), 1, "float")
     def fillEdge__float(d):

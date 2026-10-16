@@ -40,8 +40,10 @@ def run_pixel(ctx, out):
         srcCoord[:] = rt.binary("+", srcCoord, center, 2, "float")
         wrappedUV = applyWrap__vec2_vec2(srcCoord, texSize)
         color = rt.texture(_u_inputTex, wrappedUV)
+        cpu_vector_assignment_0 = rt.construct(4, 0.0)
         if _u_darkest:
-            color[:] = rt.construct(4, rt.binary("-", rt.construct_raw(3, rt.f(1.0)), rt.swizzle(color, "rgb"), 3, 'float'), rt.swizzle(color, "a"))
+            cpu_vector_assignment_0 = rt.construct(4, rt.binary("-", rt.construct_raw(3, rt.f(1.0)), rt.swizzle(color, "rgb"), 3, 'float'), rt.swizzle(color, "a"))
+            color[:] = cpu_vector_assignment_0
         g.fragColor[:] = color
     main__void()
     _c = g.fragColor

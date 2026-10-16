@@ -11,6 +11,7 @@ from __future__ import annotations
 import hashlib
 import json
 import os
+import re
 import shutil
 import sys
 import tempfile
@@ -182,7 +183,40 @@ def _adapt_source(effect_id: str, program: str, source: str) -> str:
             "float m = smoothing == 0.0 ? (d <= radius ? 1.0 : 0.0)"
             " : smoothstep(radius, radius - smoothing, d);",
         )
-    return source
+    # The sibling's adaptCanonicalSource ends with preserveVectorAssignmentReads:
+    # a single-line `v = vecN(...);` whose arguments swizzle-read `v` compiles
+    # from a temporary, so the assignment is atomic. Multi-line constructor
+    # statements escape that pass and keep the glsl-transpiler's component-wise
+    # in-place expansion, where later components read the already-stored earlier
+    # ones (mandelbrot's derivative, shapeMask's hexagram SDF).
+    return preserve_vector_assignment_reads(source)
+
+
+_VECTOR_ASSIGNMENT = re.compile(
+    r"^(\s*)([A-Za-z_]\w*)\s*=\s*((?:[biu]?vec[234])\s*\([^;\n]*\)[^;\n]*)\s*;$",
+    re.M,
+)
+
+
+def preserve_vector_assignment_reads(source: str) -> str:
+    counter = 0
+
+    def replace(match: re.Match) -> str:
+        nonlocal counter
+        indent, target, expression = match.groups()
+        if not re.search(rf"\b{target}\.[xyzwrgba]", expression):
+            return match.group(0)
+        declared = re.match(r"^([biu]?vec[234])\s*\(", expression)
+        if not declared:
+            return match.group(0)
+        temporary = f"cpu_vector_assignment_{counter}"
+        counter += 1
+        return (
+            f"{indent}{declared.group(1)} {temporary} = {expression};\n"
+            f"{indent}{target} = {temporary};"
+        )
+
+    return _VECTOR_ASSIGNMENT.sub(replace, source)
 
 
 def runtime_defines(params: dict) -> dict:

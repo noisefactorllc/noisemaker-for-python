@@ -976,16 +976,17 @@ class CodeGen:
             false_assignment = f"({tcode}.__setitem__(slice(None), {false_value}), {tcode})[-1]"
             return (f"({true_value} if {condition} else {false_assignment})", tt)
         # Local vec constructors are assigned component-by-component by the JS
-        # oracle unless its alias guard sees direct target swizzles and inserts a
-        # temporary. Preserve that boundary: nsSplat relies on the sequential
-        # form, while polygon rotation relies on the guarded atomic form.
+        # oracle: `dz = vec2(f(dz), g(dz))` emits `(dz[0] = f(dz[0], dz[1]),
+        # dz[1] = g(dz[1], dz[0]), dz)`, so the later components read the
+        # already-stored earlier ones (mandelbrot's derivative, shapeMask's
+        # hexagram SDF). The temp-guarded atomic form the generator emits is a
+        # separate matrix-assignment pass, not a constructor form.
         if (
             op == "="
             and target["k"] == "id"
             and "." not in tcode
             and width_of(tt) > 1
             and value["k"] == "construct"
-            and not _contains_member_read(value, target["name"])
         ):
             components = [self.expr(arg, scope) for arg in value["args"]]
             if len(components) == width_of(tt) and all(width_of(arg_type) == 1 for _, arg_type in components):

@@ -89,7 +89,8 @@ def run_pixel(ctx, out):
                     cond2 = rt.binary("*", nCond, rt.component_wise("max", rt.component_wise("sign", rt.binary("-", rt.swizzle(res, "y"), d, 1, "float"), width=1), rt.f(0.0), width=1), 1, "float")
                     nCond2 = rt.binary("-", rt.f(1.0), cond2, 1, "float")
                     id = rt.binary("+", rt.binary("*", rt.dot(rt.binary("+", p, b, 3, 'float'), rt.construct(3, rt.f(1.0), rt.f(57.0), rt.f(113.0))), cond, 1, "float"), rt.binary("*", id, nCond, 1, "float"), 1, "float")
-                    res[:] = rt.binary("+", rt.binary("*", rt.construct_raw(2, d, rt.swizzle(res, "x")), cond, 2, 'float'), rt.binary("*", res, nCond, 2, 'float'), 2, 'float')
+                    cpu_vector_assignment_0 = rt.construct(2, rt.binary("+", rt.binary("*", rt.construct_raw(2, d, rt.swizzle(res, "x")), cond, 2, 'float'), rt.binary("*", res, nCond, 2, 'float'), 2, 'float'))
+                    res[:] = cpu_vector_assignment_0
                     res = rt.assign_swizzle(res, "y", rt.binary("+", rt.binary("*", cond2, d, 1, "float"), rt.binary("*", nCond2, rt.swizzle(res, "y"), 1, "float"), 1, "float"))
         return rt.construct(3, rt.component_wise("sqrt", res, width=2), rt.component_wise("abs", id, width=1))
     def mod289__vec3(x):

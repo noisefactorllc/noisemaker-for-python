@@ -182,7 +182,7 @@ def run_pixel(ctx, out):
                 break
             zx = df64_to_float__vec2(zr)
             zy = df64_to_float__vec2(zi)
-            dz[:] = rt.construct(2, rt.binary("+", rt.binary("*", rt.f(2.0), rt.binary("-", rt.binary("*", zx, rt.swizzle(dz, "x"), 1, "float"), rt.binary("*", zy, rt.swizzle(dz, "y"), 1, "float"), 1, "float"), 1, "float"), rt.f(1.0), 1, "float"), rt.binary("*", rt.f(2.0), rt.binary("+", rt.binary("*", zx, rt.swizzle(dz, "y"), 1, "float"), rt.binary("*", zy, rt.swizzle(dz, "x"), 1, "float"), 1, "float"), 1, "float"))
+            (dz.__setitem__(0, rt.binary("+", rt.binary("*", rt.f(2.0), rt.binary("-", rt.binary("*", zx, rt.swizzle(dz, "x"), 1, "float"), rt.binary("*", zy, rt.swizzle(dz, "y"), 1, "float"), 1, "float"), 1, "float"), rt.f(1.0), 1, "float")), dz.__setitem__(1, rt.binary("*", rt.f(2.0), rt.binary("+", rt.binary("*", zx, rt.swizzle(dz, "y"), 1, "float"), rt.binary("*", zy, rt.swizzle(dz, "x"), 1, "float"), 1, "float"), 1, "float")), dz)[-1]
             zr2 = df64_mul__vec2_vec2(zr, zr)
             zi2 = df64_mul__vec2_vec2(zi, zi)
             zri = df64_mul__vec2_vec2(zr, zi)

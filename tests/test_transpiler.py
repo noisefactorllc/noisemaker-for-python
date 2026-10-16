@@ -227,6 +227,7 @@ def test_local_vector_constructor_member_reads_are_evaluated_atomically():
     from noisemaker_cpu.kernel_loader import load_kernel
     from noisemaker_cpu.pass_runner import Ctx, run_pass
     from noisemaker_cpu.runtime import Runtime
+    from transpiler.build import preserve_vector_assignment_reads
     from transpiler.codegen import emit_python
     from transpiler.parser import parse
     from transpiler.preprocess import normalize
@@ -240,11 +241,42 @@ def test_local_vector_constructor_member_reads_are_evaluated_atomically():
         }
     """
     normalized = normalize(source, {})
-    kernel = load_kernel(emit_python(parse(normalized["source"]), normalized["outputs"], normalized["varyings"]))
+    adapted = preserve_vector_assignment_reads(normalized["source"])
+    kernel = load_kernel(emit_python(parse(adapted), normalized["outputs"], normalized["varyings"]))
 
     surface = run_pass(kernel, Ctx(Runtime()), 1, 1)
 
     assert np.array_equal(surface.data, np.array([2.0, -1.0, 0.0, 1.0], dtype=np.float32))
+
+
+def test_local_vector_constructor_multiline_member_reads_are_evaluated_in_place():
+    from noisemaker_cpu.kernel_loader import load_kernel
+    from noisemaker_cpu.pass_runner import Ctx, run_pass
+    from noisemaker_cpu.runtime import Runtime
+    from transpiler.build import preserve_vector_assignment_reads
+    from transpiler.codegen import emit_python
+    from transpiler.parser import parse
+    from transpiler.preprocess import normalize
+
+    source = """
+        out vec4 fragColor;
+        void main() {
+            vec2 p = vec2(1.0, 2.0);
+            p = vec2(
+                p.y,
+                -p.x
+            );
+            fragColor = vec4(p, 0.0, 1.0);
+        }
+    """
+    normalized = normalize(source, {})
+    adapted = preserve_vector_assignment_reads(normalized["source"])
+    assert adapted == normalized["source"], "multi-line constructor must escape the temp pass"
+    kernel = load_kernel(emit_python(parse(adapted), normalized["outputs"], normalized["varyings"]))
+
+    surface = run_pass(kernel, Ctx(Runtime()), 1, 1)
+
+    assert np.array_equal(surface.data, np.array([2.0, -2.0, 0.0, 1.0], dtype=np.float32))
 
 
 def test_indexed_vector_conditional_assignment_matches_js_true_branch_noop():

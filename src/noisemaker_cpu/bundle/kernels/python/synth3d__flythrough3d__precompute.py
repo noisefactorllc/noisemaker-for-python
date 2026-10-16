@@ -35,7 +35,8 @@ def run_pixel(ctx, out):
         pos = rt.construct(3, rt.binary("*", a, rt.component_wise("cos", t, width=1), 1, "float"), rt.binary("*", b, rt.component_wise("sin", t, width=1), 1, "float"), rt.f(0.0))
         c = rt.component_wise("cos", tilt, width=1)
         s = rt.component_wise("sin", tilt, width=1)
-        pos[:] = rt.construct(3, rt.swizzle(pos, "x"), rt.binary("-", rt.binary("*", rt.swizzle(pos, "y"), c, 1, "float"), rt.binary("*", rt.swizzle(pos, "z"), s, 1, "float"), 1, "float"), rt.binary("+", rt.binary("*", rt.swizzle(pos, "y"), s, 1, "float"), rt.binary("*", rt.swizzle(pos, "z"), c, 1, "float"), 1, "float"))
+        cpu_vector_assignment_0 = rt.construct(3, rt.swizzle(pos, "x"), rt.binary("-", rt.binary("*", rt.swizzle(pos, "y"), c, 1, "float"), rt.binary("*", rt.swizzle(pos, "z"), s, 1, "float"), 1, "float"), rt.binary("+", rt.binary("*", rt.swizzle(pos, "y"), s, 1, "float"), rt.binary("*", rt.swizzle(pos, "z"), c, 1, "float"), 1, "float"))
+        pos[:] = cpu_vector_assignment_0
         return rt.construct(3, rt.binary("*", scale, pos, 3, 'float'))
     def lissajousOrbit__float_float(t, scale):
         fx = rt.f(1.0)

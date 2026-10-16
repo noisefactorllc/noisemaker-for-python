@@ -550,7 +550,8 @@ def run_pixel(ctx, out):
         highlight = rt.binary("*", shade, shade, 1, "float")
         shade = rt.binary("*", rt.binary("-", rt.f(1.0), rt.binary("*", rt.binary("-", rt.f(1.0), rt.swizzle(color, "z"), 1, "float"), rt.binary("-", rt.f(1.0), highlight, 1, "float"), 1, "float"), 1, "float"), shade, 1, "float")
         alpha = rt.f(0.75)
-        color[:] = rt.construct(3, rt.swizzle(color, "x"), rt.swizzle(color, "y"), rt.component_wise("mix", rt.swizzle(color, "z"), shade, alpha, width=1))
+        cpu_vector_assignment_0 = rt.construct(3, rt.swizzle(color, "x"), rt.swizzle(color, "y"), rt.component_wise("mix", rt.swizzle(color, "z"), shade, alpha, width=1))
+        color[:] = cpu_vector_assignment_0
         return hsv2rgb__vec3(color)
     def convolutionKernel__vec3_vec2(color, uv):
         color = rt.copy(color, "float")
@@ -587,7 +588,8 @@ def run_pixel(ctx, out):
         st = rt.copy(st, "float")
         if rt.binary("<", sides, rt.i(2)):
             return rt.distance(st, rt.construct(2, rt.f(0.5)))
-        st[:] = rt.binary("-", rt.binary("*", rt.construct_raw(2, rt.swizzle(st, "x"), rt.binary("-", rt.f(1.0), rt.swizzle(st, "y"), 1, "float")), rt.f(2.0), 2, 'float'), rt.construct_raw(2, rt.binary("/", rt.swizzle(_u_fullResolution, "x"), rt.swizzle(_u_fullResolution, "y"), 1, "float"), rt.f(1.0)), 2, 'float')
+        cpu_vector_assignment_1 = rt.construct(2, rt.binary("-", rt.binary("*", rt.construct_raw(2, rt.swizzle(st, "x"), rt.binary("-", rt.f(1.0), rt.swizzle(st, "y"), 1, "float")), rt.f(2.0), 2, 'float'), rt.construct_raw(2, rt.binary("/", rt.swizzle(_u_fullResolution, "x"), rt.swizzle(_u_fullResolution, "y"), 1, "float"), rt.f(1.0)), 2, 'float'))
+        st[:] = cpu_vector_assignment_1
         a = rt.binary("+", rt.component_wise("atan", rt.swizzle(st, "x"), rt.swizzle(st, "y"), width=1), rt.f(3.14159265359), 1, "float")
         r = rt.binary("/", rt.f(6.28318530718), rt.construct(1, sides), 1, "float")
         return rt.binary("*", rt.binary("*", rt.component_wise("cos", rt.binary("-", rt.binary("*", rt.component_wise("floor", rt.binary("+", rt.f(0.5), rt.binary("/", a, r, 1, "float"), 1, "float"), width=1), r, 1, "float"), a, 1, "float"), width=1), rt.length(st), 1, "float"), blend, 1, "float")

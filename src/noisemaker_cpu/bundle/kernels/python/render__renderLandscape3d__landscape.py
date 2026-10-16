@@ -138,15 +138,19 @@ def run_pixel(ctx, out):
         p = rt.copy(p, "float")
         c = rt.component_wise("cos", rt.construct(3, _u_rotateX, _u_rotateY, _u_rotateZ), width=3)
         s = rt.component_wise("sin", rt.construct(3, _u_rotateX, _u_rotateY, _u_rotateZ), width=3)
-        p[:] = rt.construct(3, rt.binary("+", rt.binary("*", rt.swizzle(p, "x"), rt.swizzle(c, "z"), 1, "float"), rt.binary("*", rt.swizzle(p, "y"), rt.swizzle(s, "z"), 1, "float"), 1, "float"), rt.binary("+", rt.binary("*", rt.unary("-", rt.swizzle(p, "x")), rt.swizzle(s, "z"), 1, "float"), rt.binary("*", rt.swizzle(p, "y"), rt.swizzle(c, "z"), 1, "float"), 1, "float"), rt.swizzle(p, "z"))
-        p[:] = rt.construct(3, rt.binary("-", rt.binary("*", rt.swizzle(p, "x"), rt.swizzle(c, "y"), 1, "float"), rt.binary("*", rt.swizzle(p, "z"), rt.swizzle(s, "y"), 1, "float"), 1, "float"), rt.swizzle(p, "y"), rt.binary("+", rt.binary("*", rt.swizzle(p, "x"), rt.swizzle(s, "y"), 1, "float"), rt.binary("*", rt.swizzle(p, "z"), rt.swizzle(c, "y"), 1, "float"), 1, "float"))
+        cpu_vector_assignment_0 = rt.construct(3, rt.binary("+", rt.binary("*", rt.swizzle(p, "x"), rt.swizzle(c, "z"), 1, "float"), rt.binary("*", rt.swizzle(p, "y"), rt.swizzle(s, "z"), 1, "float"), 1, "float"), rt.binary("+", rt.binary("*", rt.unary("-", rt.swizzle(p, "x")), rt.swizzle(s, "z"), 1, "float"), rt.binary("*", rt.swizzle(p, "y"), rt.swizzle(c, "z"), 1, "float"), 1, "float"), rt.swizzle(p, "z"))
+        p[:] = cpu_vector_assignment_0
+        cpu_vector_assignment_1 = rt.construct(3, rt.binary("-", rt.binary("*", rt.swizzle(p, "x"), rt.swizzle(c, "y"), 1, "float"), rt.binary("*", rt.swizzle(p, "z"), rt.swizzle(s, "y"), 1, "float"), 1, "float"), rt.swizzle(p, "y"), rt.binary("+", rt.binary("*", rt.swizzle(p, "x"), rt.swizzle(s, "y"), 1, "float"), rt.binary("*", rt.swizzle(p, "z"), rt.swizzle(c, "y"), 1, "float"), 1, "float"))
+        p[:] = cpu_vector_assignment_1
         return rt.construct(3, rt.swizzle(p, "x"), rt.binary("+", rt.binary("*", rt.swizzle(p, "y"), rt.swizzle(c, "x"), 1, "float"), rt.binary("*", rt.swizzle(p, "z"), rt.swizzle(s, "x"), 1, "float"), 1, "float"), rt.binary("+", rt.binary("*", rt.unary("-", rt.swizzle(p, "y")), rt.swizzle(s, "x"), 1, "float"), rt.binary("*", rt.swizzle(p, "z"), rt.swizzle(c, "x"), 1, "float"), 1, "float"))
     def forwardRotation__vec3(p):
         p = rt.copy(p, "float")
         c = rt.component_wise("cos", rt.construct(3, _u_rotateX, _u_rotateY, _u_rotateZ), width=3)
         s = rt.component_wise("sin", rt.construct(3, _u_rotateX, _u_rotateY, _u_rotateZ), width=3)
-        p[:] = rt.construct(3, rt.swizzle(p, "x"), rt.binary("-", rt.binary("*", rt.swizzle(p, "y"), rt.swizzle(c, "x"), 1, "float"), rt.binary("*", rt.swizzle(p, "z"), rt.swizzle(s, "x"), 1, "float"), 1, "float"), rt.binary("+", rt.binary("*", rt.swizzle(p, "y"), rt.swizzle(s, "x"), 1, "float"), rt.binary("*", rt.swizzle(p, "z"), rt.swizzle(c, "x"), 1, "float"), 1, "float"))
-        p[:] = rt.construct(3, rt.binary("+", rt.binary("*", rt.swizzle(p, "x"), rt.swizzle(c, "y"), 1, "float"), rt.binary("*", rt.swizzle(p, "z"), rt.swizzle(s, "y"), 1, "float"), 1, "float"), rt.swizzle(p, "y"), rt.binary("+", rt.binary("*", rt.unary("-", rt.swizzle(p, "x")), rt.swizzle(s, "y"), 1, "float"), rt.binary("*", rt.swizzle(p, "z"), rt.swizzle(c, "y"), 1, "float"), 1, "float"))
+        cpu_vector_assignment_2 = rt.construct(3, rt.swizzle(p, "x"), rt.binary("-", rt.binary("*", rt.swizzle(p, "y"), rt.swizzle(c, "x"), 1, "float"), rt.binary("*", rt.swizzle(p, "z"), rt.swizzle(s, "x"), 1, "float"), 1, "float"), rt.binary("+", rt.binary("*", rt.swizzle(p, "y"), rt.swizzle(s, "x"), 1, "float"), rt.binary("*", rt.swizzle(p, "z"), rt.swizzle(c, "x"), 1, "float"), 1, "float"))
+        p[:] = cpu_vector_assignment_2
+        cpu_vector_assignment_3 = rt.construct(3, rt.binary("+", rt.binary("*", rt.swizzle(p, "x"), rt.swizzle(c, "y"), 1, "float"), rt.binary("*", rt.swizzle(p, "z"), rt.swizzle(s, "y"), 1, "float"), 1, "float"), rt.swizzle(p, "y"), rt.binary("+", rt.binary("*", rt.unary("-", rt.swizzle(p, "x")), rt.swizzle(s, "y"), 1, "float"), rt.binary("*", rt.swizzle(p, "z"), rt.swizzle(c, "y"), 1, "float"), 1, "float"))
+        p[:] = cpu_vector_assignment_3
         return rt.construct(3, rt.binary("-", rt.binary("*", rt.swizzle(p, "x"), rt.swizzle(c, "z"), 1, "float"), rt.binary("*", rt.swizzle(p, "y"), rt.swizzle(s, "z"), 1, "float"), 1, "float"), rt.binary("+", rt.binary("*", rt.swizzle(p, "x"), rt.swizzle(s, "z"), 1, "float"), rt.binary("*", rt.swizzle(p, "y"), rt.swizzle(c, "z"), 1, "float"), 1, "float"), rt.swizzle(p, "z"))
     def renderPerspective__vec2(uv):
         uv = rt.copy(uv, "float")

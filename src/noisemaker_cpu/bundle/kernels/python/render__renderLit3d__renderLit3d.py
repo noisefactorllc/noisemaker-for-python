@@ -260,12 +260,14 @@ def run_pixel(ctx, out):
         depth = rt.f(1.0)
         alpha = rt.f(1.0)
         hit = raymarch__vec3_vec3(roVol, rdVol)
+        cpu_vector_assignment_0 = rt.construct(3, 0.0)
         if hit[2]:
             if hit[3]:
                 normal[:] = calcBoundaryNormal__vec3(hit[1])
             else:
                 normal[:] = calcNormal__vec3(hit[1])
-            normal[:] = rt.construct(3, rt.binary("-", rt.binary("*", rt.swizzle(normal, "x"), c, 1, "float"), rt.binary("*", rt.swizzle(normal, "z"), s, 1, "float"), 1, "float"), rt.swizzle(normal, "y"), rt.binary("+", rt.binary("*", rt.swizzle(normal, "x"), s, 1, "float"), rt.binary("*", rt.swizzle(normal, "z"), c, 1, "float"), 1, "float"))
+            cpu_vector_assignment_0 = rt.construct(3, rt.binary("-", rt.binary("*", rt.swizzle(normal, "x"), c, 1, "float"), rt.binary("*", rt.swizzle(normal, "z"), s, 1, "float"), 1, "float"), rt.swizzle(normal, "y"), rt.binary("+", rt.binary("*", rt.swizzle(normal, "x"), s, 1, "float"), rt.binary("*", rt.swizzle(normal, "z"), c, 1, "float"), 1, "float"))
+            normal[:] = cpu_vector_assignment_0
             color[:] = shade__vec3_vec3_vec3_vec3(hit[1], normal, rd, worldLightDir)
             depth = rt.binary("/", hit[0], g.MAX_DIST, 1, "float")
         else:

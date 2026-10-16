@@ -30,10 +30,13 @@ def run_pixel(ctx, out):
         st = rt.assign_swizzle(st, "x", rt.binary("*", rt.swizzle(st, "x"), _u_aspect, 1, "float"))
         c = rt.component_wise("cos", rt.binary("/", rt.binary("*", _u_rotation, rt.f(3.14159265359), 1, "float"), rt.f(180.0), 1, "float"), width=1)
         s = rt.component_wise("sin", rt.binary("/", rt.binary("*", _u_rotation, rt.f(3.14159265359), 1, "float"), rt.f(180.0), 1, "float"), width=1)
-        st[:] = rt.construct(2, rt.binary("-", rt.binary("*", rt.swizzle(st, "x"), c, 1, "float"), rt.binary("*", rt.swizzle(st, "y"), s, 1, "float"), 1, "float"), rt.binary("+", rt.binary("*", rt.swizzle(st, "x"), s, 1, "float"), rt.binary("*", rt.swizzle(st, "y"), c, 1, "float"), 1, "float"))
+        cpu_vector_assignment_0 = rt.construct(2, rt.binary("-", rt.binary("*", rt.swizzle(st, "x"), c, 1, "float"), rt.binary("*", rt.swizzle(st, "y"), s, 1, "float"), 1, "float"), rt.binary("+", rt.binary("*", rt.swizzle(st, "x"), s, 1, "float"), rt.binary("*", rt.swizzle(st, "y"), c, 1, "float"), 1, "float"))
+        st[:] = cpu_vector_assignment_0
         sidesF = rt.construct(1, rt.component_wise("max", _u_sides, rt.i(3), width=1))
+        cpu_vector_assignment_1 = rt.construct(2, 0.0)
         if rt.binary("==", _u_sides, rt.i(3)):
-            st[:] = rt.construct(2, rt.swizzle(st, "y"), rt.unary("-", rt.swizzle(st, "x")))
+            cpu_vector_assignment_1 = rt.construct(2, rt.swizzle(st, "y"), rt.unary("-", rt.swizzle(st, "x")))
+            st[:] = cpu_vector_assignment_1
         d = rt.binary("/", polygon__vec2_float(st, sidesF), rt.component_wise("cos", rt.binary("/", rt.f(3.14159265359), sidesF, 1, "float"), width=1), 1, "float")
         m = ((rt.f(1.0) if rt.binary("<=", d, _u_radius) else rt.f(0.0)) if rt.binary("==", _u_smoothing, rt.f(0.0)) else rt.component_wise("smoothstep", _u_radius, rt.binary("-", _u_radius, _u_smoothing, 1, "float"), d, width=1))
         fgMask = rt.binary("*", m, _u_fgAlpha, 1, "float")

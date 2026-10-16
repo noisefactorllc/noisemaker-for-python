@@ -189,7 +189,8 @@ def run_pixel(ctx, out):
         dirRad = rt.binary("/", rt.binary("*", _u_direction, g.TAU, 1, "float"), rt.f(360.0), 1, "float")
         dc = rt.component_wise("cos", dirRad, width=1)
         ds = rt.component_wise("sin", dirRad, width=1)
-        offset[:] = rt.construct(2, rt.binary("-", rt.binary("*", rt.swizzle(offset, "x"), dc, 1, "float"), rt.binary("*", rt.swizzle(offset, "y"), ds, 1, "float"), 1, "float"), rt.binary("+", rt.binary("*", rt.swizzle(offset, "x"), ds, 1, "float"), rt.binary("*", rt.swizzle(offset, "y"), dc, 1, "float"), 1, "float"))
+        cpu_vector_assignment_0 = rt.construct(2, rt.binary("-", rt.binary("*", rt.swizzle(offset, "x"), dc, 1, "float"), rt.binary("*", rt.swizzle(offset, "y"), ds, 1, "float"), 1, "float"), rt.binary("+", rt.binary("*", rt.swizzle(offset, "x"), ds, 1, "float"), rt.binary("*", rt.swizzle(offset, "y"), dc, 1, "float"), 1, "float"))
+        offset[:] = cpu_vector_assignment_0
         sample_pos = rt.construct(2, rt.binary("+", base_pos, offset, 2, 'float'))
         sampled = sample_bilinear__vec2_float_float(sample_pos, rt.swizzle(_u_resolution, "x"), rt.swizzle(_u_resolution, "y"))
         if rt.binary("==", channel, rt.i(0)):

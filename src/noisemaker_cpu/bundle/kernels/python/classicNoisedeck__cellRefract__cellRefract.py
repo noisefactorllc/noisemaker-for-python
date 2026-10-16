@@ -261,7 +261,8 @@ def run_pixel(ctx, out):
         highlight = rt.binary("*", shade, shade, 1, "float")
         shade = rt.binary("*", rt.binary("-", rt.f(1.0), rt.binary("*", rt.binary("-", rt.f(1.0), rt.swizzle(color, "z"), 1, "float"), rt.binary("-", rt.f(1.0), highlight, 1, "float"), 1, "float"), 1, "float"), shade, 1, "float")
         alpha = rt.f(0.75)
-        color[:] = rt.construct(3, rt.swizzle(color, "x"), rt.swizzle(color, "y"), rt.component_wise("mix", rt.swizzle(color, "z"), shade, alpha, width=1))
+        cpu_vector_assignment_0 = rt.construct(3, rt.swizzle(color, "x"), rt.swizzle(color, "y"), rt.component_wise("mix", rt.swizzle(color, "z"), shade, alpha, width=1))
+        color[:] = cpu_vector_assignment_0
         return hsv2rgb__vec3(color)
     def outline__vec3_vec2(color, localUV):
         color = rt.copy(color, "float")

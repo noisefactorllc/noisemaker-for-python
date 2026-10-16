@@ -44,14 +44,20 @@ def run_pixel(ctx, out):
         sortedColor = rt.texture(_u_inputTex, wrappedUV)
         working_source = rt.copy_decl(originalColor, "float")
         working_sorted = rt.copy_decl(sortedColor, "float")
+        cpu_vector_assignment_0 = rt.construct(4, 0.0)
+        cpu_vector_assignment_1 = rt.construct(4, 0.0)
         if _u_darkest:
-            working_source[:] = rt.construct(4, rt.binary("-", rt.construct_raw(3, rt.f(1.0)), rt.swizzle(working_source, "rgb"), 3, 'float'), rt.swizzle(working_source, "a"))
-            working_sorted[:] = rt.construct(4, rt.binary("-", rt.construct_raw(3, rt.f(1.0)), rt.swizzle(working_sorted, "rgb"), 3, 'float'), rt.swizzle(working_sorted, "a"))
+            cpu_vector_assignment_0 = rt.construct(4, rt.binary("-", rt.construct_raw(3, rt.f(1.0)), rt.swizzle(working_source, "rgb"), 3, 'float'), rt.swizzle(working_source, "a"))
+            working_source[:] = cpu_vector_assignment_0
+            cpu_vector_assignment_1 = rt.construct(4, rt.binary("-", rt.construct_raw(3, rt.f(1.0)), rt.swizzle(working_sorted, "rgb"), 3, 'float'), rt.swizzle(working_sorted, "a"))
+            working_sorted[:] = cpu_vector_assignment_1
         blended = rt.component_wise("max", rt.binary("*", working_source, _u_alpha, 4, 'float'), working_sorted, width=4)
         blended[:] = rt.component_wise("clamp", blended, rt.f(0.0), rt.f(1.0), width=4)
         blended = rt.assign_swizzle(blended, "a", rt.swizzle(working_source, "a"))
+        cpu_vector_assignment_2 = rt.construct(4, 0.0)
         if _u_darkest:
-            blended[:] = rt.construct(4, rt.binary("-", rt.construct_raw(3, rt.f(1.0)), rt.swizzle(blended, "rgb"), 3, 'float'), rt.swizzle(originalColor, "a"))
+            cpu_vector_assignment_2 = rt.construct(4, rt.binary("-", rt.construct_raw(3, rt.f(1.0)), rt.swizzle(blended, "rgb"), 3, 'float'), rt.swizzle(originalColor, "a"))
+            blended[:] = cpu_vector_assignment_2
         else:
             blended = rt.assign_swizzle(blended, "a", rt.swizzle(originalColor, "a"))
         g.fragColor[:] = blended
