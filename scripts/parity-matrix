@@ -23,10 +23,13 @@ Binding rules
   nearest valid interior value instead (the type rules below).
 - Resource parameters take no variants: `surface`/`volume`/`geometry` params
   are inputs the harness binds (default solid / external texture).
-  synth/remap's per-zone parameters (zone0_count .. zone7_v31) are excluded
-  as well: the port's pinned CDN bundle does not carry them, so
-  no published port interface can bind them. `iterationCount`, `stateSize`,
-  and `volumeSize` are resource sizing controls and take no variants.
+  Every other parameter is bindable on both engines, including synth/remap's
+  per-zone parameters (zone0_count .. zone7_v31): the sweep takes a
+  parameter's documented bounds from either catalog, so a parameter the
+  port's bundle metadata omits still binds through the oracle's record
+  (both engines thread it as a uniform and render identically).
+  `iterationCount`, `stateSize`, and `volumeSize` are resource sizing
+  controls and take no variants.
 - `seed` params take no variants: both engines thread the render seed into an
   unbound `seed` param explicitly (bin/noisemaker-cpu.js `withSeed`,
   renderer.py's seed-param threading), and the shared DSL programs bind
@@ -142,8 +145,8 @@ def oracle_param_records() -> dict:
 
 def _matrix_values(pname: str, spec: dict, ospec: dict) -> list:
     """The (label, value) bindings one parameter contributes to the matrix."""
-    ptype = spec.get("type")
-    otype = ospec.get("type") or ptype
+    otype = ospec.get("type")
+    ptype = spec.get("type") or otype
     if pname in _RESOURCE_NAMES or ptype in _RESOURCE_TYPES:
         return []
     lo, hi = spec.get("min"), spec.get("max")
@@ -197,6 +200,8 @@ def _matrix_values(pname: str, spec: dict, ospec: dict) -> list:
         return [("min", "#000000"), ("max", "#ffffff")]
     if ptype == "vec3":
         return [("min", [1, 0, 0]), ("max", [0, 0, 1])]
+    if ptype == "vec4":
+        return [("min", [0, 0, 0, 0]), ("max", [1, 1, 1, 1])]
     if ptype == "vec2":
         return [("min", [8, 8]), ("max", [64, 64])]
     if ptype == "mat3":
@@ -204,11 +209,14 @@ def _matrix_values(pname: str, spec: dict, ospec: dict) -> list:
     if ptype == "string":
         lo_v, hi_v = _STRING_INTERIORS.get(pname, ("Noisemaker", "parity"))
         return [("min", lo_v), ("max", hi_v)]
+    dflt = spec.get("default")
+    if dflt is None:
+        dflt = ospec.get("default")
     if ptype in ("int", "enum", "member", "palette"):
-        base = int(spec.get("default") or 0)
+        base = int(dflt or 0)
         return [("min", 0), ("max", base + 1)]
     if ptype == "float":
-        base = float(spec.get("default") or 0.0)
+        base = float(dflt or 0.0)
         step = max(1.0, abs(base) * 0.5)
         return [("min", base - step), ("max", base + step)]
     return []
@@ -393,7 +401,13 @@ def build_matrix(effects: dict, cases: dict, records: dict, only=None):
         case = cases.get(eid)
         ospecs = records.get(eid, {})
         variants = []
-        for pname, ps in spec["params"].items():
+        # Bindable parameters come from BOTH catalogs: a parameter the port's
+        # bundle metadata omits but the oracle's record documents still binds
+        # (both engines thread it as a uniform), so the union leaves no
+        # documented non-resource parameter unmeasured.
+        names = list(spec["params"]) + [p for p in ospecs if p not in spec["params"]]
+        for pname in names:
+            ps = spec["params"].get(pname, {})
             for label, value in _matrix_values(pname, ps, ospecs.get(pname, {})):
                 variants.append((pname, label, value))
         if case is None:
@@ -492,22 +506,30 @@ def _oracle_cache_key(entry: dict) -> str:
     itself. The cache directory binds the pinned oracle head.
     """
     if entry["kind"] == "effect":
-        basis = {"kind": "effect", "eid": entry["eid"], "params": entry["params"]}
+        basis = {"kind": "effect", "eid": entry["eid"], "params": entry["params"], "width": entry.get("width")}
     elif entry["kind"] == "missing":
         basis = {"kind": "missing"}
     else:
-        basis = {"kind": entry["kind"], "program": _spliced_program(entry)}
+        basis = {"kind": entry["kind"], "program": _spliced_program(entry), "width": entry.get("width")}
     blob = json.dumps(basis, sort_keys=True, default=str)
     return hashlib.sha1(blob.encode("utf-8")).hexdigest()[:16]
 
 
-def _load_oracle_cache(path: str):
-    """Decode a cached oracle PNG. None means re-render."""
+def _load_oracle_cache(path: str, width: int | None = None):
+    """Decode a cached oracle PNG. None means re-render.
+
+    A cached surface must match the case's render size: a wrong-size hit
+    (a key that moved, a migrated render) would fail every comparison with
+    a shape mismatch, so a size mismatch re-renders instead.
+    """
     try:
         with open(path, "rb") as f:
-            return _parity.decode_png(f.read())
+            surface = _parity.decode_png(f.read())
     except Exception:
         return None
+    if width is not None and getattr(surface, "width", None) != width:
+        return None
+    return surface
 
 
 # The port render depends on the whole port engine, not only the case
@@ -734,6 +756,15 @@ def main() -> int:
 
     effects = _parity._meta()["effects"]
     cases = _ps._build_cases(effects)
+    # The matrix renders at the required 8x8. A summary-only width override
+    # (filter/glyphMap at 64, where its flipped-row divergence shows) does
+    # not apply here; the matrix's width stays SIZE for that case. Volume
+    # cases keep their own grid size.
+    for eid in getattr(_ps._tp, "WIDE_IMAGE_CHAINS", {}):
+        base = eid.split(":")[0]
+        if base in cases and cases[base][2] != SIZE:
+            kind, program, _w = cases[base]
+            cases[base] = (kind, program, SIZE)
     records = oracle_param_records()
     all_matrix = build_matrix(effects, cases, records, only)
     matrix = all_matrix
@@ -793,7 +824,7 @@ def main() -> int:
         if cache_dir is not None:
             safe = re.sub(r"[^\w.-]", "_", entry["case"])
             cache_path = os.path.join(cache_dir, f"{safe}-{_oracle_cache_key(entry)}.png")
-            cached = _load_oracle_cache(cache_path)
+            cached = _load_oracle_cache(cache_path, entry.get("width", SIZE))
             if cached is not None:
                 return entry["case"], cached, None
         try:

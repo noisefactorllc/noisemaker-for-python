@@ -36,6 +36,36 @@ def test_build_matrix_excludes_resource_sizing_variants():
     assert [item["case"] for item in matrix] == ["test/effect#alpha@min", "test/effect#alpha@max"]
 
 
+def test_oracle_record_binds_parameters_the_port_metadata_omits():
+    # synth/remap's per-zone parameters live only in the oracle's records:
+    # the union still binds them (both engines thread the uniform), while
+    # surface-typed zone inputs stay excluded as resources.
+    effects = {"synth/remap": {"params": {
+        "zoneCount": {"type": "int", "min": 0, "max": 8},
+    }}}
+    records = {"synth/remap": {
+        "zone0_count": {"type": "int", "default": 0, "min": 0, "max": 64},
+        "zone0_alpha": {"type": "float", "default": 1, "min": 0, "max": 1},
+        "zone0_bounds": {"type": "vec4", "default": [0, 0, 1, 1]},
+        "zone0_tex": {"type": "surface"},
+    }}
+    cases = {"synth/remap": ("effect", None, 8)}
+    matrix = _pmx.build_matrix(effects, cases, records)
+    got = [item["case"] for item in matrix]
+    assert "synth/remap#zone0_count@min" in got and "synth/remap#zone0_count@max" in got
+    assert "synth/remap#zone0_alpha@min" in got and "synth/remap#zone0_alpha@max" in got
+    assert "synth/remap#zone0_bounds@min" in got
+    assert not [c for c in got if c.startswith("synth/remap#zone0_tex")]
+
+
+def test_oracle_only_undocumented_types_bind_interiors():
+    assert _values("zone0_v0", {}, {"type": "vec4", "default": [0, 0, 0, 0]}) == [
+        ("min", [0, 0, 0, 0]),
+        ("max", [1, 1, 1, 1]),
+    ]
+    assert _values("zone_count", {}, {"type": "int", "default": 5}) == [("min", 0), ("max", 6)]
+
+
 def test_documented_min_max_bind_the_documented_bounds():
     spec = {"type": "float", "default": 0, "min": -1, "max": 1}
     assert _values("blacks", spec) == [("min", -1), ("max", 1)]
@@ -64,6 +94,9 @@ def test_oracle_cache_key_binds_the_case_definition():
     assert _pmx._oracle_cache_key(_cache_entry()) == _pmx._oracle_cache_key(_cache_entry())
     assert _pmx._oracle_cache_key(_cache_entry()) != _pmx._oracle_cache_key(_cache_entry(params={"mode": 3}))
     assert _pmx._oracle_cache_key(_cache_entry()) != _pmx._oracle_cache_key(_cache_entry(eid="synth/other"))
+    # The render width is part of the oracle inputs: a summary width override
+    # (filter/glyphMap at 64) must never hit an 8x8 oracle render's key.
+    assert _pmx._oracle_cache_key(_cache_entry()) != _pmx._oracle_cache_key(_cache_entry(width=64))
     # The case-id label alone never moves the key: identical oracle inputs
     # (same effect id, same bindings) are the same oracle render.
     assert _pmx._oracle_cache_key(_cache_entry()) == _pmx._oracle_cache_key(_cache_entry(case="renamed#mode@max"))

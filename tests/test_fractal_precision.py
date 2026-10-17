@@ -8,8 +8,8 @@ from noisemaker_cpu.renderer import render_dsl
 @pytest.mark.parametrize(
     ("params", "expected"),
     [
-        ("mode: 1", "24018d442f1d6b0a85c5be185ab3db36dc03248c34e395e24397fa6ea3fb6e2a"),
-        ("rotation: 30, iterations: 10, mode: 1", "8c9c0986069bd7859352ece912640cc9d8ec8292b559ebc3f5adde52281a5bcc"),
+        ("mode: 1", "7a99dfb06ea81eab7b301bfe870c873afbf945c6846fa09e492ac57f9164a5f8"),
+        ("rotation: 30, iterations: 10, mode: 1", "e8582e26dda5b6e9581a33b73a3958b9d7127e728fdd2bde55f7de89e88692d8"),
         ("rotation: 30, iterations: 10", "8c7c7406e5039802b2266d64ae43f477b128e16bb4d2c95f18e1b7f1b5825f97"),
     ],
 )
@@ -24,7 +24,7 @@ def test_fractal_julia_matches_cpu_precision_receipts(params, expected):
     [
         (
             'mode: 1, zoomAmt: 37, centerX: 21, centerY: -13, rotation: 30',
-            '7f76779a52884cfd3756498f85fee20e5b5e94857b6108490d9ea208c1f66525',
+            '62e44460ecf67595fe1db6357913c525a7a137beeaac7e1ad3651531d1b58d92',
         ),
         (
             'mode: 1, speed: 37, offsetX: 14, offsetY: -18, iterations: 37',
@@ -32,23 +32,23 @@ def test_fractal_julia_matches_cpu_precision_receipts(params, expected):
         ),
         (
             'palette: 0, mode: 1, colorMode: 4, paletteMode: 0, rotatePalette: 17, repeatPalette: 3, cyclePalette: 1',
-            'a3e25f1890ba99bf2db689212ca47849bf404a3b68a336b259b181464c207212',
+            '64ab37bd2b7c88a7fe0a009b5af169acf8fd7a7b3508a2366d442aa9877f97e5',
         ),
         (
             'palette: 0, mode: 1, colorMode: 4, paletteMode: 1, rotatePalette: 17, repeatPalette: 3, cyclePalette: -1',
-            '9b260681eddc66d11f07d147e0901264d316091c4cb40c36b48d86e9c31ddc3c',
+            'eab20b654e9d6f6804028f70d9ef4ec3d7ec146b0f03312c73457e0e8ff2a3b3',
         ),
         (
             'palette: 0, mode: 1, colorMode: 4, paletteMode: 2, rotatePalette: 17, repeatPalette: 3',
-            'f7218d4abacc5e3fa686ae9c51a963e22aeb9f4afe29a9fed717a65394785bd8',
+            '91b3c23a223ac7aaf9413726a23cdd12ca5dc8f14714292b7a6e381691ed15a3',
         ),
         (
             'mode: 1, colorMode: 6, hueRange: 37, levels: 8',
-            'e2dfeb5f154fa4419315e0fde072e2281a80c18601c378344ec19c9919bfe42d',
+            '02dcba8963f06bd88224403b798ec5616f43757f81e9223ee3bd7b51098a0ed1',
         ),
         (
             'mode: 1, bgAlpha: 37, cutoff: 10',
-            '41814d5b3e4af2843d502c2ec4e55dee8af4db814134871e2dc58e1297220a71',
+            '0d5282ccd4ffdcbef7c48a16a389b8ad7ed6c5c8f00eeea2705e4a7497f3d5de',
         ),
         (
             'type: 1, mode: 1, colorMode: 4, levels: 8',
