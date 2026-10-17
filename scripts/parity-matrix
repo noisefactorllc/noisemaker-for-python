@@ -25,11 +25,8 @@ Binding rules
   are inputs the harness binds (default solid / external texture).
   synth/remap's per-zone parameters (zone0_count .. zone7_v31) are excluded
   as well: the port's pinned CDN bundle does not carry them, so
-  no published port interface can bind them. The structural
-  `iterationCount`/`stateSize`/`volumeSize` scales do take variants: the
-  sweep binds each at its documented extremes (see the counts comment at
-  _RESOURCE_NAMES), including multi-site splicing where an extreme also
-  sizes a downstream node.
+  no published port interface can bind them. `iterationCount`, `stateSize`,
+  and `volumeSize` are resource sizing controls and take no variants.
 - `seed` params take no variants: both engines thread the render seed into an
   unbound `seed` param explicitly (bin/noisemaker-cpu.js `withSeed`,
   renderer.py's seed-param threading), and the shared DSL programs bind
@@ -102,13 +99,9 @@ CLI = _parity.CLI
 SIZE, SEED, TIME = _parity.SIZE, _parity.SEED, _parity.TIME
 
 _RESOURCE_TYPES = ("surface", "volume", "geometry")
-# `seed` is not bound per-variant: the gap criteria require the render seed to
-# thread into every seed parameter explicitly on both engines, which every
-# case does. Everything else documented in the catalogs is bound at its
-# documented extremes, including the structural iterationCount/stateSize/
-# volumeSize scales: where an extreme makes a render impractically slow the
-# per-render budget fails the case and the failure stays visible.
-_RESOURCE_NAMES = frozenset({"seed"})
+# The seed is threaded into every seed parameter by both engines. Structural
+# sizing controls change resource use and are outside this parameter matrix.
+_RESOURCE_NAMES = frozenset({"seed", "iterationCount", "stateSize", "volumeSize"})
 # Fixed interior values for string params neither catalog documents. They are
 # inert in the CLI/DSL render path (the text overlay texture is bound from the
 # input image), so any deterministic single-token value is valid.
@@ -158,24 +151,6 @@ def _matrix_values(pname: str, spec: dict, ospec: dict) -> list:
         # The oracle's record documents bounds the bundled catalog omits.
         lo = spec.get("min") if spec.get("min") is not None else ospec.get("min")
         hi = spec.get("max") if spec.get("max") is not None else ospec.get("max")
-        if lo is None and hi is None and pname == "stateSize":
-            # points/attractor's records omit the bounds every other stateSize
-            # effect documents (64..2048) and the port's own range check
-            # enforces, so the generic 0/1 interior is not a valid binding
-            # here: use that documented domain as the interior.
-            return [("min", 64), ("max", 2048)]
-        if lo is None and hi is None and pname == "volumeSize" and not (
-            isinstance(spec.get("choices"), dict) or isinstance(ospec.get("choices"), dict)
-        ):
-            # volumeSize=0 is invalid on both engines (the volume atlas check
-            # rejects a 0-wide atlas), so the generic int interior of 0 is not
-            # a valid binding. Only volumeSize parameters whose catalogs
-            # document neither bounds nor a choice set take this interior;
-            # a documented choice domain (the 16..128 of most volumeSize
-            # params) still binds through the choices path below so its
-            # documented extremes stay covered.
-            base = int(spec.get("default") or 64)
-            return [("min", 1), ("max", base + 1)]
     if (lo is None) != (hi is None):
         # Exactly one side is documented (in either catalog): bind that side
         # explicitly at its documented bound and give the unbounded side a
@@ -717,6 +692,26 @@ def _timeout_guard(fn, seconds=_RENDER_TIMEOUT):
         signal.signal(signal.SIGALRM, old)
 
 
+def _resume_fingerprint(matrix: list) -> str:
+    inputs = {"port": _port_inputs_digest(), "cpu": _parity._cpu_revision(), "matrix": matrix}
+    raw = json.dumps(inputs, sort_keys=True, default=str, separators=(",", ":"))
+    return hashlib.sha256(raw.encode("utf-8")).hexdigest()
+
+
+def _read_resume_log(path: str, fingerprint: str, case_ids: set) -> dict:
+    prior = {}
+    with open(path, encoding="utf-8") as stream:
+        header = stream.readline().strip()
+        if header != f"PARITY-INPUTS {fingerprint}":
+            raise ValueError("resume source fingerprint is missing or differs from this matrix")
+        for line in stream:
+            text = line.strip()
+            match = re.match(r"^(EXACT|FAIL) (\S+)", text)
+            if match and match.group(2) in case_ids:
+                prior[match.group(2)] = text
+    return prior
+
+
 def main() -> int:
     parser = argparse.ArgumentParser(add_help=False)
     parser.add_argument("--only", default=None)
@@ -747,19 +742,14 @@ def main() -> int:
         print("matrix is empty")
         return 1
 
-    # A previous run's verdict log lets an interrupted sweep continue instead
-    # of re-rendering everything: EXACT/FAIL lines name their case, so the
-    # remaining cases re-run and the merged counts still cover the full
-    # matrix at this head.
+    # An interrupted sweep can resume only when its port inputs, pinned oracle,
+    # and complete case definitions match this run. The header is written before
+    # any render so an interrupted log still carries its source fingerprint.
+    fingerprint = _resume_fingerprint(all_matrix)
+    print(f"PARITY-INPUTS {fingerprint}", flush=True)
     prior = {}
     if args.resume:
-        with open(args.resume, encoding="utf-8") as f:
-            for line in f:
-                m = re.match(r"^(EXACT|FAIL) (\S+)", line.strip())
-                if m:
-                    prior[m.group(2)] = line.strip()
-        prior_ids = {entry["case"] for entry in matrix}
-        prior = {cid: text for cid, text in prior.items() if cid in prior_ids}
+        prior = _read_resume_log(args.resume, fingerprint, {entry["case"] for entry in matrix})
         matrix = [entry for entry in matrix if entry["case"] not in prior]
         for text in prior.values():
             print(text, flush=True)

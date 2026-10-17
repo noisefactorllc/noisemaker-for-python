@@ -42,41 +42,125 @@ def _max_diff(a: Surface, b: Surface) -> int:
     return int(np.max(np.abs(da - db)))
 
 
-def test_solid_parity(tmp_path):
-    js = _js_render(
-        ["effect", "synth/solid", "--width", "16", "--height", "16", "--param", "color=#4080c0"],
-        str(tmp_path / "js.png"),
+def _simulation_chain(func, zoom):
+    """The simulation-effect chain shared by the iterated and non-divisible
+    cases: ridged noise input, the simulation at iterationCount 2, zoom set
+    per case."""
+    return (
+        "search synth\n"
+        "noise(seed: 1, ridges: true).write(o0)\n"
+        f"{func}(seed: 1, tex: read(o0), iterationCount: 2, zoom: {zoom}).write(o1)\n"
+        "render(o1)\n"
     )
+
+
+def _invert_program(mode):
+    # Oracle is the DSL `solid(#4080c0).invert(mode:N)` — the `effect` CLI would
+    # instead invert a default gray, so it can't validate a known input.
+    return f"search synth, filter\nsolid(color: #4080c0).invert(mode: {mode}).write(o0)\nrender(o0)\n"
+
+
+_SPOOKY_PROGRAM = "search synth, filter\nperlin(seed: 0).spookyTicker(seed: 1).write(o0)\nrender(o0)\n"
+
+_COALESCE_HUE_AB_PROGRAM = (
+    "search synth, classicNoisedeck\n"
+    "solid(color: #ff2200).write(o0)\n"
+    "solid(color: #00ccff).coalesce(tex: read(o0), blendMode: hueAB).write(o1)\n"
+    "render(o1)\n"
+)
+
+
+def _oracle_batch_jobs():
+    """Every oracle render this module needs, as one manifest for
+    scripts/parity-js-batch.mjs: a single node process renders all of them, so
+    the suite pays CLI startup once instead of once per test. Seed/time/width
+    mirror exactly what each test's CLI invocation passed (the CLI's own
+    defaults are seed 1, time 0)."""
+    jobs = []
+
+    def add(key, **job):
+        job["id"] = key
+        jobs.append(job)
+
+    add("synth/solid", params=["color=#4080c0"], width=16, seed=1, time=0)
+    for effect_id in ("classicNoisedeck/noise3d", "classicNoisedeck/shapes3d"):
+        add(effect_id, width=8, seed=1, time=0.25)
+    for effect_id, program in ITERATED_PROGRAMS.items():
+        add(effect_id, program=program, width=8, seed=1, time=0.25)
+    for effect_id, (program, width) in WIDE_IMAGE_CHAINS.items():
+        add(f"{effect_id}-{width}", program=program, width=width, seed=1, time=0.25)
+    for effect_id, program in POINTS_PROGRAMS.items():
+        for size in (32, 64):
+            add(f"{effect_id}-{size}", program=program, width=size, seed=1, time=0.25)
+    for case_id, program, width, height in VOLUME_DSL_CASES:
+        add(case_id, program=program, width=width, height=height, seed=1, time=0.25)
+    for func in ("cellularAutomata", "mnca", "navierStokes", "reactionDiffusion"):
+        add(f"{func}-non-divisible", program=_simulation_chain(func, 32), width=65, height=63, seed=1, time=0.25)
+    for mode in (0, 1):
+        add(f"jsinv{mode}", program=_invert_program(mode), width=16, seed=1, time=0)
+    add("coalesce-hue-ab", program=_COALESCE_HUE_AB_PROGRAM, width=16, seed=1, time=0)
+    for name, program in RUN_PROGRAMS.items():
+        add(name, program=program, width=16, seed=1, time=0)
+    for name, program in WARP_FIXED_PROGRAMS.items():
+        add(name, program=program, width=16, seed=1, time=0)
+    for size in SPOOKY_TICKER_SIZES:
+        add(f"spooky-{size}", program=_SPOOKY_PROGRAM, width=size, seed=1, time=0.25)
+    for effect_id in ("filter/mosaicTiles", "filter/stipple", "filter/strokes"):
+        add(effect_id, width=8, seed=1, time=0.25)
+    return jobs
+
+
+@pytest.fixture(scope="session")
+def oracle_batch(tmp_path_factory):
+    """Run the whole oracle manifest through scripts/parity-js-batch.mjs in one
+    node process, then hand each test its decoded oracle surface. A job the
+    oracle fails to render fails that test with the oracle's message, so an
+    oracle-side failure stays visible; a batch-process crash errors the whole
+    module instead of passing anything silently."""
+    jobs = _oracle_batch_jobs()
+    out_dir = tmp_path_factory.mktemp("oracle-batch")
+    manifest = []
+    for job in jobs:
+        entry = dict(job)
+        entry["out"] = str(out_dir / (entry["id"].replace("/", "__").replace(":", "_") + ".png"))
+        manifest.append(entry)
+    manifest_path = out_dir / "jobs.json"
+    manifest_path.write_text(json.dumps(manifest))
+    driver = Path(__file__).resolve().parent.parent / "scripts" / "parity-js-batch.mjs"
+    subprocess.run(
+        ["node", str(driver), str(manifest_path)],
+        cwd=str(Path(__file__).resolve().parent.parent),
+        check=True,
+        capture_output=True,
+        text=True,
+    )
+    surfaces = {}
+
+    def render(key):
+        out = out_dir / (key.replace("/", "__").replace(":", "_") + ".png")
+        err = Path(str(out) + ".err")
+        if err.exists():
+            pytest.fail(f"oracle batch render failed for {key}: {err.read_text().strip()}", pytrace=False)
+        assert out.is_file(), f"oracle batch wrote neither PNG nor error for {key}"
+        if key not in surfaces:
+            surfaces[key] = decode_png(out.read_bytes())
+        return surfaces[key]
+
+    return render
+
+
+def test_solid_parity(oracle_batch):
+    js = oracle_batch("synth/solid")
     py = render_effect("synth/solid", {"color": "#4080c0"}, width=16, height=16)
     assert _max_diff(js, py) <= 2
 
 
 @pytest.mark.parametrize("effect_id", ["classicNoisedeck/noise3d", "classicNoisedeck/shapes3d"])
-def test_new_classic_image_effect_parity(tmp_path, effect_id):
-    js = _js_render(
-        ["effect", effect_id, "--width", "8", "--height", "8", "--seed", "1", "--time", "0.25"],
-        str(tmp_path / f"{effect_id.replace('/', '__').replace(':', '_')}.png"),
-    )
+def test_new_classic_image_effect_parity(oracle_batch, effect_id):
+    js = oracle_batch(effect_id)
     py = render_effect(effect_id, width=8, height=8, seed=1, time=0.25)
 
     assert _max_diff(js, py) <= 2
-
-
-def _js_render_dsl(program, out, width=16, height=16, seed=None, time=None) -> Surface:
-    args = ["node", CLI, "render", "-", "--width", str(width), "--height", str(height), "--output", out]
-    if seed is not None:
-        args += ["--seed", str(seed)]
-    if time is not None:
-        args += ["--time", str(time)]
-    subprocess.run(
-        args,
-        cwd=CPU_DIR,
-        input=program.encode(),
-        check=True,
-        capture_output=True,
-    )
-    with open(out, "rb") as f:
-        return decode_png(f.read())
 
 
 ITERATED_PROGRAMS = {
@@ -160,12 +244,7 @@ ITERATED_PROGRAMS = {
         "render(o0)\n"
     ),
     **{
-        f"synth/{func}": (
-            "search synth\n"
-            "noise(seed: 1, ridges: true).write(o0)\n"
-            f"{func}(seed: 1, tex: read(o0), iterationCount: 2, zoom: 2).write(o1)\n"
-            "render(o1)\n"
-        )
+        f"synth/{func}": _simulation_chain(func, 2)
         for func in ("cellularAutomata", "mnca", "navierStokes", "reactionDiffusion")
     },
     # flipMirror's summary case renders the effect over a default solid input,
@@ -201,15 +280,8 @@ WIDE_IMAGE_CHAINS = {
 
 
 @pytest.mark.parametrize(("effect_id", "program"), ITERATED_PROGRAMS.items(), ids=ITERATED_PROGRAMS)
-def test_iterated_effect_byte_parity(tmp_path, effect_id, program):
-    js = _js_render_dsl(
-        program,
-        str(tmp_path / f"{effect_id.replace('/', '__').replace(':', '_')}.png"),
-        width=8,
-        height=8,
-        seed=1,
-        time=0.25,
-    )
+def test_iterated_effect_byte_parity(oracle_batch, effect_id, program):
+    js = oracle_batch(effect_id)
     py = render_dsl(program, width=8, height=8, seed=1, time=0.25)
 
     assert _max_diff(js, py) == 0
@@ -218,16 +290,9 @@ def test_iterated_effect_byte_parity(tmp_path, effect_id, program):
 @pytest.mark.parametrize(
     ("effect_id", "row"), WIDE_IMAGE_CHAINS.items(), ids=WIDE_IMAGE_CHAINS
 )
-def test_wide_image_chain_byte_parity(tmp_path, effect_id, row):
+def test_wide_image_chain_byte_parity(oracle_batch, effect_id, row):
     program, width = row
-    js = _js_render_dsl(
-        program,
-        str(tmp_path / f"{effect_id.replace('/', '__')}-{width}.png"),
-        width=width,
-        height=width,
-        seed=1,
-        time=0.25,
-    )
+    js = oracle_batch(f"{effect_id}-{width}")
     py = render_dsl(program, width=width, height=width, seed=1, time=0.25)
 
     assert _max_diff(js, py) == 0
@@ -243,15 +308,8 @@ POINTS_PROGRAMS = {eid: program for eid, program in ITERATED_PROGRAMS.items() if
 @pytest.mark.slow
 @pytest.mark.parametrize("size", [32, 64])
 @pytest.mark.parametrize(("effect_id", "program"), POINTS_PROGRAMS.items(), ids=POINTS_PROGRAMS)
-def test_points_effect_byte_parity_at_larger_sizes(tmp_path, effect_id, program, size):
-    js = _js_render_dsl(
-        program,
-        str(tmp_path / f"{effect_id.replace('/', '__').replace(':', '_')}-{size}.png"),
-        width=size,
-        height=size,
-        seed=1,
-        time=0.25,
-    )
+def test_points_effect_byte_parity_at_larger_sizes(oracle_batch, effect_id, program, size):
+    js = oracle_batch(f"{effect_id}-{size}")
     py = render_dsl(program, width=size, height=size, seed=1, time=0.25)
 
     assert _max_diff(js, py) == 0
@@ -301,63 +359,34 @@ VOLUME_DSL_CASES = [
 
 
 @pytest.mark.parametrize(("case_id", "program", "width", "height"), VOLUME_DSL_CASES, ids=[c[0] for c in VOLUME_DSL_CASES])
-def test_volume_and_loop_dsl_byte_parity(tmp_path, case_id, program, width, height):
-    js = _js_render_dsl(
-        program,
-        str(tmp_path / f"{case_id.replace('/', '__').replace(':', '_')}.png"),
-        width=width,
-        height=height,
-        seed=1,
-        time=0.25,
-    )
+def test_volume_and_loop_dsl_byte_parity(oracle_batch, case_id, program, width, height):
+    js = oracle_batch(case_id)
     py = render_dsl(program, width=width, height=height, seed=1, time=0.25)
 
     assert _max_diff(js, py) == 0
 
 
 @pytest.mark.parametrize("func", ("cellularAutomata", "mnca", "navierStokes", "reactionDiffusion"))
-def test_simulation_effect_non_divisible_byte_parity(tmp_path, func):
-    program = (
-        "search synth\n"
-        "noise(seed: 1, ridges: true).write(o0)\n"
-        f"{func}(seed: 1, tex: read(o0), iterationCount: 2, zoom: 32).write(o1)\n"
-        "render(o1)\n"
-    )
+def test_simulation_effect_non_divisible_byte_parity(oracle_batch, func):
+    program = _simulation_chain(func, 32)
 
-    js = _js_render_dsl(
-        program,
-        str(tmp_path / f"{func}-non-divisible.png"),
-        width=65,
-        height=63,
-        seed=1,
-        time=0.25,
-    )
+    js = oracle_batch(f"{func}-non-divisible")
     py = render_dsl(program, width=65, height=63, seed=1, time=0.25)
 
     assert _max_diff(js, py) == 0
 
 
 @pytest.mark.parametrize("mode", [0, 1])
-def test_invert_parity(tmp_path, mode):
-    # Oracle is the DSL `solid(#4080c0).invert(mode:N)` — the `effect` CLI would
-    # instead invert a default gray, so it can't validate a known input.
-    program = f"search synth, filter\nsolid(color: #4080c0).invert(mode: {mode}).write(o0)\nrender(o0)\n"
-    js = _js_render_dsl(program, str(tmp_path / f"jsinv{mode}.png"))
+def test_invert_parity(oracle_batch, mode):
+    js = oracle_batch(f"jsinv{mode}")
     src = render_effect("synth/solid", {"color": "#4080c0"}, width=16, height=16)
     py = render_effect("filter/invert", {"mode": mode}, {"inputTex": src}, width=16, height=16)
     assert _max_diff(js, py) <= 2
 
 
-def test_coalesce_hue_ab_byte_parity(tmp_path):
-    program = (
-        "search synth, classicNoisedeck\n"
-        "solid(color: #ff2200).write(o0)\n"
-        "solid(color: #00ccff).coalesce(tex: read(o0), blendMode: hueAB).write(o1)\n"
-        "render(o1)\n"
-    )
-
-    js = _js_render_dsl(program, str(tmp_path / "coalesce-hue-ab.png"))
-    py = render_dsl(program, width=16, height=16)
+def test_coalesce_hue_ab_byte_parity(oracle_batch):
+    js = oracle_batch("coalesce-hue-ab")
+    py = render_dsl(_COALESCE_HUE_AB_PROGRAM, width=16, height=16)
 
     assert _max_diff(js, py) == 0
 
@@ -408,9 +437,9 @@ RUN_PROGRAMS = {
 
 
 @pytest.mark.parametrize("name", list(RUN_PROGRAMS))
-def test_run_dsl_parity(tmp_path, name):
+def test_run_dsl_parity(oracle_batch, name):
     program = RUN_PROGRAMS[name]
-    js = _js_render_dsl(program, str(tmp_path / f"{name}.png"))
+    js = oracle_batch(name)
     py = render_dsl(program, width=16, height=16)
     assert _max_diff(js, py) <= 2
 
@@ -447,9 +476,9 @@ WARP_FIXED_PROGRAMS = {
 
 
 @pytest.mark.parametrize("name", list(WARP_FIXED_PROGRAMS))
-def test_run_dsl_warp_parity(tmp_path, name):
+def test_run_dsl_warp_parity(oracle_batch, name):
     program = WARP_FIXED_PROGRAMS[name]
-    js = _js_render_dsl(program, str(tmp_path / f"{name}.png"))
+    js = oracle_batch(name)
     py = render_dsl(program, width=16, height=16)
     assert _max_diff(js, py) <= 2
 
@@ -582,11 +611,8 @@ def test_wormhole_kernel_is_byte_exact(tmp_path):
 
 
 @pytest.mark.parametrize("effect_id", ["filter/mosaicTiles", "filter/stipple", "filter/strokes"])
-def test_canonical_hash_filters_are_byte_exact(tmp_path, effect_id):
-    js = _js_render(
-        ["effect", effect_id, "--width", "8", "--height", "8", "--seed", "1", "--time", "0.25"],
-        str(tmp_path / "reference.png"),
-    )
+def test_canonical_hash_filters_are_byte_exact(oracle_batch, effect_id):
+    js = oracle_batch(effect_id)
     source = render_effect("synth/solid", width=8, height=8, seed=1, time=0.25)
     py = render_effect(effect_id, inputs={"inputTex": source}, width=8, height=8, seed=1, time=0.25)
     assert _max_diff(js, py) == 0
@@ -605,10 +631,9 @@ SPOOKY_TICKER_SIZES = (32, 64)
 
 @pytest.mark.slow
 @pytest.mark.parametrize("size", SPOOKY_TICKER_SIZES)
-def test_spooky_ticker_overlay_is_byte_exact_at_larger_sizes(tmp_path, size):
-    program = "search synth, filter\nperlin(seed: 0).spookyTicker(seed: 1).write(o0)\nrender(o0)\n"
-    js = _js_render_dsl(program, str(tmp_path / f"spooky-{size}.png"), width=size, height=size, seed=1, time=0.25)
-    py = render_dsl(program, width=size, height=size, seed=1, time=0.25)
+def test_spooky_ticker_overlay_is_byte_exact_at_larger_sizes(oracle_batch, size):
+    js = oracle_batch(f"spooky-{size}")
+    py = render_dsl(_SPOOKY_PROGRAM, width=size, height=size, seed=1, time=0.25)
     assert _max_diff(js, py) == 0
 
 

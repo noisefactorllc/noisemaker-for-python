@@ -65,9 +65,9 @@ for (const job of jobs) {
     const externalTextures = {}
     const renderOptions = {
       width: job.width || WIDTH,
-      height: job.width || WIDTH,
-      time: TIME,
-      seed: SEED,
+      height: job.height || job.width || WIDTH,
+      time: job.time ?? TIME,
+      seed: job.seed ?? SEED,
     }
     if (job.program !== undefined) {
       // Raw DSL program (the port's declared chain case): render it directly,

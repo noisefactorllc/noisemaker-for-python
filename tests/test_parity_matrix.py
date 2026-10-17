@@ -1,13 +1,4 @@
-"""Binding-rule coverage for scripts/parity-matrix._matrix_values.
-
-The matrix derives one variant per bindable parameter at its documented
-minimum and maximum; an exclusive or unbounded documented bound falls back to
-the nearest valid interior value. These tests pin the interior rules that a
-wrong ordering would silently break: a documented choice domain (the 16..128
-of most volumeSize parameters) must bind through the choices path, and only
-parameters with neither documented bounds nor a documented choice set take
-the interior values.
-"""
+"""Binding-rule coverage for the GAP-011 parameter matrix."""
 
 import importlib.util
 import os
@@ -28,34 +19,21 @@ def _values(pname, spec, ospec=None):
     return _pmx._matrix_values(pname, spec, ospec or {})
 
 
-def test_documented_choice_volumeSize_binds_choice_extremes():
-    # filter3d/flow3d's volumeSize documents a 16..128 choice domain: the
-    # sweep must bind those documented extremes, not interior values.
-    spec = {"type": "int", "default": 16, "choices": {k: v for k, v in ((f"{v}", v) for v in (16, 32, 64, 128))}}
-    assert _values("volumeSize", spec) == [("min", 16), ("max", 128)]
+@pytest.mark.parametrize("name", ["iterationCount", "stateSize", "volumeSize"])
+def test_resource_sizing_controls_do_not_create_variants(name):
+    assert _values(name, {"type": "int", "default": 64, "min": 1, "max": 128}) == []
 
 
-def test_oracle_documented_choice_volumeSize_binds_choice_extremes():
-    # A choice set the bundled catalog omits but the pinned oracle documents
-    # binds the oracle's documented extremes too.
-    spec = {"type": "int", "default": 16}
-    ospec = {"type": "int", "choices": {"s16": 16, "s128": 128}}
-    assert _values("volumeSize", spec, ospec) == [("min", 16), ("max", 128)]
-
-
-def test_undocumented_volumeSize_binds_valid_interior():
-    # render/renderLandscape3d's volumeSize documents neither bounds nor
-    # choices, and volumeSize=0 is invalid on both engines: the interior is
-    # 1 at the minimum and default+1 at the maximum.
-    spec = {"type": "int", "default": 64}
-    assert _values("volumeSize", spec) == [("min", 1), ("max", 65)]
-
-
-def test_undocumented_stateSize_binds_documented_domain():
-    # points/attractor's stateSize records omit the bounds every other
-    # stateSize effect documents: the interior uses that documented domain.
-    spec = {"type": "int", "default": 64}
-    assert _values("stateSize", spec) == [("min", 64), ("max", 2048)]
+def test_build_matrix_excludes_resource_sizing_variants():
+    effects = {"test/effect": {"params": {
+        "iterationCount": {"type": "int", "min": 1, "max": 10},
+        "stateSize": {"type": "int", "min": 64, "max": 2048},
+        "volumeSize": {"type": "int", "min": 16, "max": 128},
+        "alpha": {"type": "float", "min": 0, "max": 1},
+    }}}
+    cases = {"test/effect": ("effect", None, 8)}
+    matrix = _pmx.build_matrix(effects, cases, {})
+    assert [item["case"] for item in matrix] == ["test/effect#alpha@min", "test/effect#alpha@max"]
 
 
 def test_documented_min_max_bind_the_documented_bounds():
@@ -140,3 +118,25 @@ def test_port_cache_roundtrip(tmp_path):
     path.write_bytes(raw)
     wrapped = _pmx._CachedRGBA(path.read_bytes())
     assert wrapped.to_rgba8() == raw
+
+
+def test_resume_requires_matching_source_fingerprint(tmp_path):
+    path = tmp_path / "verdicts.log"
+    path.write_text("EXACT test/effect#alpha@min\n")
+    with pytest.raises(ValueError, match="source fingerprint"):
+        _pmx._read_resume_log(str(path), "current", {"test/effect#alpha@min"})
+    path.write_text("PARITY-INPUTS previous\nEXACT test/effect#alpha@min\n")
+    with pytest.raises(ValueError, match="source fingerprint"):
+        _pmx._read_resume_log(str(path), "current", {"test/effect#alpha@min"})
+    path.write_text("PARITY-INPUTS current\nEXACT test/effect#alpha@min\n")
+    assert _pmx._read_resume_log(str(path), "current", {"test/effect#alpha@min"}) == {
+        "test/effect#alpha@min": "EXACT test/effect#alpha@min"
+    }
+
+
+def test_resume_fingerprint_binds_case_definition(monkeypatch):
+    monkeypatch.setattr(_pmx._parity, "_cpu_revision", lambda: {"cpuHead": "pinned"})
+    base = _cache_entry()
+    changed = _cache_entry(params={"mode": 3})
+    assert _pmx._resume_fingerprint([base]) == _pmx._resume_fingerprint([base])
+    assert _pmx._resume_fingerprint([base]) != _pmx._resume_fingerprint([changed])

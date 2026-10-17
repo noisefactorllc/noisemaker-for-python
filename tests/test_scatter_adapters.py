@@ -434,3 +434,27 @@ def test_billboard_aperture_defocus_samples_sprite_mean_and_stays_finite():
     assert np.count_nonzero(destination.data) > 0
     assert np.isfinite(destination.data).all()
     assert (destination.data >= 0).all()
+
+
+def test_points_billboard_depth_merge_adapter_matches_compiled_kernel():
+    from noisemaker_cpu.adapters import get_adapter
+    from noisemaker_cpu.pass_runner import Ctx, run_pass
+    from noisemaker_cpu.renderer import _kernel_for
+    from noisemaker_cpu.runtime import Runtime
+
+    factory = get_adapter("render/pointsBillboardRender", "depthMerge")
+    assert factory is not None
+    base = _kernel_for("render/pointsBillboardRender:depthMerge")
+    data = np.zeros(4 * 4 * 4, dtype=np.float32)
+    for index in range(16):
+        data[index * 4] = (index * 7 % 17) / 17
+        data[index * 4 + 1] = index
+    order = Surface(4, 4, data)
+    for run_length in (1, 2, 4, 8, 16):
+        rt = Runtime()
+        ctx = Ctx(rt, uniforms={"runLength": run_length}, textures={"orderTex": order})
+        expected = run_pass(base, ctx, 4, 4)
+        rt = Runtime()
+        ctx = Ctx(rt, uniforms={"runLength": run_length}, textures={"orderTex": order})
+        actual = run_pass(factory(rt, base), ctx, 4, 4)
+        np.testing.assert_array_equal(actual.data, expected.data)
