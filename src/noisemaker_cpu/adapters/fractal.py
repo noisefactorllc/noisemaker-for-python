@@ -1,5 +1,4 @@
-"""Port of the CPU fractal adapter: float64 Julia/Newton/Mandelbrot loops and
-float32 color staging, mirroring noisemaker-cpu src/effects/adapters/fractal.js."""
+"""Port of the CPU fractal adapter, including its float32 Julia and color paths."""
 
 from __future__ import annotations
 
@@ -14,6 +13,7 @@ F32 = np.float32
 
 _PI = 3.14159265359
 _TAU = 6.28318530718
+_PI_METAL = 3.1415929794311523
 
 
 def _f32(x) -> float:
@@ -22,6 +22,23 @@ def _f32(x) -> float:
 
 def _map(value, in_min, in_max, out_min, out_max):
     return out_min + (out_max - out_min) * (value - in_min) / (in_max - in_min)
+
+
+def _map_f32(value, in_min, in_max, out_min, out_max):
+    return _f32(out_min + _f32(out_max - out_min) * ((value - in_min) * _f32(1 / _f32(in_max - in_min))))
+
+
+def _mix_f32(a, b, amount):
+    return _f32(_f32(a * _f32(1 - amount)) + _f32(b * amount))
+
+
+def _rotate_f32(x, y, rotation, aspect):
+    angle = _f32(_map_f32(rotation, 0, 360, 0, 2) * _f32(_PI_METAL))
+    px = _f32(x - _f32(0.5 * aspect))
+    py = _f32(y - 0.5)
+    cs = _f32(js_cos(angle))
+    sn = _f32(js_sin(angle))
+    return [_f32(sn * py + _f32(cs * px)), _f32(cs * py + _f32(-sn * px))]
 
 
 def _fract_f32(value):
@@ -145,29 +162,31 @@ def _palette(t, b, out):
 
 
 def _julia(x, y, b, aspect):
-    zoom = _map(b["zoomAmt"], 0, 100, 2, 0.5)
-    speedy = _map(b["speed"], 0, 100, 0, 1)
-    speed = _mix(speedy * 0.05, speedy * 0.125, speedy)
-    cx = js_sin(b["time"] * _TAU) * speed + _map(b["offsetX"], -100, 100, -0.5, 0.5)
-    cy = js_cos(b["time"] * _TAU) * speed + _map(b["offsetY"], -100, 100, -1, 1)
-    x, y = _rotate(x, y, b["rotation"], aspect)
-    x = (x - 0.5 * aspect) * zoom + _map(b["centerX"], -100, 100, 1, -1)
-    y = (y - 0.5) * zoom + _map(b["centerY"], -100, 100, 1, -1)
+    x, y, aspect = _f32(x), _f32(y), _f32(aspect)
+    time = _f32(b["time"])
+    zoom = _map_f32(b["zoomAmt"], 0, 100, 2, 0.5)
+    speedy = _map_f32(b["speed"], 0, 100, 0, 1)
+    speed = _mix_f32(_f32(speedy * 0.05), _f32(speedy * 0.125), speedy)
+    cx = _f32(js_sin(_f32(time * _f32(_TAU))) * speed + _map_f32(b["offsetX"], -100, 100, -0.5, 0.5))
+    cy = _f32(js_cos(_f32(time * _f32(_TAU))) * speed + _map_f32(b["offsetY"], -100, 100, -1, 1))
+    x, y = _rotate_f32(x, y, _f32(b["rotation"]), aspect)
+    x = _f32(x * zoom + _map_f32(b["centerX"], -100, 100, 1, -1))
+    y = _f32(y * zoom + _map_f32(b["centerY"], -100, 100, 1, -1))
     count = int(b["iterations"]) * 2
     iteration = 0
     for index in range(count):
         iteration = index
-        next_x = x * x - y * y + cx
-        next_y = y * x + x * y + cy
-        if next_x * next_x + next_y * next_y > 4:
+        next_x = _f32(_f32(x * x + cx) - y * y)
+        next_y = _f32(y * x + x * y + cy)
+        if _f32(next_x * next_x + next_y * next_y) > 4:
             break
         x = next_x
         y = next_y
     if count - iteration < int(b["cutoff"]):
         return 1
     if b["mode"] == 0:
-        return iteration / count
-    return _hypot(x, y)
+        return _f32(iteration / count)
+    return _f32(math.sqrt(_f32(x * x + y * y)))
 
 
 def _newton(x, y, b, aspect):
