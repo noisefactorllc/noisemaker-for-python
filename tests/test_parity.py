@@ -62,6 +62,8 @@ def _invert_program(mode):
 
 _SPOOKY_PROGRAM = "search synth, filter\nperlin(seed: 0).spookyTicker(seed: 1).write(o0)\nrender(o0)\n"
 
+_OSD_PROGRAM = "search synth, filter\nperlin(seed: 0).osd(seed: 1).write(o0)\nrender(o0)\n"
+
 _COALESCE_HUE_AB_PROGRAM = (
     "search synth, classicNoisedeck\n"
     "solid(color: #ff2200).write(o0)\n"
@@ -105,6 +107,8 @@ def _oracle_batch_jobs():
         add(name, program=program, width=16, seed=1, time=0)
     for size in SPOOKY_TICKER_SIZES:
         add(f"spooky-{size}", program=_SPOOKY_PROGRAM, width=size, seed=1, time=0.25)
+    for size in OSD_SIZES:
+        add(f"osd-{size}", program=_OSD_PROGRAM, width=size, seed=1, time=0.25)
     for effect_id in ("filter/mosaicTiles", "filter/stipple", "filter/strokes"):
         add(effect_id, width=8, seed=1, time=0.25)
     return jobs
@@ -634,6 +638,23 @@ SPOOKY_TICKER_SIZES = (32, 64)
 def test_spooky_ticker_overlay_is_byte_exact_at_larger_sizes(oracle_batch, size):
     js = oracle_batch(f"spooky-{size}")
     py = render_dsl(_SPOOKY_PROGRAM, width=size, height=size, seed=1, time=0.25)
+    assert _max_diff(js, py) == 0
+
+
+# filter/osd's glyph sampler divides int function parameters (`int gx = localX
+# / iScale;`) and hashes with a scalar uint pcg. The pinned oracle truncates
+# those divisions and wraps the pcg as uint32 (noisemaker-for-cpu b68fdb8). The
+# glyph block sits 25 px from its corner, so at 8x8 only the scanline tint
+# reaches the canvas; the glyphs land on canvas at 32x32 and 64x64. Same
+# DSL/seed/time form as the GAP-010 comparison.
+OSD_SIZES = (32, 64)
+
+
+@pytest.mark.slow
+@pytest.mark.parametrize("size", OSD_SIZES)
+def test_osd_overlay_is_byte_exact_at_larger_sizes(oracle_batch, size):
+    js = oracle_batch(f"osd-{size}")
+    py = render_dsl(_OSD_PROGRAM, width=size, height=size, seed=1, time=0.25)
     assert _max_diff(js, py) == 0
 
 
