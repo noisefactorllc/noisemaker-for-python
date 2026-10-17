@@ -392,6 +392,13 @@ def splice_bindings(program: str, func: str, pname: str, value) -> str:
     return "".join(out)
 
 
+def matrix_cases(effects: dict) -> dict:
+    """The summary's executable case per effect, rendered at the required
+    8x8. The summary's own sizes (filter/glyphMap at 64, the 2x2 volume and
+    loop chains) do not apply here."""
+    return {eid: (kind, payload, SIZE) for eid, (kind, payload, _w) in _ps._build_cases(effects).items()}
+
+
 def build_matrix(effects: dict, cases: dict, records: dict, only=None):
     """One matrix case per (executable effect case, bindable parameter, bound)."""
     matrix = []
@@ -755,16 +762,7 @@ def main() -> int:
     only = set(args.only.split(",")) if args.only else None
 
     effects = _parity._meta()["effects"]
-    cases = _ps._build_cases(effects)
-    # The matrix renders at the required 8x8. A summary-only width override
-    # (filter/glyphMap at 64, where its flipped-row divergence shows) does
-    # not apply here; the matrix's width stays SIZE for that case. Volume
-    # cases keep their own grid size.
-    for eid in getattr(_ps._tp, "WIDE_IMAGE_CHAINS", {}):
-        base = eid.split(":")[0]
-        if base in cases and cases[base][2] != SIZE:
-            kind, program, _w = cases[base]
-            cases[base] = (kind, program, SIZE)
+    cases = matrix_cases(effects)
     records = oracle_param_records()
     all_matrix = build_matrix(effects, cases, records, only)
     matrix = all_matrix

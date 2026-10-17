@@ -36,6 +36,16 @@ def test_build_matrix_excludes_resource_sizing_variants():
     assert [item["case"] for item in matrix] == ["test/effect#alpha@min", "test/effect#alpha@max"]
 
 
+def test_matrix_renders_every_case_at_8x8():
+    effects = _pmx._parity._meta()["effects"]
+    cases = _pmx.matrix_cases(effects)
+    assert set(cases) == set(effects)
+    assert {width for _kind, _payload, width in cases.values()} == {8}
+    # The summary keeps its own 2x2 volume and loop chains; the matrix does not.
+    assert _pmx._ps._build_cases(effects)["render/render3d"][2] == 2
+    assert cases["render/render3d"][2] == 8
+
+
 def test_oracle_record_binds_parameters_the_port_metadata_omits():
     # synth/remap's per-zone parameters live only in the oracle's records:
     # the union still binds them (both engines thread the uniform), while
