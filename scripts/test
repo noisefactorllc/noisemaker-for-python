@@ -24,8 +24,8 @@ fi
 # PARITY-SUMMARY line binds the run to both revisions). Without node the oracle
 # cannot run, so only the node-free tests run.
 if command -v node >/dev/null 2>&1; then
-    CPU_PINNED_REVISION=5fd2194afb4a97e24ffe182e9cd94f2d36fb2905
-    CPU_PINNED_TREE=eef5a2960ba52c0762a57f9482714e1734b80c68
+    CPU_PINNED_REVISION=5e93c23c6cd8c2b3f777bedc40142798be185ba8
+    CPU_PINNED_TREE=d5b48a9e5bbdd94668f752c7ba4d49d44d9874f1
     CPU_DIR="${TMPDIR:-/tmp}/noisemaker-py-cpu-oracle"
     if [ ! -d "$CPU_DIR/.git" ]; then
         git clone -q https://github.com/noisefactorllc/noisemaker-for-cpu.git "$CPU_DIR"
