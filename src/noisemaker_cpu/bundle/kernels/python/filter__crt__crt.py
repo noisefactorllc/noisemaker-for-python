@@ -316,12 +316,12 @@ def run_pixel(ctx, out):
             return
         rs = rt.component_wise("max", _u_renderScale, rt.f(1.0), width=1)
         fullRes = rt.construct(2, (_u_fullResolution if rt.binary(">", rt.swizzle(_u_fullResolution, "x"), rt.f(0.0)) else _u_resolution))
-        width_f = rt.component_wise("max", rt.binary("/", rt.swizzle(fullRes, "x"), rs, 1, "float"), rt.f(1.0), width=1)
-        height_f = rt.component_wise("max", rt.binary("/", rt.swizzle(fullRes, "y"), rs, 1, "float"), rt.f(1.0), width=1)
+        width_f = rt.component_wise("max", rt.fdiv(rt.swizzle(fullRes, "x"), rs, 1), rt.f(1.0), width=1)
+        height_f = rt.component_wise("max", rt.fdiv(rt.swizzle(fullRes, "y"), rs, 1), rt.f(1.0), width=1)
         time = _u_time
         speed = _u_speed
-        x = rt.binary("/", rt.binary("+", rt.construct(1, rt.swizzle(global_id, "x")), rt.swizzle(_u_tileOffset, "x"), 1, "float"), rs, 1, "float")
-        y = rt.binary("/", rt.binary("+", rt.construct(1, rt.swizzle(global_id, "y")), rt.swizzle(_u_tileOffset, "y"), 1, "float"), rs, 1, "float")
+        x = rt.fdiv(rt.binary("+", rt.construct(1, rt.swizzle(global_id, "x")), rt.swizzle(_u_tileOffset, "x"), 1, "float"), rs, 1)
+        y = rt.fdiv(rt.binary("+", rt.construct(1, rt.swizzle(global_id, "y")), rt.swizzle(_u_tileOffset, "y"), 1, "float"), rs, 1)
         displacement = rt.f(0.0625)
         freq = freq_for_shape__float_float_float(rt.f(2.0), width_f, height_f)
         base_offsets = compute_lens_offsets__vec2_float_float_vec2_float_float_float(rt.construct(2, x, y), width_f, height_f, freq, time, speed, displacement)
@@ -367,7 +367,7 @@ def run_pixel(ctx, out):
             displacement_pixels = rt.binary("*", rt.binary("*", displacement_base, width_f, 1, "float"), simplex_value, 1, "float")
             singularity = compute_singularity__float_float_float_float(x, y, width_f, height_f)
             aber_mask = rt.component_wise("pow", singularity, rt.f(3.0), width=1)
-            gradient = rt.component_wise("clamp", rt.binary("/", x, rt.binary("-", width_f, rt.f(1.0), 1, "float"), 1, "float"), rt.f(0.0), rt.f(1.0), width=1)
+            gradient = rt.component_wise("clamp", rt.fdiv(x, rt.binary("-", width_f, rt.f(1.0), 1, "float"), 1), rt.f(0.0), rt.f(1.0), width=1)
             hue_shift = rt.binary("-", rt.binary("*", random_scalar__float(rt.binary("+", seed_base, rt.f(1.91), 1, "float")), rt.f(0.25), 1, "float"), rt.f(0.125), 1, "float")
             red_x = rt.component_wise("min", rt.binary("+", x, displacement_pixels, 1, "float"), rt.binary("-", width_f, rt.f(1.0), 1, "float"), width=1)
             red_x = blend_linear__float_float_float(red_x, x, gradient)

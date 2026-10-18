@@ -13,7 +13,7 @@ def run_pixel(ctx, out):
     g.fragColor = rt.construct(4, 0.0)
     def tent3x3__vec2(uv):
         uv = rt.copy(uv, "float")
-        px = rt.construct(2, rt.binary("/", rt.f(1.0), _u_resolution, 2, 'float'))
+        px = rt.construct(2, rt.fdiv(rt.f(1.0), _u_resolution, 2))
         sum = rt.construct(3, rt.f(0.0))
         wsum = rt.f(0.0)
         dy = rt.unary("-", rt.i(1))
@@ -37,7 +37,7 @@ def run_pixel(ctx, out):
                 wsum = rt.binary("+", wsum, w, 1, "float")
         return rt.construct(3, rt.binary("/", sum, wsum, 3, 'float'))
     def main__void():
-        uv = rt.construct(2, rt.binary("/", rt.swizzle(ctx.frag_coord, "xy"), _u_resolution, 2, 'float'))
+        uv = rt.construct(2, rt.fdiv(rt.swizzle(ctx.frag_coord, "xy"), _u_resolution, 2))
         src = rt.texture(_u_inputTex, uv)
         c = rt.swizzle(rt.texture(_u_smearTex, uv), "rgb")
         tent = tent3x3__vec2(uv)

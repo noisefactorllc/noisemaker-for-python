@@ -62,8 +62,8 @@ def run_pixel(ctx, out):
         rotated = rt.construct(2, rt.binary("-", rt.binary("*", rt.swizzle(centered, "x"), c, 1, "float"), rt.binary("*", rt.swizzle(centered, "y"), s, 1, "float"), 1, "float"), rt.binary("+", rt.binary("*", rt.swizzle(centered, "x"), s, 1, "float"), rt.binary("*", rt.swizzle(centered, "y"), c, 1, "float"), 1, "float"))
         coord = rt.construct(2, rt.binary("+", rotated, rt.binary("*", _u_fullResolution, rt.f(0.5), 2, 'float'), 2, 'float'))
         animOffset = rt.construct(1, rt.component_wise("floor", rt.binary("*", rt.binary("*", _u_time, rt.construct(1, rt.construct(1, rt.unary("-", _u_speed), base="int")), 1, "float"), rt.f(256.0), 1, "float"), width=1), base="int")
-        x = rt.binary("+", rt.binary("+", rt.construct(1, rt.component_wise("floor", rt.binary("/", rt.swizzle(coord, "x"), pixelScale, 1, "float"), width=1), base="int"), _u_offsetX, 1, "int"), animOffset, 1, "int")
-        y = rt.binary("+", rt.construct(1, rt.component_wise("floor", rt.binary("/", rt.swizzle(coord, "y"), pixelScale, 1, "float"), width=1), base="int"), _u_offsetY, 1, "int")
+        x = rt.binary("+", rt.binary("+", rt.construct(1, rt.component_wise("floor", rt.fdiv(rt.swizzle(coord, "x"), pixelScale, 1), width=1), base="int"), _u_offsetX, 1, "int"), animOffset, 1, "int")
+        y = rt.binary("+", rt.construct(1, rt.component_wise("floor", rt.fdiv(rt.swizzle(coord, "y"), pixelScale, 1), width=1), base="int"), _u_offsetY, 1, "int")
         x = rt.binary("^", x, _u_seed, 1, "int")
         y = rt.binary("^", y, rt.binary("*", _u_seed, rt.i(3), 1, "int"), 1, "int")
         v = rt.f(0.0)
@@ -82,7 +82,7 @@ def run_pixel(ctx, out):
                 g.fragColor[:] = rt.construct(4, r, _g, b, rt.f(1.0))
             else:
                 v = bitOp__int_int_int_int(x, y, _u_operation, _u_mask)
-                hueScale = rt.binary("/", rt.construct(1, _u_mask), rt.construct(1, rt.binary("+", _u_mask, rt.i(1), 1, "int")), 1, "float")
+                hueScale = rt.fdiv(rt.construct(1, _u_mask), rt.construct(1, rt.binary("+", _u_mask, rt.i(1), 1, "int")), 1)
                 g.fragColor[:] = rt.construct(4, hsv2rgb__vec3(rt.construct(3, rt.binary("*", v, hueScale, 1, "float"), rt.f(1.0), rt.f(1.0))), rt.f(1.0))
     main__void()
     _c = g.fragColor

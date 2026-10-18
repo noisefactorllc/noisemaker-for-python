@@ -17,7 +17,7 @@ def run_pixel(ctx, out):
         return rt.construct(3, avg)
     def main__void():
         texSize = rt.texture_size(_u_inputTex)
-        texelSize = rt.construct(2, rt.binary("/", rt.f(1.0), rt.construct_raw(2, rt.construct(2, texSize)), 2, 'float'))
+        texelSize = rt.construct(2, rt.fdiv(rt.f(1.0), rt.construct_raw(2, rt.construct(2, texSize)), 2))
         localUV = rt.construct(2, rt.binary("*", rt.swizzle(ctx.frag_coord, "xy"), texelSize, 2, 'float'))
         radiusPixels = rt.binary("*", _u_amount, _u_renderScale, 1, "float")
         radiusPixels = rt.component_wise("min", radiusPixels, rt.f(256.0), width=1)

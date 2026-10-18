@@ -41,7 +41,7 @@ def run_pixel(ctx, out):
                 samplePos = rt.binary("+", coord, rt.construct(2, kx, ky, base="int"), 2, "int")
                 samplePos[:] = rt.component_wise("clamp", samplePos, rt.construct(2, rt.i(0), base="int"), rt.binary("-", texSize, rt.i(1), 2, "int"), width=2)
                 dist2 = rt.construct(1, rt.binary("+", rt.binary("*", kx, kx, 1, "int"), rt.binary("*", ky, ky, 1, "int"), 1, "int"))
-                weight = rt.component_wise("exp", rt.binary("/", rt.unary("-", dist2), rt.binary("*", rt.f(2.0), sigma2, 1, "float"), 1, "float"), width=1)
+                weight = rt.component_wise("exp", rt.fdiv(rt.unary("-", dist2), rt.binary("*", rt.f(2.0), sigma2, 1, "float"), 1), width=1)
                 texSample = rt.texel_fetch(_u_inputTex, samplePos, rt.i(0))
                 blurSum[:] = rt.binary("+", blurSum, rt.binary("*", rt.swizzle(texSample, "rgb"), weight, 3, 'float'), 3, "float")
                 weightSum = rt.binary("+", weightSum, weight, 1, "float")

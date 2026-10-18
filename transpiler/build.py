@@ -61,17 +61,78 @@ _ATOMIC_COMPOUND_KEYS = frozenset(
 
 
 def _adapt_source(effect_id: str, program: str, source: str) -> str:
-    # Match the canonical CPU hash casts without changing runtime arithmetic:
-    # the sibling's adaptCanonicalSource rewrites these hash returns for every
-    # effect except filter/scatter, so the add and the multiply each round.
-    if effect_id != "filter/scatter":
-        source = source.replace(
-            "return fract((p3.x + p3.y) * p3.z);",
-            "return fract(float(float(p3.x + p3.y) * p3.z));",
-        ).replace(
-            "return fract((p3.xx + p3.yz) * p3.zy);",
-            "return fract(vec2(float(float(p3.x + p3.y) * p3.z), float(float(p3.x + p3.z) * p3.y)));",
+    source = source.replace(
+        "return fract((p3.x + p3.y) * p3.z);",
+        "return fract(float(float(p3.x + p3.y) * p3.z));",
+    ).replace(
+        "return fract((p3.xx + p3.yz) * p3.zy);",
+        "return fract(vec2(float(float(p3.x + p3.y) * p3.z), float(float(p3.x + p3.z) * p3.y)));",
+    )
+    source = re.sub(
+        r"\bmod\(\s*([A-Za-z_]\w*(?:\.[xyzw]{1,4})?)\s*\+\s*1\.0\s*,\s*2\.0\s*\)\s*-\s*1\.0\b",
+        r"(\1 - 2.0 * floor((\1 + 1.0) * 0.5))",
+        source,
+    )
+    if effect_id == "synth/navierStokes" and program == "nsSplat":
+        old = "return fract(sin(x * 12.9898) * 43758.5453);"
+        if source.count(old) != 1:
+            raise ValueError("navierStokes hash11 source changed")
+        source = source.replace(old, "return fract(float(float(sin(float(float(x) * 12.9898))) * 43758.5453));")
+    if effect_id == "filter/scatter" and program == "scatterJitter":
+        old = "hash22(hashCoord + float(seed) * 101.7)"
+        if source.count(old) != 1:
+            raise ValueError("scatter seed term source changed")
+        source = source.replace(old, "hash22(hashCoord + float(float(seed) * 101.7))")
+    if effect_id == "filter/extrude":
+        replacements = [
+            ("float s = 1.0 + h * (depth / 100.0) * 0.4;", "float s = float(1.0 + h * (depth / 100.0) * 0.4);"),
+            (
+                "bool topHit = all(lessThanEqual(abs(P - faceCenter), faceHalf));",
+                "bool topHit = all(lessThanEqual(abs((P - imgCenter) - (cellC - imgCenter) * s), faceHalf));",
+            ),
+        ]
+        for old, new in replacements:
+            if source.count(old) != 1:
+                raise ValueError("extrude block face source changed")
+            source = source.replace(old, new)
+    if effect_id == "synth3d/noise3d" and program == "precompute":
+        replacements = [
+            (
+                "float hash4(vec4 p) {\n    vec4 ps = p + float(seed) * 0.1;",
+                "float hash4(vec4 p, vec4 k) {\n"
+                "    float cpuSeedOffset = float(float(seed) * 0.1);\n"
+                "    vec4 cpuLatticeOffset = k + cpuSeedOffset;\n"
+                "    vec4 ps = p + cpuLatticeOffset;",
+            ),
+            (
+                "vec4 grad4(vec4 p) {\n    float h1 = hash4(p);\n    float h2 = hash4(p + 127.1);\n"
+                "    float h3 = hash4(p + 269.5);\n    float h4 = hash4(p + 419.2);",
+                "vec4 grad4(vec4 p, vec4 k) {\n    float h1 = hash4(p, k);\n    float h2 = hash4(p, k + 127.1);\n"
+                "    float h3 = hash4(p, k + 269.5);\n    float h4 = hash4(p, k + 419.2);",
+            ),
+        ]
+        for old, new in replacements:
+            if source.count(old) != 1:
+                raise ValueError("noise3d seeded lattice source changed")
+            source = source.replace(old, new)
+        source, corners = re.subn(
+            r"grad4\(vec4\(i\.xyz, (iw[01])\) \+ (vec4\([01],[01],[01],0\))\)", r"grad4(vec4(i.xyz, \1), \2)", source
         )
+        if corners != 16:
+            raise ValueError(f"noise3d expected 16 corner hashes, found {corners}")
+    if effect_id == "synth3d/cell3d" and program == "precompute":
+        old = "vec3 hash3(vec3 p) {\n    p = p + float(seed) * 0.1;"
+        if source.count(old) != 1 or source.count("vec3 randomOffset = hash3(cellPos);") != 1:
+            raise ValueError("cell3d seeded lattice source changed")
+        source = source.replace(
+            old,
+            "vec3 hash3(vec3 base, vec3 neighbor) {\n"
+            "    float cpuSeedOffset = float(float(seed) * 0.1);\n"
+            "    vec3 cpuCellPos = base + neighbor;\n"
+            "    vec3 p = vec3(base.x + float(neighbor.x + cpuSeedOffset),"
+            " cpuCellPos.y + cpuSeedOffset, cpuCellPos.z + cpuSeedOffset);",
+        )
+        source = source.replace("vec3 randomOffset = hash3(cellPos);", "vec3 randomOffset = hash3(i, neighbor);")
     if effect_id == "filter/strokes" and program == "stkSmear":
         # The canonical typed-array product rounds before accumulation.
         pigment = "pigmentSum += srcSample(centerUV).rgb * mark;"
@@ -465,6 +526,7 @@ def build(ids, out_dir=BUNDLE, update_lock=False):
                         js_vector_storage=key in _JS_VECTOR_STORAGE_KEYS,
                         atomic_compound=key in _ATOMIC_COMPOUND_KEYS,
                         effect_id=eid,
+                        constant_divisors=defines,
                     )
                 except Exception as e:
                     failures.append(f"{key}: {type(e).__name__}: {str(e)[:80]}")

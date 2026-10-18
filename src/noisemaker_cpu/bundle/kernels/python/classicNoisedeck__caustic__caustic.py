@@ -101,8 +101,8 @@ def run_pixel(ctx, out):
         i[:] = mod289__vec2(i)
         p = permute__vec3(rt.construct(3, rt.binary("+", rt.construct(3, rt.binary("+", permute__vec3(rt.construct(3, rt.binary("+", rt.swizzle(i, "y"), rt.construct_raw(3, rt.f(0.0), rt.swizzle(i1, "y"), rt.f(1.0)), 3, 'float'))), rt.swizzle(i, "x"), 3, 'float')), rt.construct(3, rt.f(0.0), rt.swizzle(i1, "x"), rt.f(1.0)), 3, 'float')))
         m = rt.component_wise("max", rt.binary("-", rt.f(0.5), rt.construct_raw(3, rt.dot(x0, x0), rt.dot(rt.swizzle(x12, "xy"), rt.swizzle(x12, "xy")), rt.dot(rt.swizzle(x12, "zw"), rt.swizzle(x12, "zw"))), 3, 'float'), rt.f(0.0), width=3)
-        (m.__setitem__(0, rt.swizzle(rt.binary("*", m, m, 3, 'float'), "x")), m.__setitem__(1, rt.swizzle(rt.binary("*", m, m, 3, 'float'), "y")), m.__setitem__(2, rt.swizzle(rt.binary("*", m, m, 3, 'float'), "z")), m)[-1]
-        (m.__setitem__(0, rt.swizzle(rt.binary("*", m, m, 3, 'float'), "x")), m.__setitem__(1, rt.swizzle(rt.binary("*", m, m, 3, 'float'), "y")), m.__setitem__(2, rt.swizzle(rt.binary("*", m, m, 3, 'float'), "z")), m)[-1]
+        ((_vector_write_0_0 := rt.swizzle(rt.binary("*", m, m, 3, 'float'), "x")), (_vector_write_0_1 := rt.swizzle(rt.binary("*", m, m, 3, 'float'), "y")), (_vector_write_0_2 := rt.swizzle(rt.binary("*", m, m, 3, 'float'), "z")), m.__setitem__(0, _vector_write_0_0), m.__setitem__(1, _vector_write_0_1), m.__setitem__(2, _vector_write_0_2), m)[-1]
+        ((_vector_write_1_0 := rt.swizzle(rt.binary("*", m, m, 3, 'float'), "x")), (_vector_write_1_1 := rt.swizzle(rt.binary("*", m, m, 3, 'float'), "y")), (_vector_write_1_2 := rt.swizzle(rt.binary("*", m, m, 3, 'float'), "z")), m.__setitem__(0, _vector_write_1_0), m.__setitem__(1, _vector_write_1_1), m.__setitem__(2, _vector_write_1_2), m)[-1]
         x = rt.construct(3, rt.binary("-", rt.construct(3, rt.binary("*", rt.f(2.0), rt.component_wise("fract", rt.binary("*", p, rt.swizzle(C, "www"), 3, 'float'), width=3), 3, 'float')), rt.f(1.0), 3, 'float'))
         h = rt.construct(3, rt.binary("-", rt.component_wise("abs", x, width=3), rt.f(0.5), 3, 'float'))
         ox = rt.component_wise("floor", rt.binary("+", x, rt.f(0.5), 3, 'float'), width=3)
@@ -340,12 +340,12 @@ def run_pixel(ctx, out):
     def main__void():
         globalCoord = rt.construct(2, rt.binary("+", rt.swizzle(ctx.frag_coord, "xy"), _u_tileOffset, 2, 'float'))
         color = rt.construct(4, rt.f(0.0), rt.f(0.0), rt.f(1.0), rt.f(1.0))
-        st = rt.construct(2, rt.binary("/", globalCoord, rt.swizzle(_u_fullResolution, "y"), 2, 'float'))
-        st[:] = rt.binary("-", st, rt.construct(2, rt.binary("*", rt.binary("/", rt.swizzle(_u_fullResolution, "x"), rt.swizzle(_u_fullResolution, "y"), 1, "float"), rt.f(0.5), 1, "float"), rt.f(0.5)), 2, "float")
+        st = rt.construct(2, rt.fdiv(globalCoord, rt.swizzle(_u_fullResolution, "y"), 2))
+        st[:] = rt.binary("-", st, rt.construct(2, rt.binary("*", rt.fdiv(rt.swizzle(_u_fullResolution, "x"), rt.swizzle(_u_fullResolution, "y"), 1), rt.f(0.5), 1, "float"), rt.f(0.5)), 2, "float")
         leftColor = noise__vec2_float(st, rt.construct(1, _u_seed))
         rightColor = noise__vec2_float(st, rt.binary("+", rt.construct(1, _u_seed), rt.f(10.0), 1, "float"))
-        left = rt.component_wise("min", rt.binary("/", rt.binary("*", leftColor, rightColor, 3, 'float'), rt.binary("-", rt.f(1.0), rt.binary("*", rightColor, leftColor, 3, 'float'), 3, 'float'), 3, 'float'), rt.construct(3, rt.f(1.0)), width=3)
-        right = rt.component_wise("min", rt.binary("/", rt.binary("*", rightColor, leftColor, 3, 'float'), rt.binary("-", rt.f(1.0), rt.binary("*", leftColor, rightColor, 3, 'float'), 3, 'float'), 3, 'float'), rt.construct(3, rt.f(1.0)), width=3)
+        left = rt.component_wise("min", rt.fdiv(rt.binary("*", leftColor, rightColor, 3, 'float'), rt.binary("-", rt.f(1.0), rt.binary("*", rightColor, leftColor, 3, 'float'), 3, 'float'), 3), rt.construct(3, rt.f(1.0)), width=3)
+        right = rt.component_wise("min", rt.fdiv(rt.binary("*", rightColor, leftColor, 3, 'float'), rt.binary("-", rt.f(1.0), rt.binary("*", leftColor, rightColor, 3, 'float'), 3, 'float'), 3), rt.construct(3, rt.f(1.0)), width=3)
         color = rt.assign_swizzle(color, "rgb", brightnessContrast__vec3(rt.component_wise("mix", left, right, rt.f(0.5), width=3)))
         color = rt.assign_swizzle(color, "a", rt.f(1.0))
         g.fragColor[:] = color

@@ -18,7 +18,7 @@ def run_pixel(ctx, out):
         return rt.dot(c, rt.construct(3, rt.f(0.2126), rt.f(0.7152), rt.f(0.0722)))
     def toSampleUV__vec2(globalPixelPos):
         globalPixelPos = rt.copy(globalPixelPos, "float")
-        return rt.component_wise("clamp", rt.binary("/", rt.binary("-", globalPixelPos, _u_tileOffset, 2, 'float'), _u_resolution, 2, 'float'), rt.f(0.0), rt.f(1.0), width=2)
+        return rt.component_wise("clamp", rt.fdiv(rt.binary("-", globalPixelPos, _u_tileOffset, 2, 'float'), _u_resolution, 2), rt.f(0.0), rt.f(1.0), width=2)
     def cellAvgColor3x3__vec2(centerPx):
         centerPx = rt.copy(centerPx, "float")
         sp = rt.binary("*", _u_squareSize, rt.f(0.25), 1, "float")
@@ -44,11 +44,11 @@ def run_pixel(ctx, out):
         return rt.construct(4, rt.binary("*", sum, rt.f(0.1111111111111111), 4, 'float'))
     def main__void():
         globalCoord = rt.construct(2, rt.binary("+", rt.swizzle(ctx.frag_coord, "xy"), _u_tileOffset, 2, 'float'))
-        uv = rt.construct(2, rt.binary("/", rt.swizzle(ctx.frag_coord, "xy"), _u_resolution, 2, 'float'))
+        uv = rt.construct(2, rt.fdiv(rt.swizzle(ctx.frag_coord, "xy"), _u_resolution, 2))
         srcOwn = rt.texture(_u_inputTex, uv)
         imgCenter = rt.construct(2, rt.binary("*", _u_fullResolution, rt.f(0.5), 2, 'float'))
         relPx = rt.construct(2, rt.binary("-", globalCoord, imgCenter, 2, 'float'))
-        cellIdxF = rt.component_wise("floor", rt.binary("/", relPx, _u_squareSize, 2, 'float'), width=2)
+        cellIdxF = rt.component_wise("floor", rt.fdiv(relPx, _u_squareSize, 2), width=2)
         localPx = rt.construct(2, rt.binary("-", relPx, rt.binary("*", cellIdxF, _u_squareSize, 2, 'float'), 2, 'float'))
         cellCenter = rt.construct(2, rt.binary("+", imgCenter, rt.binary("*", rt.binary("+", cellIdxF, rt.f(0.5), 2, 'float'), _u_squareSize, 2, 'float'), 2, 'float'))
         cellColor = rt.swizzle(cellAvgColor3x3__vec2(cellCenter), "rgb")

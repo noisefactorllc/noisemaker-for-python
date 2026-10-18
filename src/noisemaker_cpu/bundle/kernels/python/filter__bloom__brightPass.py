@@ -27,7 +27,7 @@ def run_pixel(ctx, out):
             if rt.binary(">=", luma, threshHigh):
                 bloomFactor = rt.f(1.0)
             else:
-                t = rt.binary("/", rt.binary("-", luma, threshLow, 1, "float"), rt.binary("-", threshHigh, threshLow, 1, "float"), 1, "float")
+                t = rt.fdiv(rt.binary("-", luma, threshLow, 1, "float"), rt.binary("-", threshHigh, threshLow, 1, "float"), 1)
                 bloomFactor = rt.binary("*", rt.binary("*", t, t, 1, "float"), rt.binary("-", rt.f(3.0), rt.binary("*", rt.f(2.0), t, 1, "float"), 1, "float"), 1, "float")
         brightColor = rt.construct(3, rt.binary("*", rt.swizzle(color, "rgb"), bloomFactor, 3, 'float'))
         g.fragColor[:] = rt.construct(4, brightColor, rt.swizzle(color, "a"))

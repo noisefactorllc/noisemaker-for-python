@@ -118,7 +118,7 @@ def run_pixel(ctx, out):
         globalCoord = rt.construct(2, rt.binary("+", rt.swizzle(ctx.frag_coord, "xy"), _u_tileOffset, 2, 'float'))
         coord = rt.construct(2, rt.swizzle(ctx.frag_coord, "xy"), base="int")
         color = rt.texel_fetch(_u_inputTex, coord, rt.i(0))
-        straight = rt.construct(3, (rt.binary("/", rt.swizzle(color, "rgb"), rt.swizzle(color, "a"), 3, 'float') if rt.binary(">", rt.swizzle(color, "a"), rt.f(0.0)) else rt.construct(3, rt.f(0.0))))
+        straight = rt.construct(3, (rt.fdiv(rt.swizzle(color, "rgb"), rt.swizzle(color, "a"), 3) if rt.binary(">", rt.swizzle(color, "a"), rt.f(0.0)) else rt.construct(3, rt.f(0.0))))
         rgb = srgbToLinear__vec3(straight)
         rgb[:] = applyWhiteBalance__vec3_float_float(rgb, _u_temperature, _u_tint)
         (rgb.__setitem__(0, rt.binary("*", rt.swizzle(rgb, "x"), rt.component_wise("pow", rt.f(2.0), _u_exposure, width=1), 1, "float")), rgb.__setitem__(1, rt.binary("*", rt.swizzle(rgb, "y"), rt.component_wise("pow", rt.f(2.0), _u_exposure, width=1), 1, "float")), rgb.__setitem__(2, rt.binary("*", rt.swizzle(rgb, "z"), rt.component_wise("pow", rt.f(2.0), _u_exposure, width=1), 1, "float")), rgb)[-1]

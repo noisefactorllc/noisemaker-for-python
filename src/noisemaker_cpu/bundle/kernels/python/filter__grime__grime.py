@@ -118,8 +118,8 @@ def run_pixel(ctx, out):
     def main__void():
         tileSize = rt.construct(2, rt.texture_size(_u_inputTex))
         globalCoord = rt.construct(2, rt.binary("+", rt.binary("*", ctx.uv, tileSize, 2, 'float'), _u_tileOffset, 2, 'float'))
-        globalUV = rt.construct(2, rt.binary("/", globalCoord, _u_fullResolution, 2, 'float'))
-        px = rt.construct(2, rt.binary("/", rt.f(1.0), _u_fullResolution, 2, 'float'))
+        globalUV = rt.construct(2, rt.fdiv(globalCoord, _u_fullResolution, 2))
+        px = rt.construct(2, rt.fdiv(rt.f(1.0), _u_fullResolution, 2))
         base_color = rt.texture(_u_inputTex, ctx.uv)
         str = rt.component_wise("max", _u_strength, rt.f(0.0), width=1)
         s = _u_seed

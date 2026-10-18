@@ -67,7 +67,7 @@ def run_pixel(ctx, out):
             return rt.component_wise("step", boundary, lum, width=1)
         return rt.component_wise("smoothstep", rt.binary("-", boundary, _u_smoothness, 1, "float"), rt.binary("+", boundary, _u_smoothness, 1, "float"), lum, width=1)
     def main__void():
-        uv = rt.construct(2, rt.binary("/", rt.swizzle(ctx.frag_coord, "xy"), _u_resolution, 2, 'float'))
+        uv = rt.construct(2, rt.fdiv(rt.swizzle(ctx.frag_coord, "xy"), _u_resolution, 2))
         controlColor = rt.texture(_u_source, uv)
         lum = getLuminosity__vec3(rt.swizzle(controlColor, "rgb"))
         n = rt.component_wise("clamp", _u_layers, rt.i(2), rt.i(8), width=1)
@@ -83,7 +83,7 @@ def run_pixel(ctx, out):
             if rt.binary(">=", k, n):
                 break
             src = rt.construct(4, (sampleLayer__int_vec2(k, uv) if rt.binary("==", layerActive__int(k), rt.i(1)) else controlColor))
-            boundary = rt.binary("/", rt.construct(1, k), rt.construct(1, n), 1, "float")
+            boundary = rt.fdiv(rt.construct(1, k), rt.construct(1, n), 1)
             w = bandWeight__float_float(lum, boundary)
             result[:] = rt.component_wise("mix", result, src, w, width=4)
         g.fragColor[:] = result

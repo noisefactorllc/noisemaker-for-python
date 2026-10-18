@@ -120,7 +120,7 @@ def run_pixel(ctx, out):
         fragCoord = rt.copy(fragCoord, "float")
         reDF = rt.copy(reDF, "float")
         imDF = rt.copy(imDF, "float")
-        uv = rt.construct(2, rt.binary("/", rt.binary("-", fragCoord, rt.binary("*", rt.f(0.5), _u_fullResolution, 2, 'float'), 2, 'float'), rt.component_wise("min", rt.swizzle(_u_fullResolution, "x"), rt.swizzle(_u_fullResolution, "y"), width=1), 2, 'float'))
+        uv = rt.construct(2, rt.fdiv(rt.binary("-", fragCoord, rt.binary("*", rt.f(0.5), _u_fullResolution, 2, 'float'), 2, 'float'), rt.component_wise("min", rt.swizzle(_u_fullResolution, "x"), rt.swizzle(_u_fullResolution, "y"), width=1), 2))
         angle = rt.binary("/", rt.binary("*", rt.unary("-", _u_rotation), g.TAU, 1, "float"), rt.f(360.0), 1, "float")
         cs = rt.component_wise("cos", angle, width=1)
         sn = rt.component_wise("sin", angle, width=1)

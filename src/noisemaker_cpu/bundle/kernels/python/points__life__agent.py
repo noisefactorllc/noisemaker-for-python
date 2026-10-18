@@ -65,10 +65,10 @@ def run_pixel(ctx, out):
         cellSize = rt.construct(2, rt.binary("/", rt.construct_raw(2, rt.f(1.0)), rt.construct(1, g.GRID_SIZE), 2, 'float'))
         return rt.construct(2, rt.component_wise("clamp", rt.binary("/", pos, cellSize, 2, 'float'), rt.construct(2, rt.f(0.0)), rt.construct(2, rt.construct(1, rt.binary("-", g.GRID_SIZE, rt.i(1), 1, "int"))), width=2), base="int")
     def radialForce__float_float_float_float(dist, strength, prefDist, curveShape):
-        normDist = rt.binary("/", rt.binary("-", dist, _u_minRadius, 1, "float"), rt.binary("-", _u_maxRadius, _u_minRadius, 1, "float"), 1, "float")
+        normDist = rt.fdiv(rt.binary("-", dist, _u_minRadius, 1, "float"), rt.binary("-", _u_maxRadius, _u_minRadius, 1, "float"), 1)
         forceScale = rt.binary("*", _u_maxSpeed, rt.f(10.0), 1, "float")
         if rt.binary("<", normDist, rt.f(0.0)):
-            return rt.binary("*", rt.binary("*", rt.unary("-", _u_repulsionScale), rt.binary("-", rt.f(1.0), rt.binary("/", dist, _u_minRadius, 1, "float"), 1, "float"), 1, "float"), forceScale, 1, "float")
+            return rt.binary("*", rt.binary("*", rt.unary("-", _u_repulsionScale), rt.binary("-", rt.f(1.0), rt.fdiv(dist, _u_minRadius, 1), 1, "float"), 1, "float"), forceScale, 1, "float")
         if rt.binary(">", normDist, rt.f(1.0)):
             return rt.f(0.0)
         force = rt.f(0.0)
@@ -189,10 +189,10 @@ def run_pixel(ctx, out):
                     prefDist = rt.swizzle(forceParams, "y")
                     curveShape = rt.swizzle(forceParams, "z")
                     forceMag = radialForce__float_float_float_float(dist, strength, prefDist, curveShape)
-                    forceDir = rt.construct(2, rt.binary("/", diff, dist, 2, 'float'))
+                    forceDir = rt.construct(2, rt.fdiv(diff, dist, 2))
                     totalForce[:] = rt.binary("+", totalForce, rt.binary("*", forceDir, forceMag, 2, 'float'), 2, "float")
                     neighborCount = rt.binary("+", neighborCount, rt.i(1), 1, "int")
-        totalForce[:] = rt.binary("/", totalForce, mass, 2, "float")
+        totalForce[:] = rt.fdiv(totalForce, mass, 2)
         velocity[:] = rt.binary("+", velocity, totalForce, 2, "float")
         velocity[:] = rt.binary("*", velocity, rt.binary("-", rt.f(1.0), _u_friction, 1, "float"), 2, "float")
         velocity[:] = limitVec__vec2_float(velocity, _u_maxSpeed)

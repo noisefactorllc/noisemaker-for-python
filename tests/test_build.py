@@ -67,8 +67,8 @@ def test_bundled_degauss_kernel_carries_tile_awareness():
     )
     # ...and the displacement clamp is tile-aware.
     assert (
-        'maxAllowedDisplacement = (rt.binary("/", maxOffsetPixels, '
-        'rt.component_wise("max", width_f, height_f, width=1), 1, "float") if isTiling else'
+        'maxAllowedDisplacement = (rt.fdiv(maxOffsetPixels, '
+        'rt.component_wise("max", width_f, height_f, width=1), 1) if isTiling else'
     ) in kernel
 
 
@@ -265,9 +265,9 @@ def test_bundled_render3d_kernel_carries_right_handed_camera():
     assert "up = rt.cross(forward, right)" not in kernel
 
 
-def test_hash_returns_take_the_sibling_float_casts_in_every_effect_but_scatter():
+def test_hash_returns_take_the_sibling_float_casts_including_scatter():
     # The sibling's adaptCanonicalSource rounds the add and the multiply of
-    # these hash returns for every effect except filter/scatter. Without it,
+    # these hash returns in every effect, including filter/scatter. Without it,
     # points/dla's anchor grid lands one half-float step off at 64x64.
     source = "float hash21(vec2 p) {\n    return fract((p3.x + p3.y) * p3.z);\n}\nvec2 hash22(vec2 p) {\n    return fract((p3.xx + p3.yz) * p3.zy);\n}\n"
 
@@ -275,7 +275,7 @@ def test_hash_returns_take_the_sibling_float_casts_in_every_effect_but_scatter()
 
     assert "return fract(float(float(p3.x + p3.y) * p3.z));" in adapted
     assert "return fract(vec2(float(float(p3.x + p3.y) * p3.z), float(float(p3.x + p3.z) * p3.y)));" in adapted
-    assert build_module._adapt_source("filter/scatter", "scatter", source) == source
+    assert build_module._adapt_source("filter/scatter", "scatter", source) == adapted
 
 
 def test_transpiler_applies_the_upstream_8bit_output_quantization():
@@ -573,6 +573,7 @@ def test_build_enables_javascript_vector_storage_for_noise3d(tmp_path, monkeypat
 
     monkeypatch.setattr(build_module, "fetch_effect", lambda _effect_id: effect)
     monkeypatch.setattr(build_module, "emit_python", capture_emit)
+    monkeypatch.setattr(build_module, "_adapt_source", lambda _eid, _program, source: source)
 
     build_module.build([effect["id"]], out_dir=tmp_path)
 
@@ -581,6 +582,7 @@ def test_build_enables_javascript_vector_storage_for_noise3d(tmp_path, monkeypat
             "js_vector_storage": True,
             "atomic_compound": False,
             "effect_id": "synth3d/noise3d",
+            "constant_divisors": {},
         }
     ]
 

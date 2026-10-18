@@ -17,7 +17,7 @@ def run_pixel(ctx, out):
     def map__float_float_float_float_float(value, inMin, inMax, outMin, outMax):
         return rt.binary("+", outMin, rt.binary("/", rt.binary("*", rt.binary("-", outMax, outMin, 1, "float"), rt.binary("-", value, inMin, 1, "float"), 1, "float"), rt.binary("-", inMax, inMin, 1, "float"), 1, "float"), 1, "float")
     def main__void():
-        uv = rt.construct(2, rt.binary("/", rt.swizzle(ctx.frag_coord, "xy"), rt.construct(2, rt.texture_size(_u_inputTex)), 2, 'float'))
+        uv = rt.construct(2, rt.fdiv(rt.swizzle(ctx.frag_coord, "xy"), rt.construct(2, rt.texture_size(_u_inputTex)), 2))
         color1 = rt.texture(_u_inputTex, uv)
         color2 = rt.texture(_u_tex, uv)
         maskVal = rt.f(0.0)

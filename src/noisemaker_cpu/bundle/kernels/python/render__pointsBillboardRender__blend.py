@@ -15,7 +15,7 @@ def run_pixel(ctx, out):
     _u_blendMode = U.get("blendMode", 0)
     g.fragColor = rt.construct(4, 0.0)
     def main__void():
-        uv = rt.construct(2, rt.binary("/", rt.swizzle(ctx.frag_coord, "xy"), _u_resolution, 2, 'float'))
+        uv = rt.construct(2, rt.fdiv(rt.swizzle(ctx.frag_coord, "xy"), _u_resolution, 2))
         inputColor = rt.texture(_u_inputTex, uv)
         trailColor = rt.texture(_u_trailTex, uv)
         t = rt.binary("/", _u_inputIntensity, rt.f(100.0), 1, "float")

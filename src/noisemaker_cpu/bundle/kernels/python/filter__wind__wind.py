@@ -20,7 +20,7 @@ def run_pixel(ctx, out):
         c = rt.copy(c, "float")
         return rt.dot(c, rt.construct(3, rt.f(0.2126), rt.f(0.7152), rt.f(0.0722)))
     def main__void():
-        uv = rt.construct(2, rt.binary("/", rt.swizzle(ctx.frag_coord, "xy"), _u_resolution, 2, 'float'))
+        uv = rt.construct(2, rt.fdiv(rt.swizzle(ctx.frag_coord, "xy"), _u_resolution, 2))
         globalCoord = rt.construct(2, rt.binary("+", rt.swizzle(ctx.frag_coord, "xy"), _u_tileOffset, 2, 'float'))
         src = rt.texture(_u_inputTex, uv)
         amount = rt.component_wise("clamp", rt.binary("/", _u_strength, rt.f(100.0), 1, "float"), rt.f(0.0), rt.f(1.0), width=1)
@@ -48,11 +48,11 @@ def run_pixel(ctx, out):
             if rt.binary(">", distancePx, reach):
                 break
             sampleDistance = rt.binary("+", distancePx, staggerPhase, 1, "float")
-            sampleUV = rt.component_wise("clamp", rt.binary("/", rt.binary("+", rt.swizzle(ctx.frag_coord, "xy"), rt.construct_raw(2, rt.binary("*", marchDir, sampleDistance, 1, "float"), rt.f(0.0)), 2, 'float'), _u_resolution, 2, 'float'), rt.f(0.0), rt.f(1.0), width=2)
+            sampleUV = rt.component_wise("clamp", rt.fdiv(rt.binary("+", rt.swizzle(ctx.frag_coord, "xy"), rt.construct_raw(2, rt.binary("*", marchDir, sampleDistance, 1, "float"), rt.f(0.0)), 2, 'float'), _u_resolution, 2), rt.f(0.0), rt.f(1.0), width=2)
             candidate = rt.swizzle(rt.texture(_u_inputTex, sampleUV), "rgb")
             contrast = rt.binary("-", rt.binary("-", lum__vec3(candidate), baseLum, 1, "float"), edge, 1, "float")
             activation = rt.component_wise("smoothstep", rt.f(0.0), rt.f(0.08), contrast, width=1)
-            alongRun = rt.binary("/", distancePx, rt.component_wise("max", reach, rt.f(1.0), width=1), 1, "float")
+            alongRun = rt.fdiv(distancePx, rt.component_wise("max", reach, rt.f(1.0), width=1), 1)
             decayRate = rt.f(0.0)
             if rt.binary("==", _u_METHOD, rt.i(1)):
                 decayRate = rt.f(0.8)

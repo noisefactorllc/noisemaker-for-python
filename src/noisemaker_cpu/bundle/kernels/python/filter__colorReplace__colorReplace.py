@@ -18,7 +18,7 @@ def run_pixel(ctx, out):
     g.fragColor = rt.construct(4, 0.0)
     def main__void():
         globalCoord = rt.construct(2, rt.binary("+", rt.swizzle(ctx.frag_coord, "xy"), _u_tileOffset, 2, 'float'))
-        st = rt.construct(2, rt.binary("/", rt.swizzle(ctx.frag_coord, "xy"), rt.construct(2, rt.component_wise("max", rt.texture_size(_u_inputTex), rt.construct(2, rt.i(1), base="int"), width=2)), 2, 'float'))
+        st = rt.construct(2, rt.fdiv(rt.swizzle(ctx.frag_coord, "xy"), rt.construct(2, rt.component_wise("max", rt.texture_size(_u_inputTex), rt.construct(2, rt.i(1), base="int"), width=2)), 2))
         src = rt.texture(_u_inputTex, st)
         dist = rt.binary("/", rt.length(rt.binary("-", rt.swizzle(src, "rgb"), _u_targetColor, 3, 'float')), rt.f(1.7320508), 1, "float")
         halfBand = rt.binary("*", _u_smoothing, rt.f(0.5), 1, "float")

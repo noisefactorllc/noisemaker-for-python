@@ -35,7 +35,7 @@ def run_pixel(ctx, out):
         return rt.component_wise("pow", value, rt.construct(3, exponent), width=3)
     def main__void():
         globalCoord = rt.construct(2, rt.binary("+", rt.swizzle(ctx.frag_coord, "xy"), _u_tileOffset, 2, 'float'))
-        uv = rt.construct(2, rt.binary("/", rt.swizzle(ctx.frag_coord, "xy"), rt.construct(2, rt.texture_size(_u_inputTex)), 2, 'float'))
+        uv = rt.construct(2, rt.fdiv(rt.swizzle(ctx.frag_coord, "xy"), rt.construct(2, rt.texture_size(_u_inputTex)), 2))
         texel = rt.texture(_u_inputTex, uv)
         levels_raw = rt.component_wise("max", _u_levels, rt.f(0.0), width=1)
         levels_quantized = rt.component_wise("max", rt.component_wise("round", levels_raw, width=1), g.MIN_LEVELS, width=1)
@@ -43,10 +43,10 @@ def run_pixel(ctx, out):
             g.fragColor[:] = texel
             return
         level_factor = levels_quantized
-        inv_factor = rt.binary("/", rt.f(1.0), level_factor, 1, "float")
+        inv_factor = rt.fdiv(rt.f(1.0), level_factor, 1)
         half_step = rt.binary("*", inv_factor, rt.f(0.5), 1, "float")
         gamma_value = rt.component_wise("max", _u_gamma, g.MIN_GAMMA, width=1)
-        inv_gamma = rt.binary("/", rt.f(1.0), gamma_value, 1, "float")
+        inv_gamma = rt.fdiv(rt.f(1.0), gamma_value, 1)
         working_rgb = srgb_to_linear_rgb__vec3(rt.swizzle(texel, "xyz"))
         working_rgb[:] = pow_vec3__vec3_float(rt.component_wise("clamp", working_rgb, rt.construct(3, rt.f(0.0)), rt.construct(3, rt.f(1.0)), width=3), gamma_value)
         scaled = rt.construct(3, rt.binary("+", rt.binary("*", working_rgb, level_factor, 3, 'float'), rt.construct_raw(3, half_step), 3, 'float'))

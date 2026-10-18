@@ -45,8 +45,8 @@ def run_pixel(ctx, out):
         texSize = rt.texture_size(_u_inputTex)
         tileDims = rt.construct(2, texSize)
         fullRes = rt.construct(2, (_u_fullResolution if rt.binary(">", rt.swizzle(_u_fullResolution, "x"), rt.f(0.0)) else tileDims))
-        uv = rt.construct(2, rt.binary("/", rt.binary("+", rt.swizzle(ctx.frag_coord, "xy"), _u_tileOffset, 2, 'float'), fullRes, 2, 'float'))
-        aspect = rt.binary("/", rt.swizzle(fullRes, "x"), rt.swizzle(fullRes, "y"), 1, "float")
+        uv = rt.construct(2, rt.fdiv(rt.binary("+", rt.swizzle(ctx.frag_coord, "xy"), _u_tileOffset, 2, 'float'), fullRes, 2))
+        aspect = rt.fdiv(rt.swizzle(fullRes, "x"), rt.swizzle(fullRes, "y"), 1)
         coord = rt.construct(2, 0.0)
         if rt.binary("==", _u_polarMode, rt.i(0)):
             coord[:] = polarCoords__vec2_float(uv, aspect)

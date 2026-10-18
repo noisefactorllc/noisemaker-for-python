@@ -46,7 +46,7 @@ def run_pixel(ctx, out):
     def main__void():
         globalCoord = rt.construct(2, rt.binary("+", rt.swizzle(ctx.frag_coord, "xy"), _u_tileOffset, 2, 'float'))
         texSize = rt.construct(2, rt.texture_size(_u_inputTex))
-        uv = rt.construct(2, rt.binary("/", rt.swizzle(ctx.frag_coord, "xy"), texSize, 2, 'float'))
+        uv = rt.construct(2, rt.fdiv(rt.swizzle(ctx.frag_coord, "xy"), texSize, 2))
         inputColor = rt.texture(_u_inputTex, uv)
         idx = rt.component_wise("clamp", _u_paletteIndex, rt.i(0), rt.binary("-", g.PALETTE_COUNT, rt.i(1), 1, "int"), width=1)
         lum = rt.dot(rt.swizzle(inputColor, "rgb"), rt.construct(3, rt.f(0.299), rt.f(0.587), rt.f(0.114)))

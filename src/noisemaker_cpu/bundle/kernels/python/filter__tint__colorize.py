@@ -52,9 +52,9 @@ def run_pixel(ctx, out):
         return rt.construct(3, rt.binary("*", rt.binary("+", oms, rt.binary("*", s, dr, 1, "float"), 1, "float"), v, 1, "float"), rt.binary("*", rt.binary("+", oms, rt.binary("*", s, dg, 1, "float"), 1, "float"), v, 1, "float"), rt.binary("*", rt.binary("+", oms, rt.binary("*", s, db, 1, "float"), 1, "float"), v, 1, "float"))
     def main__void():
         globalCoord = rt.construct(2, rt.binary("+", rt.swizzle(ctx.frag_coord, "xy"), _u_tileOffset, 2, 'float'))
-        st = rt.construct(2, rt.binary("/", rt.swizzle(ctx.frag_coord, "xy"), rt.construct(2, rt.component_wise("max", rt.texture_size(_u_inputTex), rt.construct(2, rt.i(1), base="int"), width=2)), 2, 'float'))
+        st = rt.construct(2, rt.fdiv(rt.swizzle(ctx.frag_coord, "xy"), rt.construct(2, rt.component_wise("max", rt.texture_size(_u_inputTex), rt.construct(2, rt.i(1), base="int"), width=2)), 2))
         base = rt.texture(_u_inputTex, st)
-        base_rgb = rt.construct(3, (rt.component_wise("clamp", rt.binary("/", rt.swizzle(base, "rgb"), rt.swizzle(base, "a"), 3, 'float'), rt.f(0.0), rt.f(1.0), width=3) if rt.binary(">", rt.swizzle(base, "a"), rt.f(0.0)) else rt.construct(3, rt.f(0.0))))
+        base_rgb = rt.construct(3, (rt.component_wise("clamp", rt.fdiv(rt.swizzle(base, "rgb"), rt.swizzle(base, "a"), 3), rt.f(0.0), rt.f(1.0), width=3) if rt.binary(">", rt.swizzle(base, "a"), rt.f(0.0)) else rt.construct(3, rt.f(0.0))))
         m = rt.construct(1, _u_mode, base="int")
         tinted = rt.construct(3, 0.0)
         tintHue = rt.f(0.0)

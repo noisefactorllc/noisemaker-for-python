@@ -49,7 +49,7 @@ def run_pixel(ctx, out):
         p = rt.copy(p, "float")
         r = rt.length(p)
         theta = rt.binary("-", rt.component_wise("atan", rt.swizzle(p, "y"), rt.swizzle(p, "x"), width=1), rt.f(1.570796326795), 1, "float")
-        wedge = rt.binary("/", rt.f(6.28318530718), rt.construct(1, _u_symmetry), 1, "float")
+        wedge = rt.fdiv(rt.f(6.28318530718), rt.construct(1, _u_symmetry), 1)
         twistRad = rt.binary("/", rt.binary("*", _u_twist, rt.f(3.14159265359), 1, "float"), rt.f(180.0), 1, "float")
         baseSize = rt.binary("+", rt.f(0.25), rt.binary("*", _u_thickness, rt.f(0.65), 1, "float"), 1, "float")
         dynTwistRad = twistRad
@@ -85,7 +85,7 @@ def run_pixel(ctx, out):
             tangent = rt.binary("*", folded, Rlayer, 1, "float")
             lt = rt.f(0.0)
             if rt.binary(">", _u_layers, rt.i(1)):
-                lt = rt.binary("-", rt.binary("/", rt.construct(1, i), rt.construct(1, rt.binary("-", _u_layers, rt.i(1), 1, "int")), 1, "float"), rt.f(0.5), 1, "float")
+                lt = rt.binary("-", rt.fdiv(rt.construct(1, i), rt.construct(1, rt.binary("-", _u_layers, rt.i(1), 1, "int")), 1), rt.f(0.5), 1, "float")
             shapeSize = rt.binary("*", baseSize, rt.binary("+", rt.f(1.0), rt.binary("*", _u_shapeGrowth, lt, 1, "float"), 1, "float"), 1, "float")
             if rt.binary("==", _u_animation, rt.i(6)):
                 shapeSize = rt.binary("*", shapeSize, rt.binary("+", rt.f(1.0), rt.binary("*", _u_pulseDepth, rt.component_wise("sin", rt.binary("-", rt.binary("*", rt.binary("*", _u_time, rt.f(6.28318530718), 1, "float"), rt.component_wise("floor", _u_speed, width=1), 1, "float"), rt.binary("*", rt.construct(1, i), rt.f(0.6), 1, "float"), 1, "float"), width=1), 1, "float"), 1, "float"), 1, "float")
@@ -105,7 +105,7 @@ def run_pixel(ctx, out):
         return m
     def main__void():
         globalCoord = rt.construct(2, rt.binary("+", rt.swizzle(ctx.frag_coord, "xy"), _u_tileOffset, 2, 'float'))
-        st = rt.construct(2, rt.binary("/", globalCoord, _u_fullResolution, 2, 'float'))
+        st = rt.construct(2, rt.fdiv(globalCoord, _u_fullResolution, 2))
         (st.__setitem__(0, rt.binary("*", rt.binary("-", rt.swizzle(st, "x"), rt.f(0.5), 1, "float"), rt.f(2.0), 1, "float")), st.__setitem__(1, rt.binary("*", rt.binary("-", rt.swizzle(st, "y"), rt.f(0.5), 1, "float"), rt.f(2.0), 1, "float")), st)[-1]
         st = rt.assign_swizzle(st, "x", rt.binary("*", rt.swizzle(st, "x"), _u_aspect, 1, "float"))
         rad = rt.binary("/", rt.binary("*", _u_rotation, rt.f(3.14159265359), 1, "float"), rt.f(180.0), 1, "float")

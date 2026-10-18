@@ -18,8 +18,8 @@ def run_pixel(ctx, out):
         return rt.component_wise("exp", rt.binary("*", rt.unary("-", x), x, 1, "float"), width=1)
     def main__void():
         densitySize = rt.construct(2, rt.texture_size(_u_densityTex))
-        uv = rt.construct(2, rt.binary("/", rt.swizzle(ctx.frag_coord, "xy"), densitySize, 2, 'float'))
-        texelSize = rt.construct(2, rt.binary("/", rt.f(1.0), densitySize, 2, 'float'))
+        uv = rt.construct(2, rt.fdiv(rt.swizzle(ctx.frag_coord, "xy"), densitySize, 2))
+        texelSize = rt.construct(2, rt.fdiv(rt.f(1.0), densitySize, 2))
         wK = rt.f(0.0)
         numSamples = rt.i(64)
         dr = rt.binary("/", _u_searchRadius, rt.construct(1, numSamples), 1, "float")

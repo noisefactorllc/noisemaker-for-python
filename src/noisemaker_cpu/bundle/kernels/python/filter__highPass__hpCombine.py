@@ -14,7 +14,7 @@ def run_pixel(ctx, out):
         c = rt.copy(c, "float")
         return rt.dot(c, rt.construct(3, rt.f(0.2126), rt.f(0.7152), rt.f(0.0722)))
     def main__void():
-        uv = rt.construct(2, rt.binary("/", rt.swizzle(ctx.frag_coord, "xy"), _u_resolution, 2, 'float'))
+        uv = rt.construct(2, rt.fdiv(rt.swizzle(ctx.frag_coord, "xy"), _u_resolution, 2))
         src = rt.texture(_u_inputTex, uv)
         blur = rt.texture(_u_blurTex, uv)
         diff = rt.construct(3, rt.binary("-", rt.swizzle(src, "rgb"), rt.swizzle(blur, "rgb"), 3, 'float'))

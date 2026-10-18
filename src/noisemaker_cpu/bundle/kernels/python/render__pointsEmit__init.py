@@ -29,7 +29,7 @@ def run_pixel(ctx, out):
         return rt.construct(2, hash__uint(seed), hash__uint(rt.binary("+", seed, rt.i(1), 1, "uint")))
     def main__void():
         stateCoord = rt.construct(2, rt.swizzle(ctx.frag_coord, "xy"), base="int")
-        uv = rt.construct(2, rt.binary("/", rt.swizzle(ctx.frag_coord, "xy"), rt.construct(1, _u_stateSize), 2, 'float'))
+        uv = rt.construct(2, rt.fdiv(rt.swizzle(ctx.frag_coord, "xy"), rt.construct(1, _u_stateSize), 2))
         agentSeed = rt.binary("+", rt.construct(1, rt.binary("+", rt.swizzle(stateCoord, "x"), rt.binary("*", rt.swizzle(stateCoord, "y"), _u_stateSize, 1, "int"), 1, "int"), base="uint"), rt.construct(1, _u_seed, base="uint"), 1, "uint")
         pPos = rt.texel_fetch(_u_xyzTex, stateCoord, rt.i(0))
         pVel = rt.texel_fetch(_u_velTex, stateCoord, rt.i(0))

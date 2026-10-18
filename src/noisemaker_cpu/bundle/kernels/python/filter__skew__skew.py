@@ -18,8 +18,8 @@ def run_pixel(ctx, out):
         texSize = rt.texture_size(_u_inputTex)
         resolution = rt.construct(2, texSize)
         globalPixel = rt.construct(2, rt.binary("+", rt.swizzle(ctx.frag_coord, "xy"), _u_tileOffset, 2, 'float'))
-        globalUV = rt.construct(2, rt.binary("/", globalPixel, _u_fullResolution, 2, 'float'))
-        aspect = rt.binary("/", rt.swizzle(_u_fullResolution, "x"), rt.swizzle(_u_fullResolution, "y"), 1, "float")
+        globalUV = rt.construct(2, rt.fdiv(globalPixel, _u_fullResolution, 2))
+        aspect = rt.fdiv(rt.swizzle(_u_fullResolution, "x"), rt.swizzle(_u_fullResolution, "y"), 1)
         st = rt.copy_decl(globalUV, "float")
         st[:] = rt.binary("-", st, rt.f(0.5), 2, "float")
         st = rt.assign_swizzle(st, "x", rt.binary("*", rt.swizzle(st, "x"), aspect, 1, "float"))
@@ -28,18 +28,18 @@ def run_pixel(ctx, out):
         s = rt.component_wise("sin", angle, width=1)
         cpu_matrix_assignment_0 = rt.construct(2, rt.matrix_mult(rt.construct(4, c, rt.unary("-", s), s, c), st, 2))
         st[:] = cpu_matrix_assignment_0
-        maxSkew = rt.binary("/", rt.f(512.0), rt.swizzle(_u_fullResolution, "y"), 1, "float")
+        maxSkew = rt.fdiv(rt.f(512.0), rt.swizzle(_u_fullResolution, "y"), 1)
         effectiveSkewAmt = rt.component_wise("clamp", _u_skewAmt, rt.unary("-", maxSkew), maxSkew, width=1)
         st = rt.assign_swizzle(st, "x", rt.binary("+", rt.swizzle(st, "x"), rt.binary("*", rt.swizzle(st, "y"), rt.unary("-", effectiveSkewAmt), 1, "float"), 1, "float"))
         st = rt.assign_swizzle(st, "x", rt.binary("/", rt.swizzle(st, "x"), aspect, 1, "float"))
         st[:] = rt.binary("+", st, rt.f(0.5), 2, "float")
-        localUV = rt.construct(2, rt.binary("/", rt.binary("-", rt.binary("*", st, _u_fullResolution, 2, 'float'), _u_tileOffset, 2, 'float'), resolution, 2, 'float'))
+        localUV = rt.construct(2, rt.fdiv(rt.binary("-", rt.binary("*", st, _u_fullResolution, 2, 'float'), _u_tileOffset, 2, 'float'), resolution, 2))
         wrapMode = rt.construct(1, _u_wrap, base="int")
         if rt.binary("==", wrapMode, rt.i(0)):
             localUV[:] = rt.component_wise("clamp", localUV, rt.f(0.0), rt.f(1.0), width=2)
         else:
             if rt.binary("==", wrapMode, rt.i(1)):
-                localUV[:] = rt.component_wise("abs", rt.construct(2, rt.binary("-", rt.component_wise("mod", rt.binary("+", localUV, rt.f(1.0), 2, 'float'), rt.f(2.0), width=2), rt.f(1.0), 2, 'float')), width=2)
+                localUV[:] = rt.component_wise("abs", rt.construct(2, rt.binary("-", localUV, rt.construct(2, rt.binary("*", rt.f(2.0), rt.component_wise("floor", rt.binary("*", rt.binary("+", localUV, rt.f(1.0), 2, 'float'), rt.f(0.5), 2, 'float'), width=2), 2, 'float')), 2, 'float')), width=2)
             else:
                 localUV[:] = rt.component_wise("fract", localUV, width=2)
         g.fragColor[:] = rt.texture(_u_inputTex, localUV)

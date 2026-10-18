@@ -98,7 +98,7 @@ def test_hash_uint_routes_by_its_glsl_body_not_its_name():
         return emit_python(parse(normalized["source"]), normalized["outputs"], normalized["varyings"])
 
     murmur = generate(
-        "uint x = seed; x ^= x >> 16u; x *= 0x7feb352du; x ^= x >> 15u; x *= 0x846ca68bu; x ^= x >> 16u; return x;"
+        "seed ^= seed >> 16u; seed *= 0x7feb352du; seed ^= seed >> 15u; seed *= 0x846ca68bu; seed ^= seed >> 16u; return seed;"
     )
     lcg = generate(
         "uint state = seed * 747796405u + 2891336453u;"
@@ -199,7 +199,7 @@ def test_nested_inout_call_is_an_expression_and_updates_caller():
     assert np.array_equal(surface.data, np.array([4.0, 2.0, 0.0, 1.0], dtype=np.float32))
 
 
-def test_local_vector_constructor_assignment_matches_sequential_js_aliasing():
+def test_local_vector_constructor_assignment_stages_self_reads():
     from noisemaker_cpu.kernel_loader import load_kernel
     from noisemaker_cpu.pass_runner import Ctx, run_pass
     from noisemaker_cpu.runtime import Runtime
@@ -220,7 +220,7 @@ def test_local_vector_constructor_assignment_matches_sequential_js_aliasing():
 
     surface = run_pass(kernel, Ctx(Runtime()), 1, 1)
 
-    assert np.array_equal(surface.data, np.array([2.0, 6.0, 0.0, 1.0], dtype=np.float32))
+    assert np.array_equal(surface.data, np.array([2.0, 3.0, 0.0, 1.0], dtype=np.float32))
 
 
 def test_local_vector_constructor_member_reads_are_evaluated_atomically():
@@ -249,7 +249,7 @@ def test_local_vector_constructor_member_reads_are_evaluated_atomically():
     assert np.array_equal(surface.data, np.array([2.0, -1.0, 0.0, 1.0], dtype=np.float32))
 
 
-def test_local_vector_constructor_multiline_member_reads_are_evaluated_in_place():
+def test_local_vector_constructor_multiline_member_reads_are_evaluated_atomically():
     from noisemaker_cpu.kernel_loader import load_kernel
     from noisemaker_cpu.pass_runner import Ctx, run_pass
     from noisemaker_cpu.runtime import Runtime
@@ -276,7 +276,7 @@ def test_local_vector_constructor_multiline_member_reads_are_evaluated_in_place(
 
     surface = run_pass(kernel, Ctx(Runtime()), 1, 1)
 
-    assert np.array_equal(surface.data, np.array([2.0, -2.0, 0.0, 1.0], dtype=np.float32))
+    assert np.array_equal(surface.data, np.array([2.0, -1.0, 0.0, 1.0], dtype=np.float32))
 
 
 def test_indexed_vector_conditional_assignment_matches_js_true_branch_noop():
@@ -342,10 +342,10 @@ def test_scalar_int_division_declarations_mirror_the_sibling_lowering():
     assert 'trunc_param_div(rt.binary("/", localX, iScale, 1, "int"))' in generated
     assert 'trunc_scalar_div(rt.binary("/", localX, iScale' not in generated
     assert 'trunc_scalar_div(rt.binary("/", _u_volSize, _u_volSize' not in generated
-    # the sibling exempts filter/spookyTicker from the scalar/scalar rewrite
+    # Current CPU restores these divisions for spookyTicker too.
     spooky = emit("filter/spookyTicker")
-    assert "trunc_scalar_div" not in spooky
-    assert "trunc_param_div" not in spooky
+    assert "trunc_scalar_div" in spooky
+    assert "trunc_param_div" in spooky
     # larger expressions, non-identifier operands, and assignments stay fractional
     assert 'trunc_scalar_div(rt.binary("/", yAtlas, rt.i(2)' not in generated
 

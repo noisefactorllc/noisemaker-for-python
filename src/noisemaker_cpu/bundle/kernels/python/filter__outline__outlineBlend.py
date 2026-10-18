@@ -17,7 +17,7 @@ def run_pixel(ctx, out):
         if (bool(rt.binary("==", rt.swizzle(dimensions, "x"), rt.i(0))) or bool(rt.binary("==", rt.swizzle(dimensions, "y"), rt.i(0)))):
             g.fragColor[:] = rt.construct(4, rt.f(0.0))
             return
-        uv = rt.construct(2, rt.binary("/", rt.swizzle(ctx.frag_coord, "xy"), rt.construct_raw(2, rt.construct(2, dimensions)), 2, 'float'))
+        uv = rt.construct(2, rt.fdiv(rt.swizzle(ctx.frag_coord, "xy"), rt.construct_raw(2, rt.construct(2, dimensions)), 2))
         base = rt.texture(_u_inputTex, uv)
         edges = rt.texture(_u_edgesTexture, uv)
         strength = rt.component_wise("clamp", rt.swizzle(edges, "r"), rt.f(0.0), rt.f(1.0), width=1)

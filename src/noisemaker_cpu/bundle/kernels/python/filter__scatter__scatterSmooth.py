@@ -11,8 +11,8 @@ def run_pixel(ctx, out):
     _u_smoothness = U.get("smoothness", rt.f(0.0))
     g.fragColor = rt.construct(4, 0.0)
     def main__void():
-        uv = rt.construct(2, rt.binary("/", rt.swizzle(ctx.frag_coord, "xy"), _u_resolution, 2, 'float'))
-        texel = rt.construct(2, rt.binary("/", rt.f(1.0), _u_resolution, 2, 'float'))
+        uv = rt.construct(2, rt.fdiv(rt.swizzle(ctx.frag_coord, "xy"), _u_resolution, 2))
+        texel = rt.construct(2, rt.fdiv(rt.f(1.0), _u_resolution, 2))
         src = rt.texture(_u_inputTex, uv)
         sum = rt.construct(4, rt.f(0.0))
         wsum = rt.f(0.0)

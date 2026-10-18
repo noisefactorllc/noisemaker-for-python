@@ -253,7 +253,7 @@ def run_pixel(ctx, out):
     def main__void():
         globalCoord = rt.construct(2, rt.binary("+", rt.swizzle(ctx.frag_coord, "xy"), _u_tileOffset, 2, 'float'))
         texSize = rt.construct(2, rt.texture_size(_u_inputTex))
-        uv = rt.construct(2, rt.binary("/", rt.swizzle(ctx.frag_coord, "xy"), texSize, 2, 'float'))
+        uv = rt.construct(2, rt.fdiv(rt.swizzle(ctx.frag_coord, "xy"), texSize, 2))
         inputColor = rt.texture(_u_inputTex, uv)
         lum = rt.dot(rt.swizzle(inputColor, "rgb"), rt.construct(3, rt.f(0.299), rt.f(0.587), rt.f(0.114)))
         t = rt.binary("+", rt.binary("*", rt.binary("*", lum, rt.f(0.9999), 1, "float"), _u_repeat, 1, "float"), _u_offset, 1, "float")

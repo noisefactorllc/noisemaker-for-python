@@ -61,7 +61,7 @@ def run_pixel(ctx, out):
                 lev = rt.f(2.0)
         gamma = rt.f(0.65)
         color[:] = rt.component_wise("pow", color, rt.construct(3, gamma), width=3)
-        (color.__setitem__(0, rt.binary("/", rt.swizzle(rt.component_wise("floor", rt.binary("*", color, lev, 3, 'float'), width=3), "x"), lev, 1, "float")), color.__setitem__(1, rt.binary("/", rt.swizzle(rt.component_wise("floor", rt.binary("*", color, lev, 3, 'float'), width=3), "y"), lev, 1, "float")), color.__setitem__(2, rt.binary("/", rt.swizzle(rt.component_wise("floor", rt.binary("*", color, lev, 3, 'float'), width=3), "z"), lev, 1, "float")), color)[-1]
+        ((_vector_write_0_0 := rt.binary("/", rt.swizzle(rt.component_wise("floor", rt.binary("*", color, lev, 3, 'float'), width=3), "x"), lev, 1, "float")), (_vector_write_0_1 := rt.binary("/", rt.swizzle(rt.component_wise("floor", rt.binary("*", color, lev, 3, 'float'), width=3), "y"), lev, 1, "float")), (_vector_write_0_2 := rt.binary("/", rt.swizzle(rt.component_wise("floor", rt.binary("*", color, lev, 3, 'float'), width=3), "z"), lev, 1, "float")), color.__setitem__(0, _vector_write_0_0), color.__setitem__(1, _vector_write_0_1), color.__setitem__(2, _vector_write_0_2), color)[-1]
         color[:] = rt.component_wise("pow", color, rt.construct(3, rt.binary("/", rt.f(1.0), gamma, 1, "float")), width=3)
         return color
     def brightnessContrast__vec3(color):
@@ -195,10 +195,10 @@ def run_pixel(ctx, out):
         return color
     def main__void():
         globalCoord = rt.construct(2, rt.binary("+", rt.swizzle(ctx.frag_coord, "xy"), _u_tileOffset, 2, 'float'))
-        uv = rt.construct(2, rt.binary("/", globalCoord, _u_fullResolution, 2, 'float'))
+        uv = rt.construct(2, rt.fdiv(globalCoord, _u_fullResolution, 2))
         color = rt.construct(4, rt.f(0.0))
         blendy = periodicFunction__float(rt.binary("-", _u_time, offsets__vec2(uv), 1, "float"))
-        color[:] = rt.texture(_u_inputTex, rt.construct(2, rt.binary("/", rt.swizzle(ctx.frag_coord, "xy"), rt.construct(2, rt.texture_size(_u_inputTex)), 2, 'float')))
+        color[:] = rt.texture(_u_inputTex, rt.construct(2, rt.fdiv(rt.swizzle(ctx.frag_coord, "xy"), rt.construct(2, rt.texture_size(_u_inputTex)), 2)))
         if rt.binary("!=", _u_levels, rt.f(0.0)):
             color = rt.assign_swizzle(color, "rgb", posterize__vec3_float(rt.swizzle(color, "rgb"), _u_levels))
         bright = rgb2hsv__vec3(rt.swizzle(color, "rgb"))[int(rt.i(2))]
@@ -213,7 +213,7 @@ def run_pixel(ctx, out):
                     color = rt.assign_swizzle(color, "rgb", rt.binary("*", rt.swizzle(color, "rgb"), rt.construct(3, rt.component_wise("step", periodicFunction__float(rt.binary("+", random__vec2(globalCoord), _u_time, 1, "float")), bright, width=1)), 3, "float"))
                 else:
                     if rt.binary("==", _u_dither, rt.i(4)):
-                        coord = rt.construct(2, rt.binary("-", rt.swizzle(rt.component_wise("mod", rt.binary("/", globalCoord, _u_renderScale, 2, 'float'), rt.f(4.0), width=2), "xy"), rt.f(0.5), 2, 'float'))
+                        coord = rt.construct(2, rt.binary("-", rt.swizzle(rt.component_wise("mod", rt.fdiv(globalCoord, _u_renderScale, 2), rt.f(4.0), width=2), "xy"), rt.f(0.5), 2, 'float'))
                         if rt.binary("<", bright, rt.f(0.12)):
                             color = rt.assign_swizzle(color, "rgb", rt.construct(3, rt.f(0.0)))
                         else:

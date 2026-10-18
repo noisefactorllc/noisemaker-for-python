@@ -138,11 +138,11 @@ def run_pixel(ctx, out):
         scaling = rt.construct(2, 0.0)
         uv = rt.construct(2, 0.0)
         if rt.binary("==", _u_smoothing, rt.i(0)):
-            state = rt.swizzle(rt.texture(_u_fbTex, rt.binary("/", globalCoord, _u_fullResolution, 2, 'float')), "g")
+            state = rt.swizzle(rt.texture(_u_fbTex, rt.fdiv(globalCoord, _u_fullResolution, 2)), "g")
         else:
             if rt.binary("==", _u_smoothing, rt.i(2)):
                 texSize = rt.construct(2, rt.texture_size(_u_fbTex))
-                texelPos = rt.construct(2, rt.binary("-", rt.binary("/", rt.binary("*", globalCoord, texSize, 2, 'float'), _u_fullResolution, 2, 'float'), rt.construct_raw(2, rt.f(0.5)), 2, 'float'))
+                texelPos = rt.construct(2, rt.binary("-", rt.fdiv(rt.binary("*", globalCoord, texSize, 2, 'float'), _u_fullResolution, 2), rt.construct_raw(2, rt.f(0.5)), 2, 'float'))
                 base = rt.component_wise("floor", texelPos, width=2)
                 weights = rt.component_wise("fract", texelPos, width=2)
                 next = rt.construct(2, rt.binary("+", base, rt.construct_raw(2, rt.f(1.0)), 2, 'float'))
@@ -162,34 +162,34 @@ def run_pixel(ctx, out):
             else:
                 if rt.binary("==", _u_smoothing, rt.i(3)):
                     texSize = rt.construct(2, rt.texture_size(_u_fbTex))
-                    texelSize = rt.construct(2, rt.binary("/", rt.f(1.0), texSize, 2, 'float'))
-                    scaling = rt.construct(2, rt.binary("/", _u_fullResolution, texSize, 2, 'float'))
-                    uv = rt.construct(2, rt.binary("/", rt.binary("-", globalCoord, rt.binary("*", scaling, rt.f(0.5), 2, 'float'), 2, 'float'), _u_fullResolution, 2, 'float'))
+                    texelSize = rt.construct(2, rt.fdiv(rt.f(1.0), texSize, 2))
+                    scaling = rt.construct(2, rt.fdiv(_u_fullResolution, texSize, 2))
+                    uv = rt.construct(2, rt.fdiv(rt.binary("-", globalCoord, rt.binary("*", scaling, rt.f(0.5), 2, 'float'), 2, 'float'), _u_fullResolution, 2))
                     state = rt.swizzle(catmullRom3x3__sampler2D_vec2_vec2(_u_fbTex, uv, texelSize), "g")
                 else:
                     if rt.binary("==", _u_smoothing, rt.i(4)):
                         texSize = rt.construct(2, rt.texture_size(_u_fbTex))
-                        texelSize = rt.construct(2, rt.binary("/", rt.f(1.0), texSize, 2, 'float'))
-                        scaling = rt.construct(2, rt.binary("/", _u_fullResolution, texSize, 2, 'float'))
-                        uv = rt.construct(2, rt.binary("/", rt.binary("-", globalCoord, rt.binary("*", scaling, rt.f(0.5), 2, 'float'), 2, 'float'), _u_fullResolution, 2, 'float'))
+                        texelSize = rt.construct(2, rt.fdiv(rt.f(1.0), texSize, 2))
+                        scaling = rt.construct(2, rt.fdiv(_u_fullResolution, texSize, 2))
+                        uv = rt.construct(2, rt.fdiv(rt.binary("-", globalCoord, rt.binary("*", scaling, rt.f(0.5), 2, 'float'), 2, 'float'), _u_fullResolution, 2))
                         state = rt.swizzle(catmullRom4x4__sampler2D_vec2_vec2(_u_fbTex, uv, texelSize), "g")
                     else:
                         if rt.binary("==", _u_smoothing, rt.i(5)):
                             texSize = rt.construct(2, rt.texture_size(_u_fbTex))
-                            texelSize = rt.construct(2, rt.binary("/", rt.f(1.0), texSize, 2, 'float'))
-                            scaling = rt.construct(2, rt.binary("/", _u_fullResolution, texSize, 2, 'float'))
-                            uv = rt.construct(2, rt.binary("/", rt.binary("-", globalCoord, rt.binary("*", scaling, rt.f(0.5), 2, 'float'), 2, 'float'), _u_fullResolution, 2, 'float'))
+                            texelSize = rt.construct(2, rt.fdiv(rt.f(1.0), texSize, 2))
+                            scaling = rt.construct(2, rt.fdiv(_u_fullResolution, texSize, 2))
+                            uv = rt.construct(2, rt.fdiv(rt.binary("-", globalCoord, rt.binary("*", scaling, rt.f(0.5), 2, 'float'), 2, 'float'), _u_fullResolution, 2))
                             state = rt.swizzle(quadratic__sampler2D_vec2_vec2(_u_fbTex, uv, texelSize), "g")
                         else:
                             if rt.binary("==", _u_smoothing, rt.i(6)):
                                 texSize = rt.construct(2, rt.texture_size(_u_fbTex))
-                                texelSize = rt.construct(2, rt.binary("/", rt.f(1.0), texSize, 2, 'float'))
-                                scaling = rt.construct(2, rt.binary("/", _u_fullResolution, texSize, 2, 'float'))
-                                uv = rt.construct(2, rt.binary("/", rt.binary("-", globalCoord, rt.binary("*", scaling, rt.f(0.5), 2, 'float'), 2, 'float'), _u_fullResolution, 2, 'float'))
+                                texelSize = rt.construct(2, rt.fdiv(rt.f(1.0), texSize, 2))
+                                scaling = rt.construct(2, rt.fdiv(_u_fullResolution, texSize, 2))
+                                uv = rt.construct(2, rt.fdiv(rt.binary("-", globalCoord, rt.binary("*", scaling, rt.f(0.5), 2, 'float'), 2, 'float'), _u_fullResolution, 2))
                                 state = rt.swizzle(bicubic__sampler2D_vec2_vec2(_u_fbTex, uv, texelSize), "g")
                             else:
                                 texSize = rt.construct(2, rt.texture_size(_u_fbTex))
-                                texelPos = rt.construct(2, rt.binary("-", rt.binary("/", rt.binary("*", globalCoord, texSize, 2, 'float'), _u_fullResolution, 2, 'float'), rt.construct_raw(2, rt.f(0.5)), 2, 'float'))
+                                texelPos = rt.construct(2, rt.binary("-", rt.fdiv(rt.binary("*", globalCoord, texSize, 2, 'float'), _u_fullResolution, 2), rt.construct_raw(2, rt.f(0.5)), 2, 'float'))
                                 base = rt.component_wise("floor", texelPos, width=2)
                                 weights = rt.component_wise("fract", texelPos, width=2)
                                 next = rt.construct(2, rt.binary("+", base, rt.construct_raw(2, rt.f(1.0)), 2, 'float'))
@@ -216,7 +216,7 @@ def run_pixel(ctx, out):
         inputUv = rt.construct(2, 0.0)
         inputColor = rt.construct(3, 0.0)
         if rt.binary(">", blend, rt.f(0.0)):
-            inputUv = rt.construct(2, rt.binary("/", globalCoord, _u_fullResolution, 2, 'float'))
+            inputUv = rt.construct(2, rt.fdiv(globalCoord, _u_fullResolution, 2))
             inputColor = rt.swizzle(rt.texture(_u_inputTex, inputUv), "rgb")
             rdColor[:] = rt.component_wise("mix", rdColor, inputColor, blend, width=3)
         g.fragColor[:] = rt.construct(4, rdColor, rt.f(1.0))

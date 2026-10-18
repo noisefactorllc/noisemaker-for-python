@@ -1,4 +1,4 @@
-"""The oracle's float32 rounding model, pinned by noisemaker-for-perl 8dffce0f.
+"""The current CPU oracle's float32 rounding model.
 
 The fixture (tests/data/rounding-model.json) holds 59 probe shaders with the
 float32 bit patterns the oracle — glsl-transpiler 3.0.3's output run on the

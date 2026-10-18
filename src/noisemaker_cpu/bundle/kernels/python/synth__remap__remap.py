@@ -80,14 +80,14 @@ def run_pixel(ctx, out):
     def main__void():
         globalPx = rt.construct(2, rt.binary("+", rt.swizzle(ctx.frag_coord, "xy"), _u_tileOffset, 2, 'float'))
         q = rt.construct(2, rt.swizzle(globalPx, "x"), rt.binary("-", rt.swizzle(_u_fullResolution, "y"), rt.swizzle(globalPx, "y"), 1, "float"))
-        p = rt.construct(2, rt.binary("/", q, _u_fullResolution, 2, 'float'))
-        sampleUv = rt.construct(2, rt.binary("/", rt.swizzle(ctx.frag_coord, "xy"), rt.swizzle(_u_data[int(rt.i(266))], "xy"), 2, 'float'))
+        p = rt.construct(2, rt.fdiv(q, _u_fullResolution, 2))
+        sampleUv = rt.construct(2, rt.fdiv(rt.swizzle(ctx.frag_coord, "xy"), rt.swizzle(_u_data[int(rt.i(266))], "xy"), 2))
         header = _u_data[int(rt.i(0))]
         controls = _u_data[int(rt.i(1))]
         activeCount = rt.component_wise("min", rt.construct(1, rt.swizzle(controls, "x"), base="int"), rt.i(8), width=1)
         featherPx = rt.binary("*", rt.binary("*", rt.component_wise("max", rt.swizzle(controls, "y"), rt.f(0.0), width=1), rt.f(0.05), 1, "float"), rt.component_wise("min", rt.swizzle(_u_fullResolution, "x"), rt.swizzle(_u_fullResolution, "y"), width=1), 1, "float")
         needDist = rt.binary(">", featherPx, rt.f(0.0))
-        dilate = rt.construct(2, rt.binary("/", rt.construct_raw(2, featherPx), _u_fullResolution, 2, 'float'))
+        dilate = rt.construct(2, rt.fdiv(rt.construct_raw(2, featherPx), _u_fullResolution, 2))
         result = rt.construct(4, rt.f(0.0))
         k = rt.i(0)
         _for1_first = True

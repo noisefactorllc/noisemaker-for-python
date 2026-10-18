@@ -63,7 +63,7 @@ def run_pixel(ctx, out):
         return rt.construct(2, tEnter, tExit)
     def main__void():
         res = rt.construct(2, (_u_fullResolution if rt.binary(">", rt.swizzle(_u_fullResolution, "x"), rt.f(0.0)) else _u_resolution))
-        uv = rt.construct(2, rt.binary("/", rt.binary("-", rt.binary("+", rt.swizzle(ctx.frag_coord, "xy"), _u_tileOffset, 2, 'float'), rt.binary("*", rt.f(0.5), res, 2, 'float'), 2, 'float'), rt.binary("*", rt.f(0.5), rt.swizzle(res, "y"), 1, "float"), 2, 'float'))
+        uv = rt.construct(2, rt.fdiv(rt.binary("-", rt.binary("+", rt.swizzle(ctx.frag_coord, "xy"), _u_tileOffset, 2, 'float'), rt.binary("*", rt.f(0.5), res, 2, 'float'), 2, 'float'), rt.binary("*", rt.f(0.5), rt.swizzle(res, "y"), 1, "float"), 2))
         ro = rt.construct(3, rt.f(0.0))
         rd = rt.normalize(rt.matrix_mult(_u_cubeBasis, rt.construct(3, rt.swizzle(uv, "x"), rt.unary("-", rt.swizzle(uv, "y")), rt.f(1.0)), 3))
         col = rt.construct(3, rt.f(0.0))

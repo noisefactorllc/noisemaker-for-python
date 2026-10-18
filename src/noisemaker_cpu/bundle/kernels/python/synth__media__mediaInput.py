@@ -63,7 +63,7 @@ def run_pixel(ctx, out):
         size = rt.copy_decl(_u_imageSize, "float")
         st[:] = rt.binary("/", rt.swizzle(ctx.frag_coord, "xy"), size, 2, 'float')
         st = rt.assign_swizzle(st, "y", rt.binary("-", rt.f(1.0), rt.swizzle(st, "y"), 1, "float"))
-        scale = rt.binary("/", rt.f(100.0), _u_scaleAmt, 1, "float")
+        scale = rt.fdiv(rt.f(100.0), _u_scaleAmt, 1)
         if rt.binary("==", scale, rt.f(0.0)):
             scale = rt.f(1.0)
         st[:] = rt.binary("*", st, scale, 2, "float")
@@ -161,7 +161,7 @@ def run_pixel(ctx, out):
             return rt.construct(4, rt.binary("*", _u_bgColor, _u_bgAlpha, 3, 'float'), _u_bgAlpha)
         return text
     def main__void():
-        st = rt.construct(2, rt.binary("/", rt.swizzle(ctx.frag_coord, "xy"), _u_resolution, 2, 'float'))
+        st = rt.construct(2, rt.fdiv(rt.swizzle(ctx.frag_coord, "xy"), _u_resolution, 2))
         st = rt.assign_swizzle(st, "y", rt.binary("-", rt.f(1.0), rt.swizzle(st, "y"), 1, "float"))
         g.fragColor[:] = getImage__vec2(st)
     main__void()

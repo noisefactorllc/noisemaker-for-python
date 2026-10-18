@@ -150,10 +150,10 @@ def run_pixel(ctx, out):
         st = rt.copy(st, "float")
         rot = map__float_float_float_float_float(rot, rt.f(0.0), rt.f(360.0), rt.f(0.0), rt.f(2.0))
         angle = rt.binary("*", rot, rt.f(3.14159265359), 1, "float")
-        st[:] = rt.binary("-", st, rt.construct(2, rt.binary("/", rt.binary("*", rt.f(0.5), rt.swizzle(_u_fullResolution, "x"), 1, "float"), rt.swizzle(_u_fullResolution, "y"), 1, "float"), rt.f(0.5)), 2, "float")
+        st[:] = rt.binary("-", st, rt.construct(2, rt.fdiv(rt.binary("*", rt.f(0.5), rt.swizzle(_u_fullResolution, "x"), 1, "float"), rt.swizzle(_u_fullResolution, "y"), 1), rt.f(0.5)), 2, "float")
         cpu_matrix_assignment_0 = rt.construct(2, rt.matrix_mult(rt.construct(4, rt.component_wise("cos", angle, width=1), rt.unary("-", rt.component_wise("sin", angle, width=1)), rt.component_wise("sin", angle, width=1), rt.component_wise("cos", angle, width=1)), st, 2))
         st[:] = cpu_matrix_assignment_0
-        st[:] = rt.binary("+", st, rt.construct(2, rt.binary("/", rt.binary("*", rt.f(0.5), rt.swizzle(_u_fullResolution, "x"), 1, "float"), rt.swizzle(_u_fullResolution, "y"), 1, "float"), rt.f(0.5)), 2, "float")
+        st[:] = rt.binary("+", st, rt.construct(2, rt.fdiv(rt.binary("*", rt.f(0.5), rt.swizzle(_u_fullResolution, "x"), 1, "float"), rt.swizzle(_u_fullResolution, "y"), 1), rt.f(0.5)), 2, "float")
         return st
     def polarShape__vec2_int(st, sides):
         st = rt.copy(st, "float")
@@ -185,7 +185,7 @@ def run_pixel(ctx, out):
         st = rt.copy(st, "float")
         if rt.binary("<", rt.swizzle(st, "x"), rt.f(0.0)):
             st = rt.assign_swizzle(st, "x", rt.binary("-", freq, rt.f(1.0), 1, "float"))
-        if rt.binary(">", rt.swizzle(st, "x"), rt.binary("/", rt.binary("*", freq, rt.swizzle(_u_fullResolution, "x"), 1, "float"), rt.swizzle(_u_fullResolution, "y"), 1, "float")):
+        if rt.binary(">", rt.swizzle(st, "x"), rt.fdiv(rt.binary("*", freq, rt.swizzle(_u_fullResolution, "x"), 1, "float"), rt.swizzle(_u_fullResolution, "y"), 1)):
             st = rt.assign_swizzle(st, "x", rt.f(0.0))
         if rt.binary("<", rt.swizzle(st, "y"), rt.f(0.0)):
             st = rt.assign_swizzle(st, "y", rt.binary("-", freq, rt.f(1.0), 1, "float"))
@@ -199,9 +199,9 @@ def run_pixel(ctx, out):
         return rt.binary("-", rt.component_wise("min", a, b, width=1), rt.binary("*", rt.binary("*", rt.binary("*", h, h, 1, "float"), k, 1, "float"), rt.f(0.25), 1, "float"), 1, "float")
     def cells__vec2_float_float_int(st, freq, cellSize, sides):
         st = rt.copy(st, "float")
-        st[:] = rt.binary("-", st, rt.construct(2, rt.binary("/", rt.binary("*", rt.f(0.5), rt.swizzle(_u_fullResolution, "x"), 1, "float"), rt.swizzle(_u_fullResolution, "y"), 1, "float"), rt.f(0.5)), 2, "float")
+        st[:] = rt.binary("-", st, rt.construct(2, rt.fdiv(rt.binary("*", rt.f(0.5), rt.swizzle(_u_fullResolution, "x"), 1, "float"), rt.swizzle(_u_fullResolution, "y"), 1), rt.f(0.5)), 2, "float")
         st[:] = rt.binary("*", st, freq, 2, "float")
-        st[:] = rt.binary("+", st, rt.construct(2, rt.binary("/", rt.binary("*", rt.f(0.5), rt.swizzle(_u_fullResolution, "x"), 1, "float"), rt.swizzle(_u_fullResolution, "y"), 1, "float"), rt.f(0.5)), 2, "float")
+        st[:] = rt.binary("+", st, rt.construct(2, rt.fdiv(rt.binary("*", rt.f(0.5), rt.swizzle(_u_fullResolution, "x"), 1, "float"), rt.swizzle(_u_fullResolution, "y"), 1), rt.f(0.5)), 2, "float")
         st[:] = rt.binary("+", st, rt.swizzle(prng__vec3(rt.construct(3, rt.construct(1, _u_seed))), "xy"), 2, "float")
         i = rt.component_wise("floor", st, width=2)
         f = rt.component_wise("fract", st, width=2)
@@ -240,15 +240,15 @@ def run_pixel(ctx, out):
     def main__void():
         globalCoord = rt.construct(2, rt.binary("+", rt.swizzle(ctx.frag_coord, "xy"), _u_tileOffset, 2, 'float'))
         color = rt.construct(4, rt.f(0.0), rt.f(0.0), rt.f(1.0), rt.f(1.0))
-        st = rt.construct(2, rt.binary("/", globalCoord, rt.swizzle(_u_fullResolution, "y"), 2, 'float'))
+        st = rt.construct(2, rt.fdiv(globalCoord, rt.swizzle(_u_fullResolution, "y"), 2))
         freq = map__float_float_float_float_float(_u_scale, rt.f(1.0), rt.f(100.0), rt.f(20.0), rt.f(1.0))
         cellSize = map__float_float_float_float_float(_u_cellScale, rt.f(1.0), rt.f(100.0), rt.f(3.0), rt.f(0.75))
         texLuminosity = rt.f(0.0)
         texFactor = rt.binary("*", _u_texIntensity, rt.f(0.01), 1, "float")
-        texCoord = rt.construct(2, rt.binary("/", globalCoord, _u_fullResolution, 2, 'float'))
+        texCoord = rt.construct(2, rt.fdiv(globalCoord, _u_fullResolution, 2))
         texRGB = rt.construct(3, 0.0)
         if rt.binary(">", _u_texInfluence, rt.i(0)):
-            texRGB = rt.swizzle(rt.texture(_u_tex, rt.construct(2, rt.binary("/", rt.swizzle(ctx.frag_coord, "xy"), rt.construct(2, rt.texture_size(_u_tex)), 2, 'float'))), "rgb")
+            texRGB = rt.swizzle(rt.texture(_u_tex, rt.construct(2, rt.fdiv(rt.swizzle(ctx.frag_coord, "xy"), rt.construct(2, rt.texture_size(_u_tex)), 2))), "rgb")
             texLuminosity = luminance__vec3(texRGB)
             if rt.binary("==", _u_texInfluence, rt.i(1)):
                 cellSize = rt.binary("-", cellSize, rt.binary("*", texLuminosity, texFactor, 1, "float"), 1, "float")
@@ -290,7 +290,7 @@ def run_pixel(ctx, out):
                         if rt.binary("==", _u_cyclePalette, rt.i(1)):
                             d = rt.binary("-", d, _u_time, 1, "float")
                     color = rt.assign_swizzle(color, "rgb", pal__float(d))
-        st[:] = rt.binary("/", globalCoord, _u_fullResolution, 2, 'float')
+        st[:] = rt.fdiv(globalCoord, _u_fullResolution, 2)
         g.fragColor[:] = color
     main__void()
     _c = g.fragColor

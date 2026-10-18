@@ -157,7 +157,7 @@ def run_pixel(ctx, out):
             seed_f = rt.construct(1, agentSeed)
             age = rt.f(0.0)
             initialized = rt.f(1.0)
-        agentPhase = rt.binary("/", rt.construct(1, agentIndex), rt.construct(1, rt.component_wise("max", totalAgents, rt.i(1), width=1)), 1, "float")
+        agentPhase = rt.fdiv(rt.construct(1, agentIndex), rt.construct(1, rt.component_wise("max", totalAgents, rt.i(1), width=1)), 1)
         staggeredAge = rt.binary("+", age, rt.binary("*", agentPhase, _u_lifetime, 1, "float"), 1, "float")
         shouldRespawn = (bool(rt.binary(">", _u_lifetime, rt.f(0.0))) and bool(rt.binary(">=", staggeredAge, _u_lifetime)))
         if shouldRespawn:

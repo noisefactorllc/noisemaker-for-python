@@ -23,7 +23,7 @@ def run_pixel(ctx, out):
         return rt.binary("*", rt.binary("*", w, w, 1, "float"), rt.binary("-", rt.f(3.0), rt.binary("*", rt.f(2.0), w, 1, "float"), 1, "float"), 1, "float")
     def main__void():
         texSize = rt.texture_size(_u_inputTex)
-        uv = rt.construct(2, rt.binary("/", rt.swizzle(ctx.frag_coord, "xy"), rt.construct_raw(2, rt.construct(2, texSize)), 2, 'float'))
+        uv = rt.construct(2, rt.fdiv(rt.swizzle(ctx.frag_coord, "xy"), rt.construct_raw(2, rt.construct(2, texSize)), 2))
         st = rt.construct(2, rt.binary("*", uv, _u_repeat, 2, 'float'))
         st[:] = rt.component_wise("fract", st, width=2)
         wx = edgeWeight__float_float(rt.swizzle(st, "x"), _u_blend)

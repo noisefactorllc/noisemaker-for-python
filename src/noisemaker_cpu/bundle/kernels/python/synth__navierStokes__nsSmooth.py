@@ -50,7 +50,7 @@ def run_pixel(ctx, out):
         texSize = rt.texture_size(_u_canvasTex)
         minIdx = rt.construct(2, rt.i(0), base="int")
         maxIdx = rt.binary("-", texSize, rt.construct(2, rt.i(1), base="int"), 2, "int")
-        uv = rt.construct(2, rt.binary("/", rt.swizzle(ctx.frag_coord, "xy"), _u_resolution, 2, 'float'))
+        uv = rt.construct(2, rt.fdiv(rt.swizzle(ctx.frag_coord, "xy"), _u_resolution, 2))
         texelPos = rt.construct(2, rt.binary("-", rt.binary("*", uv, rt.construct_raw(2, rt.construct(2, texSize)), 2, 'float'), rt.construct_raw(2, rt.f(0.5)), 2, 'float'))
         baseI = rt.construct(2, rt.component_wise("floor", texelPos, width=2), base="int")
         f = rt.component_wise("fract", texelPos, width=2)

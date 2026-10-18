@@ -18,9 +18,9 @@ def run_pixel(ctx, out):
     _u_antialias = U.get("antialias", False)
     g.fragColor = rt.construct(4, 0.0)
     def main__void():
-        aspectRatio = rt.binary("/", rt.swizzle(_u_fullResolution, "x"), rt.swizzle(_u_fullResolution, "y"), 1, "float")
+        aspectRatio = rt.fdiv(rt.swizzle(_u_fullResolution, "x"), rt.swizzle(_u_fullResolution, "y"), 1)
         globalCoord = rt.construct(2, rt.binary("+", rt.swizzle(ctx.frag_coord, "xy"), _u_tileOffset, 2, 'float'))
-        uv = rt.construct(2, rt.binary("/", globalCoord, _u_fullResolution, 2, 'float'))
+        uv = rt.construct(2, rt.fdiv(globalCoord, _u_fullResolution, 2))
         uv[:] = rt.binary("-", uv, rt.f(0.5), 2, "float")
         uv = rt.assign_swizzle(uv, "x", rt.binary("*", rt.swizzle(uv, "x"), aspectRatio, 1, "float"))
         r = rt.length(uv)
@@ -45,7 +45,7 @@ def run_pixel(ctx, out):
             else:
                 rotDelta = rt.binary("*", w, rt.f(0.5), 1, "float")
                 rDelta = rt.binary("*", w, rt.f(0.5), 1, "float")
-        dir = rt.construct(2, (rt.binary("/", uv, r, 2, 'float') if rt.binary(">", r, rt.f(0.0)) else rt.construct(2, rt.f(0.0))))
+        dir = rt.construct(2, (rt.fdiv(uv, r, 2) if rt.binary(">", r, rt.f(0.0)) else rt.construct(2, rt.f(0.0))))
         rot = rt.binary("*", rt.binary("*", rt.binary("*", rotDelta, rt.f(2.0), 1, "float"), rt.f(3.14159265359), 1, "float"), rt.f(0.25), 1, "float")
         s = rt.component_wise("sin", rot, width=1)
         co = rt.component_wise("cos", rot, width=1)
@@ -54,13 +54,13 @@ def run_pixel(ctx, out):
         uv = rt.assign_swizzle(uv, "x", rt.binary("/", rt.swizzle(uv, "x"), aspectRatio, 1, "float"))
         uv[:] = rt.binary("+", uv, rt.f(0.5), 2, "float")
         if rt.binary("==", _u_WRAP, rt.i(0)):
-            uv[:] = rt.component_wise("abs", rt.construct(2, rt.binary("-", rt.component_wise("mod", rt.binary("+", uv, rt.f(1.0), 2, 'float'), rt.f(2.0), width=2), rt.f(1.0), 2, 'float')), width=2)
+            uv[:] = rt.component_wise("abs", rt.construct(2, rt.binary("-", uv, rt.construct(2, rt.binary("*", rt.f(2.0), rt.component_wise("floor", rt.binary("*", rt.binary("+", uv, rt.f(1.0), 2, 'float'), rt.f(0.5), 2, 'float'), width=2), 2, 'float')), 2, 'float')), width=2)
         else:
             if rt.binary("==", _u_WRAP, rt.i(1)):
                 uv[:] = rt.component_wise("mod", uv, rt.f(1.0), width=2)
             else:
                 uv[:] = rt.component_wise("clamp", uv, rt.f(0.0), rt.f(1.0), width=2)
-        sampleUV = rt.component_wise("clamp", rt.binary("/", rt.binary("-", rt.binary("*", uv, _u_fullResolution, 2, 'float'), _u_tileOffset, 2, 'float'), _u_resolution, 2, 'float'), rt.f(0.0), rt.f(1.0), width=2)
+        sampleUV = rt.component_wise("clamp", rt.fdiv(rt.binary("-", rt.binary("*", uv, _u_fullResolution, 2, 'float'), _u_tileOffset, 2, 'float'), _u_resolution, 2), rt.f(0.0), rt.f(1.0), width=2)
         dx = rt.construct(2, 0.0)
         dy = rt.construct(2, 0.0)
         col = rt.construct(4, 0.0)

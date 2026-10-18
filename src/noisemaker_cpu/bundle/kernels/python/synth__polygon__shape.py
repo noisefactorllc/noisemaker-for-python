@@ -25,7 +25,7 @@ def run_pixel(ctx, out):
         return rt.binary("*", rt.component_wise("cos", rt.binary("-", rt.binary("*", rt.component_wise("floor", rt.binary("+", rt.f(0.5), rt.binary("/", a, r, 1, "float"), 1, "float"), width=1), r, 1, "float"), a, 1, "float"), width=1), rt.length(st), 1, "float")
     def main__void():
         globalCoord = rt.construct(2, rt.binary("+", rt.swizzle(ctx.frag_coord, "xy"), _u_tileOffset, 2, 'float'))
-        st = rt.construct(2, rt.binary("/", globalCoord, _u_fullResolution, 2, 'float'))
+        st = rt.construct(2, rt.fdiv(globalCoord, _u_fullResolution, 2))
         (st.__setitem__(0, rt.binary("*", rt.binary("-", rt.swizzle(st, "x"), rt.f(0.5), 1, "float"), rt.f(2.0), 1, "float")), st.__setitem__(1, rt.binary("*", rt.binary("-", rt.swizzle(st, "y"), rt.f(0.5), 1, "float"), rt.f(2.0), 1, "float")), st)[-1]
         st = rt.assign_swizzle(st, "x", rt.binary("*", rt.swizzle(st, "x"), _u_aspect, 1, "float"))
         c = rt.component_wise("cos", rt.binary("/", rt.binary("*", _u_rotation, rt.f(3.14159265359), 1, "float"), rt.f(180.0), 1, "float"), width=1)
@@ -37,12 +37,12 @@ def run_pixel(ctx, out):
         if rt.binary("==", _u_sides, rt.i(3)):
             cpu_vector_assignment_1 = rt.construct(2, rt.swizzle(st, "y"), rt.unary("-", rt.swizzle(st, "x")))
             st[:] = cpu_vector_assignment_1
-        d = rt.binary("/", polygon__vec2_float(st, sidesF), rt.component_wise("cos", rt.binary("/", rt.f(3.14159265359), sidesF, 1, "float"), width=1), 1, "float")
+        d = rt.fdiv(polygon__vec2_float(st, sidesF), rt.component_wise("cos", rt.fdiv(rt.f(3.14159265359), sidesF, 1), width=1), 1)
         m = ((rt.f(1.0) if rt.binary("<=", d, _u_radius) else rt.f(0.0)) if rt.binary("==", _u_smoothing, rt.f(0.0)) else rt.component_wise("smoothstep", _u_radius, rt.binary("-", _u_radius, _u_smoothing, 1, "float"), d, width=1))
         fgMask = rt.binary("*", m, _u_fgAlpha, 1, "float")
         bgMask = rt.binary("*", rt.binary("-", rt.f(1.0), m, 1, "float"), _u_bgAlpha, 1, "float")
         totalAlpha = rt.binary("+", fgMask, bgMask, 1, "float")
-        outColor = rt.construct(3, (rt.binary("/", rt.binary("+", rt.binary("*", _u_fgColor, fgMask, 3, 'float'), rt.binary("*", _u_bgColor, bgMask, 3, 'float'), 3, 'float'), totalAlpha, 3, 'float') if rt.binary(">", totalAlpha, rt.f(0.0)) else rt.construct(3, rt.f(0.0))))
+        outColor = rt.construct(3, (rt.fdiv(rt.binary("+", rt.binary("*", _u_fgColor, fgMask, 3, 'float'), rt.binary("*", _u_bgColor, bgMask, 3, 'float'), 3, 'float'), totalAlpha, 3) if rt.binary(">", totalAlpha, rt.f(0.0)) else rt.construct(3, rt.f(0.0))))
         g.fragColor[:] = rt.construct(4, rt.binary("*", outColor, totalAlpha, 3, 'float'), totalAlpha)
     main__void()
     _c = g.fragColor

@@ -21,8 +21,8 @@ def run_pixel(ctx, out):
         return rt.binary("+", outMin, rt.binary("/", rt.binary("*", rt.binary("-", outMax, outMin, 1, "float"), rt.binary("-", value, inMin, 1, "float"), 1, "float"), rt.binary("-", inMax, inMin, 1, "float"), 1, "float"), 1, "float")
     def convolve__vec2_float_bool(uv, kernel, divide):
         uv = rt.copy(uv, "float")
-        localUV = rt.construct(2, rt.binary("/", rt.construct(2, rt.binary("-", rt.binary("*", uv, _u_fullResolution, 2, 'float'), _u_tileOffset, 2, 'float')), rt.construct(2, rt.texture_size(_u_inputTex)), 2, 'float'))
-        steps = rt.construct(2, rt.binary("/", rt.f(1.0), rt.construct(2, rt.texture_size(_u_inputTex)), 2, 'float'))
+        localUV = rt.construct(2, rt.fdiv(rt.construct(2, rt.binary("-", rt.binary("*", uv, _u_fullResolution, 2, 'float'), _u_tileOffset, 2, 'float')), rt.construct(2, rt.texture_size(_u_inputTex)), 2))
+        steps = rt.construct(2, rt.fdiv(rt.f(1.0), rt.construct(2, rt.texture_size(_u_inputTex)), 2))
         offset = rt.new_array(rt.i(9), 2)
         offset[int(rt.i(0))] = rt.construct(2, rt.construct(2, rt.unary("-", rt.swizzle(steps, "x")), rt.unary("-", rt.swizzle(steps, "y"))))
         offset[int(rt.i(1))] = rt.construct(2, rt.construct(2, rt.f(0.0), rt.unary("-", rt.swizzle(steps, "y"))))
@@ -162,15 +162,15 @@ def run_pixel(ctx, out):
         return rt.swizzle(color, "rgb")
     def main__void():
         globalCoord = rt.construct(2, rt.binary("+", rt.swizzle(ctx.frag_coord, "xy"), _u_tileOffset, 2, 'float'))
-        uv = rt.construct(2, rt.binary("/", globalCoord, _u_fullResolution, 2, 'float'))
+        uv = rt.construct(2, rt.fdiv(globalCoord, _u_fullResolution, 2))
         color = rt.construct(4, rt.f(0.0))
-        localUV = rt.construct(2, rt.binary("/", rt.construct(2, rt.binary("-", rt.binary("*", uv, _u_fullResolution, 2, 'float'), _u_tileOffset, 2, 'float')), rt.construct(2, rt.texture_size(_u_inputTex)), 2, 'float'))
+        localUV = rt.construct(2, rt.fdiv(rt.construct(2, rt.binary("-", rt.binary("*", uv, _u_fullResolution, 2, 'float'), _u_tileOffset, 2, 'float')), rt.construct(2, rt.texture_size(_u_inputTex)), 2))
         inputColor = rt.texture(_u_inputTex, localUV)
         brightness = rt.binary("+", desaturate__vec3(rt.swizzle(inputColor, "rgb")), rt.binary("/", _u_direction, rt.f(360.0), 1, "float"), 1, "float")
         displacement = rt.binary("*", _u_amount, rt.f(0.01), 1, "float")
         maxDisplacement = rt.f(0.0)
         if (bool(rt.binary(">", rt.swizzle(_u_fullResolution, "x"), rt.swizzle(_u_resolution, "x"))) or bool(rt.binary(">", rt.swizzle(_u_fullResolution, "y"), rt.swizzle(_u_resolution, "y")))):
-            maxDisplacement = rt.binary("/", rt.f(256.0), rt.component_wise("max", rt.swizzle(_u_fullResolution, "x"), rt.swizzle(_u_fullResolution, "y"), width=1), 1, "float")
+            maxDisplacement = rt.fdiv(rt.f(256.0), rt.component_wise("max", rt.swizzle(_u_fullResolution, "x"), rt.swizzle(_u_fullResolution, "y"), width=1), 1)
             displacement = rt.component_wise("min", displacement, maxDisplacement, width=1)
         if rt.binary("==", _u_mode, rt.i(0)):
             uv = rt.assign_swizzle(uv, "x", rt.binary("+", rt.swizzle(uv, "x"), rt.binary("*", rt.component_wise("cos", rt.binary("*", brightness, rt.f(6.28318530718), 1, "float"), width=1), displacement, 1, "float"), 1, "float"))
@@ -180,14 +180,14 @@ def run_pixel(ctx, out):
                 uv = rt.assign_swizzle(uv, "y", rt.binary("+", rt.swizzle(uv, "y"), rt.binary("*", desaturate__vec3(derivX__vec3_vec2_bool(rt.swizzle(inputColor, "rgb"), uv, False)), displacement, 1, "float"), 1, "float"))
                 uv = rt.assign_swizzle(uv, "x", rt.binary("+", rt.swizzle(uv, "x"), rt.binary("*", desaturate__vec3(derivY__vec3_vec2_bool(rt.swizzle(inputColor, "rgb"), uv, False)), displacement, 1, "float"), 1, "float"))
         if rt.binary("==", _u_wrap, rt.i(0)):
-            uv[:] = rt.component_wise("abs", rt.construct(2, rt.binary("-", rt.component_wise("mod", rt.binary("+", uv, rt.f(1.0), 2, 'float'), rt.f(2.0), width=2), rt.f(1.0), 2, 'float')), width=2)
+            uv[:] = rt.component_wise("abs", rt.construct(2, rt.binary("-", uv, rt.construct(2, rt.binary("*", rt.f(2.0), rt.component_wise("floor", rt.binary("*", rt.binary("+", uv, rt.f(1.0), 2, 'float'), rt.f(0.5), 2, 'float'), width=2), 2, 'float')), 2, 'float')), width=2)
         else:
             if rt.binary("==", _u_wrap, rt.i(1)):
                 uv[:] = rt.component_wise("mod", uv, rt.f(1.0), width=2)
             else:
                 if rt.binary("==", _u_wrap, rt.i(2)):
                     uv[:] = rt.component_wise("clamp", uv, rt.f(0.0), rt.f(1.0), width=2)
-        warpedLocalUV = rt.construct(2, rt.binary("/", rt.construct(2, rt.binary("-", rt.binary("*", uv, _u_fullResolution, 2, 'float'), _u_tileOffset, 2, 'float')), rt.construct(2, rt.texture_size(_u_inputTex)), 2, 'float'))
+        warpedLocalUV = rt.construct(2, rt.fdiv(rt.construct(2, rt.binary("-", rt.binary("*", uv, _u_fullResolution, 2, 'float'), _u_tileOffset, 2, 'float')), rt.construct(2, rt.texture_size(_u_inputTex)), 2))
         color[:] = rt.texture(_u_inputTex, warpedLocalUV)
         color = rt.assign_swizzle(color, "rgb", blend__vec4_vec4(inputColor, color))
         g.fragColor[:] = color

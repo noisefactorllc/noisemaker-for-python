@@ -12,7 +12,7 @@ def run_pixel(ctx, out):
     _u_threshold = U.get("threshold", rt.f(0.0))
     g.fragColor = rt.construct(4, 0.0)
     def main__void():
-        uv = rt.construct(2, rt.binary("/", rt.swizzle(ctx.frag_coord, "xy"), _u_resolution, 2, 'float'))
+        uv = rt.construct(2, rt.fdiv(rt.swizzle(ctx.frag_coord, "xy"), _u_resolution, 2))
         src = rt.texture(_u_inputTex, uv)
         blur = rt.texture(_u_blurTex, uv)
         diff = rt.construct(3, rt.binary("-", rt.swizzle(src, "rgb"), rt.swizzle(blur, "rgb"), 3, 'float'))

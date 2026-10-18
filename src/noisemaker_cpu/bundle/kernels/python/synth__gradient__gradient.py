@@ -22,7 +22,7 @@ def run_pixel(ctx, out):
     g.fragColor = rt.construct(4, 0.0)
     def rotate2D__vec2_float(st, angle):
         st = rt.copy(st, "float")
-        aspectRatio = rt.binary("/", rt.swizzle(_u_fullResolution, "x"), rt.swizzle(_u_fullResolution, "y"), 1, "float")
+        aspectRatio = rt.fdiv(rt.swizzle(_u_fullResolution, "x"), rt.swizzle(_u_fullResolution, "y"), 1)
         st = rt.assign_swizzle(st, "x", rt.binary("*", rt.swizzle(st, "x"), aspectRatio, 1, "float"))
         st[:] = rt.binary("-", st, rt.construct(2, rt.binary("*", aspectRatio, rt.f(0.5), 1, "float"), rt.f(0.5)), 2, "float")
         c = rt.component_wise("cos", angle, width=1)
@@ -100,8 +100,8 @@ def run_pixel(ctx, out):
         return rt.binary("/", sum, maxVal, 1, "float")
     def main__void():
         globalCoord = rt.construct(2, rt.binary("+", rt.swizzle(ctx.frag_coord, "xy"), _u_tileOffset, 2, 'float'))
-        st = rt.construct(2, rt.binary("/", globalCoord, _u_fullResolution, 2, 'float'))
-        aspectRatio = rt.binary("/", rt.swizzle(_u_fullResolution, "x"), rt.swizzle(_u_fullResolution, "y"), 1, "float")
+        st = rt.construct(2, rt.fdiv(globalCoord, _u_fullResolution, 2))
+        aspectRatio = rt.fdiv(rt.swizzle(_u_fullResolution, "x"), rt.swizzle(_u_fullResolution, "y"), 1)
         angle = rt.binary("/", rt.binary("*", rt.unary("-", _u_rotation), rt.f(3.14159265359), 1, "float"), rt.f(180.0), 1, "float")
         rotatedSt = rotate2D__vec2_float(st, angle)
         centered = rt.construct(2, rt.binary("-", st, rt.f(0.5), 2, 'float'))

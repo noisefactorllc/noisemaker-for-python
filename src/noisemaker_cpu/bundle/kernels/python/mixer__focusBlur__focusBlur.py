@@ -39,18 +39,18 @@ def run_pixel(ctx, out):
                 break
             r = rt.component_wise("sqrt", rt.binary("/", rt.construct(1, i), rt.f(64.0), 1, "float"), width=1)
             theta = rt.binary("*", rt.construct(1, i), GOLDEN, 1, "float")
-            offset = rt.construct(2, rt.binary("/", rt.binary("*", rt.binary("*", rt.construct_raw(2, rt.component_wise("cos", theta, width=1), rt.component_wise("sin", theta, width=1)), r, 2, 'float'), blurRadius, 2, 'float'), _u_resolution, 2, 'float'))
+            offset = rt.construct(2, rt.fdiv(rt.binary("*", rt.binary("*", rt.construct_raw(2, rt.component_wise("cos", theta, width=1), rt.component_wise("sin", theta, width=1)), r, 2, 'float'), blurRadius, 2, 'float'), _u_resolution, 2))
             color[:] = rt.binary("+", color, rt.texture(sceneTex, rt.construct(2, rt.binary("/", rt.construct(2, rt.binary("-", rt.binary("*", rt.binary("+", uv, offset, 2, 'float'), _u_fullResolution, 2, 'float'), _u_tileOffset, 2, 'float')), rt.construct(2, rt.texture_size(sceneTex)), 2, 'float'))), 4, "float")
         return rt.construct(4, rt.binary("/", color, rt.f(64.0), 4, 'float'))
     def main__void():
         globalCoord = rt.construct(2, rt.binary("+", rt.swizzle(ctx.frag_coord, "xy"), _u_tileOffset, 2, 'float'))
-        uv = rt.construct(2, rt.binary("/", globalCoord, _u_fullResolution, 2, 'float'))
+        uv = rt.construct(2, rt.fdiv(globalCoord, _u_fullResolution, 2))
         color = rt.construct(4, 0.0)
         if rt.binary("==", _u_depthSource, rt.i(0)):
             color[:] = applyFocusBlur__sampler2D_sampler2D_vec2(_u_tex, _u_inputTex, uv)
         else:
             color[:] = applyFocusBlur__sampler2D_sampler2D_vec2(_u_inputTex, _u_tex, uv)
-        color = rt.assign_swizzle(color, "a", rt.component_wise("max", rt.swizzle(rt.texture(_u_inputTex, rt.construct(2, rt.binary("/", rt.swizzle(ctx.frag_coord, "xy"), rt.construct(2, rt.texture_size(_u_inputTex)), 2, 'float'))), "a"), rt.swizzle(rt.texture(_u_tex, rt.construct(2, rt.binary("/", rt.swizzle(ctx.frag_coord, "xy"), rt.construct(2, rt.texture_size(_u_tex)), 2, 'float'))), "a"), width=1))
+        color = rt.assign_swizzle(color, "a", rt.component_wise("max", rt.swizzle(rt.texture(_u_inputTex, rt.construct(2, rt.fdiv(rt.swizzle(ctx.frag_coord, "xy"), rt.construct(2, rt.texture_size(_u_inputTex)), 2))), "a"), rt.swizzle(rt.texture(_u_tex, rt.construct(2, rt.fdiv(rt.swizzle(ctx.frag_coord, "xy"), rt.construct(2, rt.texture_size(_u_tex)), 2))), "a"), width=1))
         g.fragColor[:] = color
     main__void()
     _c = g.fragColor

@@ -346,7 +346,7 @@ def run_pixel(ctx, out):
         return findClosestPaletteColor__vec3_int(v, _u_palette)
     def fsScale__void():
         if rt.binary("==", _u_palette, g.PALETTE_INPUT):
-            return rt.binary("/", rt.f(1.0), rt.construct(1, _u_levels), 1, "float")
+            return rt.fdiv(rt.f(1.0), rt.construct(1, _u_levels), 1)
         return rt.f(0.25)
     def fsSeedNoise__ivec2_int(blockOrigin, lane):
         blockOrigin = rt.copy(blockOrigin, "int")
@@ -429,7 +429,7 @@ def run_pixel(ctx, out):
         return fsQuantize__vec3(v)
     def main__void():
         texSize = rt.texture_size(_u_inputTex)
-        uv = rt.construct(2, rt.binary("/", rt.swizzle(ctx.frag_coord, "xy"), rt.construct_raw(2, rt.construct(2, texSize)), 2, 'float'))
+        uv = rt.construct(2, rt.fdiv(rt.swizzle(ctx.frag_coord, "xy"), rt.construct_raw(2, rt.construct(2, texSize)), 2))
         color = rt.texture(_u_inputTex, uv)
         globalCoord = rt.construct(2, rt.binary("+", rt.swizzle(ctx.frag_coord, "xy"), _u_tileOffset, 2, 'float'))
         result = rt.construct(3, 0.0)

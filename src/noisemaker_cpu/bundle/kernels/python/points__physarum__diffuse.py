@@ -14,7 +14,7 @@ def run_pixel(ctx, out):
         if _u_resetState:
             g.fragColor[:] = rt.construct(4, rt.f(0.0))
             return
-        uv = rt.construct(2, rt.binary("/", rt.swizzle(ctx.frag_coord, "xy"), _u_resolution, 2, 'float'))
+        uv = rt.construct(2, rt.fdiv(rt.swizzle(ctx.frag_coord, "xy"), _u_resolution, 2))
         trailColor = rt.texture(_u_trailTex, uv)
         persistence = rt.component_wise("clamp", rt.binary("-", rt.f(1.0), _u_decay, 1, "float"), rt.f(0.0), rt.f(1.0), width=1)
         g.fragColor[:] = rt.binary("*", trailColor, persistence, 4, 'float')

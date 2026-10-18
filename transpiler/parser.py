@@ -203,7 +203,10 @@ class Parser:
                 self.expect("]")
             init = None
             if self.eat("="):
+                start = self.i
                 init = self.assign_expr()
+                if init.get("k") == "cond":
+                    init["source_tokens"] = [token.value for token in self.toks[start : self.i]]
             declarators.append({"name": name, "array": arr, "init": init})
             if not self.eat(","):
                 break

@@ -115,7 +115,7 @@ def run_pixel(ctx, out):
         targetVy = rt.f(0.0)
         scale = rt.f(0.0)
         if rt.binary(">", glen, rt.f(1e-06)):
-            scale = rt.binary("/", rt.binary("*", _u_stride, rt.f(0.1), 1, "float"), glen, 1, "float")
+            scale = rt.fdiv(rt.binary("*", _u_stride, rt.f(0.1), 1, "float"), glen, 1)
             targetVx = rt.binary("*", gx, scale, 1, "float")
             targetVy = rt.binary("*", gy, scale, 1, "float")
         weightBlend = rt.component_wise("clamp", rt.binary("*", _u_inputWeight, rt.f(0.01), 1, "float"), rt.f(0.0), rt.f(1.0), width=1)
@@ -124,10 +124,10 @@ def run_pixel(ctx, out):
         vy = rt.component_wise("mix", vy, targetVy, blendFactor, width=1)
         x = wrap_float__float_float(rt.binary("+", x, vx, 1, "float"), rt.swizzle(_u_resolution, "x"))
         y = wrap_float__float_float(rt.binary("+", y, vy, 1, "float"), rt.swizzle(_u_resolution, "y"))
-        newPx = rt.binary("/", x, rt.swizzle(_u_resolution, "x"), 1, "float")
-        newPy = rt.binary("/", y, rt.swizzle(_u_resolution, "y"), 1, "float")
-        normVx = rt.binary("/", vx, rt.swizzle(_u_resolution, "x"), 1, "float")
-        normVy = rt.binary("/", vy, rt.swizzle(_u_resolution, "y"), 1, "float")
+        newPx = rt.fdiv(x, rt.swizzle(_u_resolution, "x"), 1)
+        newPy = rt.fdiv(y, rt.swizzle(_u_resolution, "y"), 1)
+        normVx = rt.fdiv(vx, rt.swizzle(_u_resolution, "x"), 1)
+        normVy = rt.fdiv(vy, rt.swizzle(_u_resolution, "y"), 1)
         g.outXYZ[:] = rt.construct(4, newPx, newPy, rt.swizzle(xyz, "z"), alive)
         g.outVel[:] = rt.construct(4, normVx, normVy, vz, seed_f)
         g.outRGBA[:] = rgba

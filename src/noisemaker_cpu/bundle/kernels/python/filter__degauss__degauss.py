@@ -214,15 +214,15 @@ def run_pixel(ctx, out):
         fullRes = rt.construct(2, (_u_fullResolution if rt.binary(">", rt.swizzle(_u_fullResolution, "x"), rt.f(0.0)) else _u_resolution))
         width_f = rt.swizzle(fullRes, "x")
         height_f = rt.swizzle(fullRes, "y")
-        uv = rt.construct(2, rt.binary("/", rt.binary("+", rt.construct_raw(2, rt.binary("+", rt.construct(1, rt.swizzle(global_id, "x")), rt.swizzle(_u_tileOffset, "x"), 1, "float"), rt.binary("+", rt.construct(1, rt.swizzle(global_id, "y")), rt.swizzle(_u_tileOffset, "y"), 1, "float")), rt.construct_raw(2, rt.f(0.5), rt.f(0.5)), 2, 'float'), rt.construct_raw(2, rt.component_wise("max", width_f, rt.f(1.0), width=1), rt.component_wise("max", height_f, rt.f(1.0), width=1)), 2, 'float'))
+        uv = rt.construct(2, rt.fdiv(rt.binary("+", rt.construct_raw(2, rt.binary("+", rt.construct(1, rt.swizzle(global_id, "x")), rt.swizzle(_u_tileOffset, "x"), 1, "float"), rt.binary("+", rt.construct(1, rt.swizzle(global_id, "y")), rt.swizzle(_u_tileOffset, "y"), 1, "float")), rt.construct_raw(2, rt.f(0.5), rt.f(0.5)), 2, 'float'), rt.construct_raw(2, rt.component_wise("max", width_f, rt.f(1.0), width=1), rt.component_wise("max", height_f, rt.f(1.0), width=1)), 2))
         mask = singularity_mask__vec2_float_float(uv, width_f, height_f)
         if rt.binary("<=", mask, rt.f(0.0)):
             g.fragColor[:] = original
             return
-        renderScale = (rt.binary("/", rt.swizzle(_u_fullResolution, "x"), rt.component_wise("max", rt.swizzle(_u_resolution, "x"), rt.f(1.0), width=1), 1, "float") if rt.binary(">", rt.swizzle(_u_fullResolution, "x"), rt.f(0.0)) else rt.f(1.0))
+        renderScale = (rt.fdiv(rt.swizzle(_u_fullResolution, "x"), rt.component_wise("max", rt.swizzle(_u_resolution, "x"), rt.f(1.0), width=1), 1) if rt.binary(">", rt.swizzle(_u_fullResolution, "x"), rt.f(0.0)) else rt.f(1.0))
         isTiling = rt.binary(">", renderScale, rt.f(1.01))
         maxOffsetPixels = (rt.f(256.0) if isTiling else rt.component_wise("max", rt.swizzle(_u_resolution, "x"), rt.swizzle(_u_resolution, "y"), width=1))
-        maxAllowedDisplacement = (rt.binary("/", maxOffsetPixels, rt.component_wise("max", width_f, height_f, width=1), 1, "float") if isTiling else rt.binary("/", maxOffsetPixels, rt.component_wise("max", rt.swizzle(_u_resolution, "x"), rt.f(1.0), width=1), 1, "float"))
+        maxAllowedDisplacement = (rt.fdiv(maxOffsetPixels, rt.component_wise("max", width_f, height_f, width=1), 1) if isTiling else rt.fdiv(maxOffsetPixels, rt.component_wise("max", rt.swizzle(_u_resolution, "x"), rt.f(1.0), width=1), 1))
         clampedDisplacement = rt.component_wise("min", _u_displacement, maxAllowedDisplacement, width=1)
         freq = freq_for_shape__float_float_float(rt.f(2.0), width_f, height_f)
         base_pos = rt.construct(2, rt.construct(1, rt.swizzle(global_id, "x")), rt.construct(1, rt.swizzle(global_id, "y")))

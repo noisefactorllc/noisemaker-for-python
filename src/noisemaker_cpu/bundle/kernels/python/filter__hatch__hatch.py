@@ -48,7 +48,7 @@ def run_pixel(ctx, out):
         return v
     def lumGradient__vec2(uv):
         uv = rt.copy(uv, "float")
-        px = rt.construct(2, rt.binary("/", rt.f(1.0), _u_resolution, 2, 'float'))
+        px = rt.construct(2, rt.fdiv(rt.f(1.0), _u_resolution, 2))
         tl = lum__vec3(rt.swizzle(rt.texture(_u_inputTex, rt.binary("+", uv, rt.binary("*", px, rt.construct_raw(2, rt.unary("-", rt.f(1.0)), rt.f(1.0)), 2, 'float'), 2, 'float')), "rgb"))
         l = lum__vec3(rt.swizzle(rt.texture(_u_inputTex, rt.binary("+", uv, rt.binary("*", px, rt.construct_raw(2, rt.unary("-", rt.f(1.0)), rt.f(0.0)), 2, 'float'), 2, 'float')), "rgb"))
         bl = lum__vec3(rt.swizzle(rt.texture(_u_inputTex, rt.binary("+", uv, rt.binary("*", px, rt.construct_raw(2, rt.unary("-", rt.f(1.0)), rt.unary("-", rt.f(1.0))), 2, 'float'), 2, 'float')), "rgb"))
@@ -81,7 +81,7 @@ def run_pixel(ctx, out):
         p = rt.construct(2, rt.binary("*", rotate2D__vec2_float(gc, angleDeg), rt.construct(2, rt.binary("/", rt.f(1.0), stretchAmt, 1, "float"), rt.f(0.9)), 2, 'float'))
         return vnoise__vec2(p)
     def main__void():
-        uv = rt.construct(2, rt.binary("/", rt.swizzle(ctx.frag_coord, "xy"), _u_resolution, 2, 'float'))
+        uv = rt.construct(2, rt.fdiv(rt.swizzle(ctx.frag_coord, "xy"), _u_resolution, 2))
         src = rt.texture(_u_inputTex, uv)
         gc = rt.construct(2, rt.binary("+", rt.component_wise("floor", rt.swizzle(ctx.frag_coord, "xy"), width=2), _u_tileOffset, 2, 'float'))
         theta = dirAngle__int(_u_direction)
@@ -151,7 +151,7 @@ def run_pixel(ctx, out):
                 else:
                     if rt.binary("==", _u_MODE, rt.i(3)):
                         toneGate = rt.component_wise("smoothstep", rt.f(0.3), rt.f(0.7), t, width=1)
-                        texture2 = rt.component_wise("mix", s, fbm__vec2(rt.construct(2, rt.binary("+", rt.binary("/", gc, rt.binary("*", stretchAmt, rt.f(0.6), 1, "float"), 2, 'float'), rt.f(41.0), 2, 'float'))), rt.f(0.5), width=1)
+                        texture2 = rt.component_wise("mix", s, fbm__vec2(rt.construct(2, rt.binary("+", rt.fdiv(gc, rt.binary("*", stretchAmt, rt.f(0.6), 1, "float"), 2), rt.f(41.0), 2, 'float'))), rt.f(0.5), width=1)
                         level = rt.component_wise("mix", texture2, toneGate, rt.component_wise("abs", rt.binary("-", rt.binary("*", toneGate, rt.f(2.0), 1, "float"), rt.f(1.0), 1, "float"), width=1), width=1)
                         level = rt.component_wise("clamp", rt.binary("+", level, rt.binary("*", pb, rt.f(0.15), 1, "float"), 1, "float"), rt.f(0.0), rt.f(1.0), width=1)
                         outColor[:] = tonemap2__float_vec3_vec3(level, _u_inkColor, _u_paperColor)

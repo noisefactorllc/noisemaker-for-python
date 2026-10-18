@@ -26,7 +26,7 @@ def run_pixel(ctx, out):
         b = rt.component_wise("clamp", rt.binary("+", lo, rt.i(1), 2, "int"), rt.construct(2, rt.i(0), base="int"), rt.binary("-", dims, rt.i(1), 2, "int"), width=2)
         return rt.component_wise("mix", rt.component_wise("mix", rt.texel_fetch(_u_defocusTex, a, rt.i(0)), rt.texel_fetch(_u_defocusTex, rt.construct(2, rt.swizzle(b, "x"), rt.swizzle(a, "y"), base="int"), rt.i(0)), rt.swizzle(f, "x"), width=4), rt.component_wise("mix", rt.texel_fetch(_u_defocusTex, rt.construct(2, rt.swizzle(a, "x"), rt.swizzle(b, "y"), base="int"), rt.i(0)), rt.texel_fetch(_u_defocusTex, b, rt.i(0)), rt.swizzle(f, "x"), width=4), rt.swizzle(f, "y"), width=4)
     def main__void():
-        uv = rt.construct(2, rt.binary("/", rt.swizzle(ctx.frag_coord, "xy"), _u_resolution, 2, 'float'))
+        uv = rt.construct(2, rt.fdiv(rt.swizzle(ctx.frag_coord, "xy"), _u_resolution, 2))
         trailColor = rt.texture(_u_trailTex, uv)
         decay = rt.component_wise("clamp", rt.binary("/", _u_intensity, rt.f(100.0), 1, "float"), rt.f(0.0), rt.f(1.0), width=1)
         g.fragColor[:] = rt.component_wise("clamp", rt.binary("*", trailColor, decay, 4, 'float'), rt.f(0.0), rt.f(1.0), width=4)

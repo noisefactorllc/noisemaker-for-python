@@ -71,7 +71,7 @@ def run_pixel(ctx, out):
         return rt.binary("-", _u_threshold, val, 1, "float")
     def calcNormal__vec3(p):
         p = rt.copy(p, "float")
-        eps = rt.binary("/", rt.f(2.0), rt.construct(1, _u_volumeSize), 1, "float")
+        eps = rt.fdiv(rt.f(2.0), rt.construct(1, _u_volumeSize), 1)
         dx = rt.binary("-", getField__vec3(rt.construct(3, rt.binary("+", p, rt.construct_raw(3, eps, rt.f(0.0), rt.f(0.0)), 3, 'float'))), getField__vec3(rt.construct(3, rt.binary("-", p, rt.construct_raw(3, eps, rt.f(0.0), rt.f(0.0)), 3, 'float'))), 1, "float")
         dy = rt.binary("-", getField__vec3(rt.construct(3, rt.binary("+", p, rt.construct_raw(3, rt.f(0.0), eps, rt.f(0.0)), 3, 'float'))), getField__vec3(rt.construct(3, rt.binary("-", p, rt.construct_raw(3, rt.f(0.0), eps, rt.f(0.0)), 3, 'float'))), 1, "float")
         dz = rt.binary("-", getField__vec3(rt.construct(3, rt.binary("+", p, rt.construct_raw(3, rt.f(0.0), rt.f(0.0), eps), 3, 'float'))), getField__vec3(rt.construct(3, rt.binary("-", p, rt.construct_raw(3, rt.f(0.0), rt.f(0.0), eps), 3, 'float'))), 1, "float")
@@ -146,7 +146,7 @@ def run_pixel(ctx, out):
             return result
         tStart = rt.swizzle(bounds, "x")
         tEnd = rt.swizzle(bounds, "y")
-        stepSize = rt.binary("/", rt.f(1.5), rt.construct(1, _u_volumeSize), 1, "float")
+        stepSize = rt.fdiv(rt.f(1.5), rt.construct(1, _u_volumeSize), 1)
         t = tStart
         prevField = getField__vec3(rt.construct(3, rt.binary("+", ro, rt.binary("*", rd, t, 3, 'float'), 3, 'float')))
         if rt.binary("<", prevField, rt.f(0.0)):
@@ -236,7 +236,7 @@ def run_pixel(ctx, out):
         if rt.binary("<", rt.swizzle(fullRes, "x"), rt.f(1.0)):
             (fullRes.__setitem__(0, rt.f(1024.0)), fullRes.__setitem__(1, rt.f(1024.0)), fullRes)[-1]
         globalCoord = rt.construct(2, rt.binary("+", rt.swizzle(ctx.frag_coord, "xy"), _u_tileOffset, 2, 'float'))
-        uv = rt.construct(2, rt.binary("/", rt.binary("-", globalCoord, rt.binary("*", rt.f(0.5), fullRes, 2, 'float'), 2, 'float'), rt.swizzle(fullRes, "y"), 2, 'float'))
+        uv = rt.construct(2, rt.fdiv(rt.binary("-", globalCoord, rt.binary("*", rt.f(0.5), fullRes, 2, 'float'), 2, 'float'), rt.swizzle(fullRes, "y"), 2))
         ro = rt.construct(3, rt.binary("*", _u_cameraPosition, rt.f(3.5), 3, 'float'))
         forward = rt.construct(3, 0.0)
         if rt.binary("<", rt.length(ro), rt.f(0.001)):

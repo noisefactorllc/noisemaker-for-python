@@ -14,10 +14,10 @@ def run_pixel(ctx, out):
     def main__void():
         globalCoord = rt.construct(2, rt.binary("+", rt.swizzle(ctx.frag_coord, "xy"), _u_tileOffset, 2, 'float'))
         fullRes = rt.construct(2, (_u_fullResolution if rt.binary(">", rt.swizzle(_u_fullResolution, "x"), rt.f(0.0)) else _u_resolution))
-        globalUV = rt.construct(2, rt.binary("/", rt.binary("+", rt.swizzle(ctx.frag_coord, "xy"), _u_tileOffset, 2, 'float'), fullRes, 2, 'float'))
-        uv = rt.construct(2, rt.binary("/", globalCoord, _u_fullResolution, 2, 'float'))
-        pos = rt.texture(_u_positionsTex, rt.construct(2, rt.binary("/", rt.swizzle(ctx.frag_coord, "xy"), rt.construct(2, rt.texture_size(_u_positionsTex)), 2, 'float')))
-        normal = rt.texture(_u_normalsTex, rt.construct(2, rt.binary("/", rt.swizzle(ctx.frag_coord, "xy"), rt.construct(2, rt.texture_size(_u_normalsTex)), 2, 'float')))
+        globalUV = rt.construct(2, rt.fdiv(rt.binary("+", rt.swizzle(ctx.frag_coord, "xy"), _u_tileOffset, 2, 'float'), fullRes, 2))
+        uv = rt.construct(2, rt.fdiv(globalCoord, _u_fullResolution, 2))
+        pos = rt.texture(_u_positionsTex, rt.construct(2, rt.fdiv(rt.swizzle(ctx.frag_coord, "xy"), rt.construct(2, rt.texture_size(_u_positionsTex)), 2)))
+        normal = rt.texture(_u_normalsTex, rt.construct(2, rt.fdiv(rt.swizzle(ctx.frag_coord, "xy"), rt.construct(2, rt.texture_size(_u_normalsTex)), 2)))
         color = rt.construct(3, 0.0)
         if rt.binary("<", rt.swizzle(globalUV, "x"), rt.f(0.5)):
             color[:] = rt.binary("+", rt.binary("*", rt.swizzle(pos, "xyz"), rt.f(0.5), 3, 'float'), rt.f(0.5), 3, 'float')

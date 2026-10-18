@@ -101,7 +101,7 @@ def run_pixel(ctx, out):
         rgb = rt.assign_swizzle(rgb, "b", rt.component_wise("pow", rt.swizzle(rgb, "b"), rt.f(1.05), width=1))
         l = luma__vec3(rgb)
         rgb = rt.assign_swizzle(rgb, "g", rt.component_wise("mix", rt.binary("*", rt.swizzle(rgb, "g"), rt.f(0.95), 1, "float"), rt.swizzle(rgb, "g"), l, width=1))
-        (rgb.__setitem__(0, rt.swizzle(rt.binary("*", rt.binary("*", rgb, rgb, 3, 'float'), rt.binary("-", rt.f(3.0), rt.binary("*", rt.f(2.0), rgb, 3, 'float'), 3, 'float'), 3, 'float'), "x")), rgb.__setitem__(1, rt.swizzle(rt.binary("*", rt.binary("*", rgb, rgb, 3, 'float'), rt.binary("-", rt.f(3.0), rt.binary("*", rt.f(2.0), rgb, 3, 'float'), 3, 'float'), 3, 'float'), "y")), rgb.__setitem__(2, rt.swizzle(rt.binary("*", rt.binary("*", rgb, rgb, 3, 'float'), rt.binary("-", rt.f(3.0), rt.binary("*", rt.f(2.0), rgb, 3, 'float'), 3, 'float'), 3, 'float'), "z")), rgb)[-1]
+        ((_vector_write_0_0 := rt.swizzle(rt.binary("*", rt.binary("*", rgb, rgb, 3, 'float'), rt.binary("-", rt.f(3.0), rt.binary("*", rt.f(2.0), rgb, 3, 'float'), 3, 'float'), 3, 'float'), "x")), (_vector_write_0_1 := rt.swizzle(rt.binary("*", rt.binary("*", rgb, rgb, 3, 'float'), rt.binary("-", rt.f(3.0), rt.binary("*", rt.f(2.0), rgb, 3, 'float'), 3, 'float'), 3, 'float'), "y")), (_vector_write_0_2 := rt.swizzle(rt.binary("*", rt.binary("*", rgb, rgb, 3, 'float'), rt.binary("-", rt.f(3.0), rt.binary("*", rt.f(2.0), rgb, 3, 'float'), 3, 'float'), 3, 'float'), "z")), rgb.__setitem__(0, _vector_write_0_0), rgb.__setitem__(1, _vector_write_0_1), rgb.__setitem__(2, _vector_write_0_2), rgb)[-1]
         return rgb
     def lutCoolShadows__vec3(rgb):
         rgb = rt.copy(rgb, "float")

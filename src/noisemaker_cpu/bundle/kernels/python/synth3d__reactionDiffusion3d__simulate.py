@@ -95,7 +95,7 @@ def run_pixel(ctx, out):
         r1 = rt.binary("/", rt.binary("*", _u_rate1, rt.f(0.01), 1, "float"), rt.f(6.0), 1, "float")
         r2 = rt.binary("/", rt.binary("*", _u_rate2, rt.f(0.01), 1, "float"), rt.f(6.0), 1, "float")
         iterF = rt.component_wise("max", rt.f(1.0), rt.construct(1, _u_iterations), width=1)
-        s = rt.binary("/", rt.binary("*", _u_speed, rt.f(0.01), 1, "float"), iterF, 1, "float")
+        s = rt.fdiv(rt.binary("*", _u_speed, rt.f(0.01), 1, "float"), iterF, 1)
         newA = rt.binary("+", a, rt.binary("*", rt.binary("+", rt.binary("-", rt.binary("*", r1, rt.swizzle(lap, "y"), 1, "float"), rt.binary("*", rt.binary("*", a, b, 1, "float"), b, 1, "float"), 1, "float"), rt.binary("*", f, rt.binary("-", rt.f(1.0), a, 1, "float"), 1, "float"), 1, "float"), s, 1, "float"), 1, "float")
         newB = rt.binary("+", b, rt.binary("*", rt.binary("-", rt.binary("+", rt.binary("*", r2, rt.swizzle(lap, "x"), 1, "float"), rt.binary("*", rt.binary("*", a, b, 1, "float"), b, 1, "float"), 1, "float"), rt.binary("*", rt.binary("+", k, f, 1, "float"), b, 1, "float"), 1, "float"), s, 1, "float"), 1, "float")
         seedVal = rt.construct(4, 0.0)

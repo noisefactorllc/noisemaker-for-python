@@ -303,7 +303,7 @@ def run_pixel(ctx, out):
     def main__void():
         base_color = rt.texture(_u_inputTex, ctx.uv)
         dims = rt.construct(2, rt.texture_size(_u_inputTex))
-        pixel_step = rt.construct(2, rt.binary("/", rt.f(1.0), dims, 2, 'float'))
+        pixel_step = rt.construct(2, rt.fdiv(rt.f(1.0), dims, 2))
         a = rt.component_wise("clamp", _u_alpha, rt.f(0.0), rt.f(1.0), width=1)
         if rt.binary("<=", a, rt.f(0.0)):
             g.fragColor[:] = base_color

@@ -192,10 +192,10 @@ def run_pixel(ctx, out):
             alphaChannel = rt.swizzle(rt.texture(targetTex, alphaUV), "a")
             return rt.construct(4, redChannel, greenChannel, blueChannel, alphaChannel)
     def main__void():
-        uv = rt.construct(2, rt.binary("/", rt.swizzle(ctx.frag_coord, "xy"), _u_resolution, 2, 'float'))
-        texelSize = rt.construct(2, rt.binary("/", rt.f(1.0), _u_resolution, 2, 'float'))
+        uv = rt.construct(2, rt.fdiv(rt.swizzle(ctx.frag_coord, "xy"), _u_resolution, 2))
+        texelSize = rt.construct(2, rt.fdiv(rt.f(1.0), _u_resolution, 2))
         fullRes = rt.construct(2, (_u_fullResolution if rt.binary(">", rt.swizzle(_u_fullResolution, "x"), rt.f(0.0)) else _u_resolution))
-        globalUV = rt.construct(2, rt.binary("/", rt.binary("+", rt.swizzle(ctx.frag_coord, "xy"), _u_tileOffset, 2, 'float'), fullRes, 2, 'float'))
+        globalUV = rt.construct(2, rt.fdiv(rt.binary("+", rt.swizzle(ctx.frag_coord, "xy"), _u_tileOffset, 2, 'float'), fullRes, 2))
         color = rt.construct(4, 0.0)
         if rt.binary("==", _u_mode, rt.i(0)):
             if rt.binary("==", _u_mapSource, rt.i(0)):

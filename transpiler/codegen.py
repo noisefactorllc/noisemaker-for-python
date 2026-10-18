@@ -8,6 +8,7 @@ inference (widths, int/uint/float base, matrices, arrays) to drive emission.
 from __future__ import annotations
 
 import json
+import re
 
 TYPE = {
     "void": {"base": "void", "width": 0},
@@ -83,6 +84,28 @@ def _contains_member_read(node, name):
     return False
 
 
+def _reads_written_component(node, name, written):
+    if not written:
+        return False
+    if isinstance(node, dict):
+        if node.get("k") == "member" and node.get("obj", {}).get("k") == "id" and node["obj"]["name"] == name:
+            return any(any(alphabet[index] in node["field"] for alphabet in ("xyzw", "rgba", "stpq")) for index in written)
+        if node.get("k") == "index" and node.get("obj", {}).get("k") == "id" and node["obj"]["name"] == name:
+            index = node["idx"]
+            if index.get("k") != "num":
+                return True
+            try:
+                return int(str(index["value"]).rstrip("uU"), 0) in written
+            except ValueError:
+                return True
+        if node.get("k") == "id" and node.get("name") == name:
+            return True
+        return any(_reads_written_component(value, name, written) for value in node.values())
+    if isinstance(node, list):
+        return any(_reads_written_component(value, name, written) for value in node)
+    return False
+
+
 _RESERVED = {
     "and",
     "or",
@@ -150,7 +173,16 @@ class Scope:
 
 
 class CodeGen:
-    def __init__(self, program, outputs, varyings, js_vector_storage=False, effect_id="", atomic_compound=False):
+    def __init__(
+        self,
+        program,
+        outputs,
+        varyings,
+        js_vector_storage=False,
+        effect_id="",
+        atomic_compound=False,
+        constant_divisors=(),
+    ):
         self.program = program
         self.atomic_compound = atomic_compound
         self.outputs = outputs or ["fragColor"]
@@ -167,6 +199,8 @@ class CodeGen:
         self.cur_out = []  # out/inout param pynames of the function being emitted
         self.js_vector_storage = js_vector_storage
         self.effect_id = effect_id
+        self.constant_divisors = set(constant_divisors)
+        self.current_function = None
 
     # ---- collect ----
     def collect(self):
@@ -281,6 +315,7 @@ class CodeGen:
                         "type": self.type_of_name(base_t, dc.get("array")),
                         "init": dc.get("init"),
                         "array": dc.get("array"),
+                        "const": "const" in quals,
                     }
                 )
 
@@ -288,10 +323,13 @@ class CodeGen:
     def emit(self):
         self.collect()
         for u in self.uniforms:
-            self.root.define(u["name"], u["type"], f"_u_{py_ident(u['name'])}")
+            entry = self.root.define(u["name"], u["type"], f"_u_{py_ident(u['name'])}")
+            entry["division_kind"] = "constant" if u["name"] in self.constant_divisors else "runtime"
         for g in self.globals:
             py = "ctx.uv" if g["name"] in self.varyings else f"g.{py_ident(g['name'])}"
-            self.root.define(g["name"], g["type"], py)
+            entry = self.root.define(g["name"], g["type"], py)
+            entry["division_kind"] = "constant" if g["const"] else None
+            entry["initializer"] = g["init"]
 
         L = [
             "def run_pixel(ctx, out):",
@@ -349,6 +387,7 @@ class CodeGen:
         return "\n".join(L) + "\n"
 
     def _emit_func(self, L, fn, indent=1):
+        self.current_function = fn["node"]["name"]
         pad = "    " * indent
         scope = self.root.child()
         pynames = []
@@ -356,7 +395,9 @@ class CodeGen:
             if p[1] is None:
                 pynames.append("_unused")
                 continue
-            pynames.append(scope.define(p[1], t)["py"])
+            entry = scope.define(p[1], t)
+            entry["division_kind"] = "unknown"
+            pynames.append(entry["py"])
         L.append(f"{pad}def {fn['mangled']}({', '.join(pynames)}):")
         for p, t in zip(fn["node"]["params"], fn["ptypes"], strict=True):
             if p[1] and width_of(t) > 1:
@@ -412,7 +453,7 @@ class CodeGen:
                 init_node = dc.get("init")
                 init_code = self.expr(init_node, scope)[0] if init_node is not None else None
                 if init_code is not None:
-                    init_code = self._restore_integer_division(init_node, init_code, scope)
+                    init_code = self._restore_integer_division(init_node, init_code, scope, t)
                     init_code = self._materialized_operand(init_node, scope, code=init_code)
                 if (
                     self.js_vector_storage
@@ -426,6 +467,13 @@ class CodeGen:
                     # materialized store before later hash conversions.
                     init_code = f"rt.construct({t['width']}, {init_code}{_construct_base(t)})"
                 e = scope.define(dc["name"], t)
+                e["division_kind"] = (
+                    "constant"
+                    if "const" in s.get("quals", [])
+                    else self._divisor_kind(init_node, scope)
+                    if self.current_function == "main" and init_node is not None
+                    else "unknown"
+                )
                 if init_code is not None:
                     # GLSL value semantics: `vecN v = u;` copies. The canonical JS
                     # kernels copy aliased vector declarations at codegen time
@@ -661,7 +709,7 @@ class CodeGen:
         w = max(width_of(a_t), width_of(b_t))
         return (f"({a_code} if {c_code} else {b_code})", {"base": base_of(a_t), "width": w})
 
-    def _restore_integer_division(self, node, code, scope):
+    def _restore_integer_division(self, node, code, scope, declared_type=None):
         """Mirror noisemaker-for-cpu compile-glsl.js ``restoreIntegerDivision``
         (first present in a146f22839dc): GLSL int/int division truncates toward
         zero, but the transpiler loses int typing on component-indexed
@@ -685,6 +733,21 @@ class CodeGen:
         fractional. ``rt.trunc64``/``rt.trunc_scalar_div`` apply the
         truncation only when the mounted oracle carries the respective
         rewrite (see runtime)."""
+        if node.get("k") == "cond" and base_of(declared_type) == "int":
+            # Preserve grouping: the CPU statement rewrite excludes nested
+            # parentheses and calls, but includes parenthesized unary operands.
+            text = " ".join(node.get("source_tokens", []))
+            name = r"[A-Za-z_]\w*"
+            dividend = rf"({name}|\([^()]*\))"
+            match = re.fullmatch(rf"[^;?:]+\?\s*{dividend}\s*/\s*({name})\s*:\s*{dividend}\s*/\s*({name})", text)
+            if match and all(
+                divisor in self.int_names and (left.startswith("(") or left in self.int_names)
+                for left, divisor in (match.groups()[:2], match.groups()[2:])
+            ):
+                return (
+                    f"(rt.trunc64({self.expr(node['a'], scope)[0]}) if {self.expr(node['c'], scope)[0]}"
+                    f" else rt.trunc64({self.expr(node['b'], scope)[0]}))"
+                )
         if not (node.get("k") == "binary" and node.get("op") == "/"):
             return code
         l, r = node["l"], node["r"]
@@ -712,8 +775,6 @@ class CodeGen:
             # lowering. Operands the pre-b68fdb8 intNames regexes could not
             # match (int function parameters only) take the parameter rule's
             # guard so pre-rule mounted oracles keep their fractional result.
-            if self.effect_id == "filter/spookyTicker":
-                return code
             if l["name"] == r["name"]:
                 return code
             if l["name"] not in self.int_names or r["name"] not in self.int_names:
@@ -828,7 +889,22 @@ class CodeGen:
             # is bit-identical to the port's uint wrap, and the raw f64
             # product of two uint32s is not exact.
             return (f"rt.js_scalar_binary({q(op)}, {l_code}, {r_code})", {"base": base, "width": width})
-        code = f"rt.binary({q(op)}, {l_code}, {r_code}, {width}, {q(base)})"
+        metal = (
+            op == "/"
+            and base == "float"
+            and width <= 4
+            and not l_t.get("mat")
+            and not r_t.get("mat")
+            and not (
+                self._integer_division_operand(node["l"], scope) and self._integer_division_operand(node["r"], scope)
+            )
+            and self._divisor_kind(node["r"], scope) == "runtime"
+        )
+        code = (
+            f"rt.fdiv({l_code}, {r_code}, {width})"
+            if metal
+            else f"rt.binary({q(op)}, {l_code}, {r_code}, {width}, {q(base)})"
+        )
         # Round where the oracle's compiled JS rounds (see _vec_kind); otherwise
         # the result stays raw until its next consumption boundary.
         if base == "float" and width > 1 and op in ("+", "-", "*", "/"):
@@ -836,19 +912,63 @@ class CodeGen:
                 # vecN.op: inline operands materialize into pooled Float32Arrays
                 # first (which rounds each); typed and plain pass through. The
                 # op fills a plain [] with f32 components (rt.construct).
-                code = (
-                    f"rt.construct({width}, rt.binary({q(op)}, "
-                    f"{self._materialized_operand(node['l'], scope)}, "
-                    f"{self._materialized_operand(node['r'], scope)}, {width}, 'float'))"
+                left = self._materialized_operand(node["l"], scope)
+                right = self._materialized_operand(node["r"], scope)
+                operation = (
+                    f"rt.fdiv({left}, {right}, {width})"
+                    if metal
+                    else f"rt.binary({q(op)}, {left}, {right}, {width}, 'float')"
                 )
+                code = f"rt.construct({width}, {operation})"
             else:
                 # Fused inline per-component arithmetic: the components stay raw
                 # float64 until the next store (construct keeps them raw).
+                left = self._fused_operand(node["l"], scope)
+                right = self._fused_operand(node["r"], scope)
                 code = (
-                    f"rt.binary({q(op)}, {self._fused_operand(node['l'], scope)}, "
-                    f"{self._fused_operand(node['r'], scope)}, {width}, 'float')"
+                    f"rt.fdiv({left}, {right}, {width})"
+                    if metal
+                    else f"rt.binary({q(op)}, {left}, {right}, {width}, 'float')"
                 )
         return (code, {"base": base, "width": width})
+
+    def _integer_division_operand(self, node, scope):
+        _, typ = self.expr(node, scope)
+        if base_of(typ) in ("int", "uint"):
+            return True
+        return (
+            node.get("k") == "construct"
+            and node.get("type") in ("vec2", "vec3", "vec4")
+            and len(node["args"]) == 1
+            and width_of(self.expr(node["args"][0], scope)[1]) > 1
+            and self._integer_division_operand(node["args"][0], scope)
+        )
+
+    def _divisor_kind(self, node, scope, seen=frozenset()):
+        if node is None:
+            return "unknown"
+        if isinstance(node, dict):
+            if node.get("k") == "id":
+                name = node["name"]
+                if name == "gl_FragCoord":
+                    return "runtime"
+                entry = scope.resolve(name)
+                if entry is None:
+                    return "constant"
+                kind = entry.get("division_kind", "unknown")
+                if kind is not None:
+                    return kind
+                if name in seen:
+                    return "unknown"
+                return self._divisor_kind(entry.get("initializer"), scope, seen | {name})
+            kinds = [
+                self._divisor_kind(value, scope, seen) for value in node.values() if isinstance(value, (dict, list))
+            ]
+        elif isinstance(node, list):
+            kinds = [self._divisor_kind(value, scope, seen) for value in node]
+        else:
+            return "constant"
+        return "unknown" if "unknown" in kinds else "runtime" if "runtime" in kinds else "constant"
 
     def _vec_kind(self, node, scope):
         """The oracle's compiled JS holds a float vector in one of three forms,
@@ -1039,12 +1159,9 @@ class CodeGen:
             false_value, _false_type = self.expr(value["b"], scope)
             false_assignment = f"({tcode}.__setitem__(slice(None), {false_value}), {tcode})[-1]"
             return (f"({true_value} if {condition} else {false_assignment})", tt)
-        # Local vec constructors are assigned component-by-component by the JS
-        # oracle: `dz = vec2(f(dz), g(dz))` emits `(dz[0] = f(dz[0], dz[1]),
-        # dz[1] = g(dz[1], dz[0]), dz)`, so the later components read the
-        # already-stored earlier ones (mandelbrot's derivative, shapeMask's
-        # hexagram SDF). The temp-guarded atomic form the generator emits is a
-        # separate matrix-assignment pass, not a constructor form.
+        # The oracle stages hazardous whole-vector writes before assigning
+        # components. Scalar temporaries preserve each expression's float64
+        # precision until the final Float32Array store.
         if (
             op == "="
             and target["k"] == "id"
@@ -1054,11 +1171,10 @@ class CodeGen:
         ):
             components = [self.expr(arg, scope) for arg in value["args"]]
             if len(components) == width_of(tt) and all(width_of(arg_type) == 1 for _, arg_type in components):
-                assignments = [
-                    f"{tcode}.__setitem__({index}, {component})"
-                    for index, (component, _arg_type) in enumerate(components)
-                ]
-                return (f"({', '.join([*assignments, tcode])})[-1]", tt)
+                return (
+                    self._component_assignment(tcode, value["args"], [c for c, _ in components], target["name"]),
+                    tt,
+                )
         v_code, _v_t = self.expr(value, scope)
         # The oracle expands vector compound assignments component by component
         # when the right side is not a plain call: `p -= 2*max(dot(k1,p),0)*k1`
@@ -1080,20 +1196,31 @@ class CodeGen:
             and _contains_target_read(value, target["name"])
         ):
             b = "uint" if base_of(tt) == "uint" else ("int" if base_of(tt) == "int" else "float")
-            assignments = []
+            component_nodes = []
+            component_codes = []
             for index in range(width_of(tt)):
-                comp_code, _comp_t = self.expr(self._select_node(value, scope, index), scope)
+                component = self._select_node(value, scope, index)
+                comp_code, _comp_t = self.expr(component, scope)
                 if base_op:
                     comp_code = (
-                        f"rt.binary({q(base_op)}, rt.swizzle({tcode}, {q('xyzw'[index])}), "
-                        f"{comp_code}, 1, {q(b)})"
+                        f"rt.fdiv(rt.swizzle({tcode}, {q('xyzw'[index])}), {comp_code}, 1)"
+                        if base_op == "/" and b == "float" and self._divisor_kind(value, scope) == "runtime"
+                        else f"rt.binary({q(base_op)}, rt.swizzle({tcode}, {q('xyzw'[index])}), {comp_code}, 1, {q(b)})"
                     )
-                assignments.append(f"{tcode}.__setitem__({index}, {comp_code})")
-            return (f"({', '.join([*assignments, tcode])})[-1]", tt)
+                component_nodes.append(component)
+                component_codes.append(comp_code)
+            return (
+                self._component_assignment(tcode, component_nodes, component_codes, target["name"], stage=op == "="),
+                tt,
+            )
         if target["k"] == "id" or target["k"] == "index":
             if base_op:
                 b = "uint" if base_of(tt) == "uint" else ("int" if base_of(tt) == "int" else "float")
-                rhs = f"rt.binary({q(base_op)}, {tcode}, {v_code}, {width_of(tt)}, {q(b)})"
+                rhs = (
+                    f"rt.fdiv({tcode}, {v_code}, {width_of(tt)})"
+                    if base_op == "/" and b == "float" and width_of(tt) > 1 and self._divisor_kind(value, scope) == "runtime"
+                    else f"rt.binary({q(base_op)}, {tcode}, {v_code}, {width_of(tt)}, {q(b)})"
+                )
             else:
                 rhs = v_code
             # JS's glsl-transpiler reuses a pooled Float32Array for a vector variable:
@@ -1135,6 +1262,16 @@ class CodeGen:
             )
         raise SyntaxError(f"codegen: bad assignment target {target['k']}")
 
+    def _component_assignment(self, target, nodes, codes, name, stage=True):
+        prefix = []
+        if stage and any(_reads_written_component(node, name, set(range(index))) for index, node in enumerate(nodes)):
+            temporaries = [f"_vector_write_{self.call_id}_{index}" for index in range(len(codes))]
+            self.call_id += 1
+            prefix = [f"({temporary} := {code})" for temporary, code in zip(temporaries, codes, strict=True)]
+            codes = temporaries
+        assignments = [f"{target}.__setitem__({index}, {code})" for index, code in enumerate(codes)]
+        return f"({', '.join([*prefix, *assignments, target])})[-1]"
+
     def _e_construct(self, node, scope):
         tname = node["type"]
         args = [self.expr(a, scope) for a in node["args"]]
@@ -1167,10 +1304,10 @@ class CodeGen:
         if name in ("dFdx", "dFdy", "fwidth"):
             self.uses_deriv = True
             return (f"rt.{name}({codes[0]})", args[0][1])
+        if self._is_murmur_finalizer(name):
+            return (f"rt.hash_uint({codes[0]})", TYPE["uint"])
         if name == "hash_uint" and name in self.overloads:
             kind = self._hash_uint_kind()
-            if kind == "murmur":
-                return (f"rt.hash_uint({codes[0]})", TYPE["uint"])
             if kind == "lcg":
                 return (f"rt.hash_uint_lcg({codes[0]})", TYPE["uint"])
         elif r := _ROUTED.get(name):
@@ -1205,6 +1342,39 @@ class CodeGen:
         base = "int" if all(base_of(a[1]) in ("int", "uint") for a in args) and args else "float"
         return (f"rt.component_wise({q(name)}, {', '.join(codes)}, width={width})", {"base": base, "width": width})
 
+    def _is_murmur_finalizer(self, name):
+        for fn in self.overloads.get(name, []):
+            if fn["node"]["ret"] != "uint" or len(fn["node"]["params"]) != 1 or fn["node"]["params"][0][0] != "uint":
+                continue
+            argument = {"k": "id", "name": fn["node"]["params"][0][1]}
+            body = fn["node"]["body"]
+            if len(body) != 6 or body[-1] != {"k": "return", "value": argument}:
+                continue
+            steps = []
+            for statement in body[:-1]:
+                assignment = statement.get("expr", {})
+                if assignment.get("k") != "assign" or assignment["target"] != argument:
+                    break
+                value = assignment["value"]
+                op = assignment["op"][:-1]
+                if assignment["op"] == "=" and value.get("k") == "binary" and value["l"] == argument:
+                    op, value = value["op"], value["r"]
+                if op == "^" and value.get("k") == "binary" and value["op"] == ">>" and value["l"] == argument:
+                    steps.append(("shift", value["r"].get("value")))
+                elif op == "*" and value.get("k") == "num":
+                    steps.append(("multiply", value["value"].lower()))
+                else:
+                    break
+            if steps == [
+                ("shift", "16u"),
+                ("multiply", "0x7feb352du"),
+                ("shift", "15u"),
+                ("multiply", "0x846ca68bu"),
+                ("shift", "16u"),
+            ]:
+                return True
+        return False
+
     def _hash_uint_kind(self):
         """Which pinned ``uint hash_uint(uint)`` body this shader declares.
 
@@ -1232,8 +1402,6 @@ class CodeGen:
         for fn in self.overloads["hash_uint"]:
             if [base_of(t) for t in fn["ptypes"]] == ["uint"]:
                 walk(fn["node"])
-        if literals & {0x7FEB352D, 0x846CA68B}:
-            return "murmur"
         if 747796405 in literals:
             return "lcg"
         return None
@@ -1298,8 +1466,24 @@ _ROUTED = {
 _SKIP_FUNCS = {"cpu_umul", "cpu_ivec2", "cpu_ivec3", "cpu_ivec4", "cpu_uvec2", "cpu_uvec3", "cpu_uvec4", "cpu_float"}
 
 
-def emit_python(program, outputs=None, varyings=None, js_vector_storage=False, effect_id="", atomic_compound=False):
-    gen = CodeGen(program, outputs, varyings, js_vector_storage=js_vector_storage, effect_id=effect_id, atomic_compound=atomic_compound)
+def emit_python(
+    program,
+    outputs=None,
+    varyings=None,
+    js_vector_storage=False,
+    effect_id="",
+    atomic_compound=False,
+    constant_divisors=(),
+):
+    gen = CodeGen(
+        program,
+        outputs,
+        varyings,
+        js_vector_storage=js_vector_storage,
+        effect_id=effect_id,
+        atomic_compound=atomic_compound,
+        constant_divisors=constant_divisors,
+    )
     gen.funcs_filter = _SKIP_FUNCS
     # drop overridden helper functions before emit
     program["decls"] = [d for d in program["decls"] if not (d.get("k") == "func" and d.get("name") in _SKIP_FUNCS)]

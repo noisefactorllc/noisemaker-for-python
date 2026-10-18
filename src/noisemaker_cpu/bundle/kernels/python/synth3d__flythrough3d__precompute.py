@@ -155,7 +155,7 @@ def run_pixel(ctx, out):
                     factor = rt.binary("/", fixedRadius2, r2, 1, "float")
                     z[:] = rt.binary("*", z, factor, 3, "float")
                     dr = rt.binary("*", dr, factor, 1, "float")
-            (z.__setitem__(0, rt.swizzle(rt.binary("+", rt.binary("*", z, scale, 3, 'float'), pos, 3, 'float'), "x")), z.__setitem__(1, rt.swizzle(rt.binary("+", rt.binary("*", z, scale, 3, 'float'), pos, 3, 'float'), "y")), z.__setitem__(2, rt.swizzle(rt.binary("+", rt.binary("*", z, scale, 3, 'float'), pos, 3, 'float'), "z")), z)[-1]
+            ((_vector_write_0_0 := rt.swizzle(rt.binary("+", rt.binary("*", z, scale, 3, 'float'), pos, 3, 'float'), "x")), (_vector_write_0_1 := rt.swizzle(rt.binary("+", rt.binary("*", z, scale, 3, 'float'), pos, 3, 'float'), "y")), (_vector_write_0_2 := rt.swizzle(rt.binary("+", rt.binary("*", z, scale, 3, 'float'), pos, 3, 'float'), "z")), z.__setitem__(0, _vector_write_0_0), z.__setitem__(1, _vector_write_0_1), z.__setitem__(2, _vector_write_0_2), z)[-1]
             dr = rt.binary("+", rt.binary("*", dr, rt.component_wise("abs", scale, width=1), 1, "float"), rt.f(1.0), 1, "float")
             planeTrap = rt.component_wise("min", rt.component_wise("min", rt.component_wise("abs", rt.swizzle(z, "x"), width=1), rt.component_wise("abs", rt.swizzle(z, "y"), width=1), width=1), rt.component_wise("abs", rt.swizzle(z, "z"), width=1), width=1)
             trap = rt.component_wise("min", trap, planeTrap, width=1)
@@ -207,11 +207,11 @@ def run_pixel(ctx, out):
         camPos = rt.construct(3, 0.0)
         camDir = rt.construct(3, 0.0)
         camUp = rt.construct(3, 0.0)
-        (((_retc0 := getCameraState__float_vec3_vec3_vec3(_u_time, camPos, camDir, camUp)), camPos.__setitem__(slice(None), _retc0[1]), camDir.__setitem__(slice(None), _retc0[2]), camUp.__setitem__(slice(None), _retc0[3]), _retc0[0])[-1])
+        (((_retc1 := getCameraState__float_vec3_vec3_vec3(_u_time, camPos, camDir, camUp)), camPos.__setitem__(slice(None), _retc1[1]), camDir.__setitem__(slice(None), _retc1[2]), camUp.__setitem__(slice(None), _retc1[3]), _retc1[0])[-1])
         camPos[:] = applyCollisionAvoidance__vec3(camPos)
         camRight = rt.normalize(rt.cross(camDir, camUp))
         camUp[:] = rt.normalize(rt.cross(camRight, camDir))
-        normalizedCoord = rt.construct(3, rt.binary("-", rt.binary("*", rt.binary("/", rt.construct_raw(3, rt.construct(1, vx), rt.construct(1, vy), rt.construct(1, vz)), rt.binary("-", volSizeF, rt.f(1.0), 1, "float"), 3, 'float'), rt.f(2.0), 3, 'float'), rt.f(1.0), 3, 'float'))
+        normalizedCoord = rt.construct(3, rt.binary("-", rt.binary("*", rt.fdiv(rt.construct_raw(3, rt.construct(1, vx), rt.construct(1, vy), rt.construct(1, vz)), rt.binary("-", volSizeF, rt.f(1.0), 1, "float"), 3), rt.f(2.0), 3, 'float'), rt.f(1.0), 3, 'float'))
         halfExtent = rt.binary("*", _u_voiSize, rt.f(0.5), 1, "float")
         voiOffset = rt.construct(3, rt.binary("*", camDir, halfExtent, 3, 'float'))
         worldPos = rt.construct(3, rt.binary("+", rt.binary("+", rt.binary("+", rt.binary("+", camPos, voiOffset, 3, 'float'), rt.binary("*", rt.binary("*", camRight, rt.swizzle(normalizedCoord, "x"), 3, 'float'), halfExtent, 3, 'float'), 3, 'float'), rt.binary("*", rt.binary("*", camUp, rt.swizzle(normalizedCoord, "y"), 3, 'float'), halfExtent, 3, 'float'), 3, 'float'), rt.binary("*", rt.binary("*", camDir, rt.swizzle(normalizedCoord, "z"), 3, 'float'), halfExtent, 3, 'float'), 3, 'float'))

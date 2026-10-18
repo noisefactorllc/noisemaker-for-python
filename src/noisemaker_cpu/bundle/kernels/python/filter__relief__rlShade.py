@@ -36,8 +36,8 @@ def run_pixel(ctx, out):
         paper = rt.copy(paper, "float")
         return rt.component_wise("mix", ink, paper, rt.component_wise("clamp", t, rt.f(0.0), rt.f(1.0), width=1), width=3)
     def main__void():
-        uv = rt.construct(2, rt.binary("/", rt.swizzle(ctx.frag_coord, "xy"), _u_resolution, 2, 'float'))
-        texel = rt.construct(2, rt.binary("/", rt.f(1.0), _u_resolution, 2, 'float'))
+        uv = rt.construct(2, rt.fdiv(rt.swizzle(ctx.frag_coord, "xy"), _u_resolution, 2))
+        texel = rt.construct(2, rt.fdiv(rt.f(1.0), _u_resolution, 2))
         src = rt.texture(_u_inputTex, uv)
         hC = lum__vec3(rt.swizzle(rt.texture(_u_blurTex, uv), "rgb"))
         hR = lum__vec3(rt.swizzle(rt.texture(_u_blurTex, rt.binary("+", uv, rt.construct_raw(2, rt.swizzle(texel, "x"), rt.f(0.0)), 2, 'float')), "rgb"))

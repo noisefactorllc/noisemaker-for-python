@@ -20,10 +20,10 @@ def run_pixel(ctx, out):
         return rt.dot(rt.swizzle(c, "rgb"), rt.construct(3, rt.f(0.2126), rt.f(0.7152), rt.f(0.0722)))
     def main__void():
         globalCoord = rt.construct(2, rt.binary("+", rt.swizzle(ctx.frag_coord, "xy"), _u_tileOffset, 2, 'float'))
-        st = rt.construct(2, rt.binary("/", globalCoord, _u_fullResolution, 2, 'float'))
-        r = rt.binary("/", rt.binary("*", luminance__vec4(rt.texture(_u_rTex, rt.construct(2, rt.binary("/", rt.swizzle(ctx.frag_coord, "xy"), rt.construct(2, rt.texture_size(_u_rTex)), 2, 'float')))), _u_rLevel, 1, "float"), rt.f(100.0), 1, "float")
-        _g = rt.binary("/", rt.binary("*", luminance__vec4(rt.texture(_u_gTex, rt.construct(2, rt.binary("/", rt.swizzle(ctx.frag_coord, "xy"), rt.construct(2, rt.texture_size(_u_gTex)), 2, 'float')))), _u_gLevel, 1, "float"), rt.f(100.0), 1, "float")
-        b = rt.binary("/", rt.binary("*", luminance__vec4(rt.texture(_u_bTex, rt.construct(2, rt.binary("/", rt.swizzle(ctx.frag_coord, "xy"), rt.construct(2, rt.texture_size(_u_bTex)), 2, 'float')))), _u_bLevel, 1, "float"), rt.f(100.0), 1, "float")
+        st = rt.construct(2, rt.fdiv(globalCoord, _u_fullResolution, 2))
+        r = rt.binary("/", rt.binary("*", luminance__vec4(rt.texture(_u_rTex, rt.construct(2, rt.fdiv(rt.swizzle(ctx.frag_coord, "xy"), rt.construct(2, rt.texture_size(_u_rTex)), 2)))), _u_rLevel, 1, "float"), rt.f(100.0), 1, "float")
+        _g = rt.binary("/", rt.binary("*", luminance__vec4(rt.texture(_u_gTex, rt.construct(2, rt.fdiv(rt.swizzle(ctx.frag_coord, "xy"), rt.construct(2, rt.texture_size(_u_gTex)), 2)))), _u_gLevel, 1, "float"), rt.f(100.0), 1, "float")
+        b = rt.binary("/", rt.binary("*", luminance__vec4(rt.texture(_u_bTex, rt.construct(2, rt.fdiv(rt.swizzle(ctx.frag_coord, "xy"), rt.construct(2, rt.texture_size(_u_bTex)), 2)))), _u_bLevel, 1, "float"), rt.f(100.0), 1, "float")
         g.fragColor[:] = rt.construct(4, r, _g, b, rt.f(1.0))
     main__void()
     _c = g.fragColor

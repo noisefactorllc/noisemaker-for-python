@@ -91,7 +91,7 @@ def run_pixel(ctx, out):
         return rt.construct(2, rt.matrix_mult(rt.construct(4, co, rt.unary("-", si), si, co), v, 2))
     def main__void():
         globalCoord = rt.construct(2, rt.binary("+", rt.swizzle(ctx.frag_coord, "xy"), _u_tileOffset, 2, 'float'))
-        uv = rt.construct(2, rt.binary("/", rt.swizzle(ctx.frag_coord, "xy"), _u_resolution, 2, 'float'))
+        uv = rt.construct(2, rt.fdiv(rt.swizzle(ctx.frag_coord, "xy"), _u_resolution, 2))
         alpha = rt.swizzle(rt.texture(_u_inputTex, uv), "a")
         result = rt.construct(3, 0.0)
         p = rt.construct(2, 0.0)
@@ -110,10 +110,10 @@ def run_pixel(ctx, out):
         l = rt.f(0.0)
         clumpNoise = rt.f(0.0)
         if rt.binary("==", _u_MODE, rt.i(0)):
-            p = rt.construct(2, rt.binary("/", globalCoord, _u_cellSize, 2, 'float'))
+            p = rt.construct(2, rt.fdiv(globalCoord, _u_cellSize, 2))
             cell = voronoiCell__vec2_float_float(p, rt.f(0.9), rt.construct(1, _u_seed))
             seedGc = rt.construct(2, rt.binary("*", rt.swizzle(cell, "xy"), _u_cellSize, 2, 'float'))
-            seedUV = rt.component_wise("clamp", rt.binary("/", rt.binary("-", seedGc, _u_tileOffset, 2, 'float'), _u_resolution, 2, 'float'), rt.f(0.0), rt.f(1.0), width=2)
+            seedUV = rt.component_wise("clamp", rt.fdiv(rt.binary("-", seedGc, _u_tileOffset, 2, 'float'), _u_resolution, 2), rt.f(0.0), rt.f(1.0), width=2)
             seedColor = rt.swizzle(rt.texture(_u_inputTex, seedUV), "rgb")
             radius = rt.binary("+", rt.f(0.35), rt.binary("*", rt.f(0.4), rt.binary("-", rt.f(1.0), lum__vec3(seedColor), 1, "float"), 1, "float"), 1, "float")
             d = rt.length(rt.binary("-", p, rt.swizzle(cell, "xy"), 2, 'float'))
@@ -127,9 +127,9 @@ def run_pixel(ctx, out):
                     gc[:] = rotate2D__vec2_float(gc, rt.f(45.0))
                 noiseP = rt.construct(2, 0.0)
                 if rt.binary("==", _u_MODE, rt.i(1)):
-                    noiseP[:] = rt.binary("/", gc, _u_grainSize, 2, 'float')
+                    noiseP[:] = rt.fdiv(gc, _u_grainSize, 2)
                 else:
-                    noiseP[:] = rt.binary("*", gc, rt.construct_raw(2, rt.binary("/", rt.f(1.0), _u_grainSize, 1, "float"), rt.binary("/", rt.f(1.0), rt.binary("*", _u_grainSize, rt.f(8.0), 1, "float"), 1, "float")), 2, 'float')
+                    noiseP[:] = rt.binary("*", gc, rt.construct_raw(2, rt.fdiv(rt.f(1.0), _u_grainSize, 1), rt.fdiv(rt.f(1.0), rt.binary("*", _u_grainSize, rt.f(8.0), 1, "float"), 1)), 2, 'float')
                 n = vnoise__vec2(rt.construct(2, rt.binary("+", noiseP, rt.binary("*", rt.construct(1, _u_seed), rt.f(101.7), 1, "float"), 2, 'float')))
                 n = rt.binary("+", n, rt.binary("/", rt.binary("-", _u_density, rt.f(50.0), 1, "float"), rt.f(100.0), 1, "float"), 1, "float")
                 src = rt.swizzle(rt.texture(_u_inputTex, uv), "rgb")
@@ -137,7 +137,7 @@ def run_pixel(ctx, out):
             else:
                 src = rt.swizzle(rt.texture(_u_inputTex, uv), "rgb")
                 l = lum__vec3(src)
-                clumpNoise = rt.binary("*", fbm__vec2(rt.construct(2, rt.binary("+", rt.binary("/", globalCoord, rt.binary("*", _u_grainSize, rt.f(4.0), 1, "float"), 2, 'float'), rt.binary("*", rt.construct(1, _u_seed), rt.f(101.7), 1, "float"), 2, 'float'))), rt.component_wise("mix", rt.f(1.2), rt.f(0.6), l, width=1), 1, "float")
+                clumpNoise = rt.binary("*", fbm__vec2(rt.construct(2, rt.binary("+", rt.fdiv(globalCoord, rt.binary("*", _u_grainSize, rt.f(4.0), 1, "float"), 2), rt.binary("*", rt.construct(1, _u_seed), rt.f(101.7), 1, "float"), 2, 'float'))), rt.component_wise("mix", rt.f(1.2), rt.f(0.6), l, width=1), 1, "float")
                 clumpNoise = rt.binary("+", clumpNoise, rt.binary("/", rt.binary("-", _u_density, rt.f(50.0), 1, "float"), rt.f(100.0), 1, "float"), 1, "float")
                 result[:] = tonemap2__float_vec3_vec3(rt.component_wise("step", clumpNoise, l, width=1), rt.construct(3, rt.f(0.05)), rt.construct(3, rt.f(0.97)))
         g.fragColor[:] = rt.construct(4, result, alpha)

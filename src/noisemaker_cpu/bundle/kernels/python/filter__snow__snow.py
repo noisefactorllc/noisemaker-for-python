@@ -67,7 +67,7 @@ def run_pixel(ctx, out):
         static_value = snow_noise__vec2_float_float_vec3(pixelCoord, timeVal, speedVal, g.STATIC_SEED)
         limiter_value = snow_noise__vec2_float_float_vec3(pixelCoord, timeVal, speedVal, g.LIMITER_SEED)
         d = rt.component_wise("max", rt.binary("*", _u_density, rt.f(0.01), 1, "float"), rt.f(0.0001), width=1)
-        exponent = rt.binary("/", rt.binary("-", rt.f(1.0), d, 1, "float"), d, 1, "float")
+        exponent = rt.fdiv(rt.binary("-", rt.f(1.0), d, 1, "float"), d, 1)
         limiter_mask = rt.binary("*", rt.component_wise("pow", rt.component_wise("min", limiter_value, rt.f(0.99), width=1), exponent, width=1), alphaVal, 1, "float")
         static_color = rt.construct(3, static_value)
         mixed_rgb = rt.component_wise("mix", rt.swizzle(texel, "xyz"), static_color, rt.construct(3, limiter_mask), width=3)

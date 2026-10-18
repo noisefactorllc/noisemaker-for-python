@@ -17,7 +17,7 @@ def run_pixel(ctx, out):
         uv = rt.copy(uv, "float")
         mode = rt.construct(1, _u_wrap, base="int")
         if rt.binary("==", mode, rt.i(0)):
-            return rt.component_wise("abs", rt.construct(2, rt.binary("-", rt.component_wise("mod", rt.binary("+", uv, rt.f(1.0), 2, 'float'), rt.f(2.0), width=2), rt.f(1.0), 2, 'float')), width=2)
+            return rt.component_wise("abs", rt.construct(2, rt.binary("-", uv, rt.construct(2, rt.binary("*", rt.f(2.0), rt.component_wise("floor", rt.binary("*", rt.binary("+", uv, rt.f(1.0), 2, 'float'), rt.f(0.5), 2, 'float'), width=2), 2, 'float')), 2, 'float')), width=2)
         else:
             if rt.binary("==", mode, rt.i(1)):
                 return rt.component_wise("fract", uv, width=2)
@@ -28,8 +28,8 @@ def run_pixel(ctx, out):
     def main__void():
         dims = rt.texture_size(_u_inputTex)
         globalCoord = rt.construct(2, rt.binary("+", rt.swizzle(ctx.frag_coord, "xy"), _u_tileOffset, 2, 'float'))
-        globalUV = rt.construct(2, rt.binary("/", globalCoord, _u_fullResolution, 2, 'float'))
-        localUV = rt.construct(2, rt.binary("/", rt.swizzle(ctx.frag_coord, "xy"), rt.construct_raw(2, rt.construct(2, dims)), 2, 'float'))
+        globalUV = rt.construct(2, rt.fdiv(globalCoord, _u_fullResolution, 2))
+        localUV = rt.construct(2, rt.fdiv(rt.swizzle(ctx.frag_coord, "xy"), rt.construct_raw(2, rt.construct(2, dims)), 2))
         original = rt.texture(_u_inputTex, localUV)
         current = rt.copy_decl(original, "float")
         if _u_ridges:
@@ -49,7 +49,7 @@ def run_pixel(ctx, out):
                 break
             warpedGlobalUV = rt.construct(2, rt.binary("*", globalUV, scale, 2, 'float'))
             wrappedGlobalUV = applyWrap__vec2(warpedGlobalUV)
-            sampledLocalUV = rt.component_wise("fract", rt.binary("/", rt.binary("-", rt.binary("*", wrappedGlobalUV, _u_fullResolution, 2, 'float'), _u_tileOffset, 2, 'float'), rt.construct_raw(2, rt.construct(2, dims)), 2, 'float'), width=2)
+            sampledLocalUV = rt.component_wise("fract", rt.fdiv(rt.binary("-", rt.binary("*", wrappedGlobalUV, _u_fullResolution, 2, 'float'), _u_tileOffset, 2, 'float'), rt.construct_raw(2, rt.construct(2, dims)), 2), width=2)
             scaled = rt.texture(_u_inputTex, sampledLocalUV)
             if _u_ridges:
                 scaled[:] = ridge_transform__vec4(scaled)

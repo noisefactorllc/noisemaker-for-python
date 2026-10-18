@@ -81,6 +81,17 @@ def sample_nearest_bottom_left(surface, u: float, v: float) -> np.ndarray:
     return surface.data[source : source + 4].astype(np.float32)
 
 
+def sample_nearest_texel_bottom_left(surface, u: float, v: float) -> np.ndarray:
+    def texel(coordinate, size):
+        scaled = float(_F32(coordinate * size))
+        return size - 1 if math.isnan(scaled) else int(_clamp(_floor(scaled), 0, size - 1))
+
+    x = texel(u, surface.width)
+    y = surface.height - 1 - texel(v, surface.height)
+    source = (y * surface.width + x) * 4
+    return surface.data[source : source + 4].astype(np.float32)
+
+
 def sample_bilinear(surface, u: float, v: float) -> np.ndarray:
     """Bilinear sample, half-texel-centered, clamped to edge, GL bottom-left row
     addressing (flips the integer texel row, like sample_nearest_bottom_left)."""

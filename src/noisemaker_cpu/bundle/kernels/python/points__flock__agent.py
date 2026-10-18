@@ -38,7 +38,7 @@ def run_pixel(ctx, out):
         p = rt.copy(p, "float")
         i = rt.component_wise("floor", p, width=2)
         f = rt.component_wise("fract", p, width=2)
-        (f.__setitem__(0, rt.swizzle(rt.binary("*", rt.binary("*", f, f, 2, 'float'), rt.binary("-", rt.f(3.0), rt.binary("*", rt.f(2.0), f, 2, 'float'), 2, 'float'), 2, 'float'), "x")), f.__setitem__(1, rt.swizzle(rt.binary("*", rt.binary("*", f, f, 2, 'float'), rt.binary("-", rt.f(3.0), rt.binary("*", rt.f(2.0), f, 2, 'float'), 2, 'float'), 2, 'float'), "y")), f)[-1]
+        ((_vector_write_0_0 := rt.swizzle(rt.binary("*", rt.binary("*", f, f, 2, 'float'), rt.binary("-", rt.f(3.0), rt.binary("*", rt.f(2.0), f, 2, 'float'), 2, 'float'), 2, 'float'), "x")), (_vector_write_0_1 := rt.swizzle(rt.binary("*", rt.binary("*", f, f, 2, 'float'), rt.binary("-", rt.f(3.0), rt.binary("*", rt.f(2.0), f, 2, 'float'), 2, 'float'), 2, 'float'), "y")), f.__setitem__(0, _vector_write_0_0), f.__setitem__(1, _vector_write_0_1), f)[-1]
         n = rt.binary("+", rt.swizzle(i, "x"), rt.binary("*", rt.swizzle(i, "y"), rt.f(57.0), 1, "float"), 1, "float")
         return rt.binary("-", rt.binary("*", rt.component_wise("mix", rt.component_wise("mix", hashFloat__float(n), hashFloat__float(rt.binary("+", n, rt.f(1.0), 1, "float")), rt.swizzle(f, "x"), width=1), rt.component_wise("mix", hashFloat__float(rt.binary("+", n, rt.f(57.0), 1, "float")), hashFloat__float(rt.binary("+", n, rt.f(58.0), 1, "float")), rt.swizzle(f, "x"), width=1), rt.swizzle(f, "y"), width=1), rt.f(2.0), 1, "float"), rt.f(1.0), 1, "float")
     def wrapPosition__vec2_vec2(position, bounds):
@@ -158,7 +158,7 @@ def run_pixel(ctx, out):
                     if (bool(rt.binary("<", distSq, separationSq)) and bool(rt.binary(">", distSq, rt.f(0.0)))):
                         away = rt.construct(2, rt.unary("-", diff))
                         dist = rt.component_wise("sqrt", distSq, width=1)
-                        separationForce[:] = rt.binary("+", separationForce, rt.binary("/", away, dist, 2, 'float'), 2, "float")
+                        separationForce[:] = rt.binary("+", separationForce, rt.fdiv(away, dist, 2), 2, "float")
                         separationCount = rt.binary("+", separationCount, rt.i(1), 1, "int")
                     if (bool(rt.binary("<", distSq, perceptionSq)) and bool(rt.binary(">", distSq, rt.f(0.0)))):
                         alignmentSum[:] = rt.binary("+", alignmentSum, otherVelocity, 2, "float")
@@ -209,15 +209,15 @@ def run_pixel(ctx, out):
             wallForce = rt.construct(2, rt.f(0.0))
             turnStrength = rt.binary("*", _u_maxForce, rt.f(2.0), 1, "float")
             if rt.binary("<", rt.swizzle(pos, "x"), _u_wallMargin):
-                wallForce = rt.assign_swizzle(wallForce, "x", rt.binary("*", turnStrength, rt.binary("-", rt.f(1.0), rt.binary("/", rt.swizzle(pos, "x"), _u_wallMargin, 1, "float"), 1, "float"), 1, "float"))
+                wallForce = rt.assign_swizzle(wallForce, "x", rt.binary("*", turnStrength, rt.binary("-", rt.f(1.0), rt.fdiv(rt.swizzle(pos, "x"), _u_wallMargin, 1), 1, "float"), 1, "float"))
             else:
                 if rt.binary(">", rt.swizzle(pos, "x"), rt.binary("-", rt.swizzle(_u_resolution, "x"), _u_wallMargin, 1, "float")):
-                    wallForce = rt.assign_swizzle(wallForce, "x", rt.binary("*", rt.unary("-", turnStrength), rt.binary("-", rt.f(1.0), rt.binary("/", rt.binary("-", rt.swizzle(_u_resolution, "x"), rt.swizzle(pos, "x"), 1, "float"), _u_wallMargin, 1, "float"), 1, "float"), 1, "float"))
+                    wallForce = rt.assign_swizzle(wallForce, "x", rt.binary("*", rt.unary("-", turnStrength), rt.binary("-", rt.f(1.0), rt.fdiv(rt.binary("-", rt.swizzle(_u_resolution, "x"), rt.swizzle(pos, "x"), 1, "float"), _u_wallMargin, 1), 1, "float"), 1, "float"))
             if rt.binary("<", rt.swizzle(pos, "y"), _u_wallMargin):
-                wallForce = rt.assign_swizzle(wallForce, "y", rt.binary("*", turnStrength, rt.binary("-", rt.f(1.0), rt.binary("/", rt.swizzle(pos, "y"), _u_wallMargin, 1, "float"), 1, "float"), 1, "float"))
+                wallForce = rt.assign_swizzle(wallForce, "y", rt.binary("*", turnStrength, rt.binary("-", rt.f(1.0), rt.fdiv(rt.swizzle(pos, "y"), _u_wallMargin, 1), 1, "float"), 1, "float"))
             else:
                 if rt.binary(">", rt.swizzle(pos, "y"), rt.binary("-", rt.swizzle(_u_resolution, "y"), _u_wallMargin, 1, "float")):
-                    wallForce = rt.assign_swizzle(wallForce, "y", rt.binary("*", rt.unary("-", turnStrength), rt.binary("-", rt.f(1.0), rt.binary("/", rt.binary("-", rt.swizzle(_u_resolution, "y"), rt.swizzle(pos, "y"), 1, "float"), _u_wallMargin, 1, "float"), 1, "float"), 1, "float"))
+                    wallForce = rt.assign_swizzle(wallForce, "y", rt.binary("*", rt.unary("-", turnStrength), rt.binary("-", rt.f(1.0), rt.fdiv(rt.binary("-", rt.swizzle(_u_resolution, "y"), rt.swizzle(pos, "y"), 1, "float"), _u_wallMargin, 1), 1, "float"), 1, "float"))
             steer[:] = rt.binary("+", steer, wallForce, 2, "float")
         velocity[:] = rt.binary("+", velocity, steer, 2, "float")
         velocity[:] = limitVec__vec2_float(velocity, _u_maxSpeed)
@@ -227,8 +227,8 @@ def run_pixel(ctx, out):
         else:
             pos[:] = rt.component_wise("clamp", pos, rt.construct(2, rt.f(1.0)), rt.binary("-", _u_resolution, rt.construct_raw(2, rt.f(1.0)), 2, 'float'), width=2)
         age = rt.binary("+", age, rt.f(0.016), 1, "float")
-        newPx = rt.binary("/", rt.swizzle(pos, "x"), rt.swizzle(_u_resolution, "x"), 1, "float")
-        newPy = rt.binary("/", rt.swizzle(pos, "y"), rt.swizzle(_u_resolution, "y"), 1, "float")
+        newPx = rt.fdiv(rt.swizzle(pos, "x"), rt.swizzle(_u_resolution, "x"), 1)
+        newPy = rt.fdiv(rt.swizzle(pos, "y"), rt.swizzle(_u_resolution, "y"), 1)
         g.outXYZ[:] = rt.construct(4, newPx, newPy, rt.swizzle(xyz, "z"), rt.f(1.0))
         g.outVel[:] = rt.construct(4, velocity, age, seed)
         g.outRGBA[:] = rgba

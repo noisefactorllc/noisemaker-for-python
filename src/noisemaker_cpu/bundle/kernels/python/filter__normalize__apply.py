@@ -20,7 +20,7 @@ def run_pixel(ctx, out):
         if rt.binary("<", rt.binary("-", maxVal, minVal, 1, "float"), rt.f(1e-05)):
             g.fragColor[:] = color
             return
-        normalized = rt.construct(3, rt.binary("/", rt.binary("-", rt.swizzle(color, "rgb"), minVal, 3, 'float'), rt.binary("-", maxVal, minVal, 1, "float"), 3, 'float'))
+        normalized = rt.construct(3, rt.fdiv(rt.binary("-", rt.swizzle(color, "rgb"), minVal, 3, 'float'), rt.binary("-", maxVal, minVal, 1, "float"), 3))
         g.fragColor[:] = rt.construct(4, normalized, rt.swizzle(color, "a"))
     main__void()
     _c = g.fragColor

@@ -38,7 +38,7 @@ def run_pixel(ctx, out):
         p = rt.copy(p, "float")
         i = rt.component_wise("floor", p, width=2)
         f = rt.component_wise("fract", p, width=2)
-        (f.__setitem__(0, rt.swizzle(rt.binary("*", rt.binary("*", f, f, 2, 'float'), rt.binary("-", rt.f(3.0), rt.binary("*", rt.f(2.0), f, 2, 'float'), 2, 'float'), 2, 'float'), "x")), f.__setitem__(1, rt.swizzle(rt.binary("*", rt.binary("*", f, f, 2, 'float'), rt.binary("-", rt.f(3.0), rt.binary("*", rt.f(2.0), f, 2, 'float'), 2, 'float'), 2, 'float'), "y")), f)[-1]
+        ((_vector_write_0_0 := rt.swizzle(rt.binary("*", rt.binary("*", f, f, 2, 'float'), rt.binary("-", rt.f(3.0), rt.binary("*", rt.f(2.0), f, 2, 'float'), 2, 'float'), 2, 'float'), "x")), (_vector_write_0_1 := rt.swizzle(rt.binary("*", rt.binary("*", f, f, 2, 'float'), rt.binary("-", rt.f(3.0), rt.binary("*", rt.f(2.0), f, 2, 'float'), 2, 'float'), 2, 'float'), "y")), f.__setitem__(0, _vector_write_0_0), f.__setitem__(1, _vector_write_0_1), f)[-1]
         a = hash21__vec2(i)
         b = hash21__vec2(rt.construct(2, rt.binary("+", i, rt.construct_raw(2, rt.f(1.0), rt.f(0.0)), 2, 'float')))
         c = hash21__vec2(rt.construct(2, rt.binary("+", i, rt.construct_raw(2, rt.f(0.0), rt.f(1.0)), 2, 'float')))
@@ -58,7 +58,7 @@ def run_pixel(ctx, out):
             return rt.f(0.0)
         norm = rt.binary("/", value, limit, 1, "float")
         if rt.binary("==", mode, rt.i(0)):
-            norm = rt.component_wise("abs", rt.binary("-", rt.component_wise("mod", rt.binary("+", norm, rt.f(1.0), 1, "float"), rt.f(2.0), width=1), rt.f(1.0), 1, "float"), width=1)
+            norm = rt.component_wise("abs", rt.binary("-", norm, rt.binary("*", rt.f(2.0), rt.component_wise("floor", rt.binary("*", rt.binary("+", norm, rt.f(1.0), 1, "float"), rt.f(0.5), 1, "float"), width=1), 1, "float"), 1, "float"), width=1)
         else:
             if rt.binary("==", mode, rt.i(1)):
                 norm = rt.component_wise("mod", norm, rt.f(1.0), width=1)
@@ -73,13 +73,13 @@ def run_pixel(ctx, out):
         width = rt.swizzle(dims, "x")
         height = rt.swizzle(dims, "y")
         baseFreq = rt.binary("-", rt.f(11.0), _u_frequency, 1, "float")
-        aspect = rt.binary("/", width, height, 1, "float")
+        aspect = rt.fdiv(width, height, 1)
         freq = rt.construct(2, baseFreq)
         if rt.binary(">", aspect, rt.f(1.0)):
             freq = rt.assign_swizzle(freq, "y", rt.binary("*", rt.swizzle(freq, "y"), aspect, 1, "float"))
         else:
             freq = rt.assign_swizzle(freq, "x", rt.binary("/", rt.swizzle(freq, "x"), aspect, 1, "float"))
-        uv = rt.construct(2, rt.binary("/", rt.binary("+", rt.swizzle(ctx.frag_coord, "xy"), _u_tileOffset, 2, 'float'), fullRes, 2, 'float'))
+        uv = rt.construct(2, rt.fdiv(rt.binary("+", rt.swizzle(ctx.frag_coord, "xy"), _u_tileOffset, 2, 'float'), fullRes, 2))
         sampleCoord = rt.construct(2, rt.binary("*", uv, dims, 2, 'float'))
         numOctaves = rt.component_wise("max", rt.construct(1, _u_octaves, base="int"), rt.i(1), width=1)
         displaceBase = _u_displacement
@@ -99,7 +99,7 @@ def run_pixel(ctx, out):
                 break
             phase = rt.binary("*", rt.construct(1, octave), rt.f(2.399), 1, "float")
             radius = rt.binary("/", rt.f(0.5), rt.component_wise("sqrt", multiplier, width=1), 1, "float")
-            noiseCoord = rt.construct(2, rt.binary("*", rt.binary("/", sampleCoord, dims, 2, 'float'), freqScaled, 2, 'float'))
+            noiseCoord = rt.construct(2, rt.binary("*", rt.fdiv(sampleCoord, dims, 2), freqScaled, 2, 'float'))
             refX = simplexNoise__vec2_float_float_float(rt.construct(2, rt.binary("+", noiseCoord, rt.construct_raw(2, rt.f(17.0), rt.f(29.0)), 2, 'float')), rt.binary("*", _u_time, _u_speed, 1, "float"), phase, radius)
             refY = simplexNoise__vec2_float_float_float(rt.construct(2, rt.binary("+", noiseCoord, rt.construct_raw(2, rt.f(23.0), rt.f(31.0)), 2, 'float')), rt.binary("*", _u_time, _u_speed, 1, "float"), phase, radius)
             refX = rt.binary("-", rt.binary("*", refX, rt.f(2.0), 1, "float"), rt.f(1.0), 1, "float")
@@ -108,7 +108,7 @@ def run_pixel(ctx, out):
             offset = rt.construct(2, rt.binary("*", rt.binary("*", refX, displaceScale, 1, "float"), width, 1, "float"), rt.binary("*", rt.binary("*", refY, displaceScale, 1, "float"), height, 1, "float"))
             sampleCoord[:] = rt.binary("+", sampleCoord, offset, 2, "float")
             (sampleCoord.__setitem__(0, wrapFloat__float_float_int(rt.swizzle(sampleCoord, "x"), width, rt.construct(1, _u_wrap, base="int"))), sampleCoord.__setitem__(1, wrapFloat__float_float_int(rt.swizzle(sampleCoord, "y"), height, rt.construct(1, _u_wrap, base="int"))), sampleCoord)[-1]
-        finalUV = rt.construct(2, rt.binary("/", rt.construct_raw(2, wrapFloat__float_float_int(rt.swizzle(sampleCoord, "x"), width, rt.construct(1, _u_wrap, base="int")), wrapFloat__float_float_int(rt.swizzle(sampleCoord, "y"), height, rt.construct(1, _u_wrap, base="int"))), dims, 2, 'float'))
+        finalUV = rt.construct(2, rt.fdiv(rt.construct_raw(2, wrapFloat__float_float_int(rt.swizzle(sampleCoord, "x"), width, rt.construct(1, _u_wrap, base="int")), wrapFloat__float_float_int(rt.swizzle(sampleCoord, "y"), height, rt.construct(1, _u_wrap, base="int"))), dims, 2))
         dx = rt.construct(2, 0.0)
         dy = rt.construct(2, 0.0)
         col = rt.construct(4, 0.0)

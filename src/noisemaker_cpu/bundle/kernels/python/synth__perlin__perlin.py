@@ -223,10 +223,10 @@ def run_pixel(ctx, out):
         res = rt.copy_decl(_u_fullResolution, "float")
         if rt.binary("<", rt.swizzle(res, "x"), rt.f(1.0)):
             (res.__setitem__(0, rt.f(1024.0)), res.__setitem__(1, rt.f(1024.0)), res)[-1]
-        st = rt.construct(2, rt.binary("/", rt.binary("+", rt.swizzle(ctx.frag_coord, "xy"), _u_tileOffset, 2, 'float'), res, 2, 'float'))
+        st = rt.construct(2, rt.fdiv(rt.binary("+", rt.swizzle(ctx.frag_coord, "xy"), _u_tileOffset, 2, 'float'), res, 2))
         st[:] = rt.binary("-", st, rt.f(0.5), 2, "float")
         st = rt.assign_swizzle(st, "x", rt.binary("*", rt.swizzle(st, "x"), _u_aspect, 1, "float"))
-        freq = rt.component_wise("max", rt.f(0.1), rt.binary("/", rt.f(100.0), rt.component_wise("max", _u_scale, rt.f(0.01), width=1), 1, "float"), width=1)
+        freq = rt.component_wise("max", rt.f(0.1), rt.fdiv(rt.f(100.0), rt.component_wise("max", _u_scale, rt.f(0.01), width=1), 1), width=1)
         st[:] = rt.binary("*", st, freq, 2, "float")
         st[:] = rt.binary("+", st, rt.f(1000.0), 2, "float")
         timeAngle = rt.binary("*", rt.binary("*", _u_time, _u_speed, 1, "float"), g.TAU, 1, "float")

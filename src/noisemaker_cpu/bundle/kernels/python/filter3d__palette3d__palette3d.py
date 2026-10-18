@@ -77,7 +77,7 @@ def run_pixel(ctx, out):
         return rt.component_wise("clamp", rt.construct(3, rt.binary("+", offset, rt.construct(3, rt.binary("*", amp, rt.component_wise("cos", rt.binary("*", g.TAU, rt.binary("+", rt.binary("*", freq, t, 3, 'float'), phase, 3, 'float'), 3, 'float'), width=3), 3, 'float')), 3, 'float')), rt.f(0.0), rt.f(1.0), width=3)
     def main__void():
         texSize = rt.construct(2, rt.texture_size(_u_inputTex3d))
-        uv = rt.construct(2, rt.binary("/", rt.swizzle(ctx.frag_coord, "xy"), texSize, 2, 'float'))
+        uv = rt.construct(2, rt.fdiv(rt.swizzle(ctx.frag_coord, "xy"), texSize, 2))
         inputColor = rt.texture(_u_inputTex3d, uv)
         if (bool(rt.binary("<=", _u_paletteIndex, rt.i(0))) or bool(rt.binary(">", _u_paletteIndex, g.PALETTE_COUNT))):
             g.fragColor[:] = inputColor

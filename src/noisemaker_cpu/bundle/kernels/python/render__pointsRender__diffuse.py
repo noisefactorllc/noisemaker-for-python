@@ -10,7 +10,7 @@ def run_pixel(ctx, out):
     _u_intensity = U.get("intensity", rt.f(0.0))
     g.fragColor = rt.construct(4, 0.0)
     def main__void():
-        uv = rt.construct(2, rt.binary("/", rt.swizzle(ctx.frag_coord, "xy"), _u_resolution, 2, 'float'))
+        uv = rt.construct(2, rt.fdiv(rt.swizzle(ctx.frag_coord, "xy"), _u_resolution, 2))
         trailColor = rt.texture(_u_trailTex, uv)
         decay = rt.component_wise("clamp", rt.binary("/", _u_intensity, rt.f(100.0), 1, "float"), rt.f(0.0), rt.f(1.0), width=1)
         g.fragColor[:] = rt.component_wise("clamp", rt.binary("*", trailColor, decay, 4, 'float'), rt.f(0.0), rt.f(1.0), width=4)

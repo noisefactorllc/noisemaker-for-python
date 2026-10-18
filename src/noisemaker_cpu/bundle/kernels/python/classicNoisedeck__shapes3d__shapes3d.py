@@ -355,7 +355,7 @@ def run_pixel(ctx, out):
     def main__void():
         globalCoord = rt.construct(2, rt.binary("+", rt.swizzle(ctx.frag_coord, "xy"), _u_tileOffset, 2, 'float'))
         color = rt.construct(4, rt.f(1.0))
-        st = rt.construct(2, rt.binary("/", rt.binary("-", globalCoord, rt.binary("*", rt.f(0.5), rt.swizzle(_u_fullResolution, "xy"), 2, 'float'), 2, 'float'), rt.swizzle(_u_fullResolution, "y"), 2, 'float'))
+        st = rt.construct(2, rt.fdiv(rt.binary("-", globalCoord, rt.binary("*", rt.f(0.5), rt.swizzle(_u_fullResolution, "xy"), 2, 'float'), 2, 'float'), rt.swizzle(_u_fullResolution, "y"), 2))
         rayOrigin = rt.construct(3, rt.f(0.0), rt.f(0.0), rt.unary("-", _u_cameraDist))
         rayDirection = rt.normalize(rt.construct(3, st, rt.f(1.0)))
         transformData = computeTransformData__void()
@@ -399,7 +399,7 @@ def run_pixel(ctx, out):
             color[:] = rt.component_wise("mix", color, rt.construct(4, _u_bgColor, rt.binary("*", _u_bgAlpha, rt.f(0.01), 1, "float")), fogDist, width=4)
         else:
             color[:] = rt.component_wise("mix", color, rt.construct(4, _u_bgColor, rt.binary("*", _u_bgAlpha, rt.f(0.01), 1, "float")), rt.component_wise("floor", fogDist, width=1), width=4)
-        st[:] = rt.binary("/", globalCoord, _u_fullResolution, 2, 'float')
+        st[:] = rt.fdiv(globalCoord, _u_fullResolution, 2)
         g.fragColor[:] = color
     main__void()
     _c = g.fragColor

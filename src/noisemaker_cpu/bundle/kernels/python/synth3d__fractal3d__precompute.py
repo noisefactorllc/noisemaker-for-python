@@ -112,7 +112,7 @@ def run_pixel(ctx, out):
                     factor = rt.binary("/", fixedR2, r2, 1, "float")
                     z[:] = rt.binary("*", z, factor, 3, "float")
                     dr = rt.binary("*", dr, factor, 1, "float")
-            (z.__setitem__(0, rt.swizzle(rt.binary("+", rt.binary("*", z, scale, 3, 'float'), pos, 3, 'float'), "x")), z.__setitem__(1, rt.swizzle(rt.binary("+", rt.binary("*", z, scale, 3, 'float'), pos, 3, 'float'), "y")), z.__setitem__(2, rt.swizzle(rt.binary("+", rt.binary("*", z, scale, 3, 'float'), pos, 3, 'float'), "z")), z)[-1]
+            ((_vector_write_0_0 := rt.swizzle(rt.binary("+", rt.binary("*", z, scale, 3, 'float'), pos, 3, 'float'), "x")), (_vector_write_0_1 := rt.swizzle(rt.binary("+", rt.binary("*", z, scale, 3, 'float'), pos, 3, 'float'), "y")), (_vector_write_0_2 := rt.swizzle(rt.binary("+", rt.binary("*", z, scale, 3, 'float'), pos, 3, 'float'), "z")), z.__setitem__(0, _vector_write_0_0), z.__setitem__(1, _vector_write_0_1), z.__setitem__(2, _vector_write_0_2), z)[-1]
             dr = rt.binary("+", rt.binary("*", dr, rt.component_wise("abs", scale, width=1), 1, "float"), rt.f(1.0), 1, "float")
             trap = rt.component_wise("min", trap, rt.length(z), width=1)
             iter = rt.binary("+", iter, rt.f(1.0), 1, "float")
@@ -153,7 +153,7 @@ def run_pixel(ctx, out):
                     factor = rt.binary("/", fixedR2, r2, 1, "float")
                     z[:] = rt.binary("*", z, factor, 3, "float")
                     dr = rt.binary("*", dr, factor, 1, "float")
-            (z.__setitem__(0, rt.swizzle(rt.binary("+", rt.binary("*", z, scale, 3, 'float'), c, 3, 'float'), "x")), z.__setitem__(1, rt.swizzle(rt.binary("+", rt.binary("*", z, scale, 3, 'float'), c, 3, 'float'), "y")), z.__setitem__(2, rt.swizzle(rt.binary("+", rt.binary("*", z, scale, 3, 'float'), c, 3, 'float'), "z")), z)[-1]
+            ((_vector_write_1_0 := rt.swizzle(rt.binary("+", rt.binary("*", z, scale, 3, 'float'), c, 3, 'float'), "x")), (_vector_write_1_1 := rt.swizzle(rt.binary("+", rt.binary("*", z, scale, 3, 'float'), c, 3, 'float'), "y")), (_vector_write_1_2 := rt.swizzle(rt.binary("+", rt.binary("*", z, scale, 3, 'float'), c, 3, 'float'), "z")), z.__setitem__(0, _vector_write_1_0), z.__setitem__(1, _vector_write_1_1), z.__setitem__(2, _vector_write_1_2), z)[-1]
             dr = rt.binary("+", rt.binary("*", dr, rt.component_wise("abs", scale, width=1), 1, "float"), rt.f(1.0), 1, "float")
             trap = rt.component_wise("min", trap, rt.length(z), width=1)
             iter = rt.binary("+", iter, rt.f(1.0), 1, "float")
@@ -189,7 +189,7 @@ def run_pixel(ctx, out):
             g.fragColor[:] = rt.construct(4, rt.f(0.0))
             g.geoOut[:] = rt.construct(4, rt.f(0.5), rt.f(0.5), rt.f(0.5), rt.f(0.0))
             return
-        p = rt.construct(3, rt.binary("*", rt.binary("-", rt.binary("*", rt.binary("/", rt.construct_raw(3, rt.construct(1, x), rt.construct(1, y), rt.construct(1, z)), rt.binary("-", volSizeF, rt.f(1.0), 1, "float"), 3, 'float'), rt.f(2.0), 3, 'float'), rt.f(1.0), 3, 'float'), rt.f(1.5), 3, 'float'))
+        p = rt.construct(3, rt.binary("*", rt.binary("-", rt.binary("*", rt.fdiv(rt.construct_raw(3, rt.construct(1, x), rt.construct(1, y), rt.construct(1, z)), rt.binary("-", volSizeF, rt.f(1.0), 1, "float"), 3), rt.f(2.0), 3, 'float'), rt.f(1.0), 3, 'float'), rt.f(1.5), 3, 'float'))
         juliaC = rt.construct(3, rt.binary("*", rt.construct_raw(3, _u_juliaX, _u_juliaY, _u_juliaZ), rt.f(0.01), 3, 'float'))
         result = computeFractal__vec3_vec3(p, juliaC)
         dist = rt.swizzle(result, "x")

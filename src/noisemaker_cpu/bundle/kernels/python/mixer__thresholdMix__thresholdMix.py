@@ -41,9 +41,9 @@ def run_pixel(ctx, out):
             return rt.component_wise("smoothstep", lower, upper, mapValue, width=1)
     def main__void():
         globalCoord = rt.construct(2, rt.binary("+", rt.swizzle(ctx.frag_coord, "xy"), _u_tileOffset, 2, 'float'))
-        uv = rt.construct(2, rt.binary("/", globalCoord, _u_fullResolution, 2, 'float'))
-        colorA = rt.texture(_u_inputTex, rt.construct(2, rt.binary("/", rt.swizzle(ctx.frag_coord, "xy"), rt.construct(2, rt.texture_size(_u_inputTex)), 2, 'float')))
-        colorB = rt.texture(_u_tex, rt.construct(2, rt.binary("/", rt.swizzle(ctx.frag_coord, "xy"), rt.construct(2, rt.texture_size(_u_tex)), 2, 'float')))
+        uv = rt.construct(2, rt.fdiv(globalCoord, _u_fullResolution, 2))
+        colorA = rt.texture(_u_inputTex, rt.construct(2, rt.fdiv(rt.swizzle(ctx.frag_coord, "xy"), rt.construct(2, rt.texture_size(_u_inputTex)), 2)))
+        colorB = rt.texture(_u_tex, rt.construct(2, rt.fdiv(rt.swizzle(ctx.frag_coord, "xy"), rt.construct(2, rt.texture_size(_u_tex)), 2)))
         mapColor = rt.construct(3, 0.0)
         if rt.binary("==", _u_mapSource, rt.i(0)):
             mapColor[:] = rt.swizzle(colorA, "rgb")

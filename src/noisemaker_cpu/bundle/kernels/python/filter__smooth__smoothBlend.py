@@ -189,8 +189,8 @@ def run_pixel(ctx, out):
     def main__void():
         globalCoord = rt.construct(2, rt.binary("+", rt.swizzle(ctx.frag_coord, "xy"), _u_tileOffset, 2, 'float'))
         texSize = rt.texture_size(_u_inputTex)
-        uv = rt.construct(2, rt.binary("/", rt.swizzle(ctx.frag_coord, "xy"), rt.construct_raw(2, rt.construct(2, texSize)), 2, 'float'))
-        texelSize = rt.construct(2, rt.binary("/", rt.f(1.0), rt.construct_raw(2, rt.construct(2, texSize)), 2, 'float'))
+        uv = rt.construct(2, rt.fdiv(rt.swizzle(ctx.frag_coord, "xy"), rt.construct_raw(2, rt.construct(2, texSize)), 2))
+        texelSize = rt.construct(2, rt.fdiv(rt.f(1.0), rt.construct_raw(2, rt.construct(2, texSize)), 2))
         original = rt.texel_fetch(_u_inputTex, rt.construct(2, rt.swizzle(ctx.frag_coord, "xy"), base="int"), rt.i(0))
         result = rt.construct(4, 0.0)
         if rt.binary("==", _u_smoothType, rt.i(0)):

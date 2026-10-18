@@ -30,9 +30,9 @@ def run_pixel(ctx, out):
         return rt.construct(3, rt.binary("*", rt.swizzle(c, "z"), rt.component_wise("mix", rt.swizzle(K, "xxx"), rt.component_wise("clamp", rt.binary("-", p, rt.swizzle(K, "xxx"), 3, 'float'), rt.f(0.0), rt.f(1.0), width=3), rt.swizzle(c, "y"), width=3), 3, 'float'))
     def main__void():
         globalCoord = rt.construct(2, rt.binary("+", rt.swizzle(ctx.frag_coord, "xy"), _u_tileOffset, 2, 'float'))
-        st = rt.construct(2, rt.binary("/", globalCoord, _u_fullResolution, 2, 'float'))
-        color1 = rt.texture(_u_inputTex, rt.construct(2, rt.binary("/", rt.swizzle(ctx.frag_coord, "xy"), rt.construct(2, rt.texture_size(_u_inputTex)), 2, 'float')))
-        color2 = rt.texture(_u_tex, rt.construct(2, rt.binary("/", rt.swizzle(ctx.frag_coord, "xy"), rt.construct(2, rt.texture_size(_u_tex)), 2, 'float')))
+        st = rt.construct(2, rt.fdiv(globalCoord, _u_fullResolution, 2))
+        color1 = rt.texture(_u_inputTex, rt.construct(2, rt.fdiv(rt.swizzle(ctx.frag_coord, "xy"), rt.construct(2, rt.texture_size(_u_inputTex)), 2)))
+        color2 = rt.texture(_u_tex, rt.construct(2, rt.fdiv(rt.swizzle(ctx.frag_coord, "xy"), rt.construct(2, rt.texture_size(_u_tex)), 2)))
         a = rgb2hsv__vec3(rt.swizzle(color1, "rgb"))
         b = rgb2hsv__vec3(rt.swizzle(color2, "rgb"))
         resultHSV = rt.construct(3, 0.0)

@@ -15,7 +15,7 @@ def run_pixel(ctx, out):
     g.fragColor = rt.construct(4, 0.0)
     def main__void():
         globalCoord = rt.construct(2, rt.binary("+", rt.swizzle(ctx.frag_coord, "xy"), _u_tileOffset, 2, 'float'))
-        uv = rt.construct(2, rt.binary("/", globalCoord, _u_fullResolution, 2, 'float'))
+        uv = rt.construct(2, rt.fdiv(globalCoord, _u_fullResolution, 2))
         fIndex = rt.binary("*", rt.swizzle(uv, "x"), rt.f(127.0), 1, "float")
         i0 = rt.construct(1, rt.component_wise("floor", fIndex, width=1), base="int")
         i1 = rt.component_wise("min", rt.binary("+", i0, rt.i(1), 1, "int"), rt.i(127), width=1)

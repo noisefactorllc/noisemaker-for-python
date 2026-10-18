@@ -29,7 +29,7 @@ def run_pixel(ctx, out):
         return rt.texture(_u_inputTex, localUV)
     def main__void():
         globalCoord = rt.construct(2, rt.binary("+", rt.swizzle(ctx.frag_coord, "xy"), _u_tileOffset, 2, 'float'))
-        uv = rt.construct(2, rt.binary("/", globalCoord, _u_fullResolution, 2, 'float'))
+        uv = rt.construct(2, rt.fdiv(globalCoord, _u_fullResolution, 2))
         v = rt.construct(3, (rt.normalize(_u_direction) if rt.binary(">", rt.length(_u_direction), rt.f(0.0)) else rt.construct(3, rt.f(0.0), rt.f(0.0), rt.f(1.0))))
         shift = rt.construct(2, rt.binary("*", rt.swizzle(v, "xy"), g.SHIFT_SCALE, 2, 'float'))
         isTileRendering = rt.binary(">", rt.length(_u_tileOffset), rt.f(0.0))
@@ -39,7 +39,7 @@ def run_pixel(ctx, out):
             maxDispPixels = rt.f(256.0)
             dispPixels = rt.length(rt.binary("*", shift, _u_fullResolution, 2, 'float'))
             if rt.binary(">", dispPixels, maxDispPixels):
-                shift[:] = rt.binary("*", shift, rt.binary("/", maxDispPixels, dispPixels, 1, "float"), 2, "float")
+                shift[:] = rt.binary("*", shift, rt.fdiv(maxDispPixels, dispPixels, 1), 2, "float")
         t = rt.f(1.0)
         rayUV = rt.construct(2, rt.binary("+", uv, rt.binary("*", shift, rt.binary("-", rt.f(1.0), _u_pivot, 1, "float"), 2, 'float'), 2, 'float'))
         f = rt.binary("-", t, getHeight__vec2(rayUV), 1, "float")
@@ -61,7 +61,7 @@ def run_pixel(ctx, out):
                 f = rt.binary("-", t, getHeight__vec2(rayUV), 1, "float")
                 w = rt.f(0.0)
                 if rt.binary("<=", f, rt.f(0.0)):
-                    w = rt.binary("/", f, rt.binary("-", f, prevF, 1, "float"), 1, "float")
+                    w = rt.fdiv(f, rt.binary("-", f, prevF, 1, "float"), 1)
                     rayUV[:] = rt.component_wise("mix", rayUV, prevUV, w, width=2)
                     break
         g.fragColor[:] = getInput__vec2(rayUV)

@@ -145,8 +145,8 @@ def run_pixel(ctx, out):
         return count
     def main__void():
         texSize = rt.construct(2, rt.texture_size(_u_bufTex))
-        uv = rt.construct(2, rt.binary("/", rt.swizzle(ctx.frag_coord, "xy"), texSize, 2, 'float'))
-        texelSize = rt.construct(2, rt.binary("/", rt.f(1.0), texSize, 2, 'float'))
+        uv = rt.construct(2, rt.fdiv(rt.swizzle(ctx.frag_coord, "xy"), texSize, 2))
+        texelSize = rt.construct(2, rt.fdiv(rt.f(1.0), texSize, 2))
         state = rt.swizzle(rt.texture(_u_bufTex, uv), "r")
         bufState = rt.texture(_u_bufTex, uv)
         bufferIsEmpty = (bool((bool((bool(rt.binary("==", rt.swizzle(bufState, "r"), rt.f(0.0))) and bool(rt.binary("==", rt.swizzle(bufState, "g"), rt.f(0.0))))) and bool(rt.binary("==", rt.swizzle(bufState, "b"), rt.f(0.0))))) and bool(rt.binary("==", rt.swizzle(bufState, "a"), rt.f(0.0))))

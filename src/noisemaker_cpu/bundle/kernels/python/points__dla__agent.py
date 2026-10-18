@@ -79,7 +79,7 @@ def run_pixel(ctx, out):
             g.outRGBA[:] = rgba
             return
         gridDims = rt.construct(2, rt.texture_size(_u_gridTex))
-        texel = rt.binary("/", rt.f(1.0), rt.component_wise("max", rt.swizzle(gridDims, "x"), rt.swizzle(gridDims, "y"), width=1), 1, "float")
+        texel = rt.fdiv(rt.f(1.0), rt.component_wise("max", rt.swizzle(gridDims, "x"), rt.swizzle(gridDims, "y"), width=1), 1)
         local = neighborhood__vec2_float(pos, rt.f(2.0))
         proximity = rt.component_wise("smoothstep", rt.f(0.015), rt.f(0.12), local, width=1)
         randomDir = (((_retc2 := randomDirection__float(seed)), (seed := _retc2[1]), _retc2[0])[-1])

@@ -11,7 +11,7 @@ def run_pixel(ctx, out):
     _u_matteOpacity = U.get("matteOpacity", rt.f(0.0))
     g.fragColor = rt.construct(4, 0.0)
     def main__void():
-        uv = rt.construct(2, rt.binary("/", rt.swizzle(ctx.frag_coord, "xy"), _u_resolution, 2, 'float'))
+        uv = rt.construct(2, rt.fdiv(rt.swizzle(ctx.frag_coord, "xy"), _u_resolution, 2))
         inputCol = rt.texture(_u_inputTex, uv)
         grid = rt.texture(_u_gridTex, uv)
         gridStrength = rt.component_wise("clamp", rt.swizzle(grid, "a"), rt.f(0.0), rt.f(1.0), width=1)

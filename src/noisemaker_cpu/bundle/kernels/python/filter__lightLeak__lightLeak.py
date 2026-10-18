@@ -78,7 +78,7 @@ def run_pixel(ctx, out):
         coords = rt.construct(2, rt.swizzle(ctx.frag_coord, "xy"), base="int")
         tileDims = rt.texture_size(_u_inputTex)
         fullRes = rt.construct(2, (_u_fullResolution if rt.binary(">", rt.swizzle(_u_fullResolution, "x"), rt.f(0.0)) else rt.construct(2, tileDims)))
-        uv = rt.construct(2, rt.binary("/", rt.binary("+", rt.swizzle(ctx.frag_coord, "xy"), _u_tileOffset, 2, 'float'), fullRes, 2, 'float'))
+        uv = rt.construct(2, rt.fdiv(rt.binary("+", rt.swizzle(ctx.frag_coord, "xy"), _u_tileOffset, 2, 'float'), fullRes, 2))
         base = rt.texel_fetch(_u_inputTex, coords, rt.i(0))
         blend_alpha = rt.component_wise("clamp", _u_alpha, rt.f(0.0), rt.f(1.0), width=1)
         if rt.binary("<=", blend_alpha, rt.f(0.0)):

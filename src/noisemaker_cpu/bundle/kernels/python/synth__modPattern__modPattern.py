@@ -48,7 +48,7 @@ def run_pixel(ctx, out):
         return rt.construct(3, smoothFract__float(rt.swizzle(v, "x")), smoothFract__float(rt.swizzle(v, "y")), smoothFract__float(rt.swizzle(v, "z")))
     def main__void():
         globalCoord = rt.construct(2, rt.binary("+", rt.swizzle(ctx.frag_coord, "xy"), _u_tileOffset, 2, 'float'))
-        uv = rt.construct(2, rt.binary("/", rt.binary("-", globalCoord, rt.binary("*", _u_fullResolution, rt.f(0.5), 2, 'float'), 2, 'float'), rt.component_wise("min", rt.swizzle(_u_fullResolution, "x"), rt.swizzle(_u_fullResolution, "y"), width=1), 2, 'float'))
+        uv = rt.construct(2, rt.fdiv(rt.binary("-", globalCoord, rt.binary("*", _u_fullResolution, rt.f(0.5), 2, 'float'), 2, 'float'), rt.component_wise("min", rt.swizzle(_u_fullResolution, "x"), rt.swizzle(_u_fullResolution, "y"), width=1), 2))
         spd = rt.component_wise("floor", _u_speed, width=1)
         anim = rt.binary("*", _u_time, spd, 1, "float")
         s1 = rt.binary("-", rt.f(20.1), _u_scale1, 1, "float")

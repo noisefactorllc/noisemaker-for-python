@@ -16,13 +16,13 @@ def run_pixel(ctx, out):
         p = rt.copy(p, "float")
         p3 = rt.component_wise("fract", rt.binary("*", rt.construct_raw(3, rt.swizzle(p, "xyx")), rt.construct_raw(3, rt.f(0.1031), rt.f(0.103), rt.f(0.0973)), 3, 'float'), width=3)
         p3[:] = rt.binary("+", p3, rt.dot(p3, rt.binary("+", rt.swizzle(p3, "yzx"), rt.f(33.33), 3, 'float')), 3, "float")
-        return rt.component_wise("fract", rt.binary("*", rt.binary("+", rt.swizzle(p3, "xx"), rt.swizzle(p3, "yz"), 2, 'float'), rt.swizzle(p3, "zy"), 2, 'float'), width=2)
+        return rt.component_wise("fract", rt.construct(2, rt.construct(1, rt.binary("*", rt.construct(1, rt.binary("+", rt.swizzle(p3, "x"), rt.swizzle(p3, "y"), 1, "float")), rt.swizzle(p3, "z"), 1, "float")), rt.construct(1, rt.binary("*", rt.construct(1, rt.binary("+", rt.swizzle(p3, "x"), rt.swizzle(p3, "z"), 1, "float")), rt.swizzle(p3, "y"), 1, "float"))), width=2)
     def lum__vec3(c):
         c = rt.copy(c, "float")
         return rt.dot(c, rt.construct(3, rt.f(0.2126), rt.f(0.7152), rt.f(0.0722)))
     def lumGradient__vec2(uv):
         uv = rt.copy(uv, "float")
-        px = rt.construct(2, rt.binary("/", rt.f(1.0), _u_resolution, 2, 'float'))
+        px = rt.construct(2, rt.fdiv(rt.f(1.0), _u_resolution, 2))
         tl = lum__vec3(rt.swizzle(rt.texture(_u_inputTex, rt.binary("+", uv, rt.binary("*", px, rt.construct_raw(2, rt.unary("-", rt.f(1.0)), rt.f(1.0)), 2, 'float'), 2, 'float')), "rgb"))
         l = lum__vec3(rt.swizzle(rt.texture(_u_inputTex, rt.binary("+", uv, rt.binary("*", px, rt.construct_raw(2, rt.unary("-", rt.f(1.0)), rt.f(0.0)), 2, 'float'), 2, 'float')), "rgb"))
         bl = lum__vec3(rt.swizzle(rt.texture(_u_inputTex, rt.binary("+", uv, rt.binary("*", px, rt.construct_raw(2, rt.unary("-", rt.f(1.0)), rt.unary("-", rt.f(1.0))), 2, 'float'), 2, 'float')), "rgb"))
@@ -33,12 +33,12 @@ def run_pixel(ctx, out):
         b = lum__vec3(rt.swizzle(rt.texture(_u_inputTex, rt.binary("+", uv, rt.binary("*", px, rt.construct_raw(2, rt.f(0.0), rt.unary("-", rt.f(1.0))), 2, 'float'), 2, 'float')), "rgb"))
         return rt.construct(2, rt.binary("-", rt.binary("-", rt.binary("-", rt.binary("+", rt.binary("+", tr, rt.binary("*", rt.f(2.0), r, 1, "float"), 1, "float"), br, 1, "float"), tl, 1, "float"), rt.binary("*", rt.f(2.0), l, 1, "float"), 1, "float"), bl, 1, "float"), rt.binary("-", rt.binary("-", rt.binary("-", rt.binary("+", rt.binary("+", tl, rt.binary("*", rt.f(2.0), t, 1, "float"), 1, "float"), tr, 1, "float"), bl, 1, "float"), rt.binary("*", rt.f(2.0), b, 1, "float"), 1, "float"), br, 1, "float"))
     def main__void():
-        uv = rt.construct(2, rt.binary("/", rt.swizzle(ctx.frag_coord, "xy"), _u_resolution, 2, 'float'))
+        uv = rt.construct(2, rt.fdiv(rt.swizzle(ctx.frag_coord, "xy"), _u_resolution, 2))
         globalCoord = rt.construct(2, rt.binary("+", rt.swizzle(ctx.frag_coord, "xy"), _u_tileOffset, 2, 'float'))
         hashCoord = rt.copy_decl(globalCoord, "float")
         if rt.binary("==", _u_MODE, rt.i(4)):
             hashCoord[:] = rt.construct(2, rt.binary("*", rt.component_wise("floor", rt.binary("/", globalCoord, rt.f(3.0), 2, 'float'), width=2), rt.f(3.0), 2, 'float'))
-        rnd = rt.construct(2, rt.binary("-", hash22__vec2(rt.construct(2, rt.binary("+", hashCoord, rt.binary("*", rt.construct(1, _u_seed), rt.f(101.7), 1, "float"), 2, 'float'))), rt.f(0.5), 2, 'float'))
+        rnd = rt.construct(2, rt.binary("-", hash22__vec2(rt.construct(2, rt.binary("+", hashCoord, rt.construct(1, rt.binary("*", rt.construct(1, _u_seed), rt.f(101.7), 1, "float")), 2, 'float'))), rt.f(0.5), 2, 'float'))
         offset = rt.construct(2, rt.binary("*", rt.binary("*", rnd, rt.f(2.0), 2, 'float'), _u_radius, 2, 'float'))
         grad = rt.construct(2, 0.0)
         gradLen = rt.f(0.0)
@@ -47,9 +47,9 @@ def run_pixel(ctx, out):
             gradLen = rt.length(grad)
             perp = rt.construct(2, 0.0)
             if rt.binary(">", gradLen, rt.f(1e-05)):
-                perp = rt.construct(2, rt.binary("/", rt.construct_raw(2, rt.unary("-", rt.swizzle(grad, "y")), rt.swizzle(grad, "x")), gradLen, 2, 'float'))
-                (offset.__setitem__(0, rt.binary("*", rt.dot(offset, perp), rt.swizzle(perp, "x"), 1, "float")), offset.__setitem__(1, rt.binary("*", rt.dot(offset, perp), rt.swizzle(perp, "y"), 1, "float")), offset)[-1]
-        sampleUV = rt.component_wise("clamp", rt.binary("/", rt.binary("+", rt.swizzle(ctx.frag_coord, "xy"), offset, 2, 'float'), _u_resolution, 2, 'float'), rt.f(0.0), rt.f(1.0), width=2)
+                perp = rt.construct(2, rt.fdiv(rt.construct_raw(2, rt.unary("-", rt.swizzle(grad, "y")), rt.swizzle(grad, "x")), gradLen, 2))
+                ((_vector_write_0_0 := rt.binary("*", rt.dot(offset, perp), rt.swizzle(perp, "x"), 1, "float")), (_vector_write_0_1 := rt.binary("*", rt.dot(offset, perp), rt.swizzle(perp, "y"), 1, "float")), offset.__setitem__(0, _vector_write_0_0), offset.__setitem__(1, _vector_write_0_1), offset)[-1]
+        sampleUV = rt.component_wise("clamp", rt.fdiv(rt.binary("+", rt.swizzle(ctx.frag_coord, "xy"), offset, 2, 'float'), _u_resolution, 2), rt.f(0.0), rt.f(1.0), width=2)
         src = rt.texture(_u_inputTex, uv)
         samp = rt.texture(_u_inputTex, sampleUV)
         result = rt.copy_decl(samp, "float")

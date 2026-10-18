@@ -18,8 +18,8 @@ def run_pixel(ctx, out):
     def main__void():
         globalCoord = rt.construct(2, rt.binary("+", rt.swizzle(ctx.frag_coord, "xy"), _u_tileOffset, 2, 'float'))
         texSize = rt.construct(2, rt.texture_size(_u_inputTex))
-        uv = rt.construct(2, rt.binary("/", rt.swizzle(ctx.frag_coord, "xy"), texSize, 2, 'float'))
-        texelSize = rt.construct(2, rt.binary("/", rt.f(1.0), texSize, 2, 'float'))
+        uv = rt.construct(2, rt.fdiv(rt.swizzle(ctx.frag_coord, "xy"), texSize, 2))
+        texelSize = rt.construct(2, rt.fdiv(rt.f(1.0), texSize, 2))
         radiusUV = rt.construct(2, rt.binary("*", rt.binary("*", _u_radius, _u_renderScale, 1, "float"), texelSize, 2, 'float'))
         tapCount = rt.component_wise("clamp", _u_taps, rt.i(1), g.MAX_TAPS, width=1)
         bloomAccum = rt.construct(3, rt.f(0.0))
@@ -34,7 +34,7 @@ def run_pixel(ctx, out):
                 break
             if rt.binary(">=", i, tapCount):
                 break
-            t = rt.binary("/", rt.construct(1, i), rt.construct(1, tapCount), 1, "float")
+            t = rt.fdiv(rt.construct(1, i), rt.construct(1, tapCount), 1)
             r = rt.component_wise("sqrt", t, width=1)
             theta = rt.binary("*", rt.construct(1, i), g.GOLDEN_ANGLE, 1, "float")
             offset = rt.construct(2, rt.binary("*", rt.construct_raw(2, rt.component_wise("cos", theta, width=1), rt.component_wise("sin", theta, width=1)), r, 2, 'float'))

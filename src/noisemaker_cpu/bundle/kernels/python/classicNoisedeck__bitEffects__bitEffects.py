@@ -147,7 +147,7 @@ def run_pixel(ctx, out):
         return (rt.f(0.0) if rt.binary(">", v, rt.f(1.0)) else rt.f(1.0))
     def bitField__vec2(st):
         st = rt.copy(st, "float")
-        st[:] = rt.binary("/", st, _u_scale, 2, "float")
+        st[:] = rt.fdiv(st, _u_scale, 2)
         st[:] = rotate2D__vec2_float(st, _u_rotation)
         freq = map__float_float_float_float_float(_u_scale, rt.f(1.0), rt.f(100.0), _u_scale, rt.f(8.0))
         color = rt.construct(3, rt.f(0.0))
@@ -312,10 +312,10 @@ def run_pixel(ctx, out):
     def bitMask__vec2(st):
         st = rt.copy(st, "float")
         color = rt.construct(3, rt.f(0.0))
-        st[:] = rt.binary("-", st, rt.construct(2, rt.binary("/", rt.binary("*", rt.f(0.5), rt.swizzle(_u_fullResolution, "x"), 1, "float"), rt.swizzle(_u_fullResolution, "y"), 1, "float"), rt.f(0.5)), 2, "float")
+        st[:] = rt.binary("-", st, rt.construct(2, rt.fdiv(rt.binary("*", rt.f(0.5), rt.swizzle(_u_fullResolution, "x"), 1, "float"), rt.swizzle(_u_fullResolution, "y"), 1), rt.f(0.5)), 2, "float")
         st[:] = rt.binary("*", st, _u_tiles, 2, "float")
-        st[:] = rt.binary("+", st, rt.construct(2, rt.binary("/", rt.binary("*", rt.f(0.5), rt.swizzle(_u_fullResolution, "x"), 1, "float"), rt.swizzle(_u_fullResolution, "y"), 1, "float"), rt.f(0.5)), 2, "float")
-        st = rt.assign_swizzle(st, "x", rt.binary("-", rt.swizzle(st, "x"), rt.binary("/", rt.binary("*", rt.f(0.5), rt.swizzle(_u_fullResolution, "x"), 1, "float"), rt.swizzle(_u_fullResolution, "y"), 1, "float"), 1, "float"))
+        st[:] = rt.binary("+", st, rt.construct(2, rt.fdiv(rt.binary("*", rt.f(0.5), rt.swizzle(_u_fullResolution, "x"), 1, "float"), rt.swizzle(_u_fullResolution, "y"), 1), rt.f(0.5)), 2, "float")
+        st = rt.assign_swizzle(st, "x", rt.binary("-", rt.swizzle(st, "x"), rt.fdiv(rt.binary("*", rt.f(0.5), rt.swizzle(_u_fullResolution, "x"), 1, "float"), rt.swizzle(_u_fullResolution, "y"), 1), 1, "float"))
         if rt.binary("==", _u_MASK_FORMULA, rt.i(11)):
             st = rt.assign_swizzle(st, "y", rt.binary("*", rt.swizzle(st, "y"), rt.f(2.0), 1, "float"))
         freq = rt.component_wise("floor", map__float_float_float_float_float(_u_complexity, rt.f(1.0), rt.f(100.0), rt.f(5.0), rt.f(12.0)), width=1)
@@ -344,10 +344,10 @@ def run_pixel(ctx, out):
         if rt.binary("==", _u_MODE, rt.i(0)):
             color = rt.assign_swizzle(color, "rgb", bitField__vec2(st))
         else:
-            st[:] = rt.binary("/", globalCoord, rt.swizzle(_u_fullResolution, "y"), 2, 'float')
+            st[:] = rt.fdiv(globalCoord, rt.swizzle(_u_fullResolution, "y"), 2)
             st[:] = rt.binary("+", st, rt.binary("+", rt.construct(1, _u_seed), rt.f(1000.0), 1, "float"), 2, "float")
             color = rt.assign_swizzle(color, "rgb", bitMask__vec2(st))
-        st[:] = rt.binary("/", globalCoord, _u_fullResolution, 2, 'float')
+        st[:] = rt.fdiv(globalCoord, _u_fullResolution, 2)
         g.fragColor[:] = color
     main__void()
     _c = g.fragColor

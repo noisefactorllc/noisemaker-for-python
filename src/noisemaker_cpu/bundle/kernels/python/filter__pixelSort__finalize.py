@@ -20,7 +20,7 @@ def run_pixel(ctx, out):
         uv = rt.construct(2, rt.binary("/", coord, size, 2, 'float'))
         mode = rt.construct(1, _u_wrap, base="int")
         if rt.binary("==", mode, rt.i(0)):
-            uv[:] = rt.component_wise("abs", rt.construct(2, rt.binary("-", rt.component_wise("mod", rt.binary("+", uv, rt.f(1.0), 2, 'float'), rt.f(2.0), width=2), rt.f(1.0), 2, 'float')), width=2)
+            uv[:] = rt.component_wise("abs", rt.construct(2, rt.binary("-", uv, rt.construct(2, rt.binary("*", rt.f(2.0), rt.component_wise("floor", rt.binary("*", rt.binary("+", uv, rt.f(1.0), 2, 'float'), rt.f(0.5), 2, 'float'), width=2), 2, 'float')), 2, 'float')), width=2)
         else:
             if rt.binary("==", mode, rt.i(1)):
                 uv[:] = rt.component_wise("fract", uv, width=2)
@@ -39,7 +39,7 @@ def run_pixel(ctx, out):
         srcCoord = rt.assign_swizzle(srcCoord, "x", rt.binary("-", rt.binary("*", c, rt.swizzle(pixelCoord, "x"), 1, "float"), rt.binary("*", s, rt.swizzle(pixelCoord, "y"), 1, "float"), 1, "float"))
         srcCoord = rt.assign_swizzle(srcCoord, "y", rt.binary("+", rt.binary("*", s, rt.swizzle(pixelCoord, "x"), 1, "float"), rt.binary("*", c, rt.swizzle(pixelCoord, "y"), 1, "float"), 1, "float"))
         srcCoord[:] = rt.binary("+", srcCoord, center, 2, "float")
-        originalColor = rt.texture(_u_originalTex, rt.binary("/", rt.swizzle(ctx.frag_coord, "xy"), _u_resolution, 2, 'float'))
+        originalColor = rt.texture(_u_originalTex, rt.fdiv(rt.swizzle(ctx.frag_coord, "xy"), _u_resolution, 2))
         wrappedUV = applyWrap__vec2_vec2(srcCoord, texSize)
         sortedColor = rt.texture(_u_inputTex, wrappedUV)
         working_source = rt.copy_decl(originalColor, "float")

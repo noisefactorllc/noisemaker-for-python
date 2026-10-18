@@ -80,8 +80,8 @@ def run_pixel(ctx, out):
         globalCoord = rt.construct(2, rt.binary("+", rt.swizzle(ctx.frag_coord, "xy"), _u_tileOffset, 2, 'float'))
         texSize = rt.construct(2, rt.texture_size(_u_inputTex))
         fullRes = rt.construct(2, (_u_fullResolution if rt.binary(">", rt.swizzle(_u_fullResolution, "x"), rt.f(0.0)) else texSize))
-        uv = rt.construct(2, rt.binary("/", rt.swizzle(ctx.frag_coord, "xy"), texSize, 2, 'float'))
-        globalUV = rt.construct(2, rt.binary("/", rt.binary("+", rt.swizzle(ctx.frag_coord, "xy"), _u_tileOffset, 2, 'float'), fullRes, 2, 'float'))
+        uv = rt.construct(2, rt.fdiv(rt.swizzle(ctx.frag_coord, "xy"), texSize, 2))
+        globalUV = rt.construct(2, rt.fdiv(rt.binary("+", rt.swizzle(ctx.frag_coord, "xy"), _u_tileOffset, 2, 'float'), fullRes, 2))
         coord = rt.construct(2, rt.swizzle(ctx.frag_coord, "xy"), base="int")
         color = rt.texel_fetch(_u_inputTex, coord, rt.i(0))
         if rt.binary("<", rt.component_wise("abs", _u_vignetteAmount, width=1), rt.f(0.001)):
@@ -90,9 +90,9 @@ def run_pixel(ctx, out):
         rgb = srgbToLinear__vec3(rt.swizzle(color, "rgb"))
         aspectRatio = rt.construct(2, rt.f(1.0))
         if rt.binary(">", rt.swizzle(fullRes, "x"), rt.swizzle(fullRes, "y")):
-            (aspectRatio.__setitem__(0, rt.binary("/", rt.swizzle(fullRes, "x"), rt.swizzle(fullRes, "y"), 1, "float")), aspectRatio.__setitem__(1, rt.f(1.0)), aspectRatio)[-1]
+            (aspectRatio.__setitem__(0, rt.fdiv(rt.swizzle(fullRes, "x"), rt.swizzle(fullRes, "y"), 1)), aspectRatio.__setitem__(1, rt.f(1.0)), aspectRatio)[-1]
         else:
-            (aspectRatio.__setitem__(0, rt.f(1.0)), aspectRatio.__setitem__(1, rt.binary("/", rt.swizzle(fullRes, "y"), rt.swizzle(fullRes, "x"), 1, "float")), aspectRatio)[-1]
+            (aspectRatio.__setitem__(0, rt.f(1.0)), aspectRatio.__setitem__(1, rt.fdiv(rt.swizzle(fullRes, "y"), rt.swizzle(fullRes, "x"), 1)), aspectRatio)[-1]
         vignetteMask = computeVignette__vec2_vec2_float_float_float(globalUV, aspectRatio, _u_vignetteMidpoint, _u_vignetteRoundness, _u_vignetteFeather)
         rgb[:] = applyVignette__vec3_float_float_float(rgb, vignetteMask, _u_vignetteAmount, _u_vigHiProtect)
         rgb[:] = linearToSrgb__vec3(rt.component_wise("max", rgb, rt.construct(3, rt.f(0.0)), width=3))

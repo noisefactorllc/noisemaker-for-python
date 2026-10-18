@@ -80,7 +80,7 @@ def run_pixel(ctx, out):
     def main__void():
         globalCoord = rt.construct(2, rt.binary("+", rt.swizzle(ctx.frag_coord, "xy"), _u_tileOffset, 2, 'float'))
         texSize = rt.construct(2, rt.texture_size(_u_inputTex))
-        uv = rt.construct(2, rt.binary("/", rt.swizzle(ctx.frag_coord, "xy"), texSize, 2, 'float'))
+        uv = rt.construct(2, rt.fdiv(rt.swizzle(ctx.frag_coord, "xy"), texSize, 2))
         inputColor = rt.texture(_u_inputTex, uv)
         if (bool(rt.binary("<=", _u_paletteIndex, rt.i(0))) or bool(rt.binary(">", _u_paletteIndex, g.PALETTE_COUNT))):
             g.fragColor[:] = inputColor

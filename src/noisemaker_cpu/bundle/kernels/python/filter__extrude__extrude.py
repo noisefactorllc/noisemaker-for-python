@@ -31,7 +31,7 @@ def run_pixel(ctx, out):
         return rt.dot(c, rt.construct(3, rt.f(0.2126), rt.f(0.7152), rt.f(0.0722)))
     def toSampleUV__vec2(globalPixelPos):
         globalPixelPos = rt.copy(globalPixelPos, "float")
-        return rt.component_wise("clamp", rt.binary("/", rt.binary("-", globalPixelPos, _u_tileOffset, 2, 'float'), _u_resolution, 2, 'float'), rt.f(0.0), rt.f(1.0), width=2)
+        return rt.component_wise("clamp", rt.fdiv(rt.binary("-", globalPixelPos, _u_tileOffset, 2, 'float'), _u_resolution, 2), rt.f(0.0), rt.f(1.0), width=2)
     def cellAvgColor3x3__vec2(centerPx):
         centerPx = rt.copy(centerPx, "float")
         sp = rt.binary("*", _u_size, rt.f(0.25), 1, "float")
@@ -122,7 +122,7 @@ def run_pixel(ctx, out):
         halfCell = rt.construct(2, rt.binary("*", _u_size, rt.f(0.5), 1, "float"))
         toCenter = rt.construct(2, rt.binary("-", imgCenter, P, 2, 'float'))
         distToCenter = rt.length(toCenter)
-        stepDir = rt.construct(2, (rt.binary("/", toCenter, distToCenter, 2, 'float') if rt.binary(">", distToCenter, rt.f(0.0)) else rt.construct(2, rt.f(0.0))))
+        stepDir = rt.construct(2, (rt.fdiv(toCenter, distToCenter, 2) if rt.binary(">", distToCenter, rt.f(0.0)) else rt.construct(2, rt.f(0.0))))
         bestPriority = rt.unary("-", rt.f(1000000000.0))
         bestCenterPx = rt.construct(2, rt.f(0.0))
         bestS = rt.f(1.0)
@@ -139,10 +139,10 @@ def run_pixel(ctx, out):
                 break
             t = rt.component_wise("min", rt.binary("*", rt.construct(1, i), _u_size, 1, "float"), distToCenter, width=1)
             samplePos = rt.construct(2, rt.binary("+", P, rt.binary("*", stepDir, t, 2, 'float'), 2, 'float'))
-            cellIdxF = rt.component_wise("floor", rt.binary("/", rt.binary("-", samplePos, imgCenter, 2, 'float'), _u_size, 2, 'float'), width=2)
+            cellIdxF = rt.component_wise("floor", rt.fdiv(rt.binary("-", samplePos, imgCenter, 2, 'float'), _u_size, 2), width=2)
             cellC = rt.construct(2, rt.binary("+", imgCenter, rt.binary("*", rt.binary("+", cellIdxF, rt.f(0.5), 2, 'float'), _u_size, 2, 'float'), 2, 'float'))
             h = cellHeight__vec2_vec2(cellC, cellIdxF)
-            s = rt.binary("+", rt.f(1.0), rt.binary("*", rt.binary("*", h, rt.binary("/", _u_depth, rt.f(100.0), 1, "float"), 1, "float"), rt.f(0.4), 1, "float"), 1, "float")
+            s = rt.construct(1, rt.binary("+", rt.f(1.0), rt.binary("*", rt.binary("*", h, rt.binary("/", _u_depth, rt.f(100.0), 1, "float"), 1, "float"), rt.f(0.4), 1, "float"), 1, "float"))
             apex = rt.construct(2, 0.0)
             tri = 0
             faceCenter = rt.construct(2, 0.0)
@@ -161,7 +161,7 @@ def run_pixel(ctx, out):
             else:
                 faceCenter = rt.construct(2, rt.binary("+", imgCenter, rt.binary("*", rt.binary("-", cellC, imgCenter, 2, 'float'), s, 2, 'float'), 2, 'float'))
                 faceHalf = rt.construct(2, rt.binary("*", halfCell, s, 2, 'float'))
-                topHit = rt.component_wise("all", rt.component_wise("lessThanEqual", rt.component_wise("abs", rt.binary("-", P, faceCenter, 2, 'float'), width=2), faceHalf, width=2), width=2)
+                topHit = rt.component_wise("all", rt.component_wise("lessThanEqual", rt.component_wise("abs", rt.binary("-", rt.binary("-", P, imgCenter, 2, 'float'), rt.binary("*", rt.binary("-", cellC, imgCenter, 2, 'float'), s, 2, 'float'), 2, 'float'), width=2), faceHalf, width=2), width=2)
                 sideHit = (bool((not (topHit))) and bool(rt.component_wise("all", rt.component_wise("lessThanEqual", rt.component_wise("abs", rt.binary("-", P, cellC, 2, 'float'), width=2), halfCell, width=2), width=2)))
                 priority = rt.f(0.0)
                 if (bool(topHit) or bool(sideHit)):
@@ -177,7 +177,7 @@ def run_pixel(ctx, out):
         outColor = rt.construct(4, 0.0)
         cellC = rt.construct(2, 0.0)
         if (not (found)):
-            cellC = rt.construct(2, rt.binary("+", imgCenter, rt.construct(2, rt.binary("*", rt.construct(2, rt.binary("+", rt.component_wise("floor", rt.binary("/", rt.binary("-", P, imgCenter, 2, 'float'), _u_size, 2, 'float'), width=2), rt.f(0.5), 2, 'float')), _u_size, 2, 'float')), 2, 'float'))
+            cellC = rt.construct(2, rt.binary("+", imgCenter, rt.construct(2, rt.binary("*", rt.construct(2, rt.binary("+", rt.component_wise("floor", rt.fdiv(rt.binary("-", P, imgCenter, 2, 'float'), _u_size, 2), width=2), rt.f(0.5), 2, 'float')), _u_size, 2, 'float')), 2, 'float'))
             outColor[:] = cellAvgColor3x3__vec2(cellC)
         else:
             apex = rt.construct(2, 0.0)

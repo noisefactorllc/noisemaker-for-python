@@ -31,9 +31,9 @@ def run_pixel(ctx, out):
         texSize = rt.texture_size(_u_inputTex)
         tileDims = rt.construct(2, texSize)
         fullRes = rt.construct(2, (_u_fullResolution if rt.binary(">", rt.swizzle(_u_fullResolution, "x"), rt.f(0.0)) else tileDims))
-        uv = rt.construct(2, rt.binary("/", rt.binary("+", rt.swizzle(ctx.frag_coord, "xy"), _u_tileOffset, 2, 'float'), fullRes, 2, 'float'))
+        uv = rt.construct(2, rt.fdiv(rt.binary("+", rt.swizzle(ctx.frag_coord, "xy"), _u_tileOffset, 2, 'float'), fullRes, 2))
         centered = rt.construct(2, rt.binary("-", uv, rt.f(0.5), 2, 'float'))
-        aspectRatio = rt.binary("/", rt.swizzle(fullRes, "x"), rt.swizzle(fullRes, "y"), 1, "float")
+        aspectRatio = rt.fdiv(rt.swizzle(fullRes, "x"), rt.swizzle(fullRes, "y"), 1)
         if _u_aspectLens:
             centered = rt.assign_swizzle(centered, "x", rt.binary("*", rt.swizzle(centered, "x"), aspectRatio, 1, "float"))
         a = rt.component_wise("atan", rt.swizzle(centered, "y"), rt.swizzle(centered, "x"), width=1)

@@ -208,13 +208,13 @@ def run_pixel(ctx, out):
         if isTileRendering:
             cs = rt.component_wise("min", cs, rt.i(512), width=1)
         csf = rt.construct(1, cs)
-        cellIndex = rt.component_wise("floor", rt.binary("/", pixelCoord, csf, 2, 'float'), width=2)
-        localPos = rt.component_wise("fract", rt.binary("/", pixelCoord, csf, 2, 'float'), width=2)
+        cellIndex = rt.component_wise("floor", rt.fdiv(pixelCoord, csf, 2), width=2)
+        localPos = rt.component_wise("fract", rt.fdiv(pixelCoord, csf, 2), width=2)
         gx = rt.construct(1, rt.component_wise("floor", rt.binary("*", rt.swizzle(localPos, "x"), rt.f(5.0), 1, "float"), width=1), base="int")
         gy = rt.binary("-", rt.i(6), rt.component_wise("clamp", rt.construct(1, rt.component_wise("floor", rt.binary("*", rt.swizzle(localPos, "y"), rt.f(7.0), 1, "float"), width=1), base="int"), rt.i(0), rt.i(6), width=1), 1, "int")
         gx = rt.component_wise("clamp", gx, rt.i(0), rt.i(4), width=1)
         cellCenter = rt.construct(2, rt.binary("*", rt.binary("+", cellIndex, rt.f(0.5), 2, 'float'), csf, 2, 'float'))
-        sampleUV = rt.construct(2, rt.binary("/", rt.binary("-", cellCenter, _u_tileOffset, 2, 'float'), resolution, 2, 'float'))
+        sampleUV = rt.construct(2, rt.fdiv(rt.binary("-", cellCenter, _u_tileOffset, 2, 'float'), resolution, 2))
         if isTileRendering:
             sampleUV[:] = rt.component_wise("clamp", sampleUV, rt.f(0.0), rt.f(1.0), width=2)
         srcColor = rt.texture(_u_inputTex, sampleUV)

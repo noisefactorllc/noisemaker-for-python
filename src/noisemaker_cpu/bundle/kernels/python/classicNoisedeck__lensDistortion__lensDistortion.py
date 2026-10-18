@@ -129,22 +129,22 @@ def run_pixel(ctx, out):
     def _distance__vec2_vec2(diff, uv):
         diff = rt.copy(diff, "float")
         uv = rt.copy(uv, "float")
-        uv = rt.assign_swizzle(uv, "x", rt.binary("*", rt.swizzle(uv, "x"), rt.binary("/", rt.swizzle(_u_fullResolution, "x"), rt.swizzle(_u_fullResolution, "y"), 1, "float"), 1, "float"))
+        uv = rt.assign_swizzle(uv, "x", rt.binary("*", rt.swizzle(uv, "x"), rt.fdiv(rt.swizzle(_u_fullResolution, "x"), rt.swizzle(_u_fullResolution, "y"), 1), 1, "float"))
         dist = rt.f(1.0)
         if rt.binary("==", _u_shape, rt.i(0)):
             dist = rt.length(diff)
         else:
             if rt.binary("==", _u_shape, rt.i(1)):
-                dist = rt.binary("+", rt.component_wise("abs", rt.binary("-", rt.swizzle(uv, "x"), rt.binary("/", rt.binary("*", rt.f(0.5), rt.swizzle(_u_fullResolution, "x"), 1, "float"), rt.swizzle(_u_fullResolution, "y"), 1, "float"), 1, "float"), width=1), rt.component_wise("abs", rt.binary("-", rt.swizzle(uv, "y"), rt.f(0.5), 1, "float"), width=1), 1, "float")
+                dist = rt.binary("+", rt.component_wise("abs", rt.binary("-", rt.swizzle(uv, "x"), rt.fdiv(rt.binary("*", rt.f(0.5), rt.swizzle(_u_fullResolution, "x"), 1, "float"), rt.swizzle(_u_fullResolution, "y"), 1), 1, "float"), width=1), rt.component_wise("abs", rt.binary("-", rt.swizzle(uv, "y"), rt.f(0.5), 1, "float"), width=1), 1, "float")
             else:
                 if rt.binary("==", _u_shape, rt.i(2)):
                     dist = rt.component_wise("max", rt.component_wise("max", rt.binary("-", rt.component_wise("abs", rt.swizzle(diff, "x"), width=1), rt.binary("*", rt.swizzle(diff, "y"), rt.unary("-", rt.f(0.5)), 1, "float"), 1, "float"), rt.binary("*", rt.unary("-", rt.f(1.0)), rt.swizzle(diff, "y"), 1, "float"), width=1), rt.component_wise("max", rt.binary("-", rt.component_wise("abs", rt.swizzle(diff, "x"), width=1), rt.binary("*", rt.swizzle(diff, "y"), rt.f(0.5), 1, "float"), 1, "float"), rt.binary("*", rt.f(1.0), rt.swizzle(diff, "y"), 1, "float"), width=1), width=1)
                 else:
                     if rt.binary("==", _u_shape, rt.i(3)):
-                        dist = rt.component_wise("max", rt.binary("/", rt.binary("+", rt.component_wise("abs", rt.binary("-", rt.swizzle(uv, "x"), rt.binary("/", rt.binary("*", rt.f(0.5), rt.swizzle(_u_fullResolution, "x"), 1, "float"), rt.swizzle(_u_fullResolution, "y"), 1, "float"), 1, "float"), width=1), rt.component_wise("abs", rt.binary("-", rt.swizzle(uv, "y"), rt.f(0.5), 1, "float"), width=1), 1, "float"), rt.component_wise("sqrt", rt.f(2.0), width=1), 1, "float"), rt.component_wise("max", rt.component_wise("abs", rt.binary("-", rt.swizzle(uv, "x"), rt.binary("/", rt.binary("*", rt.f(0.5), rt.swizzle(_u_fullResolution, "x"), 1, "float"), rt.swizzle(_u_fullResolution, "y"), 1, "float"), 1, "float"), width=1), rt.component_wise("abs", rt.binary("-", rt.swizzle(uv, "y"), rt.f(0.5), 1, "float"), width=1), width=1), width=1)
+                        dist = rt.component_wise("max", rt.binary("/", rt.binary("+", rt.component_wise("abs", rt.binary("-", rt.swizzle(uv, "x"), rt.fdiv(rt.binary("*", rt.f(0.5), rt.swizzle(_u_fullResolution, "x"), 1, "float"), rt.swizzle(_u_fullResolution, "y"), 1), 1, "float"), width=1), rt.component_wise("abs", rt.binary("-", rt.swizzle(uv, "y"), rt.f(0.5), 1, "float"), width=1), 1, "float"), rt.component_wise("sqrt", rt.f(2.0), width=1), 1, "float"), rt.component_wise("max", rt.component_wise("abs", rt.binary("-", rt.swizzle(uv, "x"), rt.fdiv(rt.binary("*", rt.f(0.5), rt.swizzle(_u_fullResolution, "x"), 1, "float"), rt.swizzle(_u_fullResolution, "y"), 1), 1, "float"), width=1), rt.component_wise("abs", rt.binary("-", rt.swizzle(uv, "y"), rt.f(0.5), 1, "float"), width=1), width=1), width=1)
                     else:
                         if rt.binary("==", _u_shape, rt.i(4)):
-                            dist = rt.component_wise("max", rt.component_wise("abs", rt.binary("-", rt.swizzle(uv, "x"), rt.binary("/", rt.binary("*", rt.f(0.5), rt.swizzle(_u_fullResolution, "x"), 1, "float"), rt.swizzle(_u_fullResolution, "y"), 1, "float"), 1, "float"), width=1), rt.component_wise("abs", rt.binary("-", rt.swizzle(uv, "y"), rt.f(0.5), 1, "float"), width=1), width=1)
+                            dist = rt.component_wise("max", rt.component_wise("abs", rt.binary("-", rt.swizzle(uv, "x"), rt.fdiv(rt.binary("*", rt.f(0.5), rt.swizzle(_u_fullResolution, "x"), 1, "float"), rt.swizzle(_u_fullResolution, "y"), 1), 1, "float"), width=1), rt.component_wise("abs", rt.binary("-", rt.swizzle(uv, "y"), rt.f(0.5), 1, "float"), width=1), width=1)
                         else:
                             if rt.binary("==", _u_shape, rt.i(6)):
                                 dist = rt.component_wise("max", rt.binary("-", rt.component_wise("abs", rt.swizzle(diff, "x"), width=1), rt.binary("*", rt.swizzle(diff, "y"), rt.unary("-", rt.f(0.5)), 1, "float"), 1, "float"), rt.binary("*", rt.unary("-", rt.f(1.0)), rt.swizzle(diff, "y"), 1, "float"), width=1)
@@ -160,11 +160,11 @@ def run_pixel(ctx, out):
         return rt.component_wise("mix", dist, rt.binary("*", rt.binary("*", rt.binary("+", rt.component_wise("sin", rt.binary("*", t, rt.f(6.28318530718), 1, "float"), width=1), rt.f(0.5), 1, "float"), rt.component_wise("abs", _u_speed, width=1), 1, "float"), rt.f(0.005), 1, "float"), rt.binary("*", rt.component_wise("abs", _u_speed, width=1), rt.f(0.01), 1, "float"), width=1)
     def main__void():
         globalCoord = rt.construct(2, rt.binary("+", rt.swizzle(ctx.frag_coord, "xy"), _u_tileOffset, 2, 'float'))
-        uv = rt.construct(2, rt.binary("/", globalCoord, _u_fullResolution, 2, 'float'))
+        uv = rt.construct(2, rt.fdiv(globalCoord, _u_fullResolution, 2))
         color = rt.construct(4, rt.f(0.0), rt.f(0.0), rt.f(0.0), rt.f(1.0))
         diff = rt.construct(2, rt.binary("-", rt.f(0.5), uv, 2, 'float'))
         if _u_aspectLens:
-            diff[:] = rt.binary("-", rt.construct_raw(2, rt.binary("/", rt.binary("*", rt.f(0.5), rt.swizzle(_u_fullResolution, "x"), 1, "float"), rt.swizzle(_u_fullResolution, "y"), 1, "float"), rt.f(0.5)), rt.construct_raw(2, rt.binary("/", rt.binary("*", rt.swizzle(uv, "x"), rt.swizzle(_u_fullResolution, "x"), 1, "float"), rt.swizzle(_u_fullResolution, "y"), 1, "float"), rt.swizzle(uv, "y")), 2, 'float')
+            diff[:] = rt.binary("-", rt.construct_raw(2, rt.fdiv(rt.binary("*", rt.f(0.5), rt.swizzle(_u_fullResolution, "x"), 1, "float"), rt.swizzle(_u_fullResolution, "y"), 1), rt.f(0.5)), rt.construct_raw(2, rt.fdiv(rt.binary("*", rt.swizzle(uv, "x"), rt.swizzle(_u_fullResolution, "x"), 1, "float"), rt.swizzle(_u_fullResolution, "y"), 1), rt.swizzle(uv, "y")), 2, 'float')
         centerDist = _distance__vec2_vec2(diff, uv)
         distort = rt.f(0.0)
         zoom = rt.f(1.0)

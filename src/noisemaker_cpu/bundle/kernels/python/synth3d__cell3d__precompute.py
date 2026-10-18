@@ -26,9 +26,12 @@ def run_pixel(ctx, out):
         v = rt.assign_swizzle(v, "y", rt.binary("+", rt.swizzle(v, "y"), rt.binary("*", rt.swizzle(v, "z"), rt.swizzle(v, "x"), 1, "uint"), 1, "uint"))
         v = rt.assign_swizzle(v, "z", rt.binary("+", rt.swizzle(v, "z"), rt.binary("*", rt.swizzle(v, "x"), rt.swizzle(v, "y"), 1, "uint"), 1, "uint"))
         return v
-    def hash3__vec3(p):
-        p = rt.copy(p, "float")
-        (p.__setitem__(0, rt.binary("+", rt.swizzle(p, "x"), rt.binary("*", rt.construct(1, _u_seed), rt.f(0.1), 1, "float"), 1, "float")), p.__setitem__(1, rt.binary("+", rt.swizzle(p, "y"), rt.binary("*", rt.construct(1, _u_seed), rt.f(0.1), 1, "float"), 1, "float")), p.__setitem__(2, rt.binary("+", rt.swizzle(p, "z"), rt.binary("*", rt.construct(1, _u_seed), rt.f(0.1), 1, "float"), 1, "float")), p)[-1]
+    def hash3__vec3_vec3(base, neighbor):
+        base = rt.copy(base, "float")
+        neighbor = rt.copy(neighbor, "float")
+        cpuSeedOffset = rt.construct(1, rt.binary("*", rt.construct(1, _u_seed), rt.f(0.1), 1, "float"))
+        cpuCellPos = rt.construct(3, rt.binary("+", base, neighbor, 3, 'float'))
+        p = rt.construct(3, rt.binary("+", rt.swizzle(base, "x"), rt.construct(1, rt.binary("+", rt.swizzle(neighbor, "x"), cpuSeedOffset, 1, "float")), 1, "float"), rt.binary("+", rt.swizzle(cpuCellPos, "y"), cpuSeedOffset, 1, "float"), rt.binary("+", rt.swizzle(cpuCellPos, "z"), cpuSeedOffset, 1, "float"))
         q = rt.construct(3, rt.binary("+", rt.construct(3, rt.binary("*", p, rt.f(1000.0), 3, 'float'), base="int"), rt.i(65536), 3, "int"), base="uint")
         q[:] = rt.pcg3d(q)
         return rt.construct(3, rt.binary("/", rt.construct_raw(3, rt.construct(3, q)), rt.f(4294967295.0), 3, 'float'))
@@ -64,7 +67,7 @@ def run_pixel(ctx, out):
                         break
                     neighbor = rt.construct(3, rt.construct(1, x), rt.construct(1, y), rt.construct(1, z))
                     cellPos = rt.construct(3, rt.binary("+", i, neighbor, 3, 'float'))
-                    randomOffset = hash3__vec3(cellPos)
+                    randomOffset = hash3__vec3_vec3(i, neighbor)
                     jitter = rt.binary("*", _u_cellVariation, rt.f(0.01), 1, "float")
                     cellPoint = rt.construct(3, rt.binary("+", neighbor, rt.component_wise("mix", rt.construct(3, rt.f(0.5)), randomOffset, jitter, width=3), 3, 'float'))
                     diff = rt.construct(3, rt.binary("-", cellPoint, f, 3, 'float'))
@@ -92,16 +95,16 @@ def run_pixel(ctx, out):
             g.fragColor[:] = rt.construct(4, rt.f(0.0))
             g.geoOut[:] = rt.construct(4, rt.f(0.5), rt.f(0.5), rt.f(0.5), rt.f(0.0))
             return
-        p = rt.construct(3, rt.binary("-", rt.binary("*", rt.binary("/", rt.construct_raw(3, rt.construct(1, x), rt.construct(1, y), rt.construct(1, z)), rt.binary("-", volSizeF, rt.f(1.0), 1, "float"), 3, 'float'), rt.f(2.0), 3, 'float'), rt.f(1.0), 3, 'float'))
+        p = rt.construct(3, rt.binary("-", rt.binary("*", rt.fdiv(rt.construct_raw(3, rt.construct(1, x), rt.construct(1, y), rt.construct(1, z)), rt.binary("-", volSizeF, rt.f(1.0), 1, "float"), 3), rt.f(2.0), 3, 'float'), rt.f(1.0), 3, 'float'))
         scaledP = rt.construct(3, rt.binary("*", p, rt.binary("-", rt.f(16.0), _u_scale, 1, "float"), 3, 'float'))
         result = cellNoise3D__vec3(scaledP)
         dist = rt.swizzle(result, "x")
         cellId = rt.swizzle(result, "y")
-        eps = rt.binary("/", rt.f(0.01), _u_scale, 1, "float")
+        eps = rt.fdiv(rt.f(0.01), _u_scale, 1)
         dxp = rt.swizzle(cellNoise3D__vec3(rt.construct(3, rt.binary("+", scaledP, rt.construct_raw(3, eps, rt.f(0.0), rt.f(0.0)), 3, 'float'))), "x")
         dyp = rt.swizzle(cellNoise3D__vec3(rt.construct(3, rt.binary("+", scaledP, rt.construct_raw(3, rt.f(0.0), eps, rt.f(0.0)), 3, 'float'))), "x")
         dzp = rt.swizzle(cellNoise3D__vec3(rt.construct(3, rt.binary("+", scaledP, rt.construct_raw(3, rt.f(0.0), rt.f(0.0), eps), 3, 'float'))), "x")
-        gradient = rt.construct(3, rt.binary("/", rt.construct_raw(3, rt.binary("-", dxp, dist, 1, "float"), rt.binary("-", dyp, dist, 1, "float"), rt.binary("-", dzp, dist, 1, "float")), eps, 3, 'float'))
+        gradient = rt.construct(3, rt.fdiv(rt.construct_raw(3, rt.binary("-", dxp, dist, 1, "float"), rt.binary("-", dyp, dist, 1, "float"), rt.binary("-", dzp, dist, 1, "float")), eps, 3))
         normal = rt.normalize(rt.binary("+", rt.unary('-', gradient), rt.construct_raw(3, rt.f(1e-06)), 3, 'float'))
         normalizer = rt.f(0.0)
         if rt.binary("==", _u_metric, rt.i(0)):

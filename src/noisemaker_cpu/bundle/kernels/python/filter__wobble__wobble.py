@@ -33,7 +33,7 @@ def run_pixel(ctx, out):
         p = rt.copy(p, "float")
         i = rt.component_wise("floor", p, width=3)
         f = rt.component_wise("fract", p, width=3)
-        (f.__setitem__(0, rt.swizzle(rt.binary("*", rt.binary("*", f, f, 3, 'float'), rt.binary("-", rt.f(3.0), rt.binary("*", rt.f(2.0), f, 3, 'float'), 3, 'float'), 3, 'float'), "x")), f.__setitem__(1, rt.swizzle(rt.binary("*", rt.binary("*", f, f, 3, 'float'), rt.binary("-", rt.f(3.0), rt.binary("*", rt.f(2.0), f, 3, 'float'), 3, 'float'), 3, 'float'), "y")), f.__setitem__(2, rt.swizzle(rt.binary("*", rt.binary("*", f, f, 3, 'float'), rt.binary("-", rt.f(3.0), rt.binary("*", rt.f(2.0), f, 3, 'float'), 3, 'float'), 3, 'float'), "z")), f)[-1]
+        ((_vector_write_0_0 := rt.swizzle(rt.binary("*", rt.binary("*", f, f, 3, 'float'), rt.binary("-", rt.f(3.0), rt.binary("*", rt.f(2.0), f, 3, 'float'), 3, 'float'), 3, 'float'), "x")), (_vector_write_0_1 := rt.swizzle(rt.binary("*", rt.binary("*", f, f, 3, 'float'), rt.binary("-", rt.f(3.0), rt.binary("*", rt.f(2.0), f, 3, 'float'), 3, 'float'), 3, 'float'), "y")), (_vector_write_0_2 := rt.swizzle(rt.binary("*", rt.binary("*", f, f, 3, 'float'), rt.binary("-", rt.f(3.0), rt.binary("*", rt.f(2.0), f, 3, 'float'), 3, 'float'), 3, 'float'), "z")), f.__setitem__(0, _vector_write_0_0), f.__setitem__(1, _vector_write_0_1), f.__setitem__(2, _vector_write_0_2), f)[-1]
         n000 = hash31__vec3(i)
         n100 = hash31__vec3(rt.construct(3, rt.binary("+", i, rt.construct_raw(3, rt.f(1.0), rt.f(0.0), rt.f(0.0)), 3, 'float')))
         n010 = hash31__vec3(rt.construct(3, rt.binary("+", i, rt.construct_raw(3, rt.f(0.0), rt.f(1.0), rt.f(0.0)), 3, 'float')))
@@ -60,7 +60,7 @@ def run_pixel(ctx, out):
         uv = rt.copy(uv, "float")
         mode = rt.construct(1, _u_wrap, base="int")
         if rt.binary("==", mode, rt.i(0)):
-            return rt.component_wise("abs", rt.construct(2, rt.binary("-", rt.component_wise("mod", rt.binary("+", uv, rt.f(1.0), 2, 'float'), rt.f(2.0), width=2), rt.f(1.0), 2, 'float')), width=2)
+            return rt.component_wise("abs", rt.construct(2, rt.binary("-", uv, rt.construct(2, rt.binary("*", rt.f(2.0), rt.component_wise("floor", rt.binary("*", rt.binary("+", uv, rt.f(1.0), 2, 'float'), rt.f(0.5), 2, 'float'), width=2), 2, 'float')), 2, 'float')), width=2)
         else:
             if rt.binary("==", mode, rt.i(1)):
                 return rt.component_wise("fract", uv, width=2)

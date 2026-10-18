@@ -15,8 +15,8 @@ def run_pixel(ctx, out):
     def main__void():
         globalCoord = rt.construct(2, rt.binary("+", rt.swizzle(ctx.frag_coord, "xy"), _u_tileOffset, 2, 'float'))
         texSize = rt.texture_size(_u_inputTex)
-        uv = rt.construct(2, rt.binary("/", rt.swizzle(ctx.frag_coord, "xy"), rt.construct_raw(2, rt.construct(2, texSize)), 2, 'float'))
-        texelSize = rt.construct(2, rt.binary("/", rt.f(1.0), rt.construct_raw(2, rt.construct(2, texSize)), 2, 'float'))
+        uv = rt.construct(2, rt.fdiv(rt.swizzle(ctx.frag_coord, "xy"), rt.construct_raw(2, rt.construct(2, texSize)), 2))
+        texelSize = rt.construct(2, rt.fdiv(rt.f(1.0), rt.construct_raw(2, rt.construct(2, texSize)), 2))
         radius = rt.construct(1, rt.binary("*", _u_radiusY, _u_renderScale, 1, "float"), base="int")
         if rt.binary("<=", radius, rt.i(0)):
             g.fragColor[:] = rt.texture(_u_inputTex, uv)
@@ -34,7 +34,7 @@ def run_pixel(ctx, out):
             if not (rt.binary("<=", i, radius)):
                 break
             x = rt.construct(1, i)
-            weight = rt.component_wise("exp", rt.binary("/", rt.unary("-", rt.binary("*", x, x, 1, "float")), rt.binary("*", rt.f(2.0), sigma2, 1, "float"), 1, "float"), width=1)
+            weight = rt.component_wise("exp", rt.fdiv(rt.unary("-", rt.binary("*", x, x, 1, "float")), rt.binary("*", rt.f(2.0), sigma2, 1, "float"), 1), width=1)
             offset = rt.construct(2, rt.f(0.0), rt.binary("*", rt.construct(1, i), rt.swizzle(texelSize, "y"), 1, "float"))
             sum[:] = rt.binary("+", sum, rt.construct(4, rt.binary("*", rt.texture(_u_inputTex, rt.binary("+", uv, offset, 2, 'float')), weight, 4, 'float')), 4, "float")
             weightSum = rt.binary("+", weightSum, weight, 1, "float")

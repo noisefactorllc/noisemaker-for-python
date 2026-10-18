@@ -45,8 +45,8 @@ def run_pixel(ctx, out):
         return rt.construct(2, rt.binary("+", rt.construct_raw(2, rt.binary("*", r, rt.component_wise("cos", a, width=1), 1, "float"), rt.binary("*", r, rt.component_wise("sin", a, width=1), 1, "float")), rt.f(0.5), 2, 'float'))
     def main__void():
         globalCoord = rt.construct(2, rt.binary("+", rt.swizzle(ctx.frag_coord, "xy"), _u_tileOffset, 2, 'float'))
-        globalUV = rt.construct(2, rt.binary("/", globalCoord, _u_fullResolution, 2, 'float'))
-        aspect = rt.binary("/", rt.swizzle(_u_fullResolution, "x"), rt.swizzle(_u_fullResolution, "y"), 1, "float")
+        globalUV = rt.construct(2, rt.fdiv(globalCoord, _u_fullResolution, 2))
+        aspect = rt.fdiv(rt.swizzle(_u_fullResolution, "x"), rt.swizzle(_u_fullResolution, "y"), 1)
         st = rt.construct(2, rt.binary("-", globalUV, rt.f(0.5), 2, 'float'))
         if _u_aspectLens:
             st = rt.assign_swizzle(st, "x", rt.binary("*", rt.swizzle(st, "x"), aspect, 1, "float"))
@@ -59,13 +59,13 @@ def run_pixel(ctx, out):
         effectiveScale = rt.f(0.0)
         if rt.binary("==", _u_symmetry, rt.i(3)):
             local = hexCoord__vec2(rt.construct(2, rt.binary("*", rt.binary("+", st, rt.construct_raw(2, _u_offsetX, _u_offsetY), 2, 'float'), rep, 2, 'float')))
-            (local.__setitem__(0, rt.binary("/", rt.swizzle(local, "x"), _u_scale, 1, "float")), local.__setitem__(1, rt.binary("/", rt.swizzle(local, "y"), _u_scale, 1, "float")), local)[-1]
+            (local.__setitem__(0, rt.fdiv(rt.swizzle(local, "x"), _u_scale, 1)), local.__setitem__(1, rt.fdiv(rt.swizzle(local, "y"), _u_scale, 1)), local)[-1]
             st[:] = rotationalFold__vec2_int(rt.construct(2, rt.binary("+", local, rt.f(0.5), 2, 'float')), rt.i(6))
         else:
-            (st.__setitem__(0, rt.swizzle(rt.binary("*", st, rep, 2, 'float'), "x")), st.__setitem__(1, rt.swizzle(rt.binary("*", st, rep, 2, 'float'), "y")), st)[-1]
+            ((_vector_write_0_0 := rt.swizzle(rt.binary("*", st, rep, 2, 'float'), "x")), (_vector_write_0_1 := rt.swizzle(rt.binary("*", st, rep, 2, 'float'), "y")), st.__setitem__(0, _vector_write_0_0), st.__setitem__(1, _vector_write_0_1), st)[-1]
             st[:] = rt.component_wise("fract", st, width=2)
             effectiveScale = (rt.binary("*", _u_scale, rt.f(0.5), 1, "float") if rt.binary("==", _u_symmetry, rt.i(0)) else _u_scale)
-            (st.__setitem__(0, rt.binary("/", rt.binary("-", rt.swizzle(st, "x"), rt.f(0.5), 1, "float"), effectiveScale, 1, "float")), st.__setitem__(1, rt.binary("/", rt.binary("-", rt.swizzle(st, "y"), rt.f(0.5), 1, "float"), effectiveScale, 1, "float")), st)[-1]
+            (st.__setitem__(0, rt.fdiv(rt.binary("-", rt.swizzle(st, "x"), rt.f(0.5), 1, "float"), effectiveScale, 1)), st.__setitem__(1, rt.fdiv(rt.binary("-", rt.swizzle(st, "y"), rt.f(0.5), 1, "float"), effectiveScale, 1)), st)[-1]
             st[:] = rt.binary("+", st, rt.binary("+", rt.f(0.5), rt.construct_raw(2, _u_offsetX, _u_offsetY), 2, 'float'), 2, "float")
             if rt.binary("==", _u_symmetry, rt.i(0)):
                 st = rt.assign_swizzle(st, "x", mirrorFold__float(rt.swizzle(st, "x")))

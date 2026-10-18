@@ -15,9 +15,9 @@ def run_pixel(ctx, out):
         globalCoord = rt.construct(2, rt.binary("+", rt.swizzle(ctx.frag_coord, "xy"), _u_tileOffset, 2, 'float'))
         texSize = rt.texture_size(_u_inputTex)
         resolution = rt.construct(2, texSize)
-        uv = rt.construct(2, rt.binary("/", globalCoord, _u_fullResolution, 2, 'float'))
-        texelSize = rt.construct(2, rt.binary("/", rt.f(1.0), resolution, 2, 'float'))
-        origColor = rt.texture(_u_inputTex, rt.construct(2, rt.binary("/", rt.swizzle(ctx.frag_coord, "xy"), rt.construct(2, rt.texture_size(_u_inputTex)), 2, 'float')))
+        uv = rt.construct(2, rt.fdiv(globalCoord, _u_fullResolution, 2))
+        texelSize = rt.construct(2, rt.fdiv(rt.f(1.0), resolution, 2))
+        origColor = rt.texture(_u_inputTex, rt.construct(2, rt.fdiv(rt.swizzle(ctx.frag_coord, "xy"), rt.construct(2, rt.texture_size(_u_inputTex)), 2)))
         kernel = rt.new_array(rt.i(9), 1)
         kernel[int(rt.i(0))] = rt.unary("-", rt.f(1.0))
         kernel[int(rt.i(1))] = rt.f(0.0)
@@ -47,7 +47,7 @@ def run_pixel(ctx, out):
             _for0_first = False
             if not (rt.binary("<", i, rt.i(9))):
                 break
-            texSample = rt.swizzle(rt.texture(_u_inputTex, rt.construct(2, rt.binary("/", rt.construct(2, rt.binary("-", rt.binary("*", rt.binary("+", uv, rt.binary("*", rt.binary("*", offsets[int(i)], _u_amount, 2, 'float'), _u_renderScale, 2, 'float'), 2, 'float'), _u_fullResolution, 2, 'float'), _u_tileOffset, 2, 'float')), rt.construct(2, rt.texture_size(_u_inputTex)), 2, 'float'))), "rgb")
+            texSample = rt.swizzle(rt.texture(_u_inputTex, rt.construct(2, rt.fdiv(rt.construct(2, rt.binary("-", rt.binary("*", rt.binary("+", uv, rt.binary("*", rt.binary("*", offsets[int(i)], _u_amount, 2, 'float'), _u_renderScale, 2, 'float'), 2, 'float'), _u_fullResolution, 2, 'float'), _u_tileOffset, 2, 'float')), rt.construct(2, rt.texture_size(_u_inputTex)), 2))), "rgb")
             conv[:] = rt.binary("+", conv, rt.binary("*", texSample, kernel[int(i)], 3, 'float'), 3, "float")
         g.fragColor[:] = rt.construct(4, rt.component_wise("clamp", conv, rt.f(0.0), rt.f(1.0), width=3), rt.swizzle(origColor, "a"))
     main__void()

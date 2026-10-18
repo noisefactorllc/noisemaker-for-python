@@ -84,7 +84,7 @@ def run_pixel(ctx, out):
         return sum
     def main__void():
         globalCoord = rt.construct(2, rt.binary("+", rt.swizzle(ctx.frag_coord, "xy"), _u_tileOffset, 2, 'float'))
-        st = rt.construct(2, rt.binary("/", globalCoord, rt.swizzle(_u_fullResolution, "y"), 2, 'float'))
+        st = rt.construct(2, rt.fdiv(globalCoord, rt.swizzle(_u_fullResolution, "y"), 2))
         freq = map__float_float_float_float_float(_u_scale, rt.f(1.0), rt.f(100.0), rt.f(20.0), rt.f(1.0))
         sigma = map__float_float_float_float_float(_u_bandwidth, rt.f(1.0), rt.f(100.0), rt.f(0.05), rt.f(0.35))
         baseAngle = rt.binary("/", rt.binary("*", _u_orientation, rt.f(3.14159265359), 1, "float"), rt.f(180.0), 1, "float")

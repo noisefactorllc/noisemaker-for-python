@@ -52,7 +52,7 @@ def run_pixel(ctx, out):
         return rt.binary("-", rt.f(1.0), rt.component_wise("smoothstep", rt.binary("-", groutHalfWidthPx, groutAA, 1, "float"), rt.binary("+", groutHalfWidthPx, groutAA, 1, "float"), edgeDistPx, width=1), 1, "float")
     def main__void():
         globalCoord = rt.construct(2, rt.binary("+", rt.swizzle(ctx.frag_coord, "xy"), _u_tileOffset, 2, 'float'))
-        uv = rt.construct(2, rt.binary("/", rt.swizzle(ctx.frag_coord, "xy"), _u_resolution, 2, 'float'))
+        uv = rt.construct(2, rt.fdiv(rt.swizzle(ctx.frag_coord, "xy"), _u_resolution, 2))
         srcHome = rt.texture(_u_inputTex, uv)
         seedF = rt.construct(1, _u_seed)
         result = rt.construct(3, 0.0)
@@ -92,12 +92,12 @@ def run_pixel(ctx, out):
         if rt.binary("==", _u_MODE, rt.i(0)):
             warp = mosaicWarp__vec2_float_float(globalCoord, _u_tileSize, seedF)
             warpedCoord = rt.construct(2, rt.binary("+", globalCoord, rt.construct_raw(2, warp), 2, 'float'))
-            cellSpace = rt.construct(2, rt.binary("/", warpedCoord, _u_tileSize, 2, 'float'))
+            cellSpace = rt.construct(2, rt.fdiv(warpedCoord, _u_tileSize, 2))
             cellId = rt.component_wise("floor", cellSpace, width=2)
             warpedCenter = rt.construct(2, rt.binary("*", rt.binary("+", cellId, rt.construct_raw(2, rt.f(0.5)), 2, 'float'), _u_tileSize, 2, 'float'))
             centerWarp = mosaicWarp__vec2_float_float(warpedCenter, _u_tileSize, seedF)
             sampleGc = rt.construct(2, rt.binary("-", warpedCenter, rt.construct_raw(2, centerWarp), 2, 'float'))
-            sampleUV = rt.component_wise("clamp", rt.binary("/", rt.binary("-", sampleGc, _u_tileOffset, 2, 'float'), _u_resolution, 2, 'float'), rt.f(0.0), rt.f(1.0), width=2)
+            sampleUV = rt.component_wise("clamp", rt.fdiv(rt.binary("-", sampleGc, _u_tileOffset, 2, 'float'), _u_resolution, 2), rt.f(0.0), rt.f(1.0), width=2)
             tileColor = rt.swizzle(rt.texture(_u_inputTex, sampleUV), "rgb")
             kC = mosaicGroutMask__vec2_float_float_float(globalCoord, _u_tileSize, _u_groutWidth, seedF)
             kR = mosaicGroutMask__vec2_float_float_float(rt.construct(2, rt.binary("+", globalCoord, rt.construct_raw(2, rt.f(1.0), rt.f(0.0)), 2, 'float')), _u_tileSize, _u_groutWidth, seedF)
@@ -116,7 +116,7 @@ def run_pixel(ctx, out):
             result[:] = rt.component_wise("clamp", rt.binary("*", darkened, shadeMul, 3, 'float'), rt.f(0.0), rt.f(1.0), width=3)
         else:
             if rt.binary("==", _u_MODE, rt.i(1)):
-                cellSpace = rt.construct(2, rt.binary("/", globalCoord, _u_tileSize, 2, 'float'))
+                cellSpace = rt.construct(2, rt.fdiv(globalCoord, _u_tileSize, 2))
                 cellId = rt.component_wise("floor", cellSpace, width=2)
                 cellFrac = rt.component_wise("fract", cellSpace, width=2)
                 edgeDistPx = rt.binary("*", rt.component_wise("min", rt.component_wise("min", rt.swizzle(cellFrac, "x"), rt.binary("-", rt.f(1.0), rt.swizzle(cellFrac, "x"), 1, "float"), width=1), rt.component_wise("min", rt.swizzle(cellFrac, "y"), rt.binary("-", rt.f(1.0), rt.swizzle(cellFrac, "y"), 1, "float"), width=1), width=1), _u_tileSize, 1, "float")
@@ -126,7 +126,7 @@ def run_pixel(ctx, out):
                 offsetPx = rt.construct(2, rt.binary("*", rt.construct(2, rt.binary("*", rt.construct(2, rt.binary("*", rt.construct(2, rt.binary("-", hash22__vec2(rt.construct(2, rt.binary("+", cellId, rt.binary("*", seedF, rt.f(101.7), 1, "float"), 2, 'float'))), rt.f(0.5), 2, 'float')), rt.f(2.0), 2, 'float')), rt.binary("/", _u_maxOffset, rt.f(100.0), 1, "float"), 2, 'float')), _u_tileSize, 2, 'float'))
                 cellCenterGc = rt.construct(2, rt.binary("*", rt.binary("+", cellId, rt.construct_raw(2, rt.f(0.5)), 2, 'float'), _u_tileSize, 2, 'float'))
                 shiftedGc = rt.construct(2, rt.binary("+", cellCenterGc, offsetPx, 2, 'float'))
-                shiftedUV = rt.component_wise("clamp", rt.binary("/", rt.binary("-", shiftedGc, _u_tileOffset, 2, 'float'), _u_resolution, 2, 'float'), rt.f(0.0), rt.f(1.0), width=2)
+                shiftedUV = rt.component_wise("clamp", rt.fdiv(rt.binary("-", shiftedGc, _u_tileOffset, 2, 'float'), _u_resolution, 2), rt.f(0.0), rt.f(1.0), width=2)
                 tileColor = rt.swizzle(rt.texture(_u_inputTex, shiftedUV), "rgb")
                 gapColor = rt.construct(3, 0.0)
                 if rt.binary("==", _u_gapFill, rt.i(0)):

@@ -19,7 +19,7 @@ def run_pixel(ctx, out):
     g.fragColor = rt.construct(4, 0.0)
     def main__void():
         globalCoord = rt.construct(2, rt.binary("+", rt.swizzle(ctx.frag_coord, "xy"), _u_tileOffset, 2, 'float'))
-        uv = rt.construct(2, rt.binary("/", globalCoord, _u_fullResolution, 2, 'float'))
+        uv = rt.construct(2, rt.fdiv(globalCoord, _u_fullResolution, 2))
         scrollAmount = rt.binary("*", rt.binary("*", _u_speed, _u_deltaTime, 1, "float"), rt.f(0.5), 1, "float")
         scrollUv = rt.construct(2, rt.binary("-", rt.swizzle(uv, "x"), scrollAmount, 1, "float"), rt.swizzle(uv, "y"))
         prev = rt.construct(4, rt.f(0.0))
@@ -36,7 +36,7 @@ def run_pixel(ctx, out):
         keyFrac = rt.component_wise("fract", keyExact, width=1)
         maxVel = rt.f(0.0)
         lanePixels = rt.binary("/", rt.swizzle(_u_fullResolution, "y"), rt.f(16.0), 1, "float")
-        keysPerPixel = rt.binary("/", rt.construct(1, keyRange), lanePixels, 1, "float")
+        keysPerPixel = rt.fdiv(rt.construct(1, keyRange), lanePixels, 1)
         spread = rt.component_wise("max", rt.i(1), rt.construct(1, rt.component_wise("ceil", keysPerPixel, width=1), base="int"), width=1)
         dk = rt.unary("-", spread)
         _for0_first = True
@@ -51,7 +51,7 @@ def run_pixel(ctx, out):
             noteData = rt.texture(_u_noteGridTex, gridUv)
             if rt.binary(">", rt.swizzle(noteData, "g"), rt.f(0.5)):
                 maxVel = rt.component_wise("max", maxVel, rt.swizzle(noteData, "r"), width=1)
-        edgeWidth = rt.binary("/", rt.f(4.0), rt.swizzle(_u_fullResolution, "x"), 1, "float")
+        edgeWidth = rt.fdiv(rt.f(4.0), rt.swizzle(_u_fullResolution, "x"), 1)
         noteVal = rt.f(0.0)
         if (bool(rt.binary("<", rt.swizzle(uv, "x"), edgeWidth)) and bool(rt.binary(">", maxVel, rt.f(0.0)))):
             noteVal = rt.binary("*", maxVel, _u_gain, 1, "float")

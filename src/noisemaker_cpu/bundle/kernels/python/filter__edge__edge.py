@@ -76,7 +76,7 @@ def run_pixel(ctx, out):
     def main__void():
         texSize = rt.texture_size(_u_inputTex)
         resolution = rt.construct(2, texSize)
-        texelSize = rt.construct(2, rt.binary("/", rt.f(1.0), resolution, 2, 'float'))
+        texelSize = rt.construct(2, rt.fdiv(rt.f(1.0), resolution, 2))
         origColor = rt.texture(_u_inputTex, rt.binary("*", rt.swizzle(ctx.frag_coord, "xy"), texelSize, 2, 'float'))
         kernelType = rt.construct(1, _u_kernel, base="int")
         radius = rt.component_wise("min", rt.construct(1, rt.binary("*", rt.binary("+", _u_size, rt.f(1.0), 1, "float"), _u_renderScale, 1, "float"), base="int"), rt.i(256), width=1)
@@ -122,7 +122,7 @@ def run_pixel(ctx, out):
                     centerWeight = rt.binary("-", centerWeight, w, 1, "float")
             centerSample = rt.swizzle(origColor, "rgb")
             if useLuma:
-                (centerSample.__setitem__(0, rt.dot(centerSample, g.LUMA)), centerSample.__setitem__(1, rt.dot(centerSample, g.LUMA)), centerSample.__setitem__(2, rt.dot(centerSample, g.LUMA)), centerSample)[-1]
+                ((_vector_write_0_0 := rt.dot(centerSample, g.LUMA)), (_vector_write_0_1 := rt.dot(centerSample, g.LUMA)), (_vector_write_0_2 := rt.dot(centerSample, g.LUMA)), centerSample.__setitem__(0, _vector_write_0_0), centerSample.__setitem__(1, _vector_write_0_1), centerSample.__setitem__(2, _vector_write_0_2), centerSample)[-1]
             conv[:] = rt.binary("+", conv, rt.binary("*", centerSample, centerWeight, 3, 'float'), 3, "float")
         conv[:] = rt.binary("*", conv, rt.binary("/", _u_amount, rt.f(50.0), 1, "float"), 3, "float")
         conv[:] = rt.component_wise("clamp", conv, rt.f(0.0), rt.f(1.0), width=3)

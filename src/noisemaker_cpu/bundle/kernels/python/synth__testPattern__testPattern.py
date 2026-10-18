@@ -96,7 +96,7 @@ def run_pixel(ctx, out):
         n = rt.component_wise("max", _u_gridSize, rt.i(1), width=1)
         cellUV = rt.component_wise("fract", rt.binary("*", uv, rt.construct(1, n), 2, 'float'), width=2)
         edge = rt.component_wise("min", cellUV, rt.binary("-", rt.f(1.0), cellUV, 2, 'float'), width=2)
-        fw = rt.construct(2, rt.binary("*", rt.binary("/", rt.construct_raw(2, rt.f(1.0)), _u_fullResolution, 2, 'float'), rt.construct(1, n), 2, 'float'))
+        fw = rt.construct(2, rt.binary("*", rt.fdiv(rt.construct_raw(2, rt.f(1.0)), _u_fullResolution, 2), rt.construct(1, n), 2, 'float'))
         line = rt.binary("-", rt.f(1.0), rt.binary("*", rt.component_wise("smoothstep", rt.f(0.0), rt.binary("*", rt.f(2.0), rt.swizzle(fw, "x"), 1, "float"), rt.swizzle(edge, "x"), width=1), rt.component_wise("smoothstep", rt.f(0.0), rt.binary("*", rt.f(2.0), rt.swizzle(fw, "y"), 1, "float"), rt.swizzle(edge, "y"), width=1), 1, "float"), 1, "float")
         return rt.construct(4, rt.construct(3, line), rt.f(1.0))
     def hue2rgb__float(h):
@@ -122,7 +122,7 @@ def run_pixel(ctx, out):
         return rt.construct(4, rt.construct(3, dot), rt.f(1.0))
     def main__void():
         globalCoord = rt.construct(2, rt.binary("+", rt.swizzle(ctx.frag_coord, "xy"), _u_tileOffset, 2, 'float'))
-        uv = rt.construct(2, rt.binary("/", globalCoord, _u_fullResolution, 2, 'float'))
+        uv = rt.construct(2, rt.fdiv(globalCoord, _u_fullResolution, 2))
         if rt.binary("==", _u_pattern, rt.i(1)):
             g.fragColor[:] = colorBars__vec2(uv)
         else:

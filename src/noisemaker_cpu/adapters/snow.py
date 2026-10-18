@@ -7,14 +7,8 @@ is computed here, mirroring snow.js's helper functions verbatim — including
 the exact points where it rounds to float32 (``Math.fround``) versus where it
 leaves an expression as raw float64 (plain JS ``+ - * /``).
 
-Two deliberate deviations from the transpiled GLSL kernel, both inherited from
-snow.js itself (not bugs to "fix"):
-  * `snowHash`'s internal dot-product-like sum is NOT computed with the CPU
-    runtime's `dot()` (accumulate in float64, round once); it's a hand-unrolled
-    sum with float32 rounding applied only at specific sub-expressions — see
-    `_snow_hash` below for the exact grouping.
-  * the coordinates fed to the noise are the raw `fragCoord.xy` — unlike the
-    transpiled kernel, this adapter never adds `tileOffset`.
+The hash uses the M4 Metal fused multiply-add chain and retains the float32
+cosine value at quarter turns. Coordinates are raw ``fragCoord.xy``.
 """
 
 from __future__ import annotations
@@ -24,6 +18,7 @@ import math
 import numpy as np
 
 from . import register
+from .crt import fma32
 
 F32 = np.float32
 
@@ -85,20 +80,14 @@ def _snow_hash(x, y, z):
     sx = _fract(_mul(x, _f32(0.1031)))
     sy = _fract(_mul(y, _f32(0.1031)))
     sz = _fract(_mul(z, _f32(0.1031)))
-    # dot = F32(F32(sx*add(sy,33.33) + mul(sy,add(sz,33.33))) + sz*add(sx,33.33))
-    # NB: `sx * add(...)` and `sz * add(...)` are raw (unrounded) float64
-    # products in the JS source; only `mul(...)` and the two outer `F32(...)`
-    # wraps actually round to float32. Preserve that grouping exactly.
-    inner = _f32(sx * _add(sy, _f32(33.33)) + _mul(sy, _add(sz, _f32(33.33))))
-    dot = _f32(inner + sz * _add(sx, _f32(33.33)))
-    shifted_xy = _f32(sx + sy + _f32(2.0 * dot))
-    return _clamp01(_fract(_f32(shifted_xy * _add(sz, dot))))
+    dot = fma32(sz, _add(sx, _f32(33.33)), fma32(sy, _add(sz, _f32(33.33)), _mul(sx, _add(sy, _f32(33.33)))))
+    return _clamp01(_fract(_mul(_add(_add(sx, sy), 2 * dot), _add(sz, dot))))
 
 
 def _snow_noise(x, y, time, speed, seed):
     angle = _mul(time, _TAU)
     cosine_value = _cosine(angle)
-    z_base = 0.0 if abs(cosine_value) < _f32(0.0000001) else _mul(cosine_value, speed)
+    z_base = _mul(cosine_value, speed)
     base_value = _snow_hash(_add(x, seed[0]), _add(y, seed[1]), _add(z_base, seed[2]))
     if speed == 0 or time == 0:
         return base_value

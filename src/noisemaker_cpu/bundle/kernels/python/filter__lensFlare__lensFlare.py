@@ -55,10 +55,10 @@ def run_pixel(ctx, out):
         delta = rt.copy(delta, "float")
         return rt.binary("-", rt.f(1.0), rt.component_wise("smoothstep", rt.binary("*", size, rt.f(0.6), 1, "float"), size, hexDist__vec2(delta), width=1), 1, "float")
     def main__void():
-        aspectRatio = rt.binary("/", rt.swizzle(_u_fullResolution, "x"), rt.swizzle(_u_fullResolution, "y"), 1, "float")
+        aspectRatio = rt.fdiv(rt.swizzle(_u_fullResolution, "x"), rt.swizzle(_u_fullResolution, "y"), 1)
         globalCoord = rt.construct(2, rt.binary("+", rt.swizzle(ctx.frag_coord, "xy"), _u_tileOffset, 2, 'float'))
-        uv = rt.construct(2, rt.binary("/", globalCoord, _u_fullResolution, 2, 'float'))
-        localUV = rt.construct(2, rt.binary("/", rt.swizzle(ctx.frag_coord, "xy"), _u_resolution, 2, 'float'))
+        uv = rt.construct(2, rt.fdiv(globalCoord, _u_fullResolution, 2))
+        localUV = rt.construct(2, rt.fdiv(rt.swizzle(ctx.frag_coord, "xy"), _u_resolution, 2))
         src = rt.texture(_u_inputTex, localUV)
         flarePos = rt.construct(2, _u_centerX, _u_centerY)
         mirrorPos = rt.construct(2, rt.binary("-", rt.construct_raw(2, rt.f(1.0)), flarePos, 2, 'float'))

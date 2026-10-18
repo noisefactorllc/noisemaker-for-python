@@ -12,12 +12,12 @@ def run_pixel(ctx, out):
     _u_radius = U.get("radius", rt.f(0.0))
     g.fragColor = rt.construct(4, 0.0)
     def main__void():
-        uv = rt.construct(2, rt.binary("/", rt.swizzle(ctx.frag_coord, "xy"), _u_resolution, 2, 'float'))
+        uv = rt.construct(2, rt.fdiv(rt.swizzle(ctx.frag_coord, "xy"), _u_resolution, 2))
         acc = rt.texture(_u_inputTex, uv)
         texel = rt.construct(2, 0.0)
         r = rt.f(0.0)
         if rt.binary("==", _u_SHAPE, rt.i(0)):
-            texel = rt.construct(2, rt.binary("/", rt.f(1.0), _u_resolution, 2, 'float'))
+            texel = rt.construct(2, rt.fdiv(rt.f(1.0), _u_resolution, 2))
             r = rt.component_wise("min", _u_radius, rt.f(32.0), width=1)
             i = rt.i(1)
             _for0_first = True

@@ -1,0 +1,133 @@
+{
+  "revision": "d7deb06e03a8ce2e963b04bea4c3e1a9a518e37d",
+  "cases": [
+    {
+      "name": "crt-default",
+      "effect": "crt",
+      "width": 8,
+      "height": 8,
+      "alpha": 1,
+      "seed": 1,
+      "time": 0.25,
+      "speed": 1
+    },
+    {
+      "name": "crt-tiled",
+      "effect": "crt",
+      "width": 8,
+      "height": 6,
+      "alpha": 0.7,
+      "seed": 5,
+      "time": 0.4,
+      "speed": 2.5,
+      "renderScale": 2,
+      "fullResolution": [
+        32,
+        18
+      ],
+      "tileOffset": [
+        4,
+        2
+      ]
+    },
+    {
+      "name": "crt-still",
+      "effect": "crt",
+      "width": 8,
+      "height": 6,
+      "alpha": 1,
+      "seed": -2,
+      "time": 0,
+      "speed": 0
+    },
+    {
+      "name": "crt-zero",
+      "effect": "crt",
+      "width": 8,
+      "height": 6,
+      "alpha": 0,
+      "seed": 1,
+      "time": 0.25,
+      "speed": 1
+    },
+    {
+      "name": "snow-quarter",
+      "effect": "snow",
+      "width": 8,
+      "height": 8,
+      "alpha": 1,
+      "density": 100,
+      "time": 0.25
+    },
+    {
+      "name": "snow-animated",
+      "effect": "snow",
+      "width": 8,
+      "height": 6,
+      "alpha": 0.6,
+      "density": 75,
+      "time": 0.4
+    },
+    {
+      "name": "snow-paused",
+      "effect": "snow",
+      "width": 8,
+      "height": 6,
+      "alpha": 1,
+      "density": 100,
+      "time": 0.6,
+      "pause": true
+    },
+    {
+      "name": "snow-zero",
+      "effect": "snow",
+      "width": 8,
+      "height": 6,
+      "alpha": 0,
+      "density": 100,
+      "time": 0.25
+    }
+  ],
+  "fma": [
+    {
+      "args": [
+        1.1836352348327637,
+        1.7818914651870728,
+        -1.931027560075904e-9
+      ],
+      "result": 2.10910964012146
+    },
+    {
+      "args": [
+        1.715787649154663,
+        1.694210410118103,
+        -3.285236749306364e-9
+      ],
+      "result": 2.90690541267395
+    },
+    {
+      "args": [
+        1.5398544073104858,
+        1.8304558992385864,
+        -9.061266736942741e-10
+      ],
+      "result": 2.8186357021331787
+    },
+    {
+      "args": [
+        1,
+        1.0000001192092896,
+        5.960464477539063e-8
+      ],
+      "result": 1.000000238418579
+    },
+    {
+      "args": [
+        3,
+        0.3333333432674408,
+        -1
+      ],
+      "result": 2.9802322387695312e-8
+    }
+  ]
+}

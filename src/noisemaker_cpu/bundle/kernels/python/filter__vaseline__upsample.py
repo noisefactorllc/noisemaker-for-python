@@ -25,15 +25,15 @@ def run_pixel(ctx, out):
         return rt.component_wise("max", rt.swizzle(centered, "x"), rt.swizzle(centered, "y"), width=1)
     def main__void():
         globalCoord = rt.construct(2, rt.binary("+", rt.swizzle(ctx.frag_coord, "xy"), _u_tileOffset, 2, 'float'))
-        uv = rt.construct(2, rt.binary("/", globalCoord, _u_fullResolution, 2, 'float'))
+        uv = rt.construct(2, rt.fdiv(globalCoord, _u_fullResolution, 2))
         fullRes = rt.construct(2, (_u_fullResolution if rt.binary(">", rt.swizzle(_u_fullResolution, "x"), rt.f(0.0)) else _u_resolution))
-        globalUV = rt.construct(2, rt.binary("/", rt.binary("+", rt.swizzle(ctx.frag_coord, "xy"), _u_tileOffset, 2, 'float'), fullRes, 2, 'float'))
+        globalUV = rt.construct(2, rt.fdiv(rt.binary("+", rt.swizzle(ctx.frag_coord, "xy"), _u_tileOffset, 2, 'float'), fullRes, 2))
         original = rt.texel_fetch(_u_inputTex, rt.construct(2, rt.swizzle(ctx.frag_coord, "xy"), base="int"), rt.i(0))
         a = rt.component_wise("clamp", _u_alpha, rt.f(0.0), rt.f(1.0), width=1)
         if rt.binary("<=", a, rt.f(0.0)):
             g.fragColor[:] = rt.construct(4, clamp01__vec3(rt.swizzle(original, "rgb")), rt.swizzle(original, "a"))
             return
-        texelSize = rt.construct(2, rt.binary("/", rt.f(1.0), _u_fullResolution, 2, 'float'))
+        texelSize = rt.construct(2, rt.fdiv(rt.f(1.0), _u_fullResolution, 2))
         radiusUV = rt.construct(2, rt.binary("*", rt.binary("*", g.RADIUS, _u_renderScale, 1, "float"), texelSize, 2, 'float'))
         blurAccum = rt.construct(3, rt.f(0.0))
         weightSum = rt.f(0.0)
@@ -52,7 +52,7 @@ def run_pixel(ctx, out):
             sigma = rt.f(0.4)
             weight = rt.component_wise("exp", rt.binary("/", rt.binary("*", rt.unary("-", rt.f(0.5)), rt.binary("*", r, r, 1, "float"), 1, "float"), rt.binary("*", sigma, sigma, 1, "float"), 1, "float"), width=1)
             sampleGlobalUV = rt.component_wise("clamp", rt.binary("+", uv, rt.binary("*", offset, radiusUV, 2, 'float'), 2, 'float'), rt.construct(2, rt.f(0.0)), rt.construct(2, rt.f(1.0)), width=2)
-            sampleLocalUV = rt.construct(2, rt.binary("/", rt.construct(2, rt.binary("-", rt.binary("*", sampleGlobalUV, _u_fullResolution, 2, 'float'), _u_tileOffset, 2, 'float')), rt.construct(2, rt.texture_size(_u_inputTex)), 2, 'float'))
+            sampleLocalUV = rt.construct(2, rt.fdiv(rt.construct(2, rt.binary("-", rt.binary("*", sampleGlobalUV, _u_fullResolution, 2, 'float'), _u_tileOffset, 2, 'float')), rt.construct(2, rt.texture_size(_u_inputTex)), 2))
             blurAccum[:] = rt.binary("+", blurAccum, rt.construct(3, rt.binary("*", rt.swizzle(rt.texture(_u_inputTex, sampleLocalUV), "rgb"), weight, 3, 'float')), 3, "float")
             weightSum = rt.binary("+", weightSum, weight, 1, "float")
         blurred = rt.construct(3, rt.binary("/", blurAccum, weightSum, 3, 'float'))

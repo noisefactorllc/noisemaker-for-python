@@ -31,7 +31,7 @@ def run_pixel(ctx, out):
                 break
             t = rt.binary("+", rt.binary("*", rt.binary("-", rt.binary("/", rt.construct(1, i), rt.construct(1, rt.binary("-", g.N, rt.i(1), 1, "int")), 1, "float"), rt.f(0.5), 1, "float"), _u_blurDistance, 1, "float"), jitter, 1, "float")
             offset = rt.construct(2, rt.binary("*", dir, t, 2, 'float'))
-            sum[:] = rt.binary("+", sum, rt.texture(_u_inputTex, rt.binary("/", rt.binary("+", rt.swizzle(ctx.frag_coord, "xy"), offset, 2, 'float'), _u_resolution, 2, 'float')), 4, "float")
+            sum[:] = rt.binary("+", sum, rt.texture(_u_inputTex, rt.fdiv(rt.binary("+", rt.swizzle(ctx.frag_coord, "xy"), offset, 2, 'float'), _u_resolution, 2)), 4, "float")
         g.fragColor[:] = rt.binary("/", sum, rt.construct(1, g.N), 4, 'float')
     main__void()
     _c = g.fragColor

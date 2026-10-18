@@ -49,7 +49,7 @@ def run_pixel(ctx, out):
         return rt.component_wise("fract", rt.binary("*", rt.binary("+", rt.swizzle(p2, "x"), rt.swizzle(p2, "y"), 1, "float"), rt.swizzle(p2, "x"), 1, "float"), width=1)
     def main__void():
         texSize = rt.texture_size(_u_bufTex)
-        tex = rt.texture(_u_bufTex, rt.binary("/", rt.swizzle(ctx.frag_coord, "xy"), rt.construct_raw(2, rt.construct(2, texSize)), 2, 'float'))
+        tex = rt.texture(_u_bufTex, rt.fdiv(rt.swizzle(ctx.frag_coord, "xy"), rt.construct_raw(2, rt.construct(2, texSize)), 2))
         a = rt.swizzle(tex, "r")
         b = rt.swizzle(tex, "g")
         bufferIsEmpty = (bool((bool((bool(rt.binary("==", rt.swizzle(tex, "r"), rt.f(0.0))) and bool(rt.binary("==", rt.swizzle(tex, "g"), rt.f(0.0))))) and bool(rt.binary("==", rt.swizzle(tex, "b"), rt.f(0.0))))) and bool(rt.binary("==", rt.swizzle(tex, "a"), rt.f(0.0))))
@@ -61,7 +61,7 @@ def run_pixel(ctx, out):
             g.fragColor[:] = rt.construct(4, a, b, rt.f(0.0), rt.f(1.0))
             return
         color = lp__sampler2D_vec2_vec2(_u_bufTex, rt.swizzle(ctx.frag_coord, "xy"), rt.construct(2, texSize))
-        prevFrameCoord = rt.construct(2, rt.binary("/", rt.swizzle(ctx.frag_coord, "xy"), rt.construct_raw(2, rt.construct(2, texSize)), 2, 'float'))
+        prevFrameCoord = rt.construct(2, rt.fdiv(rt.swizzle(ctx.frag_coord, "xy"), rt.construct_raw(2, rt.construct(2, texSize)), 2))
         prevFrame = rt.swizzle(rt.texture(_u_inputTex, prevFrameCoord), "rgb")
         prevLum = lum__vec3(prevFrame)
         f = rt.binary("*", _u_feed, rt.f(0.001), 1, "float")

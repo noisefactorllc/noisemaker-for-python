@@ -15,10 +15,10 @@ def run_pixel(ctx, out):
     _u_inputTex = T["inputTex"]
     g.fragColor = rt.construct(4, 0.0)
     def hash11__float(x):
-        return rt.component_wise("fract", rt.binary("*", rt.component_wise("sin", rt.binary("*", x, rt.f(12.9898), 1, "float"), width=1), rt.f(43758.5453), 1, "float"), width=1)
+        return rt.component_wise("fract", rt.construct(1, rt.binary("*", rt.construct(1, rt.component_wise("sin", rt.construct(1, rt.binary("*", rt.construct(1, x), rt.f(12.9898), 1, "float")), width=1)), rt.f(43758.5453), 1, "float")), width=1)
     def hash22__vec2(p):
         p = rt.copy(p, "float")
-        (p.__setitem__(0, rt.dot(p, rt.construct(2, rt.f(127.1), rt.f(311.7)))), p.__setitem__(1, rt.dot(p, rt.construct(2, rt.f(269.5), rt.f(183.3)))), p)[-1]
+        ((_vector_write_0_0 := rt.dot(p, rt.construct(2, rt.f(127.1), rt.f(311.7)))), (_vector_write_0_1 := rt.dot(p, rt.construct(2, rt.f(269.5), rt.f(183.3)))), p.__setitem__(0, _vector_write_0_0), p.__setitem__(1, _vector_write_0_1), p)[-1]
         return rt.component_wise("fract", rt.construct(2, rt.binary("*", rt.component_wise("sin", p, width=2), rt.f(43758.5453), 2, 'float')), width=2)
     def lum__vec3(c):
         c = rt.copy(c, "float")
@@ -26,7 +26,7 @@ def run_pixel(ctx, out):
     def main__void():
         texSize = rt.texture_size(_u_bufTex)
         fragCoord = rt.swizzle(ctx.frag_coord, "xy")
-        uv = rt.construct(2, rt.binary("/", fragCoord, rt.construct_raw(2, rt.construct(2, texSize)), 2, 'float'))
+        uv = rt.construct(2, rt.fdiv(fragCoord, rt.construct_raw(2, rt.construct(2, texSize)), 2))
         prev = rt.texture(_u_bufTex, uv)
         bufferEmpty = rt.binary("==", rt.swizzle(prev, "a"), rt.f(0.0))
         vel = rt.construct(2, 0.0)
@@ -50,7 +50,7 @@ def run_pixel(ctx, out):
                 radius = rt.binary("+", rt.f(0.1), rt.binary("*", rt.f(0.06), hash11__float(rt.binary("+", rt.binary("*", idf, rt.f(2.11), 1, "float"), seedF, 1, "float")), 1, "float"), 1, "float")
                 d = rt.construct(2, rt.binary("-", uv, c, 2, 'float'))
                 r2 = rt.dot(d, d)
-                falloff = rt.component_wise("exp", rt.binary("/", rt.unary("-", r2), rt.binary("*", rt.binary("*", rt.f(2.0), radius, 1, "float"), radius, 1, "float"), 1, "float"), width=1)
+                falloff = rt.component_wise("exp", rt.fdiv(rt.unary("-", r2), rt.binary("*", rt.binary("*", rt.f(2.0), radius, 1, "float"), radius, 1, "float"), 1), width=1)
                 tangent = rt.construct(2, rt.unary("-", rt.swizzle(d, "y")), rt.swizzle(d, "x"))
                 vel[:] = rt.binary("+", vel, rt.binary("*", rt.binary("*", rt.binary("*", tangent, sign, 2, 'float'), falloff, 2, 'float'), rt.f(12.0), 2, 'float'), 2, "float")
                 dye = rt.binary("+", dye, falloff, 1, "float")
@@ -67,7 +67,7 @@ def run_pixel(ctx, out):
         lu = rt.f(0.0)
         grad = rt.construct(2, 0.0)
         if (bool(rt.binary(">", iForce, rt.f(0.0))) or bool(rt.binary(">", iDye, rt.f(0.0)))):
-            texel = rt.construct(2, rt.binary("/", rt.f(1.0), rt.construct_raw(2, rt.construct(2, texSize)), 2, 'float'))
+            texel = rt.construct(2, rt.fdiv(rt.f(1.0), rt.construct_raw(2, rt.construct(2, texSize)), 2))
             lc = lum__vec3(rt.swizzle(rt.texture(_u_inputTex, uv), "rgb"))
             lr = lum__vec3(rt.swizzle(rt.texture(_u_inputTex, rt.binary("+", uv, rt.construct_raw(2, rt.swizzle(texel, "x"), rt.f(0.0)), 2, 'float')), "rgb"))
             lu = lum__vec3(rt.swizzle(rt.texture(_u_inputTex, rt.binary("+", uv, rt.construct_raw(2, rt.f(0.0), rt.swizzle(texel, "y")), 2, 'float')), "rgb"))

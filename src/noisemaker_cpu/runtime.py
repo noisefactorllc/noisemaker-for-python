@@ -199,7 +199,7 @@ def _oracle_scalar_int_division_trunc() -> bool:
     global _ORACLE_SCALAR_INT_DIVISION
     if _ORACLE_SCALAR_INT_DIVISION is None:
         text = _mounted_oracle_text(os.path.join("scripts", "upstream", "compile-glsl.js"))
-        _ORACLE_SCALAR_INT_DIVISION = text is None or "effectId !== 'filter/spookyTicker'" in text
+        _ORACLE_SCALAR_INT_DIVISION = text is None or "Math.trunc(${dividend} / ${divisor})" in text
     return _ORACLE_SCALAR_INT_DIVISION
 
 
@@ -621,6 +621,16 @@ class Runtime:
         return v
 
     # ---- operators ----
+    def fdiv(self, a, b, width=1):
+        from .metal_division import metal_divide
+
+        if _is_scalar(a) and _is_scalar(b):
+            return metal_divide(a, b)
+        left, right = np.broadcast_arrays(np.asarray(a), np.asarray(b))
+        return np.array([metal_divide(x, y) for x, y in zip(left.flat, right.flat, strict=True)], dtype=np.float64)[
+            :width
+        ]
+
     def binary(self, op, a, b, width=None, base="float"):
         if op in ("==", "!=", "<", ">", "<=", ">=", "&&", "||"):
             return self._logical(op, a, b)
@@ -767,7 +777,7 @@ class Runtime:
 
     # ---- texture ----
     def texture(self, sampler, uv):
-        from .sampler import sample_bilinear, sample_nearest_bottom_left
+        from .sampler import sample_bilinear, sample_nearest_texel_bottom_left
 
         # Sample at f32 coords — JS reads the uv from a stored Float32Array (binary
         # defers the round). float64 coords would floor/interpolate a hair differently.
@@ -775,7 +785,7 @@ class Runtime:
         v = f32(float(uv[1]))
         if getattr(sampler, "filter", "nearest") == "linear":
             return sample_bilinear(sampler, u, v)
-        return sample_nearest_bottom_left(sampler, u, v)
+        return sample_nearest_texel_bottom_left(sampler, u, v)
 
     def texture_size(self, sampler):
         return np.array([sampler.width, sampler.height], dtype=F32)

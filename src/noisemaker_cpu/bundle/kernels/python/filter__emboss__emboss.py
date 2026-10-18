@@ -18,7 +18,7 @@ def run_pixel(ctx, out):
     g.LUMA = rt.construct(3, rt.f(0.2126), rt.f(0.7152), rt.f(0.0722))
     def sampleGlobal__vec2(globalUV):
         globalUV = rt.copy(globalUV, "float")
-        localUV = rt.construct(2, rt.binary("/", rt.construct(2, rt.binary("-", rt.binary("*", globalUV, _u_fullResolution, 2, 'float'), _u_tileOffset, 2, 'float')), rt.construct(2, rt.texture_size(_u_inputTex)), 2, 'float'))
+        localUV = rt.construct(2, rt.fdiv(rt.construct(2, rt.binary("-", rt.binary("*", globalUV, _u_fullResolution, 2, 'float'), _u_tileOffset, 2, 'float')), rt.construct(2, rt.texture_size(_u_inputTex)), 2))
         return rt.swizzle(rt.texture(_u_inputTex, localUV), "rgb")
     def colorDefaultEmboss__vec2_vec2(uv, texelSize):
         uv = rt.copy(uv, "float")
@@ -52,7 +52,7 @@ def run_pixel(ctx, out):
             _for0_first = False
             if not (rt.binary("<", i, rt.i(9))):
                 break
-            texSample = rt.swizzle(rt.texture(_u_inputTex, rt.construct(2, rt.binary("/", rt.construct(2, rt.binary("-", rt.binary("*", rt.binary("+", uv, rt.binary("*", rt.binary("*", offsets[int(i)], _u_amount, 2, 'float'), _u_renderScale, 2, 'float'), 2, 'float'), _u_fullResolution, 2, 'float'), _u_tileOffset, 2, 'float')), rt.construct(2, rt.texture_size(_u_inputTex)), 2, 'float'))), "rgb")
+            texSample = rt.swizzle(rt.texture(_u_inputTex, rt.construct(2, rt.fdiv(rt.construct(2, rt.binary("-", rt.binary("*", rt.binary("+", uv, rt.binary("*", rt.binary("*", offsets[int(i)], _u_amount, 2, 'float'), _u_renderScale, 2, 'float'), 2, 'float'), _u_fullResolution, 2, 'float'), _u_tileOffset, 2, 'float')), rt.construct(2, rt.texture_size(_u_inputTex)), 2))), "rgb")
             conv[:] = rt.binary("+", conv, rt.binary("*", texSample, kernel[int(i)], 3, 'float'), 3, "float")
         return conv
     def colorGeneralEmboss__vec2_vec2(uv, texelSize):
@@ -93,7 +93,7 @@ def run_pixel(ctx, out):
             basePx = baseOffsetsPx[int(i)]
             rotatedPx = rt.construct(2, rt.binary("*", rt.construct_raw(2, rt.binary("+", rt.binary("*", ct, rt.swizzle(basePx, "x"), 1, "float"), rt.binary("*", st, rt.swizzle(basePx, "y"), 1, "float"), 1, "float"), rt.binary("+", rt.binary("*", rt.unary("-", st), rt.swizzle(basePx, "x"), 1, "float"), rt.binary("*", ct, rt.swizzle(basePx, "y"), 1, "float"), 1, "float")), _u_height, 2, 'float'))
             offsetUV = rt.construct(2, rt.binary("*", rt.binary("*", rt.binary("*", rotatedPx, texelSize, 2, 'float'), _u_amount, 2, 'float'), _u_renderScale, 2, 'float'))
-            texSample = rt.swizzle(rt.texture(_u_inputTex, rt.construct(2, rt.binary("/", rt.construct(2, rt.binary("-", rt.binary("*", rt.binary("+", uv, offsetUV, 2, 'float'), _u_fullResolution, 2, 'float'), _u_tileOffset, 2, 'float')), rt.construct(2, rt.texture_size(_u_inputTex)), 2, 'float'))), "rgb")
+            texSample = rt.swizzle(rt.texture(_u_inputTex, rt.construct(2, rt.fdiv(rt.construct(2, rt.binary("-", rt.binary("*", rt.binary("+", uv, offsetUV, 2, 'float'), _u_fullResolution, 2, 'float'), _u_tileOffset, 2, 'float')), rt.construct(2, rt.texture_size(_u_inputTex)), 2))), "rgb")
             conv[:] = rt.binary("+", conv, rt.binary("*", texSample, kernel[int(i)], 3, 'float'), 3, "float")
         return conv
     def grayEmboss__vec2_vec3(uv, centerRGB):
@@ -101,7 +101,7 @@ def run_pixel(ctx, out):
         centerRGB = rt.copy(centerRGB, "float")
         theta = rt.component_wise("radians", _u_angle, width=1)
         direction = rt.construct(2, rt.component_wise("cos", theta, width=1), rt.component_wise("sin", theta, width=1))
-        offsetUV = rt.construct(2, rt.binary("/", rt.binary("*", direction, rt.binary("*", _u_height, _u_renderScale, 1, "float"), 2, 'float'), _u_fullResolution, 2, 'float'))
+        offsetUV = rt.construct(2, rt.fdiv(rt.binary("*", direction, rt.binary("*", _u_height, _u_renderScale, 1, "float"), 2, 'float'), _u_fullResolution, 2))
         positiveLuma = rt.dot(sampleGlobal__vec2(rt.construct(2, rt.binary("+", uv, offsetUV, 2, 'float'))), g.LUMA)
         negativeLuma = rt.dot(sampleGlobal__vec2(rt.construct(2, rt.binary("-", uv, offsetUV, 2, 'float'))), g.LUMA)
         signedEdge = rt.binary("-", positiveLuma, negativeLuma, 1, "float")
@@ -114,11 +114,11 @@ def run_pixel(ctx, out):
     def main__void():
         globalCoord = rt.construct(2, rt.binary("+", rt.swizzle(ctx.frag_coord, "xy"), _u_tileOffset, 2, 'float'))
         resolution = rt.construct(2, rt.texture_size(_u_inputTex))
-        uv = rt.construct(2, rt.binary("/", globalCoord, _u_fullResolution, 2, 'float'))
-        texelSize = rt.construct(2, rt.binary("/", rt.f(1.0), resolution, 2, 'float'))
-        origColor = rt.texture(_u_inputTex, rt.binary("/", rt.swizzle(ctx.frag_coord, "xy"), resolution, 2, 'float'))
+        uv = rt.construct(2, rt.fdiv(globalCoord, _u_fullResolution, 2))
+        texelSize = rt.construct(2, rt.fdiv(rt.f(1.0), resolution, 2))
+        origColor = rt.texture(_u_inputTex, rt.fdiv(rt.swizzle(ctx.frag_coord, "xy"), resolution, 2))
         fullFrame = (bool(rt.component_wise("all", rt.component_wise("equal", _u_tileOffset, rt.construct(2, rt.f(0.0)), width=2), width=2)) and bool(rt.component_wise("all", rt.component_wise("equal", _u_fullResolution, resolution, width=2), width=2)))
-        colorTexelSize = rt.construct(2, (texelSize if fullFrame else rt.binary("/", rt.f(1.0), _u_fullResolution, 2, 'float')))
+        colorTexelSize = rt.construct(2, (texelSize if fullFrame else rt.fdiv(rt.f(1.0), _u_fullResolution, 2)))
         result = rt.construct(3, 0.0)
         if rt.binary("==", _u_STYLE, rt.i(0)):
             if (bool(rt.binary("==", _u_angle, rt.f(135.0))) and bool(rt.binary("==", _u_height, rt.f(1.0)))):

@@ -34,7 +34,7 @@ def run_pixel(ctx, out):
     def main__void():
         texSize = rt.texture_size(_u_bufTex)
         fragCoord = rt.swizzle(ctx.frag_coord, "xy")
-        uv = rt.construct(2, rt.binary("/", fragCoord, rt.construct_raw(2, rt.construct(2, texSize)), 2, 'float'))
+        uv = rt.construct(2, rt.fdiv(fragCoord, rt.construct_raw(2, rt.construct(2, texSize)), 2))
         here = rt.texel_fetch(_u_bufTex, rt.component_wise("clamp", rt.construct(2, fragCoord, base="int"), rt.construct(2, rt.i(0), base="int"), rt.binary("-", texSize, rt.construct(2, rt.i(1), base="int"), 2, "int"), width=2), rt.i(0))
         u = rt.swizzle(here, "rg")
         dt = rt.binary("*", rt.component_wise("clamp", _u_speed, rt.f(0.0), rt.f(200.0), width=1), rt.f(0.0001), 1, "float")

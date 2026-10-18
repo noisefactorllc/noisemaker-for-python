@@ -28,7 +28,7 @@ def run_pixel(ctx, out):
         return rt.dot(c, rt.construct(3, rt.f(0.2126), rt.f(0.7152), rt.f(0.0722)))
     def lumGradientSimplified__vec2(uv):
         uv = rt.copy(uv, "float")
-        px = rt.construct(2, rt.binary("/", rt.f(1.0), _u_resolution, 2, 'float'))
+        px = rt.construct(2, rt.fdiv(rt.f(1.0), _u_resolution, 2))
         tl = lum__vec3(rt.swizzle(rt.texture(_u_simplifiedTex, rt.binary("+", uv, rt.binary("*", px, rt.construct_raw(2, rt.unary("-", rt.f(1.0)), rt.f(1.0)), 2, 'float'), 2, 'float')), "rgb"))
         l = lum__vec3(rt.swizzle(rt.texture(_u_simplifiedTex, rt.binary("+", uv, rt.binary("*", px, rt.construct_raw(2, rt.unary("-", rt.f(1.0)), rt.f(0.0)), 2, 'float'), 2, 'float')), "rgb"))
         bl = lum__vec3(rt.swizzle(rt.texture(_u_simplifiedTex, rt.binary("+", uv, rt.binary("*", px, rt.construct_raw(2, rt.unary("-", rt.f(1.0)), rt.unary("-", rt.f(1.0))), 2, 'float'), 2, 'float')), "rgb"))
@@ -39,7 +39,7 @@ def run_pixel(ctx, out):
         b = lum__vec3(rt.swizzle(rt.texture(_u_simplifiedTex, rt.binary("+", uv, rt.binary("*", px, rt.construct_raw(2, rt.f(0.0), rt.unary("-", rt.f(1.0))), 2, 'float'), 2, 'float')), "rgb"))
         return rt.construct(2, rt.binary("-", rt.binary("-", rt.binary("-", rt.binary("+", rt.binary("+", tr, rt.binary("*", rt.f(2.0), r, 1, "float"), 1, "float"), br, 1, "float"), tl, 1, "float"), rt.binary("*", rt.f(2.0), l, 1, "float"), 1, "float"), bl, 1, "float"), rt.binary("-", rt.binary("-", rt.binary("-", rt.binary("+", rt.binary("+", tl, rt.binary("*", rt.f(2.0), t, 1, "float"), 1, "float"), tr, 1, "float"), bl, 1, "float"), rt.binary("*", rt.f(2.0), b, 1, "float"), 1, "float"), br, 1, "float"))
     def main__void():
-        uv = rt.construct(2, rt.binary("/", rt.swizzle(ctx.frag_coord, "xy"), _u_resolution, 2, 'float'))
+        uv = rt.construct(2, rt.fdiv(rt.swizzle(ctx.frag_coord, "xy"), _u_resolution, 2))
         src = rt.texture(_u_inputTex, uv)
         simplified = rt.swizzle(rt.texture(_u_simplifiedTex, uv), "rgb")
         edge = rt.length(lumGradientSimplified__vec2(uv))

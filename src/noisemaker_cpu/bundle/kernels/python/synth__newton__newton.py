@@ -92,7 +92,7 @@ def run_pixel(ctx, out):
         cY_df = rt.copy(cY_df, "float")
         re_df = rt.copy(re_df, "float")
         im_df = rt.copy(im_df, "float")
-        uv = rt.construct(2, rt.binary("/", rt.binary("-", fragCoord, rt.binary("*", rt.f(0.5), _u_fullResolution, 2, 'float'), 2, 'float'), rt.component_wise("min", rt.swizzle(_u_fullResolution, "x"), rt.swizzle(_u_fullResolution, "y"), width=1), 2, 'float'))
+        uv = rt.construct(2, rt.fdiv(rt.binary("-", fragCoord, rt.binary("*", rt.f(0.5), _u_fullResolution, 2, 'float'), 2, 'float'), rt.component_wise("min", rt.swizzle(_u_fullResolution, "x"), rt.swizzle(_u_fullResolution, "y"), width=1), 2))
         angle = rt.binary("/", rt.binary("*", rt.unary("-", rot), g.TAU, 1, "float"), rt.f(360.0), 1, "float")
         c = rt.component_wise("cos", angle, width=1)
         s = rt.component_wise("sin", angle, width=1)
@@ -168,7 +168,7 @@ def run_pixel(ctx, out):
                 break
             if rt.binary(">=", k, numRoots):
                 break
-            angle = rt.binary("/", rt.binary("*", g.TAU, rt.construct(1, k), 1, "float"), rt.construct(1, intDeg), 1, "float")
+            angle = rt.fdiv(rt.binary("*", g.TAU, rt.construct(1, k), 1, "float"), rt.construct(1, intDeg), 1)
             roots[int(k)] = rt.construct(2, rt.construct(2, rt.component_wise("cos", angle, width=1), rt.component_wise("sin", angle, width=1)))
         iter = rt.f(0.0)
         convergedRoot = rt.unary("-", rt.i(1))
@@ -215,7 +215,7 @@ def run_pixel(ctx, out):
             if rt.binary("<", rt.binary("+", rt.binary("*", fpzr_f, fpzr_f, 1, "float"), rt.binary("*", fpzi_f, fpzi_f, 1, "float"), 1, "float"), rt.f(1e-20)):
                 break
             denom = rt.binary("+", rt.binary("*", fpzr_f, fpzr_f, 1, "float"), rt.binary("*", fpzi_f, fpzi_f, 1, "float"), 1, "float")
-            inv_denom = rt.binary("/", rt.f(1.0), denom, 1, "float")
+            inv_denom = rt.fdiv(rt.f(1.0), denom, 1)
             nr = df64_add__vec2_vec2(df64_mul__vec2_vec2(fzr, fpzr), df64_mul__vec2_vec2(fzi, fpzi))
             ni = df64_sub__vec2_vec2(df64_mul__vec2_vec2(fzi, fpzr), df64_mul__vec2_vec2(fzr, fpzi))
             dr = df64_mul_f__vec2_float(nr, inv_denom)
@@ -248,19 +248,19 @@ def run_pixel(ctx, out):
             iter = rt.binary("+", iter, rt.f(1.0), 1, "float")
         smoothIter = iter
         if (bool((bool(rt.binary(">=", convergedRoot, rt.i(0))) and bool(rt.binary(">", convergeDist, rt.f(0.0))))) and bool(rt.binary("<", convergeDist, _u_tolerance))):
-            smoothIter = rt.binary("-", iter, rt.component_wise("log2", rt.binary("/", rt.component_wise("log", convergeDist, width=1), rt.component_wise("log", _u_tolerance, width=1), 1, "float"), width=1), 1, "float")
+            smoothIter = rt.binary("-", iter, rt.component_wise("log2", rt.fdiv(rt.component_wise("log", convergeDist, width=1), rt.component_wise("log", _u_tolerance, width=1), 1), width=1), 1, "float")
         value = rt.f(0.0)
         maxIterF = rt.construct(1, maxIter)
         numRootsF = rt.construct(1, numRoots)
         if rt.binary("==", outMode, rt.i(0)):
-            value = rt.binary("/", smoothIter, maxIterF, 1, "float")
+            value = rt.fdiv(smoothIter, maxIterF, 1)
         else:
             if rt.binary("==", outMode, rt.i(1)):
                 if rt.binary(">=", convergedRoot, rt.i(0)):
-                    value = rt.binary("/", rt.construct(1, convergedRoot), numRootsF, 1, "float")
+                    value = rt.fdiv(rt.construct(1, convergedRoot), numRootsF, 1)
             else:
                 if rt.binary(">=", convergedRoot, rt.i(0)):
-                    value = rt.binary("/", rt.binary("+", rt.construct(1, convergedRoot), rt.binary("/", smoothIter, maxIterF, 1, "float"), 1, "float"), numRootsF, 1, "float")
+                    value = rt.fdiv(rt.binary("+", rt.construct(1, convergedRoot), rt.fdiv(smoothIter, maxIterF, 1), 1, "float"), numRootsF, 1)
         if doInvert:
             value = rt.binary("-", rt.f(1.0), value, 1, "float")
         g.fragColor[:] = rt.construct(4, rt.construct(3, value), rt.f(1.0))

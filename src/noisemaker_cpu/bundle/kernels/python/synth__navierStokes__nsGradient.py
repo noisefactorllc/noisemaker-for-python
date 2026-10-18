@@ -12,8 +12,8 @@ def run_pixel(ctx, out):
     def main__void():
         texSize = rt.texture_size(_u_velTex)
         fragCoord = rt.swizzle(ctx.frag_coord, "xy")
-        texel = rt.construct(2, rt.binary("/", rt.f(1.0), rt.construct_raw(2, rt.construct(2, texSize)), 2, 'float'))
-        uv = rt.construct(2, rt.binary("/", fragCoord, rt.construct_raw(2, rt.construct(2, texSize)), 2, 'float'))
+        texel = rt.construct(2, rt.fdiv(rt.f(1.0), rt.construct_raw(2, rt.construct(2, texSize)), 2))
+        uv = rt.construct(2, rt.fdiv(fragCoord, rt.construct_raw(2, rt.construct(2, texSize)), 2))
         pR = rt.swizzle(rt.texture(_u_pressureTex, rt.binary("+", uv, rt.construct_raw(2, rt.swizzle(texel, "x"), rt.f(0.0)), 2, 'float')), "r")
         pL = rt.swizzle(rt.texture(_u_pressureTex, rt.binary("-", uv, rt.construct_raw(2, rt.swizzle(texel, "x"), rt.f(0.0)), 2, 'float')), "r")
         pT = rt.swizzle(rt.texture(_u_pressureTex, rt.binary("+", uv, rt.construct_raw(2, rt.f(0.0), rt.swizzle(texel, "y")), 2, 'float')), "r")

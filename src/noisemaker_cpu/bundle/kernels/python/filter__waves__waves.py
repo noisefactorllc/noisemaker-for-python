@@ -28,25 +28,25 @@ def run_pixel(ctx, out):
         st = rt.assign_swizzle(st, "x", rt.binary("/", rt.swizzle(st, "x"), aspectRatio, 1, "float"))
         return st
     def main__void():
-        aspectRatio = rt.binary("/", rt.swizzle(_u_fullResolution, "x"), rt.swizzle(_u_fullResolution, "y"), 1, "float")
+        aspectRatio = rt.fdiv(rt.swizzle(_u_fullResolution, "x"), rt.swizzle(_u_fullResolution, "y"), 1)
         globalCoord = rt.construct(2, rt.binary("+", rt.swizzle(ctx.frag_coord, "xy"), _u_tileOffset, 2, 'float'))
-        uv = rt.construct(2, rt.binary("/", globalCoord, _u_fullResolution, 2, 'float'))
+        uv = rt.construct(2, rt.fdiv(globalCoord, _u_fullResolution, 2))
         uv[:] = rotate2D__vec2_float_float(uv, rt.binary("/", _u_rotation, rt.f(180.0), 1, "float"), aspectRatio)
         displacement = rt.binary("*", rt.component_wise("sin", rt.binary("+", rt.binary("*", rt.binary("*", rt.swizzle(uv, "x"), _u_scale, 1, "float"), rt.f(10.0), 1, "float"), rt.binary("*", rt.binary("*", _u_time, rt.f(6.28318530718), 1, "float"), rt.construct(1, _u_speed), 1, "float"), 1, "float"), width=1), rt.binary("*", _u_strength, rt.f(0.01), 1, "float"), 1, "float")
         maxDisplacementUV = rt.f(0.0)
         if rt.component_wise("any", rt.component_wise("notEqual", _u_tileOffset, rt.construct(2, rt.f(0.0)), width=2), width=2):
-            maxDisplacementUV = rt.binary("/", rt.f(256.0), rt.swizzle(_u_fullResolution, "y"), 1, "float")
+            maxDisplacementUV = rt.fdiv(rt.f(256.0), rt.swizzle(_u_fullResolution, "y"), 1)
             displacement = rt.component_wise("clamp", displacement, rt.unary("-", maxDisplacementUV), maxDisplacementUV, width=1)
         uv = rt.assign_swizzle(uv, "y", rt.binary("+", rt.swizzle(uv, "y"), displacement, 1, "float"))
         if rt.binary("==", _u_wrap, rt.i(0)):
-            uv[:] = rt.component_wise("abs", rt.construct(2, rt.binary("-", rt.component_wise("mod", rt.binary("+", uv, rt.f(1.0), 2, 'float'), rt.f(2.0), width=2), rt.f(1.0), 2, 'float')), width=2)
+            uv[:] = rt.component_wise("abs", rt.construct(2, rt.binary("-", uv, rt.construct(2, rt.binary("*", rt.f(2.0), rt.component_wise("floor", rt.binary("*", rt.binary("+", uv, rt.f(1.0), 2, 'float'), rt.f(0.5), 2, 'float'), width=2), 2, 'float')), 2, 'float')), width=2)
         else:
             if rt.binary("==", _u_wrap, rt.i(1)):
                 uv[:] = rt.component_wise("mod", uv, rt.f(1.0), width=2)
             else:
                 uv[:] = rt.component_wise("clamp", uv, rt.f(0.0), rt.f(1.0), width=2)
         uv[:] = rotate2D__vec2_float_float(uv, rt.binary("/", rt.unary("-", _u_rotation), rt.f(180.0), 1, "float"), aspectRatio)
-        localCoord = rt.construct(2, rt.binary("/", rt.construct(2, rt.binary("-", rt.binary("*", uv, _u_fullResolution, 2, 'float'), _u_tileOffset, 2, 'float')), rt.construct(2, rt.texture_size(_u_inputTex)), 2, 'float'))
+        localCoord = rt.construct(2, rt.fdiv(rt.construct(2, rt.binary("-", rt.binary("*", uv, _u_fullResolution, 2, 'float'), _u_tileOffset, 2, 'float')), rt.construct(2, rt.texture_size(_u_inputTex)), 2))
         sampleUV = rt.construct(2, (rt.component_wise("fract", localCoord, width=2) if rt.component_wise("any", rt.component_wise("notEqual", _u_tileOffset, rt.construct(2, rt.f(0.0)), width=2), width=2) else rt.component_wise("clamp", localCoord, rt.f(0.0), rt.f(1.0), width=2)))
         dx = rt.construct(2, 0.0)
         dy = rt.construct(2, 0.0)

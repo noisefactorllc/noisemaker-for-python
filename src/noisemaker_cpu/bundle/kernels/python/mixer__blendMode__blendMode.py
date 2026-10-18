@@ -55,9 +55,9 @@ def run_pixel(ctx, out):
         return rt.component_wise("max", rt.binary("-", color1, color2, 4, 'float'), rt.construct(4, rt.f(0.0)), width=4)
     def main__void():
         globalCoord = rt.construct(2, rt.binary("+", rt.swizzle(ctx.frag_coord, "xy"), _u_tileOffset, 2, 'float'))
-        st = rt.construct(2, rt.binary("/", globalCoord, _u_fullResolution, 2, 'float'))
-        color1 = rt.texture(_u_inputTex, rt.construct(2, rt.binary("/", rt.swizzle(ctx.frag_coord, "xy"), rt.construct(2, rt.texture_size(_u_inputTex)), 2, 'float')))
-        color2 = rt.texture(_u_tex, rt.construct(2, rt.binary("/", rt.swizzle(ctx.frag_coord, "xy"), rt.construct(2, rt.texture_size(_u_tex)), 2, 'float')))
+        st = rt.construct(2, rt.fdiv(globalCoord, _u_fullResolution, 2))
+        color1 = rt.texture(_u_inputTex, rt.construct(2, rt.fdiv(rt.swizzle(ctx.frag_coord, "xy"), rt.construct(2, rt.texture_size(_u_inputTex)), 2)))
+        color2 = rt.texture(_u_tex, rt.construct(2, rt.fdiv(rt.swizzle(ctx.frag_coord, "xy"), rt.construct(2, rt.texture_size(_u_tex)), 2)))
         amt = map__float_float_float_float_float(_u_mixAmt, rt.unary("-", rt.f(100.0)), rt.f(100.0), rt.f(0.0), rt.f(1.0))
         opacity = (amt if rt.binary("==", _u_mode, rt.i(8)) else rt.component_wise("min", rt.binary("*", amt, rt.f(2.0), 1, "float"), rt.f(1.0), width=1))
         sourceAlpha = rt.binary("*", rt.swizzle(color2, "a"), opacity, 1, "float")
@@ -66,11 +66,11 @@ def run_pixel(ctx, out):
         sourceColor = rt.construct(4, 0.0)
         blended = rt.construct(3, 0.0)
         if rt.binary("!=", _u_mode, rt.i(8)):
-            baseColor = rt.construct(4, (rt.binary("/", rt.swizzle(color1, "rgb"), rt.swizzle(color1, "a"), 3, 'float') if rt.binary(">", rt.swizzle(color1, "a"), rt.f(0.0)) else rt.construct(3, rt.f(0.0))), rt.f(1.0))
-            sourceColor = rt.construct(4, (rt.binary("/", rt.swizzle(color2, "rgb"), rt.swizzle(color2, "a"), 3, 'float') if rt.binary(">", rt.swizzle(color2, "a"), rt.f(0.0)) else rt.construct(3, rt.f(0.0))), rt.f(1.0))
+            baseColor = rt.construct(4, (rt.fdiv(rt.swizzle(color1, "rgb"), rt.swizzle(color1, "a"), 3) if rt.binary(">", rt.swizzle(color1, "a"), rt.f(0.0)) else rt.construct(3, rt.f(0.0))), rt.f(1.0))
+            sourceColor = rt.construct(4, (rt.fdiv(rt.swizzle(color2, "rgb"), rt.swizzle(color2, "a"), 3) if rt.binary(">", rt.swizzle(color2, "a"), rt.f(0.0)) else rt.construct(3, rt.f(0.0))), rt.f(1.0))
             blended = rt.swizzle(applyBlendMode__vec4_vec4_int(baseColor, sourceColor, _u_mode), "rgb")
             blended[:] = rt.component_wise("mix", blended, rt.swizzle(sourceColor, "rgb"), rt.component_wise("max", rt.binary("-", rt.binary("*", amt, rt.f(2.0), 1, "float"), rt.f(1.0), 1, "float"), rt.f(0.0), width=1), width=3)
-            (source.__setitem__(0, rt.swizzle(rt.binary("+", rt.binary("*", source, rt.binary("-", rt.f(1.0), rt.swizzle(color1, "a"), 1, "float"), 3, 'float'), rt.binary("*", rt.binary("*", blended, sourceAlpha, 3, 'float'), rt.swizzle(color1, "a"), 3, 'float'), 3, 'float'), "x")), source.__setitem__(1, rt.swizzle(rt.binary("+", rt.binary("*", source, rt.binary("-", rt.f(1.0), rt.swizzle(color1, "a"), 1, "float"), 3, 'float'), rt.binary("*", rt.binary("*", blended, sourceAlpha, 3, 'float'), rt.swizzle(color1, "a"), 3, 'float'), 3, 'float'), "y")), source.__setitem__(2, rt.swizzle(rt.binary("+", rt.binary("*", source, rt.binary("-", rt.f(1.0), rt.swizzle(color1, "a"), 1, "float"), 3, 'float'), rt.binary("*", rt.binary("*", blended, sourceAlpha, 3, 'float'), rt.swizzle(color1, "a"), 3, 'float'), 3, 'float'), "z")), source)[-1]
+            ((_vector_write_0_0 := rt.swizzle(rt.binary("+", rt.binary("*", source, rt.binary("-", rt.f(1.0), rt.swizzle(color1, "a"), 1, "float"), 3, 'float'), rt.binary("*", rt.binary("*", blended, sourceAlpha, 3, 'float'), rt.swizzle(color1, "a"), 3, 'float'), 3, 'float'), "x")), (_vector_write_0_1 := rt.swizzle(rt.binary("+", rt.binary("*", source, rt.binary("-", rt.f(1.0), rt.swizzle(color1, "a"), 1, "float"), 3, 'float'), rt.binary("*", rt.binary("*", blended, sourceAlpha, 3, 'float'), rt.swizzle(color1, "a"), 3, 'float'), 3, 'float'), "y")), (_vector_write_0_2 := rt.swizzle(rt.binary("+", rt.binary("*", source, rt.binary("-", rt.f(1.0), rt.swizzle(color1, "a"), 1, "float"), 3, 'float'), rt.binary("*", rt.binary("*", blended, sourceAlpha, 3, 'float'), rt.swizzle(color1, "a"), 3, 'float'), 3, 'float'), "z")), source.__setitem__(0, _vector_write_0_0), source.__setitem__(1, _vector_write_0_1), source.__setitem__(2, _vector_write_0_2), source)[-1]
         g.fragColor[:] = rt.construct(4, rt.binary("+", source, rt.binary("*", rt.swizzle(color1, "rgb"), rt.binary("-", rt.f(1.0), sourceAlpha, 1, "float"), 3, 'float'), 3, 'float'), rt.binary("+", sourceAlpha, rt.binary("*", rt.swizzle(color1, "a"), rt.binary("-", rt.f(1.0), sourceAlpha, 1, "float"), 1, "float"), 1, "float"))
     main__void()
     _c = g.fragColor

@@ -18,7 +18,7 @@ def run_pixel(ctx, out):
     def main__void():
         globalCoord = rt.construct(2, rt.binary("+", rt.swizzle(ctx.frag_coord, "xy"), _u_tileOffset, 2, 'float'))
         dims = rt.texture_size(_u_inputTex)
-        uv = rt.construct(2, rt.binary("/", rt.swizzle(ctx.frag_coord, "xy"), rt.construct_raw(2, rt.construct(2, dims)), 2, 'float'))
+        uv = rt.construct(2, rt.fdiv(rt.swizzle(ctx.frag_coord, "xy"), rt.construct_raw(2, rt.construct(2, dims)), 2))
         texel = rt.texture(_u_inputTex, uv)
         ridged = ridge_transform__vec4_float(texel, _u_level)
         out_color = rt.construct(4, rt.swizzle(ridged, "xyz"), rt.f(1.0))

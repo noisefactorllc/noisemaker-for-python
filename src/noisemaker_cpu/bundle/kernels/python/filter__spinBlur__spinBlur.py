@@ -35,9 +35,9 @@ def run_pixel(ctx, out):
         p = rt.assign_swizzle(p, "x", rt.binary("/", rt.swizzle(p, "x"), aspectRatio, 1, "float"))
         return p
     def main__void():
-        aspectRatio = rt.binary("/", rt.swizzle(_u_fullResolution, "x"), rt.swizzle(_u_fullResolution, "y"), 1, "float")
+        aspectRatio = rt.fdiv(rt.swizzle(_u_fullResolution, "x"), rt.swizzle(_u_fullResolution, "y"), 1)
         globalCoord = rt.construct(2, rt.binary("+", rt.swizzle(ctx.frag_coord, "xy"), _u_tileOffset, 2, 'float'))
-        uv = rt.construct(2, rt.binary("/", globalCoord, _u_fullResolution, 2, 'float'))
+        uv = rt.construct(2, rt.fdiv(globalCoord, _u_fullResolution, 2))
         center = rt.construct(2, _u_centerX, _u_centerY)
         arc = rt.component_wise("radians", _u_amount, width=1)
         angularStep = rt.binary("/", arc, rt.construct(1, rt.binary("-", g.N, rt.i(1), 1, "int")), 1, "float")
@@ -54,7 +54,7 @@ def run_pixel(ctx, out):
                 break
             theta = rt.binary("+", rt.binary("*", rt.binary("-", rt.binary("/", rt.construct(1, i), rt.construct(1, rt.binary("-", g.N, rt.i(1), 1, "int")), 1, "float"), rt.f(0.5), 1, "float"), arc, 1, "float"), jitter, 1, "float")
             distorted = rt.component_wise("clamp", rotateAround__vec2_vec2_float_float(uv, center, theta, aspectRatio), rt.f(0.0), rt.f(1.0), width=2)
-            sampleUV = rt.component_wise("clamp", rt.binary("/", rt.binary("-", rt.binary("*", distorted, _u_fullResolution, 2, 'float'), _u_tileOffset, 2, 'float'), _u_resolution, 2, 'float'), rt.f(0.0), rt.f(1.0), width=2)
+            sampleUV = rt.component_wise("clamp", rt.fdiv(rt.binary("-", rt.binary("*", distorted, _u_fullResolution, 2, 'float'), _u_tileOffset, 2, 'float'), _u_resolution, 2), rt.f(0.0), rt.f(1.0), width=2)
             sum[:] = rt.binary("+", sum, rt.texture(_u_inputTex, sampleUV), 4, "float")
         g.fragColor[:] = rt.binary("/", sum, rt.construct(1, g.N), 4, 'float')
     main__void()

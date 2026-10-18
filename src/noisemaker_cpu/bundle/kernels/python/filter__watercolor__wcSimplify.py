@@ -19,8 +19,8 @@ def run_pixel(ctx, out):
         return (None, a, b)
     def main__void():
         stride = rt.component_wise("mix", rt.f(3.0), rt.f(1.0), rt.binary("/", rt.component_wise("clamp", _u_detail, rt.f(0.0), rt.f(100.0), width=1), rt.f(100.0), 1, "float"), width=1)
-        texel = rt.construct(2, rt.binary("/", stride, _u_resolution, 2, 'float'))
-        uv = rt.construct(2, rt.binary("/", rt.swizzle(ctx.frag_coord, "xy"), _u_resolution, 2, 'float'))
+        texel = rt.construct(2, rt.fdiv(stride, _u_resolution, 2))
+        uv = rt.construct(2, rt.fdiv(rt.swizzle(ctx.frag_coord, "xy"), _u_resolution, 2))
         s0 = rt.texture(_u_inputTex, rt.binary("+", uv, rt.construct_raw(2, rt.unary("-", rt.swizzle(texel, "x")), rt.unary("-", rt.swizzle(texel, "y"))), 2, 'float'))
         s1 = rt.texture(_u_inputTex, rt.binary("+", uv, rt.construct_raw(2, rt.f(0.0), rt.unary("-", rt.swizzle(texel, "y"))), 2, 'float'))
         s2 = rt.texture(_u_inputTex, rt.binary("+", uv, rt.construct_raw(2, rt.swizzle(texel, "x"), rt.unary("-", rt.swizzle(texel, "y"))), 2, 'float'))

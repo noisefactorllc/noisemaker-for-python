@@ -51,11 +51,11 @@ def run_pixel(ctx, out):
         range = rt.binary("-", rt.swizzle(minMax, "y"), rt.swizzle(minMax, "x"), 1, "float")
         normalized = referenceValue
         if rt.binary(">", range, rt.f(0.0001)):
-            normalized = clamp01__float(rt.binary("/", rt.binary("-", referenceValue, rt.swizzle(minMax, "x"), 1, "float"), range, 1, "float"))
+            normalized = clamp01__float(rt.fdiv(rt.binary("-", referenceValue, rt.swizzle(minMax, "x"), 1, "float"), range, 1))
         modRange = rt.construct(1, rt.component_wise("min", rt.swizzle(texSize, "x"), rt.swizzle(texSize, "y"), width=1))
         offsetValue = rt.binary("+", rt.binary("*", rt.binary("*", normalized, _u_uDisplacement, 1, "float"), modRange, 1, "float"), normalized, 1, "float")
-        sampleX = rt.construct(1, rt.binary("*", rt.component_wise("fract", rt.binary("/", offsetValue, rt.construct(1, rt.swizzle(texSize, "x")), 1, "float"), width=1), rt.construct(1, rt.swizzle(texSize, "x")), 1, "float"), base="int")
-        sampleY = rt.construct(1, rt.binary("*", rt.component_wise("fract", rt.binary("/", offsetValue, rt.construct(1, rt.swizzle(texSize, "y")), 1, "float"), width=1), rt.construct(1, rt.swizzle(texSize, "y")), 1, "float"), base="int")
+        sampleX = rt.construct(1, rt.binary("*", rt.component_wise("fract", rt.fdiv(offsetValue, rt.construct(1, rt.swizzle(texSize, "x")), 1), width=1), rt.construct(1, rt.swizzle(texSize, "x")), 1, "float"), base="int")
+        sampleY = rt.construct(1, rt.binary("*", rt.component_wise("fract", rt.fdiv(offsetValue, rt.construct(1, rt.swizzle(texSize, "y")), 1), width=1), rt.construct(1, rt.swizzle(texSize, "y")), 1, "float"), base="int")
         sampleX = rt.component_wise("min", sampleX, rt.binary("-", rt.swizzle(texSize, "x"), rt.i(1), 1, "int"), width=1)
         sampleY = rt.component_wise("min", sampleY, rt.binary("-", rt.swizzle(texSize, "y"), rt.i(1), 1, "int"), width=1)
         sampled = rt.texel_fetch(_u_inputTex, rt.construct(2, sampleX, sampleY, base="int"), rt.i(0))

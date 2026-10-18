@@ -118,7 +118,7 @@ def run_pixel(ctx, out):
             finalAngle = rt.component_wise("round", finalAngle, width=1)
         scale = rt.component_wise("max", rt.binary("/", rt.component_wise("max", rt.swizzle(_u_resolution, "x"), rt.swizzle(_u_resolution, "y"), width=1), rt.f(1024.0), 1, "float"), rt.f(1.0), width=1)
         devFactor = rt.binary("+", rt.f(1.0), rt.binary("*", rt.binary("*", strideRand, rt.f(2.0), 1, "float"), _u_strideDeviation, 1, "float"), 1, "float")
-        actualStride = rt.component_wise("max", rt.f(0.0001), rt.binary("/", rt.binary("*", rt.binary("*", rt.binary("*", _u_stride, rt.f(0.1), 1, "float"), scale, 1, "float"), devFactor, 1, "float"), rt.component_wise("max", rt.swizzle(_u_resolution, "x"), rt.swizzle(_u_resolution, "y"), width=1), 1, "float"), width=1)
+        actualStride = rt.component_wise("max", rt.f(0.0001), rt.fdiv(rt.binary("*", rt.binary("*", rt.binary("*", _u_stride, rt.f(0.1), 1, "float"), scale, 1, "float"), devFactor, 1, "float"), rt.component_wise("max", rt.swizzle(_u_resolution, "x"), rt.swizzle(_u_resolution, "y"), width=1), 1), width=1)
         newX = rt.binary("+", px, rt.binary("*", rt.component_wise("sin", finalAngle, width=1), actualStride, 1, "float"), 1, "float")
         newY = rt.binary("+", py, rt.binary("*", rt.component_wise("cos", finalAngle, width=1), actualStride, 1, "float"), 1, "float")
         newX = rt.component_wise("fract", newX, width=1)

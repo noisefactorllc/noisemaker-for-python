@@ -18,7 +18,7 @@ def run_pixel(ctx, out):
         brightestXNorm = rt.swizzle(rt.texel_fetch(_u_brightestTex, rt.construct(2, rt.i(0), y, base="int"), rt.i(0)), "r")
         brightestX = rt.construct(1, rt.component_wise("round", rt.binary("*", brightestXNorm, rt.construct(1, rt.binary("-", width, rt.i(1), 1, "int")), 1, "float"), width=1), base="int")
         sortedIndex = rt.binary("%", rt.binary("+", rt.binary("-", x, brightestX, 1, "int"), width, 1, "int"), width, 1, "int")
-        targetRank = rt.binary("/", rt.construct(1, sortedIndex), rt.construct(1, rt.binary("-", width, rt.i(1), 1, "int")), 1, "float")
+        targetRank = rt.fdiv(rt.construct(1, sortedIndex), rt.construct(1, rt.binary("-", width, rt.i(1), 1, "int")), 1)
         NUM_SAMPLES = rt.i(64)
         bestDiff = rt.f(2.0)
         bestX = x

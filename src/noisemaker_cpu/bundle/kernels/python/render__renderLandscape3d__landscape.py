@@ -155,9 +155,9 @@ def run_pixel(ctx, out):
     def renderPerspective__vec2(uv):
         uv = rt.copy(uv, "float")
         size = rt.construct(1, _u_volumeSize)
-        focalLength = rt.binary("/", rt.f(1.0), rt.component_wise("tan", rt.binary("*", rt.component_wise("clamp", _u_fieldOfView, rt.f(10.0), rt.f(150.0), width=1), rt.f(0.00872664626), 1, "float"), width=1), 1, "float")
+        focalLength = rt.fdiv(rt.f(1.0), rt.component_wise("tan", rt.binary("*", rt.component_wise("clamp", _u_fieldOfView, rt.f(10.0), rt.f(150.0), width=1), rt.f(0.00872664626), 1, "float"), width=1), 1)
         origin = rt.construct(3, rt.binary("*", rt.construct(3, rt.binary("+", rt.construct(3, rt.binary("/", inverseRotation__vec3(rt.construct(3, rt.unary("-", _u_posX), rt.unary("-", _u_posY), rt.binary("-", rt.f(80.0), _u_posZ, 1, "float"))), rt.f(80.0), 3, 'float')), rt.f(0.5), 3, 'float')), size, 3, 'float'))
-        framedUv = rt.construct(2, rt.binary("/", rt.binary("+", uv, rt.construct_raw(2, _u_panX, _u_panY), 2, 'float'), rt.component_wise("max", _u_zoom, rt.f(0.001), width=1), 2, 'float'))
+        framedUv = rt.construct(2, rt.fdiv(rt.binary("+", uv, rt.construct_raw(2, _u_panX, _u_panY), 2, 'float'), rt.component_wise("max", _u_zoom, rt.f(0.001), width=1), 2))
         cameraRay = rt.construct(3, rt.binary("/", rt.binary("*", framedUv, rt.f(2.0), 2, 'float'), rt.binary("*", focalLength, rt.component_wise("max", _u_viewScale, rt.f(0.001), width=1), 1, "float"), 2, 'float'), rt.unary("-", rt.f(1.0)))
         direction = rt.construct(3, rt.binary("*", inverseRotation__vec3(cameraRay), rt.binary("/", size, rt.f(80.0), 1, "float"), 3, 'float'))
         nearT = rt.construct(3, rt.unary("-", rt.f(1e+30)))
@@ -261,7 +261,7 @@ def run_pixel(ctx, out):
         g.fragColor[:] = rt.construct(4, rt.binary("*", _u_bgColor, _u_bgAlpha, 3, 'float'), _u_bgAlpha)
         g.geoOut[:] = rt.construct(4, rt.f(0.5), rt.f(0.5), rt.f(1.0), rt.f(1.0))
         fullRes = rt.construct(2, (_u_fullResolution if rt.binary(">", rt.swizzle(_u_fullResolution, "x"), rt.f(0.0)) else _u_resolution))
-        uv = rt.construct(2, rt.binary("/", rt.binary("-", rt.binary("+", rt.swizzle(ctx.frag_coord, "xy"), _u_tileOffset, 2, 'float'), rt.binary("*", fullRes, rt.f(0.5), 2, 'float'), 2, 'float'), rt.swizzle(fullRes, "y"), 2, 'float'))
+        uv = rt.construct(2, rt.fdiv(rt.binary("-", rt.binary("+", rt.swizzle(ctx.frag_coord, "xy"), _u_tileOffset, 2, 'float'), rt.binary("*", fullRes, rt.f(0.5), 2, 'float'), 2, 'float'), rt.swizzle(fullRes, "y"), 2))
         size = rt.f(0.0)
         aspect = rt.f(0.0)
         span = rt.f(0.0)
@@ -279,8 +279,8 @@ def run_pixel(ctx, out):
             renderPerspective__vec2(uv)
         else:
             size = rt.construct(1, _u_volumeSize)
-            aspect = rt.binary("/", rt.swizzle(fullRes, "x"), rt.swizzle(fullRes, "y"), 1, "float")
-            span = rt.binary("/", rt.binary("*", rt.binary("*", rt.component_wise("max", rt.f(1.6329931619), rt.binary("/", rt.f(1.4142135624), aspect, 1, "float"), width=1), size, 1, "float"), rt.f(1.08), 1, "float"), rt.component_wise("max", _u_zoom, rt.f(0.001), width=1), 1, "float")
+            aspect = rt.fdiv(rt.swizzle(fullRes, "x"), rt.swizzle(fullRes, "y"), 1)
+            span = rt.fdiv(rt.binary("*", rt.binary("*", rt.component_wise("max", rt.f(1.6329931619), rt.fdiv(rt.f(1.4142135624), aspect, 1), width=1), size, 1, "float"), rt.f(1.08), 1, "float"), rt.component_wise("max", _u_zoom, rt.f(0.001), width=1), 1)
             right = rt.construct(3, rt.f(0.7071067812), rt.f(0.0), rt.unary("-", rt.f(0.7071067812)))
             up = rt.construct(3, rt.unary("-", rt.f(0.4082482905)), rt.f(0.8164965809), rt.unary("-", rt.f(0.4082482905)))
             origin = rt.construct(3, rt.binary("+", rt.binary("+", rt.construct_raw(3, rt.binary("*", size, rt.f(2.5), 1, "float")), rt.binary("*", rt.binary("*", right, rt.binary("+", rt.swizzle(uv, "x"), _u_panX, 1, "float"), 3, 'float'), span, 3, 'float'), 3, 'float'), rt.binary("*", rt.binary("*", up, rt.binary("+", rt.swizzle(uv, "y"), _u_panY, 1, "float"), 3, 'float'), span, 3, 'float'), 3, 'float'))
@@ -308,7 +308,7 @@ def run_pixel(ctx, out):
                 if rt.binary(">", hit[0], distance):
                     normal[:] = isosurfaceNormal__vec3_vec3(p, normal)
                 g.fragColor[:] = rt.construct(4, lighting__vec3_vec3_vec3(rt.swizzle(sampleAtlasCoords__sampler2D_struct1_bool(_u_volumeCache, hit[2], True), "rgb"), normal, rt.construct(3, rt.f(0.5773502692))), rt.f(1.0))
-                g.geoOut[:] = rt.construct(4, rt.binary("+", rt.binary("*", normal, rt.f(0.5), 3, 'float'), rt.f(0.5), 3, 'float'), rt.component_wise("clamp", rt.binary("/", hit[0], rt.binary("*", size, rt.f(4.0), 1, "float"), 1, "float"), rt.f(0.0), rt.f(1.0), width=1))
+                g.geoOut[:] = rt.construct(4, rt.binary("+", rt.binary("*", normal, rt.f(0.5), 3, 'float'), rt.f(0.5), 3, 'float'), rt.component_wise("clamp", rt.fdiv(hit[0], rt.binary("*", size, rt.f(4.0), 1, "float"), 1), rt.f(0.0), rt.f(1.0), width=1))
                 return
             step = rt.i(0)
             _for5_first = True
@@ -326,7 +326,7 @@ def run_pixel(ctx, out):
                 if (bool(rt.binary(">", density, rt.f(0.0))) and bool(rt.binary(">=", density, _u_threshold))):
                     color = rt.swizzle(rt.texel_fetch(_u_volumeCache, atlas, rt.i(0)), "rgb")
                     g.fragColor[:] = rt.construct(4, lighting__vec3_vec3_vec3(color, normal, rt.construct(3, rt.f(0.5773502692))), rt.f(1.0))
-                    g.geoOut[:] = rt.construct(4, rt.binary("+", rt.binary("*", normal, rt.f(0.5), 3, 'float'), rt.f(0.5), 3, 'float'), rt.component_wise("clamp", rt.binary("/", distance, rt.binary("*", size, rt.f(4.0), 1, "float"), 1, "float"), rt.f(0.0), rt.f(1.0), width=1))
+                    g.geoOut[:] = rt.construct(4, rt.binary("+", rt.binary("*", normal, rt.f(0.5), 3, 'float'), rt.f(0.5), 3, 'float'), rt.component_wise("clamp", rt.fdiv(distance, rt.binary("*", size, rt.f(4.0), 1, "float"), 1), rt.f(0.0), rt.f(1.0), width=1))
                     return
                 distance = rt.component_wise("min", rt.component_wise("min", rt.swizzle(nextT, "x"), rt.swizzle(nextT, "y"), width=1), rt.swizzle(nextT, "z"), width=1)
                 crossed = rt.component_wise("lessThanEqual", nextT, rt.construct(3, distance), width=3)

@@ -26,19 +26,19 @@ def run_pixel(ctx, out):
         v = rt.js_scalar_binary("^", v, rt.js_scalar_binary(">>", v, rt.i(16)))
         return v
     def sample_glyph__int_int_int_int(digit, localX, localY, iScale):
-        gx = rt.js_scalar_binary("/", localX, iScale)
-        gy = rt.js_scalar_binary("/", localY, iScale)
+        gx = rt.trunc_scalar_div(rt.js_scalar_binary("/", localX, iScale))
+        gy = rt.trunc_scalar_div(rt.js_scalar_binary("/", localY, iScale))
         if (bool((bool((bool(rt.binary("<", gx, rt.i(0))) or bool(rt.binary(">=", gx, g.GLYPH_W)))) or bool(rt.binary("<", gy, rt.i(0))))) or bool(rt.binary(">=", gy, g.GLYPH_H))):
             return rt.f(0.0)
         row = rt.array_read(g.GLYPHS, rt.js_scalar_binary("+", rt.js_scalar_binary("*", digit, rt.i(8)), gy))
         return rt.construct(1, rt.js_scalar_binary("&", rt.js_scalar_binary(">>", row, rt.js_scalar_binary("-", rt.i(6), gx)), rt.i(1)))
     def ticker_row_mask__int_int_int_float_int_int(pixelX, pixelY, rowSeed, t, CELL_W, iScale):
-        scrollSpeed = rt.binary("+", rt.f(0.5), rt.binary("*", rt.binary("/", rt.construct(1, rt.js_scalar_binary("&", hash_mix__uint(rt.js_scalar_binary("^", rt.construct(1, rowSeed, base="uint"), rt.i(17))), rt.i(65535))), rt.f(65535.0), 1, "float"), rt.f(1.5), 1, "float"), 1, "float")
+        scrollSpeed = rt.binary("+", rt.f(0.5), rt.binary("*", rt.binary("/", rt.construct(1, rt.js_scalar_binary("&", rt.hash_uint(rt.js_scalar_binary("^", rt.construct(1, rowSeed, base="uint"), rt.i(17))), rt.i(65535))), rt.f(65535.0), 1, "float"), rt.f(1.5), 1, "float"), 1, "float")
         offset = rt.construct(1, rt.component_wise("floor", rt.binary("*", rt.binary("*", t, scrollSpeed, 1, "float"), rt.f(120.0), 1, "float"), width=1), base="int")
         sx = rt.js_scalar_binary("+", pixelX, offset)
-        cellX = (rt.js_scalar_binary("/", sx, CELL_W) if rt.binary(">=", sx, rt.i(0)) else rt.js_scalar_binary("/", rt.js_scalar_binary("+", rt.js_scalar_binary("-", sx, CELL_W), rt.i(1)), CELL_W))
+        cellX = (rt.trunc64(rt.js_scalar_binary("/", sx, CELL_W)) if rt.binary(">=", sx, rt.i(0)) else rt.trunc64(rt.js_scalar_binary("/", rt.js_scalar_binary("+", rt.js_scalar_binary("-", sx, CELL_W), rt.i(1)), CELL_W)))
         localX = rt.js_scalar_binary("-", sx, rt.js_scalar_binary("*", cellX, CELL_W))
-        h = hash_mix__uint(rt.js_scalar_binary("^", rt.construct(1, cellX, base="uint"), rt.binary("*", rt.construct(1, rowSeed, base="uint"), rt.i(997), 1, "uint")))
+        h = rt.hash_uint(rt.js_scalar_binary("^", rt.construct(1, cellX, base="uint"), rt.binary("*", rt.construct(1, rowSeed, base="uint"), rt.i(997), 1, "uint")))
         digit = rt.construct(1, rt.js_scalar_binary("%", h, rt.i(10)), base="int")
         return sample_glyph__int_int_int_int(digit, localX, pixelY, iScale)
     def main__void():
@@ -49,7 +49,7 @@ def run_pixel(ctx, out):
         dims = rt.construct(2, rt.texture_size(_u_inputTex))
         src = rt.texture(_u_inputTex, ctx.uv)
         t = rt.binary("*", _u_time, _u_speed, 1, "float")
-        baseSeed = hash_mix__uint(rt.binary("*", rt.construct(1, _u_seed, base="uint"), rt.i(7919), 1, "uint"))
+        baseSeed = rt.hash_uint(rt.binary("*", rt.construct(1, _u_seed, base="uint"), rt.i(7919), 1, "uint"))
         totalH = rt.js_scalar_binary("*", _u_rows, rt.js_scalar_binary("+", CELL_H, ROW_GAP))
         px = rt.construct(1, rt.component_wise("floor", rt.binary("*", rt.swizzle(ctx.uv, "x"), rt.swizzle(dims, "x"), 1, "float"), width=1), base="int")
         pyFromBottom = rt.construct(1, rt.component_wise("floor", rt.binary("*", rt.binary("-", rt.f(1.0), rt.swizzle(ctx.uv, "y"), 1, "float"), rt.swizzle(dims, "y"), 1, "float"), width=1), base="int")
@@ -57,12 +57,12 @@ def run_pixel(ctx, out):
             g.fragColor[:] = src
             return
         rowStride = rt.js_scalar_binary("+", CELL_H, ROW_GAP)
-        rowIdx = rt.js_scalar_binary("/", pyFromBottom, rowStride)
+        rowIdx = rt.trunc_scalar_div(rt.js_scalar_binary("/", pyFromBottom, rowStride))
         localY = rt.js_scalar_binary("-", pyFromBottom, rt.js_scalar_binary("*", rowIdx, rowStride))
         if (bool(rt.binary(">=", rowIdx, _u_rows)) or bool(rt.binary(">=", localY, CELL_H))):
             g.fragColor[:] = src
             return
-        rowSeed = rt.construct(1, hash_mix__uint(rt.js_scalar_binary("+", rt.construct(1, rowIdx, base="uint"), baseSeed)), base="int")
+        rowSeed = rt.construct(1, rt.hash_uint(rt.js_scalar_binary("+", rt.construct(1, rowIdx, base="uint"), baseSeed)), base="int")
         mask = ticker_row_mask__int_int_int_float_int_int(px, localY, rowSeed, t, CELL_W, iScale)
         shadow = rt.f(0.0)
         shadowOff = rt.component_wise("max", rt.construct(1, rt.binary("*", rt.f(2.0), _u_renderScale, 1, "float"), base="int"), rt.i(1), width=1)
