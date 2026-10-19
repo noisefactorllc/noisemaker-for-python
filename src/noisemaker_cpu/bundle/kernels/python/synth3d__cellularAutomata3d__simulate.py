@@ -19,10 +19,10 @@ def run_pixel(ctx, out):
     g.fragColor = rt.construct(4, 0.0)
     def hash3__vec3(p):
         p = rt.copy(p, "float")
-        (p.__setitem__(0, rt.binary("+", rt.swizzle(p, "x"), rt.binary("*", rt.construct(1, _u_seed), rt.f(0.1), 1, "float"), 1, "float")), p.__setitem__(1, rt.binary("+", rt.swizzle(p, "y"), rt.binary("*", rt.construct(1, _u_seed), rt.f(0.1), 1, "float"), 1, "float")), p.__setitem__(2, rt.binary("+", rt.swizzle(p, "z"), rt.binary("*", rt.construct(1, _u_seed), rt.f(0.1), 1, "float"), 1, "float")), p)[-1]
+        (p.__setitem__(0, rt.binary("+", rt.swizzle(p, "x"), rt.construct(1, rt.binary("*", rt.construct(1, _u_seed), rt.f(0.1), 1, "float")), 1, "float")), p.__setitem__(1, rt.binary("+", rt.swizzle(p, "y"), rt.construct(1, rt.binary("*", rt.construct(1, _u_seed), rt.f(0.1), 1, "float")), 1, "float")), p.__setitem__(2, rt.binary("+", rt.swizzle(p, "z"), rt.construct(1, rt.binary("*", rt.construct(1, _u_seed), rt.f(0.1), 1, "float")), 1, "float")), p)[-1]
         p[:] = rt.component_wise("fract", rt.binary("*", p, rt.construct_raw(3, rt.f(0.1031), rt.f(0.103), rt.f(0.0973)), 3, 'float'), width=3)
-        p[:] = rt.binary("+", p, rt.dot(p, rt.binary("+", rt.swizzle(p, "yxz"), rt.f(33.33), 3, 'float')), 3, "float")
-        return rt.component_wise("fract", rt.binary("*", rt.binary("+", rt.swizzle(p, "x"), rt.swizzle(p, "y"), 1, "float"), rt.swizzle(p, "z"), 1, "float"), width=1)
+        cpuHashDot = rt.dot(p, rt.binary("+", rt.swizzle(p, "yxz"), rt.f(33.33), 3, 'float'))
+        return rt.component_wise("fract", rt.construct(1, rt.binary("*", rt.construct(1, rt.binary("+", rt.construct(1, rt.binary("+", rt.swizzle(p, "x"), rt.swizzle(p, "y"), 1, "float")), rt.construct(1, rt.binary("+", cpuHashDot, cpuHashDot, 1, "float")), 1, "float")), rt.construct(1, rt.binary("+", rt.swizzle(p, "z"), cpuHashDot, 1, "float")), 1, "float")), width=1)
     def atlasTexel__ivec3_int(p, volSize):
         p = rt.copy(p, "int")
         wrapped = rt.construct(3, rt.binary("%", rt.binary("+", rt.swizzle(p, "x"), volSize, 1, "int"), volSize, 1, "int"), rt.binary("%", rt.binary("+", rt.swizzle(p, "y"), volSize, 1, "int"), volSize, 1, "int"), rt.binary("%", rt.binary("+", rt.swizzle(p, "z"), volSize, 1, "int"), volSize, 1, "int"), base="int")

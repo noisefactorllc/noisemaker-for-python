@@ -65,6 +65,53 @@ IMAGE_CASES.append(
     }
 )
 
+# The seeded 3D lattice must keep the CPU authority's float32 addition order.
+IMAGE_CASES.append(
+    {
+        "id": "perlin-3d-seeded-lattice",
+        "program": "search synth\n\nperlin(seed: 13, dimensions: 3).write(o0)\nrender(o0)\n",
+        "width": 41,
+        "height": 23,
+        "seed": 13,
+        "time": 0.25,
+    }
+)
+
+for name, program in [
+    (
+        "subchain",
+        'search synth, filter; solid(color: #36a).subchain("finish") { .invert() .posterize(levels: 3) }.write(o0)',
+    ),
+    (
+        "inline-chain",
+        "search synth, mixer, filter; solid(color: #36a).cellSplit(tex: solid(color: #b63).invert()).write(o0)",
+    ),
+    ("effect-alias", "search synth; let base = solid; let copy = base; copy(color: #36a).write(o0)"),
+    ("partial-forward", "search synth; let base = solid(color: tint); let tint = #36a; base().write(o0)"),
+    ("namespace-from", "search synth; from(synth, solid(color: #36a)).write(o0)"),
+    ("math-pi", "search synth; pattern(rotation: Math.PI / 4).write(o0)"),
+    (
+        "volume-io-zero",
+        "search synth3d, render; reactionDiffusion3d(volumeSize: 4, iterationCo"
+        "unt: 0).write3d(vol0, geo0); read3d(tex3d: vol0, geo: geo0).render3d()"
+        ".write(o0)",
+    ),
+    (
+        "volume-io",
+        "search synth3d, render; noise3d(volumeSize: 2).write3d(vol0, geo0); read3d(vol0, geo0).render3d().write(o0)",
+    ),
+    ("float-choice", "search synth, filter; solid(color: #36a).palette(rotation: fwd).write(o0)"),
+    (
+        "reaction-seeding",
+        "search synth3d, render; reactionDiffusion3d(volumeSize: 4, iterationCount: 1, seed: 13).render3d().write(o0)",
+    ),
+    (
+        "cellular-seeding",
+        "search synth3d, render; cellularAutomata3d(volumeSize: 4, iterationCount: 1, seed: 13).render3d().write(o0)",
+    ),
+]:
+    IMAGE_CASES.append({"id": name, "program": program, "width": 3, "height": 2, "seed": 13, "time": 0.25})
+
 # Import the public CPU renderer directly. Unlike the general CLI batch helper,
 # this driver does not create a temporary module in the source checkout.
 NODE_RENDER_DRIVER = r"""

@@ -120,6 +120,55 @@ def _adapt_source(effect_id: str, program: str, source: str) -> str:
         )
         if corners != 16:
             raise ValueError(f"noise3d expected 16 corner hashes, found {corners}")
+    if effect_id == "synth/perlin" and program == "perlin":
+        replacements = [
+            (
+                "float hash3(vec3 p) {\n    // Add seed to input to vary the noise pattern\n"
+                "    p = p + float(seed) * 0.1;",
+                "float hash3(vec3 p, vec3 k) {\n"
+                "    float cpuSeedOffset = float(float(seed) * 0.1);\n"
+                "    vec2 cpuLatticeOffset = k.xy + cpuSeedOffset;\n"
+                "    p = vec3(p.x + cpuLatticeOffset.x, p.y + cpuLatticeOffset.y,"
+                " float(p.z + cpuSeedOffset) + k.z);",
+            ),
+            (
+                "vec3 grad3(vec3 p) {\n    // Generate 3 independent random values\n"
+                "    float h1 = hash3(p);\n    float h2 = hash3(p + 127.1);\n"
+                "    float h3 = hash3(p + 269.5);",
+                "vec3 grad3(vec3 p, vec3 k) {\n    float h1 = hash3(p, k);\n"
+                "    float h2 = hash3(p, k + 127.1);\n    float h3 = hash3(p, k + 269.5);",
+            ),
+        ]
+        for old, new in replacements:
+            if source.count(old) != 1:
+                raise ValueError("perlin seeded lattice source changed")
+            source = source.replace(old, new)
+        source, corners = re.subn(
+            r"grad3\(vec3\(i\.xy, (iz[01])\) \+ (vec3\([01],[01],0\))\)",
+            r"grad3(vec3(i.xy, \1), \2)",
+            source,
+        )
+        if corners != 8:
+            raise ValueError(f"perlin expected 8 corner hashes, found {corners}")
+    if effect_id in {"synth3d/reactionDiffusion3d", "synth3d/cellularAutomata3d"} and program == "simulate":
+        old = (
+            "float hash3(vec3 p) {\n"
+            "    p = p + float(seed) * 0.1;\n"
+            "    p = fract(p * vec3(0.1031, 0.1030, 0.0973));\n"
+            "    p += dot(p, p.yxz + 33.33);\n"
+            "    return fract((p.x + p.y) * p.z);\n}"
+        )
+        if source.count(old) != 1:
+            raise ValueError(f"{effect_id} seeding hash source changed")
+        source = source.replace(
+            old,
+            "float hash3(vec3 p) {\n"
+            "    p = p + float(float(seed) * 0.1);\n"
+            "    p = fract(p * vec3(0.1031, 0.1030, 0.0973));\n"
+            "    float cpuHashDot = dot(p, p.yxz + 33.33);\n"
+            "    return fract(float(float(float(p.x + p.y) + float(cpuHashDot + cpu"
+            "HashDot)) * float(p.z + cpuHashDot)));\n}",
+        )
     if effect_id == "synth3d/cell3d" and program == "precompute":
         old = "vec3 hash3(vec3 p) {\n    p = p + float(seed) * 0.1;"
         if source.count(old) != 1 or source.count("vec3 randomOffset = hash3(cellPos);") != 1:

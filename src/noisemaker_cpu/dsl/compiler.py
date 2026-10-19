@@ -105,6 +105,22 @@ def _compile_oscillator(call, bindings, depth):
     }
 
 
+class _CompileScope(dict):
+    def __init__(self, effects, search):
+        super().__init__()
+        self.effects = effects
+        self.search = search
+        self.pending = None
+        self.inline_count = 0
+
+    def compile_inline_chain(self, chain):
+        compiled = _compile_chain(chain, self, self.search, self.effects, inline=True)
+        surface = f"inline:{self.inline_count}"
+        self.inline_count += 1
+        self.pending.append({"surface": surface, "chain": compiled})
+        return {"kind": "surface", "name": surface, "loc": chain["loc"]}
+
+
 def _evaluate_value(value, bindings, osc_depth=0):
     if isinstance(value, list):
         return [_evaluate_value(item, bindings, osc_depth) for item in value]
@@ -126,7 +142,7 @@ def _evaluate_value(value, bindings, osc_depth=0):
             binding = bindings[name]
             if binding["kind"] == "partial":
                 raise DslError(f'Effect partial "{name}" cannot be used as a value', value.get("loc"))
-            return binding["value"]
+            return binding["name"] if binding["kind"] == "alias" else binding["value"]
         return name
     if kind == "vector":
         components = [_evaluate_value(item, bindings) for item in value["values"]]
@@ -151,6 +167,8 @@ def _evaluate_value(value, bindings, osc_depth=0):
         if operator == "*":
             return left * right
         return left / right
+    if kind == "Chain" and bindings.pending is not None:
+        return bindings.compile_inline_chain(value)
     raise DslError(f"Unsupported DSL value {kind}", value.get("loc"))
 
 
@@ -158,7 +176,7 @@ def _resolve_args(args, bindings):
     return [{**arg, "value": _evaluate_value(arg["value"], bindings)} for arg in args]
 
 
-def _merge_partial(stored, call):
+def _merge_args(stored, call):
     if not stored["argMode"]:
         return {**call, "name": stored["name"]}
     if not call["argMode"]:
@@ -171,6 +189,39 @@ def _merge_partial(stored, call):
     for arg in call["args"]:
         merged[arg["name"]] = arg
     return {**call, "name": stored["name"], "args": list(merged.values()), "argMode": "named"}
+
+
+def _merge_partial(stored, call):
+    merged = _merge_args(stored, call)
+    namespace = call.get("namespace", stored.get("namespace"))
+    if namespace:
+        merged["namespace"] = namespace
+    else:
+        merged.pop("namespace", None)
+    return merged
+
+
+def _volume_references(call):
+    if call["argMode"] != "positional" or len(call["args"]) != 2:
+        return None
+    names = []
+    for arg in call["args"]:
+        value = arg["value"]
+        if not isinstance(value, dict) or value.get("kind") not in {"surface", "identifier"}:
+            return None
+        if value["kind"] == "identifier" and "." in value["name"]:
+            return None
+        names.append(value["name"])
+    return names
+
+
+def _read3d_references(call):
+    if call["argMode"] == "named":
+        named = {arg["name"]: arg for arg in call["args"]}
+        if "tex3d" not in named or "geo" not in named:
+            return None
+        return _volume_references({"argMode": "positional", "args": [named["tex3d"], named["geo"]]})
+    return _volume_references(call)
 
 
 def _resolve_effect(func, search, effects):
@@ -239,20 +290,34 @@ def _normalize_effect(effect_id, spec, args):
     return params, surfaces
 
 
-def _compile_chain(chain, bindings, search, effects):
+def _compile_chain(chain, bindings, search, effects, inline=False):
     steps = []
     has_image = False
     has_volume = False
     starts_with_generator = False
     open_loop = None
-    for index, raw_call in enumerate(chain["calls"]):
+    calls = [
+        call
+        for element in chain["calls"]
+        for call in (element["body"] if element.get("kind") == "Subchain" else [element])
+    ]
+    for index, raw_call in enumerate(calls):
         call = raw_call
         binding = bindings.get(call["name"])
         if binding is not None:
-            if binding["kind"] != "partial":
+            if binding["kind"] == "alias":
+                call = {**call, "name": binding["name"]}
+            elif binding["kind"] == "partial":
+                call = _merge_partial(binding["call"], call)
+            else:
                 raise DslError(f'Binding "{call["name"]}" is not callable', call["loc"])
-            call = _merge_partial(binding["call"], call)
-        args = _resolve_args(call["args"], bindings)
+        outer_pending = bindings.pending
+        bindings.pending = []
+        try:
+            args = _resolve_args(call["args"], bindings)
+        finally:
+            inline_chains = bindings.pending
+            bindings.pending = outer_pending
         if call["name"] == "read":
             if index != 0 or len(args) != 1 or not _is_surface(args[0]["value"]):
                 raise DslError("read(surface) must begin a chain", call["loc"])
@@ -266,9 +331,25 @@ def _compile_chain(chain, bindings, search, effects):
                 raise DslError("write(surface) requires a current image", call["loc"])
             steps.append({"kind": "write", "surface": args[0]["value"]["name"], "loc": call["loc"]})
             continue
-        effect_id = _resolve_effect(call["name"], search, effects)
+        if call["name"] == "write3d":
+            if index == 0:
+                raise DslError("Expected effect or IO function name", call["loc"])
+            if open_loop is not None:
+                raise DslError("loopBegin must be closed by loopEnd before write", call["loc"])
+            references = _volume_references(call)
+            if not references:
+                raise DslError("Expected surface reference", call["loc"])
+            steps.append({"kind": "write3d", "volume": references[0], "geometry": references[1], "loc": call["loc"]})
+            continue
+        references = _read3d_references(call) if call["name"] == "read3d" and index == 0 else None
+        if references:
+            steps.append({"kind": "read3d", "volume": references[0], "geometry": references[1], "loc": call["loc"]})
+            has_volume = True
+            continue
+        namespaces = [call["namespace"]] if call.get("namespace") else search
+        effect_id = _resolve_effect(call["name"], namespaces, effects)
         if effect_id is None:
-            raise DslError(f'Unknown effect "{call["name"]}" in search namespaces {", ".join(search)}', call["loc"])
+            raise DslError(f'Unknown effect "{call["name"]}" in search namespaces {", ".join(namespaces)}', call["loc"])
         spec = effects[effect_id]
         domain = spec.get("domain", "image")
         if domain == "volume-generator":
@@ -310,12 +391,13 @@ def _compile_chain(chain, bindings, search, effects):
                 )
             has_image = True
         params, surfaces = _normalize_effect(effect_id, spec, args)
-        steps.append(
-            {"kind": "effect", "effect_id": effect_id, "params": params, "surfaces": surfaces, "loc": call["loc"]}
-        )
+        step = {"kind": "effect", "effect_id": effect_id, "params": params, "surfaces": surfaces, "loc": call["loc"]}
+        if inline_chains:
+            step["inlineChains"] = inline_chains
+        steps.append(step)
     if open_loop is not None:
         raise DslError("loopBegin must be closed by loopEnd before the chain ends", open_loop)
-    if starts_with_generator and (not steps or steps[-1]["kind"] != "write"):
+    if not inline and starts_with_generator and (not steps or steps[-1]["kind"] not in {"write", "write3d"}):
         raise DslError("Generator chain must end with write(oN)", chain["loc"])
     return {"steps": steps, "loc": chain["loc"]}
 
@@ -325,7 +407,7 @@ def compile_dsl(source, effects, options=None):
     if len(ast["search"]) == 0:
         raise DslError("Missing required search directive", ast["loc"])
 
-    bindings = {}
+    bindings = _CompileScope(effects, ast["search"])
     for binding in ast["bindings"]:
         if binding["name"] in bindings:
             raise DslError(f'Duplicate binding "{binding["name"]}"', binding["loc"])
@@ -333,8 +415,18 @@ def compile_dsl(source, effects, options=None):
         if isinstance(value, dict) and value.get("kind") == "Call" and value.get("name") not in _VALUE_CALLS:
             bindings[binding["name"]] = {
                 "kind": "partial",
-                "call": {**value, "args": _resolve_args(value["args"], bindings)},
+                "call": value,
             }
+        elif (
+            isinstance(value, dict)
+            and value.get("kind") == "identifier"
+            and "." not in value["name"]
+            and (
+                bindings.get(value["name"], {}).get("kind") in {"partial", "alias"}
+                or (value["name"] not in bindings and _resolve_effect(value["name"], ast["search"], effects))
+            )
+        ):
+            bindings[binding["name"]] = bindings.get(value["name"], {"kind": "alias", "name": value["name"]})
         else:
             bindings[binding["name"]] = {"kind": "value", "value": _evaluate_value(value, bindings)}
 

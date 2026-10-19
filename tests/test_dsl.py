@@ -291,3 +291,85 @@ def test_compile_balanced_loop_and_rejects_malformed_markers():
     for source, message in malformed:
         with pytest.raises(DslError, match=message):
             compile_dsl(source, _typed_effects())
+
+
+@pytest.mark.parametrize(
+    ("program", "expanded"),
+    [
+        (
+            'search synth, filter; solid(color: #36a).subchain("finish") { .invert() .posterize(levels: 3) }.write(o0)',
+            "search synth, filter; solid(color: #36a).invert().posterize(levels: 3).write(o0)",
+        ),
+        (
+            "search synth; pattern(rotation: Math.PI / 4).write(o0)",
+            "search synth; pattern(rotation: 0.7853981633974483).write(o0)",
+        ),
+        (
+            "search synth; let base = solid; let copy = base; copy(color: #36a).write(o0)",
+            "search synth; solid(color: #36a).write(o0)",
+        ),
+        (
+            "search synth; let base = solid(color: #36a); let copy = base; copy().write(o0)",
+            "search synth; solid(color: #36a).write(o0)",
+        ),
+        ("search synth; from(synth, solid(color: #36a)).write(o0)", "search synth; solid(color: #36a).write(o0)"),
+        (
+            "search synth, mixer, filter; solid(color: #36a).cellSplit(tex: solid(color: #b63).invert()).write(o0)",
+            "search synth, mixer, filter; solid(color: #b63).invert().write(o1); so"
+            "lid(color: #36a).cellSplit(tex: o1).write(o0)",
+        ),
+        (
+            "search synth; let base = solid(color: tint); let tint = #36a; base().write(o0)",
+            "search synth; solid(color: #36a).write(o0)",
+        ),
+        (
+            "search synth3d, render; noise3d(volumeSize: 2).write3d(vol0, geo0); re"
+            "ad3d(vol0, geo0).render3d().write(o0)",
+            "search synth3d, render; noise3d(volumeSize: 2).render3d().write(o0)",
+        ),
+    ],
+)
+def test_cpu_sync_offline_dsl_render_forms(program, expanded):
+    assert (
+        render_dsl(program, width=2, height=2, seed=3, time=0.25).to_rgba8()
+        == render_dsl(expanded, width=2, height=2, seed=3, time=0.25).to_rgba8()
+    )
+
+
+@pytest.mark.parametrize("value", ["-", "+", ")", "(", ";", "let"])
+def test_cpu_sync_quoted_tokens_stay_values(value):
+    import json
+
+    ast = parse_dsl(f"search synth; let label = {json.dumps(value)}; solid().write(o0)")
+    assert ast["bindings"][0]["value"] == value
+
+
+def test_cpu_sync_triple_quoted_string_keeps_raw_content_and_location():
+    source = 'search synth; let label = """first\n\\n second"""; solid().write(o0)'
+    ast = parse_dsl(source)
+    assert ast["bindings"][0]["value"] == "first\n\\n second"
+    assert ast["chains"][0]["loc"]["line"] == 2
+
+
+@pytest.mark.parametrize("choice", ["fwd", "rotation.fwd"])
+def test_cpu_sync_float_choice_renders_like_its_numeric_value(choice):
+    named = f"search synth, filter; solid(color: #36a).palette(rotation: {choice}).write(o0)"
+    numeric = "search synth, filter; solid(color: #36a).palette(rotation: 1).write(o0)"
+    assert (
+        render_dsl(named, width=2, height=2, time=0.25).to_rgba8()
+        == render_dsl(numeric, width=2, height=2, time=0.25).to_rgba8()
+    )
+
+
+def test_cpu_sync_search_rejects_quoted_namespace_keyword():
+    with pytest.raises(DslError, match="Expected namespace after search"):
+        parse_dsl('search "render"; solid().write(o0)')
+
+
+def test_cpu_sync_zero_iteration_volume_io_retains_typed_empty_volume():
+    source = (
+        "search synth3d, render; reactionDiffusion3d(volumeSize: 4, iterationCount: 0).write3d(vol0, geo0); "
+        "read3d(vol0, geo0).render3d().write(o0)"
+    )
+    result = render_dsl(source, width=3, height=2)
+    assert (result.width, result.height) == (3, 2)

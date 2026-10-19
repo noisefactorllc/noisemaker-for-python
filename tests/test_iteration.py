@@ -151,3 +151,21 @@ def test_flow3d_absorbs_the_preceding_animated_noise3d_group():
         {"steps": [static_case], "iterated": False},
         {"steps": [zero_flow], "iterated": True},
     ]
+
+
+@pytest.mark.parametrize(("speed", "count", "joins"), [(1, 3, True), (0, 3, False), (1, 0, False)])
+def test_cpu_sync_particle_owner_repeats_animated_input_only_when_needed(speed, count, joins):
+    effects = {
+        "synth/noise": {
+            "kind": "generator",
+            "domain": "image",
+            "passes": [],
+            "textures": {},
+            "params": {"speed": {"default": 1}},
+        },
+        "render/pointsEmit": {"iterated": True, "textures": {"global_xyz": {}}, "passes": []},
+    }
+    image = {**_effect("synth/noise"), "params": {"speed": speed}}
+    owner = {**_effect("render/pointsEmit"), "params": {"iterationCount": count}}
+    groups = compute_iteration_groups([image, owner], effects)
+    assert [group["steps"] for group in groups] == ([[image, owner]] if joins else [[image], [owner]])

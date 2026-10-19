@@ -13,8 +13,8 @@ import re
 
 from .error import DslError
 
-KEYWORDS = {"search", "let", "render", "true", "false"}
-PUNCTUATION = set("()[],.:=;")
+KEYWORDS = {"search", "let", "render", "true", "false", "subchain"}
+PUNCTUATION = set("()[]{},.:=;")
 OPERATORS = set("+-*/")
 
 _WS = re.compile(r"\s")
@@ -88,6 +88,15 @@ def tokenize_dsl(source, options=None):
             if len(lexeme) not in (4, 7, 9):
                 raise DslError("Colors must use #RGB, #RRGGBB, or #RRGGBBAA", location)
             push("color", lexeme, location)
+            continue
+        if source.startswith('"""', state["index"]):
+            end = source.find('"""', state["index"] + 3)
+            if end < 0:
+                raise DslError("Unterminated string", location)
+            value = source[state["index"] + 3 : end]
+            while state["index"] < end + 3:
+                advance()
+            push("string", value, location, value)
             continue
         if char == '"':
             advance()

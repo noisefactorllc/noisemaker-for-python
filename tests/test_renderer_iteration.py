@@ -367,3 +367,33 @@ def test_pass_repeat_rule_applies_to_dsl_iterated_groups(monkeypatch):
     renderer.render_dsl("ignored", width=1, height=1, time=0.25)
 
     assert len(seen) == 4, "the DSL group loop must not multiply the pass repeat (4, not 8)"
+
+
+def test_cpu_sync_mrt_uses_render_resolution_and_destination_pixel_grid(monkeypatch):
+    effect = {
+        "namespace": "filter",
+        "kind": "filter",
+        "params": {},
+        "textures": {name: {"width": "50%", "height": "25%", "format": "rgba32f"} for name in ("state", "other")},
+        "passes": [
+            {
+                "name": "step",
+                "program": "step",
+                "key": "filter/test:step",
+                "inputs": {},
+                "outputs": {"fragColor": "state", "fragColor1": "other"},
+            }
+        ],
+    }
+    seen = []
+
+    def kernel(ctx, out):
+        seen.append((tuple(ctx.uniforms["resolution"]), tuple(ctx.resolution), tuple(ctx.frag_coord[:2])))
+        out[:] = [[0, 0, 0, 1], [0, 0, 0, 1]]
+
+    kernel.output_names = ("fragColor", "fragColor1")
+    _install_effect(monkeypatch, effect, kernel)
+    renderer.render_effect("filter/test", width=8, height=8)
+    assert len(seen) == 8
+    assert all(bound == (8.0, 8.0) and context == (4.0, 2.0) for bound, context, _ in seen)
+    assert {point for _, _, point in seen} == {(x + 0.5, y + 0.5) for x in range(4) for y in range(2)}

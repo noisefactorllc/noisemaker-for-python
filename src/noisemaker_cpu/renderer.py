@@ -220,6 +220,9 @@ def _coerce(spec: dict, value, name: str | None = None):
             value = [float(x) for x in value.split(",")]
         return np.array(value, dtype=F32)
     if t == "float":
+        if isinstance(value, str):
+            choices = spec.get("choices") or {}
+            value = choices.get(value, choices.get(value.split(".")[-1], value))
         number = float(value)
         _check_param_range(spec, name, number)
         # Keep the full double like the JS oracle: canonical kernels bind
@@ -704,12 +707,11 @@ def _render_effect_once(
                     height,
                     {**inputs, **attachments},
                 )
-            pass_resolution = np.array([float(pass_width), float(pass_height)], dtype=F32)
-            # `resolution` is the pass destination's size, but the aspect and
-            # its reciprocal stay bound to the render's own dimensions:
-            # createCanonicalBindings derives them from completeResolution
-            # (fullResolution ?? resolution), and the per-pass bindCanonicalKernel
-            # call always passes the render's fullResolution.
+            # MRT shader uniforms use the canvas resolution; pixel contexts
+            # retain the destination resolution. Single-output uniforms also
+            # use the destination resolution, as in the CPU authority.
+            resolution_width, resolution_height = (width, height) if len(out_names) > 1 else (pass_width, pass_height)
+            pass_resolution = np.array([float(resolution_width), float(resolution_height)], dtype=F32)
             pass_uniforms.update({"resolution": pass_resolution})
             mesh_op = get_mesh_op(effect_id, p["program"]) if p.get("drawMode") == "triangles" else None
             draw_op = mesh_op or (get_draw_op(effect_id, p["program"]) if p.get("drawMode") else None)
@@ -966,6 +968,16 @@ def _run_iterated_group(group, current, surfaces, external_textures, effects, wi
                 "geometry": current["geometry"].clone() if current["geometry"] is not None else None,
                 "volumeSize": current["volumeSize"],
             }
+        if current is None and first_effect.get("domain") == "volume-generator":
+            return render_effect(
+                first_step["effect_id"],
+                first_step["params"],
+                width=width,
+                height=height,
+                seed=seed,
+                time=time,
+                external_inputs=external_inputs,
+            )
         return current.clone() if current is not None else Surface(width, height)
 
     state_size = None
@@ -1029,9 +1041,13 @@ def render_dsl(source, width=512, height=512, seed=1, time=0.0, external_texture
     effects = _meta()["effects"]
     plan = compile_dsl(source, effects)
     surfaces = dict(seed_surfaces or {})
-    for chain in plan["chains"]:
+
+    def run_chain(chain):
         current = None
         for group in compute_iteration_groups(chain["steps"], effects):
+            for step in group["steps"]:
+                for inline in step.get("inlineChains", []):
+                    surfaces[inline["surface"]] = _chain_bundle(run_chain(inline["chain"]))["image"]
             if group["iterated"]:
                 current = _run_iterated_group(
                     group,
@@ -1054,8 +1070,29 @@ def render_dsl(source, width=512, height=512, seed=1, time=0.0, external_texture
                         raise ValueError(f"Surface {step['surface']} has not been written")
                 elif kind == "write":
                     surfaces[step["surface"]] = _chain_bundle(current)["image"]
+                elif kind == "write3d":
+                    bundle = _chain_bundle(current)
+                    for name, channel in ((step["volume"], "volume"), (step["geometry"], "geometry")):
+                        if name != "none" and bundle[channel] is not None:
+                            surfaces[name] = bundle[channel]
+                elif kind == "read3d":
+                    volume = surfaces.get(step["volume"])
+                    if volume is None:
+                        raise ValueError(f"Surface {step['volume']} has not been written")
+                    current = {
+                        "image": None,
+                        "volume": volume,
+                        "geometry": surfaces.get(step["geometry"]),
+                        "volumeSize": volume.width,
+                    }
                 else:
-                    current = _run_effect_step(step, current, surfaces, external_textures, width, height, seed, time, external_inputs)
+                    current = _run_effect_step(
+                        step, current, surfaces, external_textures, width, height, seed, time, external_inputs
+                    )
+        return current
+
+    for chain in plan["chains"]:
+        run_chain(chain)
     rendered = surfaces.get(plan["render_surface"])
     if rendered is None:
         raise ValueError(f"Surface {plan['render_surface']} has not been written")

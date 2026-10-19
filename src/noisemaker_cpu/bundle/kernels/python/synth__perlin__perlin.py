@@ -40,9 +40,13 @@ def run_pixel(ctx, out):
         p = rt.assign_swizzle(p, "y", (rt.binary("*", rt.swizzle(p, "y"), rt.f(2.0), 1, "float") if rt.binary(">=", rt.swizzle(p, "y"), rt.f(0.0)) else rt.binary("+", rt.binary("*", rt.unary("-", rt.swizzle(p, "y")), rt.f(2.0), 1, "float"), rt.f(1.0), 1, "float")))
         p = rt.assign_swizzle(p, "z", (rt.binary("*", rt.swizzle(p, "z"), rt.f(2.0), 1, "float") if rt.binary(">=", rt.swizzle(p, "z"), rt.f(0.0)) else rt.binary("+", rt.binary("*", rt.unary("-", rt.swizzle(p, "z")), rt.f(2.0), 1, "float"), rt.f(1.0), 1, "float")))
         return rt.construct(3, rt.binary("/", rt.construct(3, pcg__uvec3(rt.construct(3, p, base="uint"))), rt.construct(1, rt.construct(1, rt.i(4294967295), base="uint")), 3, 'float'))
-    def hash3__vec3(p):
+    def hash3__vec3_vec3(p, k):
         p = rt.copy(p, "float")
-        (p.__setitem__(0, rt.binary("+", rt.swizzle(p, "x"), rt.binary("*", rt.construct(1, _u_seed), rt.f(0.1), 1, "float"), 1, "float")), p.__setitem__(1, rt.binary("+", rt.swizzle(p, "y"), rt.binary("*", rt.construct(1, _u_seed), rt.f(0.1), 1, "float"), 1, "float")), p.__setitem__(2, rt.binary("+", rt.swizzle(p, "z"), rt.binary("*", rt.construct(1, _u_seed), rt.f(0.1), 1, "float"), 1, "float")), p)[-1]
+        k = rt.copy(k, "float")
+        cpuSeedOffset = rt.construct(1, rt.binary("*", rt.construct(1, _u_seed), rt.f(0.1), 1, "float"))
+        cpuLatticeOffset = rt.construct(2, rt.binary("+", rt.swizzle(k, "xy"), cpuSeedOffset, 2, 'float'))
+        cpu_vector_assignment_0 = rt.construct(3, rt.binary("+", rt.swizzle(p, "x"), rt.swizzle(cpuLatticeOffset, "x"), 1, "float"), rt.binary("+", rt.swizzle(p, "y"), rt.swizzle(cpuLatticeOffset, "y"), 1, "float"), rt.binary("+", rt.construct(1, rt.binary("+", rt.swizzle(p, "z"), cpuSeedOffset, 1, "float")), rt.swizzle(k, "z"), 1, "float"))
+        p[:] = cpu_vector_assignment_0
         q = rt.construct(3, rt.binary("+", rt.construct(3, rt.binary("*", p, rt.f(1000.0), 3, 'float'), base="int"), rt.i(65536), 3, "int"), base="uint")
         (q.__setitem__(0, rt.binary("+", rt.binary("*", rt.swizzle(q, "x"), rt.i(1664525), 1, "uint"), rt.i(1013904223), 1, "uint")), q.__setitem__(1, rt.binary("+", rt.binary("*", rt.swizzle(q, "y"), rt.i(1664525), 1, "uint"), rt.i(1013904223), 1, "uint")), q.__setitem__(2, rt.binary("+", rt.binary("*", rt.swizzle(q, "z"), rt.i(1664525), 1, "uint"), rt.i(1013904223), 1, "uint")), q)[-1]
         q = rt.assign_swizzle(q, "x", rt.binary("+", rt.swizzle(q, "x"), rt.binary("*", rt.swizzle(q, "y"), rt.swizzle(q, "z"), 1, "uint"), 1, "uint"))
@@ -53,11 +57,12 @@ def run_pixel(ctx, out):
         q = rt.assign_swizzle(q, "y", rt.binary("+", rt.swizzle(q, "y"), rt.binary("*", rt.swizzle(q, "z"), rt.swizzle(q, "x"), 1, "uint"), 1, "uint"))
         q = rt.assign_swizzle(q, "z", rt.binary("+", rt.swizzle(q, "z"), rt.binary("*", rt.swizzle(q, "x"), rt.swizzle(q, "y"), 1, "uint"), 1, "uint"))
         return rt.binary("/", rt.construct(1, rt.binary("^", rt.binary("^", rt.swizzle(q, "x"), rt.swizzle(q, "y"), 1, "uint"), rt.swizzle(q, "z"), 1, "uint")), rt.f(4294967295.0), 1, "float")
-    def grad3__vec3(p):
+    def grad3__vec3_vec3(p, k):
         p = rt.copy(p, "float")
-        h1 = hash3__vec3(p)
-        h2 = hash3__vec3(rt.construct(3, rt.binary("+", p, rt.f(127.1), 3, 'float')))
-        h3 = hash3__vec3(rt.construct(3, rt.binary("+", p, rt.f(269.5), 3, 'float')))
+        k = rt.copy(k, "float")
+        h1 = hash3__vec3_vec3(p, k)
+        h2 = hash3__vec3_vec3(p, rt.construct(3, rt.binary("+", k, rt.f(127.1), 3, 'float')))
+        h3 = hash3__vec3_vec3(p, rt.construct(3, rt.binary("+", k, rt.f(269.5), 3, 'float')))
         _g = rt.construct(3, rt.binary("-", rt.binary("*", h1, rt.f(2.0), 1, "float"), rt.f(1.0), 1, "float"), rt.binary("-", rt.binary("*", h2, rt.f(2.0), 1, "float"), rt.f(1.0), 1, "float"), rt.binary("-", rt.binary("*", h3, rt.f(2.0), 1, "float"), rt.f(1.0), 1, "float"))
         return rt.normalize(_g)
     def quintic__float(t):
@@ -93,14 +98,14 @@ def run_pixel(ctx, out):
         u = rt.construct(3, quintic__float(rt.swizzle(f, "x")), quintic__float(rt.swizzle(f, "y")), quintic__float(rt.swizzle(f, "z")))
         iz0 = wrapZ__float(rt.swizzle(i, "z"))
         iz1 = wrapZ__float(rt.binary("+", rt.swizzle(i, "z"), rt.f(1.0), 1, "float"))
-        n000 = rt.dot(grad3__vec3(rt.construct(3, rt.binary("+", rt.construct_raw(3, rt.swizzle(i, "xy"), iz0), rt.construct_raw(3, rt.construct(1, rt.i(0)), rt.construct(1, rt.i(0)), rt.construct(1, rt.i(0))), 3, 'float'))), rt.binary("-", f, rt.construct_raw(3, rt.construct(1, rt.i(0)), rt.construct(1, rt.i(0)), rt.construct(1, rt.i(0))), 3, 'float'))
-        n100 = rt.dot(grad3__vec3(rt.construct(3, rt.binary("+", rt.construct_raw(3, rt.swizzle(i, "xy"), iz0), rt.construct_raw(3, rt.construct(1, rt.i(1)), rt.construct(1, rt.i(0)), rt.construct(1, rt.i(0))), 3, 'float'))), rt.binary("-", f, rt.construct_raw(3, rt.construct(1, rt.i(1)), rt.construct(1, rt.i(0)), rt.construct(1, rt.i(0))), 3, 'float'))
-        n010 = rt.dot(grad3__vec3(rt.construct(3, rt.binary("+", rt.construct_raw(3, rt.swizzle(i, "xy"), iz0), rt.construct_raw(3, rt.construct(1, rt.i(0)), rt.construct(1, rt.i(1)), rt.construct(1, rt.i(0))), 3, 'float'))), rt.binary("-", f, rt.construct_raw(3, rt.construct(1, rt.i(0)), rt.construct(1, rt.i(1)), rt.construct(1, rt.i(0))), 3, 'float'))
-        n110 = rt.dot(grad3__vec3(rt.construct(3, rt.binary("+", rt.construct_raw(3, rt.swizzle(i, "xy"), iz0), rt.construct_raw(3, rt.construct(1, rt.i(1)), rt.construct(1, rt.i(1)), rt.construct(1, rt.i(0))), 3, 'float'))), rt.binary("-", f, rt.construct_raw(3, rt.construct(1, rt.i(1)), rt.construct(1, rt.i(1)), rt.construct(1, rt.i(0))), 3, 'float'))
-        n001 = rt.dot(grad3__vec3(rt.construct(3, rt.binary("+", rt.construct_raw(3, rt.swizzle(i, "xy"), iz1), rt.construct_raw(3, rt.construct(1, rt.i(0)), rt.construct(1, rt.i(0)), rt.construct(1, rt.i(0))), 3, 'float'))), rt.binary("-", f, rt.construct_raw(3, rt.construct(1, rt.i(0)), rt.construct(1, rt.i(0)), rt.construct(1, rt.i(1))), 3, 'float'))
-        n101 = rt.dot(grad3__vec3(rt.construct(3, rt.binary("+", rt.construct_raw(3, rt.swizzle(i, "xy"), iz1), rt.construct_raw(3, rt.construct(1, rt.i(1)), rt.construct(1, rt.i(0)), rt.construct(1, rt.i(0))), 3, 'float'))), rt.binary("-", f, rt.construct_raw(3, rt.construct(1, rt.i(1)), rt.construct(1, rt.i(0)), rt.construct(1, rt.i(1))), 3, 'float'))
-        n011 = rt.dot(grad3__vec3(rt.construct(3, rt.binary("+", rt.construct_raw(3, rt.swizzle(i, "xy"), iz1), rt.construct_raw(3, rt.construct(1, rt.i(0)), rt.construct(1, rt.i(1)), rt.construct(1, rt.i(0))), 3, 'float'))), rt.binary("-", f, rt.construct_raw(3, rt.construct(1, rt.i(0)), rt.construct(1, rt.i(1)), rt.construct(1, rt.i(1))), 3, 'float'))
-        n111 = rt.dot(grad3__vec3(rt.construct(3, rt.binary("+", rt.construct_raw(3, rt.swizzle(i, "xy"), iz1), rt.construct_raw(3, rt.construct(1, rt.i(1)), rt.construct(1, rt.i(1)), rt.construct(1, rt.i(0))), 3, 'float'))), rt.binary("-", f, rt.construct_raw(3, rt.construct(1, rt.i(1)), rt.construct(1, rt.i(1)), rt.construct(1, rt.i(1))), 3, 'float'))
+        n000 = rt.dot(grad3__vec3_vec3(rt.construct(3, rt.swizzle(i, "xy"), iz0), rt.construct(3, rt.i(0), rt.i(0), rt.i(0))), rt.binary("-", f, rt.construct_raw(3, rt.construct(1, rt.i(0)), rt.construct(1, rt.i(0)), rt.construct(1, rt.i(0))), 3, 'float'))
+        n100 = rt.dot(grad3__vec3_vec3(rt.construct(3, rt.swizzle(i, "xy"), iz0), rt.construct(3, rt.i(1), rt.i(0), rt.i(0))), rt.binary("-", f, rt.construct_raw(3, rt.construct(1, rt.i(1)), rt.construct(1, rt.i(0)), rt.construct(1, rt.i(0))), 3, 'float'))
+        n010 = rt.dot(grad3__vec3_vec3(rt.construct(3, rt.swizzle(i, "xy"), iz0), rt.construct(3, rt.i(0), rt.i(1), rt.i(0))), rt.binary("-", f, rt.construct_raw(3, rt.construct(1, rt.i(0)), rt.construct(1, rt.i(1)), rt.construct(1, rt.i(0))), 3, 'float'))
+        n110 = rt.dot(grad3__vec3_vec3(rt.construct(3, rt.swizzle(i, "xy"), iz0), rt.construct(3, rt.i(1), rt.i(1), rt.i(0))), rt.binary("-", f, rt.construct_raw(3, rt.construct(1, rt.i(1)), rt.construct(1, rt.i(1)), rt.construct(1, rt.i(0))), 3, 'float'))
+        n001 = rt.dot(grad3__vec3_vec3(rt.construct(3, rt.swizzle(i, "xy"), iz1), rt.construct(3, rt.i(0), rt.i(0), rt.i(0))), rt.binary("-", f, rt.construct_raw(3, rt.construct(1, rt.i(0)), rt.construct(1, rt.i(0)), rt.construct(1, rt.i(1))), 3, 'float'))
+        n101 = rt.dot(grad3__vec3_vec3(rt.construct(3, rt.swizzle(i, "xy"), iz1), rt.construct(3, rt.i(1), rt.i(0), rt.i(0))), rt.binary("-", f, rt.construct_raw(3, rt.construct(1, rt.i(1)), rt.construct(1, rt.i(0)), rt.construct(1, rt.i(1))), 3, 'float'))
+        n011 = rt.dot(grad3__vec3_vec3(rt.construct(3, rt.swizzle(i, "xy"), iz1), rt.construct(3, rt.i(0), rt.i(1), rt.i(0))), rt.binary("-", f, rt.construct_raw(3, rt.construct(1, rt.i(0)), rt.construct(1, rt.i(1)), rt.construct(1, rt.i(1))), 3, 'float'))
+        n111 = rt.dot(grad3__vec3_vec3(rt.construct(3, rt.swizzle(i, "xy"), iz1), rt.construct(3, rt.i(1), rt.i(1), rt.i(0))), rt.binary("-", f, rt.construct_raw(3, rt.construct(1, rt.i(1)), rt.construct(1, rt.i(1)), rt.construct(1, rt.i(1))), 3, 'float'))
         nx00 = rt.component_wise("mix", n000, n100, rt.swizzle(u, "x"), width=1)
         nx10 = rt.component_wise("mix", n010, n110, rt.swizzle(u, "x"), width=1)
         nx01 = rt.component_wise("mix", n001, n101, rt.swizzle(u, "x"), width=1)

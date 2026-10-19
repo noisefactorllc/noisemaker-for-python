@@ -8,6 +8,8 @@ enum-member identifiers, and canonical `read(oN)` surface references.
 
 from __future__ import annotations
 
+import math
+
 from .error import DslError
 from .tokenizer import tokenize_dsl
 
@@ -49,10 +51,10 @@ class _Parser:
         return self.peek()["type"] == "eof"
 
     def check(self, lexeme):
-        return self.peek()["lexeme"] == lexeme
+        return self.peek()["type"] != "string" and self.peek()["lexeme"] == lexeme
 
     def match(self, *lexemes):
-        if self.peek()["lexeme"] not in lexemes:
+        if self.peek()["type"] == "string" or self.peek()["lexeme"] not in lexemes:
             return False
         self.current += 1
         return True
@@ -83,7 +85,9 @@ class _Parser:
         if self.match("search"):
             while True:
                 namespace = self.peek()
-                if namespace["type"] != "identifier" and namespace["lexeme"] != "render":
+                if namespace["type"] != "identifier" and not (
+                    namespace["type"] == "keyword" and namespace["lexeme"] == "render"
+                ):
                     raise DslError("Expected namespace after search", _location(namespace))
                 self.current += 1
                 ast["search"].append(namespace["lexeme"])
@@ -123,8 +127,115 @@ class _Parser:
         first = self.parse_call()
         calls = [first]
         while self.match("."):
-            calls.append(self.parse_call())
+            if self.at_subchain():
+                calls.append(self.parse_subchain())
+            elif self.peek()["type"] == "identifier" and self.check("write3d"):
+                calls.append(self.parse_write3d())
+            else:
+                calls.append(self.parse_call())
         return {"kind": "Chain", "calls": calls, "loc": first["loc"]}
+
+    def is_punctuation(self, lexeme):
+        return self.peek()["type"] == "punctuation" and self.check(lexeme)
+
+    def at_subchain(self):
+        return self.peek()["type"] == "keyword" and self.check("subchain")
+
+    def parse_write3d(self):
+        name = self.identifier()
+        self.consume("(")
+
+        def reference():
+            token = self.peek()
+            if token["type"] == "surface":
+                return self.parse_surface()
+            if token["type"] != "identifier":
+                raise DslError("Expected surface reference", _location(token))
+            self.current += 1
+            return {"kind": "identifier", "name": token["lexeme"], "loc": _location(token)}
+
+        volume = reference()
+        self.consume(",")
+        geometry = reference()
+        self.consume(")")
+        return {
+            "kind": "Call",
+            "name": "write3d",
+            "args": [{"name": None, "value": value, "loc": value["loc"]} for value in (volume, geometry)],
+            "argMode": "positional",
+            "loc": _location(name),
+        }
+
+    def parse_expression_chain(self, first):
+        calls = [first]
+        while self.is_punctuation("."):
+            self.current += 1
+            if self.at_subchain():
+                calls.append(self.parse_subchain())
+                continue
+            call = self.parse_call()
+            if call["name"] in {"write", "write3d"}:
+                raise DslError("Expected effect or IO function name", call["loc"])
+            calls.append(call)
+        return {"kind": "Chain", "calls": calls, "loc": first["loc"]}
+
+    def parse_subchain(self):
+        start = self.peek()
+        self.current += 1
+        self.consume("(")
+        meta = {"name": None, "id": None}
+        if self.peek()["type"] == "string":
+            meta["name"] = self.peek()["value"]
+            self.current += 1
+        else:
+            while self.peek()["type"] == "identifier" and self.peek(1)["lexeme"] == ":":
+                key = self.identifier()["lexeme"]
+                self.consume(":")
+                if self.peek()["type"] != "string":
+                    break
+                value = self.peek()["value"]
+                self.current += 1
+                if key in meta:
+                    meta[key] = value
+                self.match(",")
+        self.consume(")")
+        self.consume("{")
+        body = []
+        while True:
+            self.consume(".")
+            call = self.parse_call()
+            if call["name"] in {"write", "write3d"}:
+                raise DslError("Expected effect or IO function name", call["loc"])
+            body.append(call)
+            if self.check("}"):
+                break
+        self.consume("}")
+        return {
+            "kind": "Subchain",
+            "name": meta["name"] or None,
+            "id": meta["id"] or None,
+            "body": body,
+            "loc": _location(start),
+        }
+
+    def from_call(self, call):
+        if call["argMode"] != "positional" or len(call["args"]) != 2:
+            return call
+        namespace, target = (arg["value"] for arg in call["args"])
+        inner = (
+            target["calls"][0]
+            if isinstance(target, dict) and target.get("kind") == "Chain" and len(target["calls"]) == 1
+            else None
+        )
+        if (
+            not isinstance(namespace, dict)
+            or namespace.get("kind") != "identifier"
+            or not inner
+            or inner.get("kind") != "Call"
+            or inner["name"] in {"read", "read3d", "write", "write3d"}
+        ):
+            return call
+        return {**inner, "namespace": namespace["name"]}
 
     def parse_call(self):
         name = self.identifier("Expected effect or IO function name")
@@ -147,11 +258,12 @@ class _Parser:
                 if not self.match(","):
                     break
         self.consume(")")
-        return {"kind": "Call", "name": name["lexeme"], "args": args, "argMode": mode, "loc": _location(name)}
+        call = {"kind": "Call", "name": name["lexeme"], "args": args, "argMode": mode, "loc": _location(name)}
+        return self.from_call(call) if call["name"] == "from" else call
 
     def parse_value_expression(self, min_precedence=0):
         left = self.parse_value_unary()
-        while _PRECEDENCE.get(self.peek()["lexeme"], -1) >= min_precedence:
+        while self.peek()["type"] == "operator" and _PRECEDENCE.get(self.peek()["lexeme"], -1) >= min_precedence:
             operator = self.tokens[self.current]
             self.current += 1
             right = self.parse_value_expression(_PRECEDENCE[operator["lexeme"]] + 1)
@@ -207,6 +319,24 @@ class _Parser:
         if token["type"] == "identifier":
             self.current += 1
             name = token["lexeme"]
+            if (
+                name == "Math"
+                and self.is_punctuation(".")
+                and self.peek(1)["type"] == "identifier"
+                and self.peek(1)["lexeme"] == "PI"
+            ):
+                self.current += 2
+                return math.pi
+            if name == "read3d" and self.is_punctuation("("):
+                self.current -= 1
+                call = self.parse_call()
+                if (
+                    len(call["args"]) == 1
+                    and isinstance(call["args"][0]["value"], dict)
+                    and call["args"][0]["value"].get("kind") == "identifier"
+                ):
+                    return call["args"][0]["value"]
+                return self.parse_expression_chain(call)
             if name == "read" and self.match("("):
                 if self.peek()["type"] == "identifier" and self.peek(1)["lexeme"] == ":":
                     argument_name = self.identifier()["lexeme"]
@@ -218,6 +348,15 @@ class _Parser:
                     self.consume(":")
                 surface = self.parse_surface()
                 self.consume(")")
+                if self.is_punctuation("."):
+                    call = {
+                        "kind": "Call",
+                        "name": "read",
+                        "args": [{"name": None, "value": surface, "loc": surface["loc"]}],
+                        "argMode": "positional",
+                        "loc": _location(token),
+                    }
+                    return self.parse_expression_chain(call)
                 return surface
             if name in ("vec2", "vec3", "vec4") and self.match("("):
                 values = []
@@ -232,6 +371,9 @@ class _Parser:
             if name in ("osc", "midi", "audio") and self.peek()["lexeme"] == "(":
                 self.current -= 1
                 return self.parse_call()
+            if self.is_punctuation("("):
+                self.current -= 1
+                return self.parse_expression_chain(self.parse_call())
             path = name
             while self.match("."):
                 path += f".{self.identifier('Expected enum member')['lexeme']}"

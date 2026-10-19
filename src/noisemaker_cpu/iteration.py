@@ -26,6 +26,29 @@ def _references_particle_state(step, effects):
     return False
 
 
+def _is_animated_image_generator(step, effects):
+    definition = effects[step["effect_id"]]
+    params = {name: spec.get("default") for name, spec in definition.get("params", {}).items()}
+    params.update(step.get("params", {}))
+    return (
+        definition.get("kind") == "generator"
+        and definition.get("domain", "image") == "image"
+        and not definition.get("iterated")
+        and "speed" in params
+        and params["speed"] != 0
+    )
+
+
+def _positive_iterations(step, effects):
+    count = step.get("params", {}).get(
+        "iterationCount", effects[step["effect_id"]].get("params", {}).get("iterationCount", {}).get("default", 0)
+    )
+    try:
+        return float(count) > 0
+    except (TypeError, ValueError):
+        return False
+
+
 def compute_iteration_groups(steps, effects):
     groups = []
     open_group = None
@@ -39,7 +62,7 @@ def compute_iteration_groups(steps, effects):
 
     for step in steps:
         if open_loop is not None:
-            if step["kind"] in {"read", "write"}:
+            if step["kind"] in {"read", "write", "read3d", "write3d"}:
                 raise ValueError("Loop iteration group cannot cross a read/write boundary")
             definition = effects[step["effect_id"]]
             if definition.get("loopRole") == "begin":
@@ -49,7 +72,7 @@ def compute_iteration_groups(steps, effects):
                 groups.append({"steps": open_loop["steps"], "iterated": True, "loop": True})
                 open_loop = None
             continue
-        if step["kind"] in {"read", "write"}:
+        if step["kind"] in {"read", "write", "read3d", "write3d"}:
             close_open_group()
             groups.append({"steps": [step], "iterated": False})
             continue
@@ -62,6 +85,17 @@ def compute_iteration_groups(steps, effects):
             continue
         if _declares_xyz(step, effects):
             close_open_group()
+            previous = groups[-1] if groups else None
+            if (
+                _positive_iterations(step, effects)
+                and previous is not None
+                and len(previous["steps"]) == 1
+                and not previous["iterated"]
+                and _is_animated_image_generator(previous["steps"][0], effects)
+            ):
+                groups.pop()
+                open_group = {"steps": [previous["steps"][0], step], "iterated": definition.get("iterated") is True}
+                continue
             open_group = {"steps": [step], "iterated": definition.get("iterated") is True}
             continue
         if open_group is not None and _references_particle_state(step, effects):
