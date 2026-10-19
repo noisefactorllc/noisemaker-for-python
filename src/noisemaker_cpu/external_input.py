@@ -336,6 +336,18 @@ def pack_mesh_data_for_textures(positions, normals, uvs, tex_width: int, tex_hei
     }
 
 
+def empty_mesh_data(tex_width: int = 256, tex_height: int = 256) -> dict:
+    """The mesh a program samples before any OBJ upload. The upstream pipeline
+    creates each mesh surface as zero-filled 256x256 rgba32f textures
+    (pipeline.js ``createSurfaces``), so every vertex has w = 0 and no triangle
+    is drawn. Port of noisemaker-for-cpu external-input.js ``emptyMeshData``.
+    """
+    packed = pack_mesh_data_for_textures([], [], [], tex_width, tex_height)
+    packed["texWidth"] = tex_width
+    packed["texHeight"] = tex_height
+    return packed
+
+
 def _compute_face_normals(positions: list[float], normals: list[float]) -> None:
     """Smooth vertex normals for un-normalized OBJ files: exact port of the
     upstream obj-parser computeFaceNormals (face normals from reversed-winding

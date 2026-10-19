@@ -21,6 +21,7 @@ from .automation import is_finite_number as _is_finite_number
 from .automation import resolve_automation_uniform as _resolve_automation_uniform
 from .draw_ops import get_draw_op
 from .dsl import compile_dsl
+from .external_input import empty_mesh_data
 from .external_textures import external_data_surface
 from .frame_export import CpuFrameExportAdapter, FrameExportQueue
 from .iteration import compute_iteration_groups, is_particle_state_name, iteration_schedule
@@ -334,9 +335,11 @@ def _bind_external_inputs(effect_id, eff, uniforms, attachments, external_inputs
             attachments["midiNoteGrid"] = external_data_surface(grid, 128, 16)
     mesh_names = [name for name in pass_input_names if name.startswith("global_mesh0_")]
     if mesh_names:
+        # With no meshData, bind the zero mesh the upstream pipeline samples
+        # before an OBJ upload (noisemaker-for-cpu renderer.js emptyMeshData).
         mesh_data = external_inputs.get("meshData")
-        if not mesh_data:
-            raise ValueError(f"{effect_id} requires external mesh data (external_inputs['meshData'])")
+        if mesh_data is None:
+            mesh_data = empty_mesh_data()
         tex_width = mesh_data.get("texWidth") or _MESH_TEX_WIDTH
         tex_height = mesh_data.get("texHeight") or _MESH_TEX_HEIGHT
         if "global_mesh0_positions" in mesh_names:

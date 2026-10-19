@@ -33,6 +33,8 @@ import math
 
 import numpy as np
 
+from .external_input import empty_mesh_data
+
 _F32 = np.float32
 
 
@@ -164,9 +166,11 @@ def get_mesh_op(effect_id, program):
 
 
 def mesh_render_triangles_draw(inputs, destination, uniforms, _render_pass, external_inputs=None):
+    # With no meshData, draw the zero mesh the upstream pipeline samples before
+    # an upload (noisemaker-for-cpu mesh-render.js emptyMeshData).
     mesh_data = (external_inputs or {}).get("meshData")
-    if not mesh_data:
-        raise ValueError("render/meshRender requires external mesh data (externalInputs.meshData)")
+    if mesh_data is None:
+        mesh_data = empty_mesh_data()
     positions = mesh_data.get("positions")
     if positions is None:
         positions = mesh_data["positionData"]

@@ -1,4 +1,5 @@
 import os
+from pathlib import Path
 
 import click
 import pytest
@@ -69,11 +70,28 @@ def test_resolve_random_excludes_non_image_iterated_and_external_texture_effects
     assert all(not effects[effect_id].get("externalTexture") for effect_id in captured)
     # External-input effects (reactive synth/roll|scope|spectrum, mesh
     # render/meshLoader|meshRender) are excluded too: the CLI binds no
-    # MIDI/audio/mesh fixture, so picking one would exit nonzero.
+    # MIDI, audio or mesh input, so a random pick would show only
+    # silent-input or empty-mesh output.
     assert not (set(captured) & set(cli.EXTERNAL_INPUT_EFFECT_IDS))
     # Catalog drift guard: the reactive/mesh effects are catalog members now
     # (noisemaker-for-cpu reactive/mesh import), so the exclusion is live.
     assert set(cli.EXTERNAL_INPUT_EFFECT_IDS) <= set(effects)
+
+
+def test_run_renders_every_external_input_effect():
+    """The upstream pipeline binds zero MIDI/audio state and creates mesh0 as
+    zero-filled textures, so the run command renders every external-input
+    effect with no fixture bound (mirror of the sibling's kit-README test)."""
+    fixtures = Path(__file__).parent / "data" / "reactive-mesh-oracle"
+    with CliRunner().isolated_filesystem():
+        for name in ("synth__roll", "synth__scope", "synth__spectrum", "render__meshLoader", "render__meshRender"):
+            result = CliRunner().invoke(
+                cli.main,
+                ["run", "--width", "8", "--height", "8", "--filename", "out.png"],
+                input=(fixtures / f"{name}.dsl").read_text(),
+            )
+            assert result.exit_code == 0, f"{name}: {result.output}"
+            assert _png("out.png").width == 8
 
 
 def test_generate_writes_a_png():

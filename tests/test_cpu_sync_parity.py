@@ -1,4 +1,5 @@
-"""Non-default parity cases for the CPU d7deb06e03a8 synchronization."""
+"""Non-default parity cases for the CPU d7deb06e03a8 / 3cc7a0362d0a
+synchronizations."""
 
 import json
 import os
@@ -76,6 +77,19 @@ IMAGE_CASES.append(
         "time": 0.25,
     }
 )
+
+# The upstream pipeline creates mesh0 as zero-filled 256x256 rgba32f textures
+# before any OBJ upload, so the mesh programs render with no mesh loaded and no
+# error (noisemaker-for-cpu emptyMeshData). Authority readback (WebGL2, ANGLE
+# Metal, 16x16, time 0.25): one RGBA value each.
+for _name, _readback in (
+    ("render__meshRender", (25, 25, 38, 255)),
+    ("render__meshLoader", (128, 128, 128, 255)),
+):
+    _program = (Path(__file__).parent / "data" / "reactive-mesh-oracle" / f"{_name}.dsl").read_text()
+    IMAGE_CASES.append(
+        {"id": _name, "program": _program, "width": 16, "height": 16, "seed": 1, "time": 0.25, "readback": _readback}
+    )
 
 for name, program in [
     (
@@ -158,6 +172,25 @@ def test_sync_nondefault_image_matches_cpu_bytes(case, cpu_sync_image_batch):
     expected = cpu_sync_image_batch[case["id"]]
     assert len(expected) == case["width"] * case["height"] * 4
     assert actual == expected
+
+
+@pytest.mark.oracle
+@pytest.mark.skipif(
+    not (shutil.which("node") and (CPU_DIR / "src/index.js").is_file()),
+    reason="JS CPU oracle is unavailable",
+)
+@pytest.mark.parametrize("case", [case for case in IMAGE_CASES if "readback" in case], ids=lambda case: case["id"])
+def test_sync_mesh_renders_with_no_mesh_loaded(case, cpu_sync_image_batch):
+    """No meshData binds the zero mesh instead of raising: the render matches
+    the live CPU oracle byte-for-byte, and its single RGBA value equals the
+    pinned authority readback (upstream creates mesh0 as zero-filled 256x256
+    rgba32f textures before any OBJ upload)."""
+    actual = render_dsl(
+        case["program"], width=case["width"], height=case["height"], seed=case["seed"], time=case["time"]
+    ).to_rgba8()
+    assert actual == cpu_sync_image_batch[case["id"]]
+    values = {bytes(actual[i : i + 4]) for i in range(0, len(actual), 4)}
+    assert values == {bytes(case["readback"])}
 
 
 VOLUME_PROBES = json.loads((DATA / "seeded-volume-probes.json").read_text())["fixtures"]
