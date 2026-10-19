@@ -12,6 +12,7 @@ param's own default ("inputTex"/"none") exactly as the JS engine does.
 from __future__ import annotations
 
 import math
+import sys
 
 from ..automation import MAX_AUTOMATION_DEPTH, is_automation_value
 from .error import DslError
@@ -30,6 +31,8 @@ def _is_surface(value):
 # noise2d is the two-stage periodic noise).
 _OSC_KINDS = {"sine": 0, "tri": 1, "saw": 2, "sawInv": 3, "square": 4, "noise": 5, "noise1d": 5, "noise2d": 6}
 _OSC_PARAM_ORDER = ["type", "min", "max", "speed", "offset", "seed"]
+_UNSUPPORTED_INPUT = object()
+_VALUE_CALLS = {"osc", "midi", "audio"}
 
 
 def _clamp01(value):
@@ -79,6 +82,8 @@ def _compile_oscillator(call, bindings, depth):
         if node is None:
             return fallback
         value = _evaluate_value(node, bindings, depth + 1)
+        if value is _UNSUPPORTED_INPUT:
+            return fallback
         if is_automation_value(value):
             return value
         if value is True:
@@ -109,6 +114,9 @@ def _evaluate_value(value, bindings, osc_depth=0):
     if kind == "surface":
         return value
     if kind == "Call":
+        if value["name"] in {"midi", "audio"}:
+            print(f"Warning: {value['name']}() is unsupported in CPU ports; real-time input is unavailable. Ignoring this unsupported input value.", file=sys.stderr)
+            return _UNSUPPORTED_INPUT
         if value["name"] == "osc":
             return _compile_oscillator(value, bindings, osc_depth)
         raise DslError(f'Unsupported DSL value {kind} "{value["name"]}"', value.get("loc"))
@@ -213,6 +221,8 @@ def _normalize_effect(effect_id, spec, args):
         if not supplied or supplied not in param_specs:
             bad = supplied if supplied else f"argument {index + 1}"
             raise DslError(f'Unknown parameter "{bad}" for {effect_id}; accepted: {", ".join(param_names)}', arg["loc"])
+        if arg["value"] is _UNSUPPORTED_INPUT:
+            continue
         provided.add(supplied)
         pspec = param_specs[supplied]
         if pspec.get("type") == "surface":
@@ -320,7 +330,7 @@ def compile_dsl(source, effects, options=None):
         if binding["name"] in bindings:
             raise DslError(f'Duplicate binding "{binding["name"]}"', binding["loc"])
         value = binding["value"]
-        if isinstance(value, dict) and value.get("kind") == "Call" and value.get("name") != "osc":
+        if isinstance(value, dict) and value.get("kind") == "Call" and value.get("name") not in _VALUE_CALLS:
             bindings[binding["name"]] = {
                 "kind": "partial",
                 "call": {**value, "args": _resolve_args(value["args"], bindings)},

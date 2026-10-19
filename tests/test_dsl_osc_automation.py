@@ -163,3 +163,20 @@ def test_a_binding_can_hold_an_osc_value_for_reuse_across_steps():
         time=time,
     )
     assert np.array_equal(_rgba8(bound), _rgba8(numeric))
+
+
+@pytest.mark.parametrize("call", ["midi(channel: 1, min: 0.8)", "audio(band: audioBand.low, min: 0.8)"])
+@pytest.mark.parametrize("binding", [False, True])
+def test_realtime_input_warns_and_keeps_the_offline_default(call, binding, capsys):
+    prefix = f"let input = {call}\n" if binding else ""
+    value = "input" if binding else call
+    ignored = render_dsl(
+        f"search synth\n{prefix}noise(seed: 1, scaleX: {value}).write(o0)\nrender(o0)",
+        width=8, height=8, time=0.25, seed=1,
+    )
+    diagnostic = capsys.readouterr()
+    assert diagnostic.out == ""
+    assert f"Warning: {call.split('(')[0]}() is unsupported in CPU ports; real-time input is unavailable" in diagnostic.err
+    baseline = render_dsl("search synth\nnoise(seed: 1).write(o0)\nrender(o0)", width=8, height=8, time=0.25, seed=1)
+    assert ignored.to_rgba8() == baseline.to_rgba8()
+    assert capsys.readouterr().err == ""

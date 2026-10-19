@@ -135,7 +135,7 @@ class _Parser:
             while True:
                 is_named = self.peek()["type"] == "identifier" and self.peek(1)["lexeme"] == ":"
                 next_mode = "named" if is_named else "positional"
-                if mode and mode != next_mode:
+                if mode and mode != next_mode and name["lexeme"] not in ("midi", "audio"):
                     raise DslError("Cannot mix positional and named arguments", _location(self.peek()))
                 mode = next_mode
                 arg_name = None
@@ -228,11 +228,8 @@ class _Parser:
                             break
                 self.consume(")")
                 return {"kind": "vector", "width": int(name[-1]), "values": values, "loc": _location(token)}
-            # `osc(...)` is the one value-position call the DSL supports (oscillator
-            # automation, matching upstream's parser); it parses as a regular call and
-            # the compiler turns it into an Oscillator automation value. Every other
-            # call in a value position stays a parse error via the dangling "(".
-            if name == "osc" and self.peek()["lexeme"] == "(":
+            # Parse MIDI/audio calls only to warn and omit unsupported input.
+            if name in ("osc", "midi", "audio") and self.peek()["lexeme"] == "(":
                 self.current -= 1
                 return self.parse_call()
             path = name
