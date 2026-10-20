@@ -132,7 +132,7 @@ def _evaluate_value(value, bindings, osc_depth=0, resolving=None):
     if resolving is None:
         resolving = []
     if isinstance(value, list):
-        return [_evaluate_value(item, bindings, osc_depth) for item in value]
+        return [_evaluate_value(item, bindings, osc_depth, resolving) for item in value]
     if not isinstance(value, dict):
         return value
     kind = value.get("kind")

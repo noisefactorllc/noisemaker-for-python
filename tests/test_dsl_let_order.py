@@ -82,3 +82,13 @@ def test_a_bare_identifier_value_that_names_no_effect_reports_s003():
     # searched namespaces); the JS port mirrors it in test/dsl-grammar-forms.
     with pytest.raises(DslError, match="Variable used before assignment: 'wobble'"):
         compile_dsl("search synth\nlet pattern = wobble\npattern().write(o0)\nrender(o0)\n", _effects())
+
+def test_a_cyclic_let_set_through_a_list_fails_with_a_cycle_report():
+    # The list branch threads the resolving chain like every other recursive
+    # value position, so a cycle that passes through a list reports instead of
+    # recursing until RecursionError.
+    with pytest.raises(DslError, match="Automation cycle detected: a -> b -> a"):
+        compile_dsl(
+            "search synth\nlet a = [b]\nlet b = [a]\nnoise(scaleX: a).write(o0)\n",
+            _effects(),
+        )
