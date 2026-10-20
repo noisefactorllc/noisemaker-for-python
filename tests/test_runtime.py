@@ -1,4 +1,5 @@
 import numpy as np
+import pytest
 
 from noisemaker_cpu.runtime import Runtime
 
@@ -266,3 +267,22 @@ def test_dot_probe_defaults_to_the_folded_tip(monkeypatch):
     monkeypatch.setattr(runtime, "_mounted_oracle_text", lambda path: None)
     assert runtime._oracle_dot_fma() is True
 
+
+
+def test_an_unbound_sampler_reads_transparent_black():
+    # Mirrors upstream be8ed4cd: a declared sampler that the pass lists no input
+    # for reads transparent black (the backends bind their default texture).
+    runtime = Runtime()
+
+    assert list(runtime.texture(None, [0.25, 0.75])) == [0.0, 0.0, 0.0, 0.0]
+    assert list(runtime.texel_fetch(None, [0, 0])) == [0.0, 0.0, 0.0, 0.0]
+
+
+def test_a_non_surface_sampler_binding_still_fails():
+    # A binding that exists but is not a Surface stays an error.
+    runtime = Runtime()
+
+    with pytest.raises(TypeError, match="GLSL texture sampler must be a Surface"):
+        runtime.texture({"width": 2}, [0.25, 0.75])
+    with pytest.raises(TypeError, match="GLSL texelFetch sampler must be a Surface"):
+        runtime.texel_fetch({"width": 2}, [0, 0])

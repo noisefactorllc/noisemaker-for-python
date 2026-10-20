@@ -776,8 +776,20 @@ class Runtime:
         return np.asarray(r, dtype=F32)
 
     # ---- texture ----
+    def _transparent_black(self):
+        # A sampler binding that the pass lists no input for reads transparent
+        # black, as upstream's backends bind their default texture for a declared
+        # sampler outside pass.inputs (upstream be8ed4cd). A non-Surface binding
+        # that does exist stays an error.
+        return np.zeros(4, dtype=F32)
+
     def texture(self, sampler, uv):
         from .sampler import sample_bilinear, sample_nearest_texel_bottom_left
+
+        if sampler is None:
+            return self._transparent_black()
+        if getattr(sampler, "data", None) is None:
+            raise TypeError("GLSL texture sampler must be a Surface")
 
         # Sample at f32 coords — JS reads the uv from a stored Float32Array (binary
         # defers the round). float64 coords would floor/interpolate a hair differently.
@@ -791,6 +803,10 @@ class Runtime:
         return np.array([sampler.width, sampler.height], dtype=F32)
 
     def texel_fetch(self, sampler, coord, lod=0):
+        if sampler is None:
+            return self._transparent_black()
+        if getattr(sampler, "data", None) is None:
+            raise TypeError("GLSL texelFetch sampler must be a Surface")
         w, h = sampler.width, sampler.height
         x = min(max(int(coord[0]), 0), w - 1)
         # GL bottom-left origin -> top-down storage row flip (integer texel).

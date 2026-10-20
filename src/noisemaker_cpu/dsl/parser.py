@@ -14,6 +14,16 @@ from .error import DslError
 from .tokenizer import tokenize_dsl
 
 
+class _BindingNode(dict):
+    """A `let` binding AST node.
+
+    Upstream 9cc041d0: statement order matters. The parser stamps each binding
+    with planIndex (the number of chain statements written before it); a chain
+    sees only the lets declared at or before its own index. The stamp lives as
+    an attribute, mirroring upstream's non-enumerable Object.defineProperty so
+    the node's dict content (and its JSON form) stays unchanged."""
+
+
 def _location(token):
     return {
         "sourceName": token["sourceName"],
@@ -98,7 +108,9 @@ class _Parser:
             if self.match(";"):
                 continue
             if self.match("let"):
-                ast["bindings"].append(self.parse_binding(self.previous()))
+                binding = self.parse_binding(self.previous())
+                binding.planIndex = len(ast["chains"])
+                ast["bindings"].append(binding)
             elif self.match("render"):
                 if ast["render"]:
                     raise DslError("Program may only declare one render surface", _location(self.previous()))
@@ -121,7 +133,7 @@ class _Parser:
         else:
             value = self.parse_value_expression()
         self.match(";")
-        return {"kind": "Binding", "name": name["lexeme"], "value": value, "loc": _location(start)}
+        return _BindingNode({"kind": "Binding", "name": name["lexeme"], "value": value, "loc": _location(start)})
 
     def parse_chain(self):
         first = self.parse_call()

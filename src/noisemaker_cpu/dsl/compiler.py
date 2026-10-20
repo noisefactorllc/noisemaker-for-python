@@ -39,7 +39,7 @@ def _clamp01(value):
     return max(0.0, min(1.0, value))
 
 
-def _compile_oscillator(call, bindings, depth):
+def _compile_oscillator(call, bindings, depth, resolving=None):
     """Compiles an `osc(...)` value-position call into the automation value shape
     the runtime evaluator consumes ({type: 'Oscillator', oscType, min, max, speed,
     offset, seed}), mirroring upstream's parser transformOscInvocation plus the
@@ -65,7 +65,11 @@ def _compile_oscillator(call, bindings, depth):
             if index < len(_OSC_PARAM_ORDER):
                 fields[_OSC_PARAM_ORDER[index]] = arg["value"]
 
-    raw_type = 0 if fields.get("type") is None else _evaluate_value(fields["type"], bindings, depth + 1)
+    raw_type = (
+        0
+        if fields.get("type") is None
+        else _evaluate_value(fields["type"], bindings, depth + 1, resolving)
+    )
     if isinstance(raw_type, (int, float)) and not isinstance(raw_type, bool):
         if not (isinstance(raw_type, int) or (isinstance(raw_type, float) and raw_type.is_integer())) or not 0 <= raw_type <= 6:
             raise DslError("osc() type must resolve to a supported oscKind value (0-6)", loc)
@@ -81,7 +85,7 @@ def _compile_oscillator(call, bindings, depth):
     def number_field(node, name, fallback, clamp):
         if node is None:
             return fallback
-        value = _evaluate_value(node, bindings, depth + 1)
+        value = _evaluate_value(node, bindings, depth + 1, resolving)
         if value is _UNSUPPORTED_INPUT:
             return fallback
         if is_automation_value(value):
@@ -112,6 +116,9 @@ class _CompileScope(dict):
         self.search = search
         self.pending = None
         self.inline_count = 0
+        # Names of the program's lets that a later statement declares. Reading one
+        # before its let reports S003, as upstream's validator does.
+        self.pending_names = None
 
     def compile_inline_chain(self, chain):
         compiled = _compile_chain(chain, self, self.search, self.effects, inline=True)
@@ -121,7 +128,9 @@ class _CompileScope(dict):
         return {"kind": "surface", "name": surface, "loc": chain["loc"]}
 
 
-def _evaluate_value(value, bindings, osc_depth=0):
+def _evaluate_value(value, bindings, osc_depth=0, resolving=None):
+    if resolving is None:
+        resolving = []
     if isinstance(value, list):
         return [_evaluate_value(item, bindings, osc_depth) for item in value]
     if not isinstance(value, dict):
@@ -134,7 +143,7 @@ def _evaluate_value(value, bindings, osc_depth=0):
             print(f"Warning: {value['name']}() is unsupported in CPU ports; real-time input is unavailable. Ignoring this unsupported input value.", file=sys.stderr)
             return _UNSUPPORTED_INPUT
         if value["name"] == "osc":
-            return _compile_oscillator(value, bindings, osc_depth)
+            return _compile_oscillator(value, bindings, osc_depth, resolving)
         raise DslError(f'Unsupported DSL value {kind} "{value["name"]}"', value.get("loc"))
     if kind == "identifier":
         name = value["name"]
@@ -142,21 +151,35 @@ def _evaluate_value(value, bindings, osc_depth=0):
             binding = bindings[name]
             if binding["kind"] == "partial":
                 raise DslError(f'Effect partial "{name}" cannot be used as a value', value.get("loc"))
-            return binding["name"] if binding["kind"] == "alias" else binding["value"]
+            if binding["kind"] == "alias":
+                return binding["name"]
+            # A value binding resolves lazily at its first use. Statement order
+            # (upstream 9cc041d0) makes a chain see only lets declared at or before
+            # its own index, so a name declared by a later let is pending here and
+            # reading it reports S003, as upstream does.
+            if binding["resolved"]:
+                return binding["value"]
+            if name in resolving:
+                raise DslError(f"Automation cycle detected: {' -> '.join([*resolving, name])}", value.get("loc"))
+            binding["value"] = _evaluate_value(binding["expr"], bindings, osc_depth, [*resolving, name])
+            binding["resolved"] = True
+            return binding["value"]
+        if bindings.pending_names is not None and name in bindings.pending_names:
+            raise DslError(f"Variable used before assignment: '{name}'", value.get("loc"))
         return name
     if kind == "vector":
-        components = [_evaluate_value(item, bindings) for item in value["values"]]
+        components = [_evaluate_value(item, bindings, 0, resolving) for item in value["values"]]
         if len(components) != value["width"] or any(not _is_number(item) for item in components):
             raise DslError(f"vec{value['width']} requires {value['width']} numeric values", value.get("loc"))
         return components
     if kind == "unary":
-        operand = _evaluate_value(value["argument"], bindings)
+        operand = _evaluate_value(value["argument"], bindings, 0, resolving)
         if not _is_number(operand):
             raise DslError("Unary arithmetic requires a number", value.get("loc"))
         return -operand if value["operator"] == "-" else operand
     if kind == "binary":
-        left = _evaluate_value(value["left"], bindings)
-        right = _evaluate_value(value["right"], bindings)
+        left = _evaluate_value(value["left"], bindings, 0, resolving)
+        right = _evaluate_value(value["right"], bindings, 0, resolving)
         if not _is_number(left) or not _is_number(right):
             raise DslError("Arithmetic requires numeric values", value.get("loc"))
         operator = value["operator"]
@@ -402,35 +425,69 @@ def _compile_chain(chain, bindings, search, effects, inline=False):
     return {"steps": steps, "loc": chain["loc"]}
 
 
+def _alias_binding(value, bindings):
+    if not isinstance(value, dict) or value.get("kind") != "identifier" or "." in value["name"]:
+        return None
+    bound = bindings.get(value["name"])
+    if bound is not None:
+        return bound if bound["kind"] in {"partial", "alias"} else None
+    if _resolve_effect(value["name"], bindings.search, bindings.effects):
+        return {"kind": "alias", "name": value["name"]}
+    return None
+
+
+def _declare_binding(binding, bindings):
+    """Declares one let. Statement order (upstream 9cc041d0): a chain sees only the
+    lets declared at or before its own statement index; a later `let` of the same
+    name reassigns it for later statements; reading a pending name reports S003.
+    A bare identifier value must name something resolvable now (an earlier
+    binding, an alias, or an effect), as upstream's declareVar requires."""
+    value = binding["value"]
+    if isinstance(value, dict) and value.get("kind") == "Call" and value.get("name") not in _VALUE_CALLS:
+        # A partial keeps its call unresolved. Its arguments resolve where it is
+        # called, as upstream's validator substitutes a symbol at each use.
+        bindings[binding["name"]] = {"kind": "partial", "call": value}
+        return
+    alias = _alias_binding(value, bindings)
+    if alias is not None:
+        bindings[binding["name"]] = alias
+        return
+    if (
+        isinstance(value, dict)
+        and value.get("kind") == "identifier"
+        and "." not in value["name"]
+        and value["name"] not in bindings
+        and not _resolve_effect(value["name"], bindings.search, bindings.effects)
+    ):
+        raise DslError(f"Variable used before assignment: '{value['name']}'", value.get("loc"))
+    bindings[binding["name"]] = {"kind": "value", "expr": value, "resolved": False, "value": None}
+
+
 def compile_dsl(source, effects, options=None):
     ast = parse_dsl(source, options or {})
     if len(ast["search"]) == 0:
         raise DslError("Missing required search directive", ast["loc"])
 
     bindings = _CompileScope(effects, ast["search"])
-    for binding in ast["bindings"]:
-        if binding["name"] in bindings:
-            raise DslError(f'Duplicate binding "{binding["name"]}"', binding["loc"])
-        value = binding["value"]
-        if isinstance(value, dict) and value.get("kind") == "Call" and value.get("name") not in _VALUE_CALLS:
-            bindings[binding["name"]] = {
-                "kind": "partial",
-                "call": value,
-            }
-        elif (
-            isinstance(value, dict)
-            and value.get("kind") == "identifier"
-            and "." not in value["name"]
-            and (
-                bindings.get(value["name"], {}).get("kind") in {"partial", "alias"}
-                or (value["name"] not in bindings and _resolve_effect(value["name"], ast["search"], effects))
-            )
-        ):
-            bindings[binding["name"]] = bindings.get(value["name"], {"kind": "alias", "name": value["name"]})
-        else:
-            bindings[binding["name"]] = {"kind": "value", "value": _evaluate_value(value, bindings)}
+    next_binding = 0
 
-    chains = [_compile_chain(chain, bindings, ast["search"], effects) for chain in ast["chains"]]
+    def declare_through(chain_index):
+        nonlocal next_binding
+        while next_binding < len(ast["bindings"]) and getattr(ast["bindings"][next_binding], "planIndex", 0) <= chain_index:
+            _declare_binding(ast["bindings"][next_binding], bindings)
+            next_binding += 1
+
+    chains = []
+    for chain_index, chain in enumerate(ast["chains"]):
+        declare_through(chain_index)
+        # pendingNames covers the whole chain compile, including inline chains:
+        # every argument position reports a pending read, as upstream does.
+        bindings.pending_names = {binding["name"] for binding in ast["bindings"][next_binding:]}
+        try:
+            chains.append(_compile_chain(chain, bindings, ast["search"], effects))
+        finally:
+            bindings.pending_names = None
+    declare_through(float("inf"))
 
     last_written = None
     for chain in chains:
