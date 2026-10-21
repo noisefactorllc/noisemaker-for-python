@@ -169,6 +169,27 @@ def _adapt_source(effect_id: str, program: str, source: str) -> str:
             "    return fract(float(float(float(p.x + p.y) + float(cpuHashDot + cpu"
             "HashDot)) * float(p.z + cpuHashDot)));\n}",
         )
+    if effect_id == "synth3d/cellularAutomata3d" and program == "simulate":
+        if "uniform int colorMode;" not in source:
+            replacements = [
+                ("uniform float weight;", "uniform float weight;\nuniform int colorMode;"),
+                (
+                    "int countMooreNeighbors(ivec3 voxel, int volSize) {",
+                    "vec4 packState(float alive, float age) {\n"
+                    "    if (colorMode == 1) return vec4(alive, age, 0.0, 1.0);\n"
+                    "    return vec4(alive, alive, alive, 1.0);\n}\n\n"
+                    "int countMooreNeighbors(ivec3 voxel, int volSize) {",
+                ),
+                ("fragColor = vec4(alive, alive, alive, 1.0);", "fragColor = packState(alive, age);"),
+                (
+                    "fragColor = vec4(finalAlive, finalAlive, finalAlive, 1.0);",
+                    "fragColor = packState(finalAlive, finalAge);",
+                ),
+            ]
+            for old, new in replacements:
+                if source.count(old) != 1:
+                    raise ValueError("cellularAutomata3d state source changed")
+                source = source.replace(old, new)
     if effect_id == "synth3d/cell3d" and program == "precompute":
         old = "vec3 hash3(vec3 p) {\n    p = p + float(seed) * 0.1;"
         if source.count(old) != 1 or source.count("vec3 randomOffset = hash3(cellPos);") != 1:

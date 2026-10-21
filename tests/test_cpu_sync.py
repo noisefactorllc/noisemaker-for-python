@@ -221,3 +221,37 @@ def test_ternary_division_preserves_parenthesis_boundaries(expression, expected)
     )
     actual = run_pass(kernel, Ctx(Runtime(), uniforms={"a": 1, "b": 1, "CW": 3}), 1, 1)
     assert np.array_equal(actual.data, np.full(4, expected, dtype=np.float32))
+
+
+@pytest.mark.parametrize(
+    "color_mode,state,seed,reset,speed,weight,density,rule,expected",
+    [
+        (1, [0, 0, 0, 0], [1, 1, 1, 1], False, 100, 0, 0, 5, [1, 0, 0, 1]),
+        (1, [0, 0, 0, 0], [0, 0, 0, 0], False, 100, 0, 100, 5, [1, 0, 0, 1]),
+        (1, [1, 0.7, 0, 1], [1, 1, 1, 1], True, 100, 0, 0, 5, [1, 0, 0, 1]),
+        (1, [1, 0.25, 0, 1], [0, 0, 0, 0], False, 100, 0, 0, 5, [1, 0.26, 0, 1]),
+        (1, [1, 0.995, 0, 1], [0, 0, 0, 0], False, 100, 0, 0, 5, [1, 1, 0, 1]),
+        (1, [1, 0.25, 0, 1], [0, 0, 0, 0], False, 100, 0, 0, 0,
+         [2.2351741790771484e-8, 5.587935447692871e-9, 0, 1]),
+        (1, [1, 0.25, 0, 1], [0, 0, 0, 0], False, 50, 50, 0, 0, [0.25, 0.125, 0, 1]),
+        (0, [0, 0, 0, 0], [1, 1, 1, 1], False, 100, 0, 0, 5, [1, 1, 1, 1]),
+        (0, [1, 0.25, 0, 1], [0, 0, 0, 0], False, 50, 50, 0, 0, [0.25, 0.25, 0.25, 1]),
+    ],
+    ids=["seed", "random-seed", "reset", "survive", "age-clamp", "death", "weighted-speed", "mono-seed", "mono-speed"],
+)
+def test_cellular_automata3d_state_retains_age(
+    color_mode, state, seed, reset, speed, weight, density, rule, expected
+):
+    path = Path(__file__).parents[1] / "src/noisemaker_cpu/bundle/kernels/python/synth3d__cellularAutomata3d__simulate.py"
+    kernel = load_kernel(path.read_text())
+    ctx = Ctx(
+        Runtime(),
+        uniforms={
+            "volumeSize": 1, "ruleIndex": rule, "neighborMode": 0,
+            "colorMode": color_mode, "resetState": reset, "speed": speed,
+            "weight": weight, "density": density,
+        },
+        textures={"stateTex": Surface(1, 1).clear(state), "seedTex": Surface(1, 1).clear(seed)},
+    )
+    actual = run_pass(kernel, ctx, 1, 1)
+    np.testing.assert_array_equal(actual.data, np.array(expected, dtype=np.float32))

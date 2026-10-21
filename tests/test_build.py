@@ -710,3 +710,28 @@ def test_package_data_config_covers_runtime_bundle(tmp_path):
             f"{runtime_file.name} is not covered by package-data patterns {patterns}; "
             "built distributions would omit a runtime-required file"
         )
+
+
+def test_transpiler_mirrors_cellular_automata3d_age_state():
+    source = (
+        "uniform float weight;\nuniform bool resetState;\n"
+        "out vec4 fragColor;\n"
+        "float hash3(vec3 p) {\n"
+        "    p = p + float(seed) * 0.1;\n"
+        "    p = fract(p * vec3(0.1031, 0.1030, 0.0973));\n"
+        "    p += dot(p, p.yxz + 33.33);\n"
+        "    return fract((p.x + p.y) * p.z);\n}\n"
+        "int countMooreNeighbors(ivec3 voxel, int volSize) { return 0; }\nvoid main() {\n"
+        "fragColor = vec4(alive, alive, alive, 1.0);\n"
+        "fragColor = vec4(finalAlive, finalAlive, finalAlive, 1.0);\n}\n"
+    )
+    adapted = build_module._adapt_source("synth3d/cellularAutomata3d", "simulate", source)
+    assert "uniform int colorMode;" in adapted
+    assert "if (colorMode == 1) return vec4(alive, age, 0.0, 1.0);" in adapted
+    assert "fragColor = packState(alive, age);" in adapted
+    assert "fragColor = packState(finalAlive, finalAge);" in adapted
+    assert build_module._adapt_source("synth3d/cellularAutomata3d", "precompute", source) == source
+    import pytest
+    with pytest.raises(ValueError, match="cellularAutomata3d state source changed"):
+        changed = source.replace("fragColor = vec4(alive, alive, alive, 1.0);", "fragColor = vec4(1.0);")
+        build_module._adapt_source("synth3d/cellularAutomata3d", "simulate", changed)

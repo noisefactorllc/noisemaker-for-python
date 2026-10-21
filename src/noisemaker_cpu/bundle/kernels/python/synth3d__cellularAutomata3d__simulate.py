@@ -13,6 +13,7 @@ def run_pixel(ctx, out):
     _u_speed = U.get("speed", rt.f(0.0))
     _u_density = U.get("density", rt.f(0.0))
     _u_weight = U.get("weight", rt.f(0.0))
+    _u_colorMode = U.get("colorMode", 0)
     _u_resetState = U.get("resetState", False)
     _u_stateTex = T["stateTex"]
     _u_seedTex = T["seedTex"]
@@ -33,6 +34,10 @@ def run_pixel(ctx, out):
     def sampleSeed__ivec3_int(voxel, volSize):
         voxel = rt.copy(voxel, "int")
         return rt.texel_fetch(_u_seedTex, atlasTexel__ivec3_int(voxel, volSize), rt.i(0))
+    def packState__float_float(alive, age):
+        if rt.binary("==", _u_colorMode, rt.i(1)):
+            return rt.construct(4, alive, age, rt.f(0.0), rt.f(1.0))
+        return rt.construct(4, alive, alive, alive, rt.f(1.0))
     def countMooreNeighbors__ivec3_int(voxel, volSize):
         voxel = rt.copy(voxel, "int")
         count = rt.i(0)
@@ -180,7 +185,7 @@ def run_pixel(ctx, out):
                 else:
                     alive = rt.f(0.0)
                     age = rt.f(0.0)
-            g.fragColor[:] = rt.construct(4, alive, alive, alive, rt.f(1.0))
+            g.fragColor[:] = packState__float_float(alive, age)
             return
         neighbors = 0
         if rt.binary("==", _u_neighborMode, rt.i(0)):
@@ -211,7 +216,7 @@ def run_pixel(ctx, out):
             seedVal = sampleSeed__ivec3_int(voxel, volSize)
             seedLum = rt.binary("+", rt.binary("+", rt.binary("*", rt.f(0.299), rt.swizzle(seedVal, "r"), 1, "float"), rt.binary("*", rt.f(0.587), rt.swizzle(seedVal, "g"), 1, "float"), 1, "float"), rt.binary("*", rt.f(0.114), rt.swizzle(seedVal, "b"), 1, "float"), 1, "float")
             finalAlive = rt.component_wise("mix", finalAlive, seedLum, rt.binary("*", _u_weight, rt.f(0.01), 1, "float"), width=1)
-        g.fragColor[:] = rt.construct(4, finalAlive, finalAlive, finalAlive, rt.f(1.0))
+        g.fragColor[:] = packState__float_float(finalAlive, finalAge)
     main__void()
     _c = g.fragColor
     out[0] = rt.f32(_c[0]); out[1] = rt.f32(_c[1]); out[2] = rt.f32(_c[2]); out[3] = rt.f32(_c[3])
