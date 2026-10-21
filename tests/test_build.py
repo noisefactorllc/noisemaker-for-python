@@ -278,21 +278,15 @@ def test_hash_returns_take_the_sibling_float_casts_including_scatter():
     assert build_module._adapt_source("filter/scatter", "scatter", source) == adapted
 
 
-def test_transpiler_applies_the_upstream_8bit_output_quantization():
-    # Upstream a1a3fa2a quantizes canonical effect output to 8-bit color in
+def test_transpiler_leaves_the_upstream_8bit_output_quantization_to_the_source():
+    # Published engine 1.0.302 ships the 8-bit color quantization natively in
     # classicNoisedeck/glitch (before scanlines/snow) and filter/crt (before
-    # the base_color blend). The locked CDN build in bundle-lock.json predates
-    # that revision, so the transpiler injects the same statements.
+    # the base_color blend), so the transpiler must not inject it again: that
+    # would quantize twice and break byte-parity with the CPU authority.
     glitch = build_module._adapt_source("classicNoisedeck/glitch", "glitch", "color = glitch(uv);")
-    assert glitch == (
-        "color = glitch(uv);\n"
-        "    color.rgb = floor(clamp(color.rgb, 0.0, 1.0) * 255.0 + 0.5) / 255.0;"
-    )
+    assert glitch == "color = glitch(uv);"
     crt = build_module._adapt_source("filter/crt", "crt", "color = mix(base_color, color, alphaVal);")
-    assert crt == (
-        "vec3 effectColor8 = floor(clamp(color, 0.0, 1.0) * 255.0 + 0.5) / 255.0;\n"
-        "    color = mix(base_color, effectColor8, alphaVal);"
-    )
+    assert crt == "color = mix(base_color, color, alphaVal);"
     # Other effects and programs are untouched.
     assert build_module._adapt_source("classicNoisedeck/glitch", "scanlines", "color = glitch(uv);") == "color = glitch(uv);"
     assert build_module._adapt_source("filter/crt", "depthKeys", "color = mix(base_color, color, alphaVal);") == "color = mix(base_color, color, alphaVal);"
@@ -318,86 +312,45 @@ def test_transpiler_mirrors_the_sibling_testPattern_digit_division_fix():
     assert build_module._adapt_source("synth/pattern", "pattern", source) == source
 
 
-def test_transpiler_mirrors_the_sibling_tile_aware_effect_stack():
-    # Upstream Noisemaker 6cb1a3c3 makes classicNoisedeck/effects tile-aware:
-    # block grids anchor to fullResolution, convolution steps measure one
-    # full-image texel, input taps map through the tile mapping, and the
-    # radial zoom clamps its tap under tiling. The locked CDN build predates
-    # that revision, so the transpiler applies the same statements here.
+def test_transpiler_leaves_the_native_tile_aware_effect_stack_to_the_source():
+    # Published engine 1.0.302 (Noisemaker b71a896a) makes
+    # classicNoisedeck/effects tile-aware natively: block grids anchor to
+    # fullResolution, convolution steps measure one full-image texel, input
+    # taps map through the tile mapping, and the radial zoom clamps its tap
+    # under tiling. The transpiler no longer rewrites these statements; the
+    # sibling's compile-glsl.js dropped the same pass once the engine shipped
+    # it, and a rewrite here would double-map every input tap.
     source = (
-        "    float dx = size * (1.0 / resolution.x);\n"
-        "    float dy = size * (1.0 / resolution.y);\n"
-        "    return texture(inputTex, coord).rgb;\n"
-        "    vec2 steps = 1.0 / resolution;\n"
-        "    float amount = resolution.x / size;\n"
-        "\tvec4 base = texture( inputTex, vec2( sx, sy ) );\n"
-        "    if( mod( gl_FragCoord.x, dSize ) > size ) {\n"
-        "        if( mod( gl_FragCoord.y, dSize ) > size ) {\n"
-        "        if( mod( gl_FragCoord.y, dSize ) > size ) {\n"
-        "    st *= resolution;\n"
-        "    vec3 orig = texture(inputTex, st).rgb;\n"
-        "    sum += texture(inputTex, st + vec2(j, i) * 0.004).rgb * strength;\n"
-        "        vec4 tex = texture(inputTex, st + tapB);\n"
-        "    vec2 imageSize = resolution;\n"
+        "    float dx = size * (1.0 / fullResolution.x);\n"
+        "    float dy = size * (1.0 / fullResolution.y);\n"
+        "    return texture(inputTex, (coord * fullResolution - tileOffset)"
+        " / vec2(textureSize(inputTex, 0))).rgb;\n"
+        "    vec2 steps = 1.0 / fullResolution;\n"
+        "    float amount = fullResolution.x / size;\n"
+        "    vec4 base = texture( inputTex, (vec2( sx, sy ) * fullResolution"
+        " - tileOffset) / vec2(textureSize(inputTex, 0)) );\n"
+        "    st *= fullResolution;\n"
+        "    vec3 orig = texture(inputTex, (st * fullResolution - tileOffset)"
+        " / vec2(textureSize(inputTex, 0))).rgb;\n"
+        "    vec2 imageSize = fullResolution;\n"
     )
     adapted = build_module._adapt_source("classicNoisedeck/effects", "effects", source)
-    assert "float dx = size * (1.0 / fullResolution.x);" in adapted
-    assert "float dy = size * (1.0 / fullResolution.y);" in adapted
-    assert (
-        "return texture(inputTex, (coord * fullResolution - tileOffset)"
-        " / vec2(textureSize(inputTex, 0))).rgb;" in adapted
-    )
-    assert "vec2 steps = 1.0 / fullResolution;" in adapted
-    assert "float amount = fullResolution.x / size;" in adapted
-    assert (
-        "vec4 base = texture( inputTex, (vec2( sx, sy ) * fullResolution"
-        " - tileOffset) / vec2(textureSize(inputTex, 0)) );" in adapted
-    )
-    assert "mod( gl_FragCoord.x + tileOffset.x, dSize )" in adapted
-    assert adapted.count("mod( gl_FragCoord.y + tileOffset.y, dSize )") == 2
-    assert "st *= fullResolution;" in adapted
-    assert (
-        "vec3 orig = texture(inputTex, (st * fullResolution - tileOffset)"
-        " / vec2(textureSize(inputTex, 0))).rgb;" in adapted
-    )
-    assert (
-        "sum += texture(inputTex, ((st + vec2(j, i) * 0.004) * fullResolution"
-        " - tileOffset) / vec2(textureSize(inputTex, 0))).rgb * strength;" in adapted
-    )
-    assert (
-        "if (tileOffset.x != 0.0 || tileOffset.y != 0.0) {\n"
-        "            vec2 tapBudget = vec2(256.0) * invFullResolution;\n"
-        "            tapB = min(max(tapB, -tapBudget), tapBudget);\n"
-        "        }" in adapted
-    )
-    assert (
-        "vec4 tex = texture(inputTex, ((st + tapB) * fullResolution"
-        " - tileOffset) / vec2(textureSize(inputTex, 0)));" in adapted
-    )
-    assert "vec2 imageSize = fullResolution;" in adapted
-    # Guards: a changed canonical source raises instead of skipping.
-    import pytest
-    with pytest.raises(ValueError):
-        build_module._adapt_source("classicNoisedeck/effects", "effects", "st *= resolution;")
+    assert adapted == source
     # Other effects keep the raw form.
     assert build_module._adapt_source("synth/pattern", "pattern", source) == source
 
 
-def test_transpiler_mirrors_the_sibling_glyphmap_tiling_detection():
-    # Upstream Noisemaker 6cb1a3c3 detects glyphMap tiling from the
-    # full-image size differing from the local render size instead of from
-    # tileOffset: the origin tile's offset is (0, 0), the same value the
-    # runtime writes when not tiling.
-    source = "bool isTileRendering = length(tileOffset) > 0.0;\n"
+def test_transpiler_leaves_the_glyphmap_tiling_detection_to_the_source():
+    # Published engine 1.0.302 (Noisemaker b71a896a) detects glyphMap tiling
+    # from the full-image size differing from the local render size instead
+    # of from tileOffset: the origin tile's offset is (0, 0), the same value
+    # the runtime writes when not tiling. The transpiler no longer rewrites
+    # the detection; the sibling's compile-glsl.js dropped the same pass once
+    # the engine shipped it.
+    source = "bool isTileRendering = any(notEqual(fullResolution, resolution));\n"
     adapted = build_module._adapt_source("filter/glyphMap", "glyphMap", source)
-    assert adapted == (
-        "bool isTileRendering = any(notEqual(fullResolution, resolution));\n"
-    )
-    # Guards: a changed canonical source raises instead of skipping.
-    import pytest
-    with pytest.raises(ValueError):
-        build_module._adapt_source("filter/glyphMap", "glyphMap", "bool isTileRendering = false;")
-    # Other effects keep the raw form.
+    assert adapted == source
+    # Other programs keep the raw form.
     assert build_module._adapt_source("filter/glyphMap", "preview", source) == source
 
 

@@ -1,7 +1,7 @@
 {
   "provenance": {
     "source": "shaders.noisedeck.app CDN",
-    "version": "1.0.286",
+    "version": "1.0.302",
     "base": "https://shaders.noisedeck.app"
   },
   "effects": {
@@ -14233,7 +14233,11 @@
         },
         "matteColor": {
           "type": "color",
-          "default": "#000000",
+          "default": [
+            0,
+            0,
+            0
+          ],
           "uniform": "matteColor",
           "ui": {
             "label": "matte color",
@@ -17898,6 +17902,14 @@
       "kind": "filter",
       "domain": "image",
       "params": {
+        "fieldTex": {
+          "type": "surface",
+          "default": "inputTex",
+          "ui": {
+            "label": "field map",
+            "category": "source"
+          }
+        },
         "stateSize": {
           "type": "int",
           "default": 256,
@@ -18047,7 +18059,7 @@
             "velTex": "global_vel",
             "rgbaTex": "global_rgba",
             "gridTex": "global_dla_grid",
-            "inputTex": "inputTex"
+            "inputTex": "fieldTex"
           },
           "outputs": {
             "outXYZ": "global_xyz",
@@ -18297,6 +18309,14 @@
       "kind": "filter",
       "domain": "image",
       "params": {
+        "fieldTex": {
+          "type": "surface",
+          "default": "inputTex",
+          "ui": {
+            "label": "field map",
+            "category": "source"
+          }
+        },
         "stateSize": {
           "type": "int",
           "default": 256,
@@ -18404,7 +18424,7 @@
             "xyzTex": "global_xyz",
             "velTex": "global_vel",
             "rgbaTex": "global_rgba",
-            "inputTex": "inputTex"
+            "inputTex": "fieldTex"
           },
           "outputs": {
             "outXYZ": "global_xyz",
@@ -18541,6 +18561,14 @@
       "kind": "filter",
       "domain": "image",
       "params": {
+        "heightTex": {
+          "type": "surface",
+          "default": "inputTex",
+          "ui": {
+            "label": "height map",
+            "category": "source"
+          }
+        },
         "stride": {
           "type": "float",
           "default": 10,
@@ -18605,7 +18633,7 @@
             "xyzTex": "global_xyz",
             "velTex": "global_vel",
             "rgbaTex": "global_rgba",
-            "inputTex": "inputTex"
+            "inputTex": "heightTex"
           },
           "outputs": {
             "outXYZ": "global_xyz",
@@ -18850,6 +18878,14 @@
       "kind": "filter",
       "domain": "image",
       "params": {
+        "diffuseTex": {
+          "type": "surface",
+          "default": "inputTex",
+          "ui": {
+            "label": "diffuse map",
+            "category": "source"
+          }
+        },
         "stateSize": {
           "type": "int",
           "default": 256,
@@ -19047,7 +19083,7 @@
             "rgbaTex": "global_rgba",
             "dataTex": "global_life_data",
             "forceMatrix": "forceMatrix",
-            "inputTex": "inputTex"
+            "inputTex": "diffuseTex"
           },
           "outputs": {
             "outXYZ": "global_xyz",
@@ -19090,6 +19126,14 @@
       "kind": "filter",
       "domain": "image",
       "params": {
+        "fieldTex": {
+          "type": "surface",
+          "default": "inputTex",
+          "ui": {
+            "label": "field map",
+            "category": "source"
+          }
+        },
         "moveSpeed": {
           "type": "float",
           "default": 1.78,
@@ -19231,7 +19275,7 @@
             "velTex": "global_vel",
             "rgbaTex": "global_rgba",
             "trailTex": "global_physarum_pheromone",
-            "inputTex": "inputTex"
+            "inputTex": "fieldTex"
           },
           "outputs": {
             "outXYZ": "global_xyz",
@@ -21666,6 +21710,15 @@
       "kind": "filter",
       "domain": "image",
       "params": {
+        "diffuseTex": {
+          "type": "surface",
+          "default": "inputTex",
+          "ui": {
+            "label": "diffuse map",
+            "category": "source",
+            "resetOnChange": true
+          }
+        },
         "stateSize": {
           "type": "int",
           "default": 256,
@@ -21794,7 +21847,7 @@
             "xyzTex": "global_xyz",
             "velTex": "global_vel",
             "rgbaTex": "global_rgba",
-            "inputTex": "inputTex"
+            "inputTex": "diffuseTex"
           },
           "outputs": {
             "outXYZ": "global_xyz",
