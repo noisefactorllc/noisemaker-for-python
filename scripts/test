@@ -3,8 +3,8 @@
 # Needs: python3 (>=3.11), curl, and network (dependency install only; no
 # oracle checkout). Everything installs under the temp dir; no pre-existing
 # sibling checkout is required. This is the push gate: the same selection CI's
-# push job runs (pytest -m "not slow and not oracle"). CI's scheduled and PR
-# jobs run the full oracle suite directly from .github/workflows/tests.yml,
+# push job runs (pytest -m "not slow and not oracle"). CI's scheduled and
+# workflow_dispatch jobs run the full oracle suite directly from .github/workflows/tests.yml,
 # reading the pinned oracle revision from CPU_PINNED_REVISION/CPU_PINNED_TREE
 # below; the whole-catalog scripts/parity-summary runs there and as the
 # reviewer's own pre-review parity check. The full suite plus the summary
