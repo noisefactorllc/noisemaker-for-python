@@ -397,3 +397,17 @@ def test_cpu_sync_mrt_uses_render_resolution_and_destination_pixel_grid(monkeypa
     assert len(seen) == 8
     assert all(bound == (8.0, 8.0) and context == (4.0, 2.0) for bound, context, _ in seen)
     assert {point for _, _, point in seen} == {(x + 0.5, y + 0.5) for x in range(4) for y in range(2)}
+
+
+def test_base_color_memory_textures_read_the_inherited_state_size():
+    from noisemaker_cpu.renderer import _declares_inherited_state_size_textures, _meta
+
+    effects = _meta()["effects"]
+    # The 12751c78 base-color memories: their dimensions read the group's
+    # shared stateSize through `inherit: true`, so a joining behavior sizes
+    # them from pointsEmit's stateSize even when it declares no stateSize
+    # global of its own.
+    for eid in ("points/attractor", "points/flock", "points/hydraulic", "points/lenia", "points/physarum"):
+        assert _declares_inherited_state_size_textures(effects[eid]), eid
+    assert not _declares_inherited_state_size_textures(effects["points/life"])
+    assert not _declares_inherited_state_size_textures(effects["render/pointsEmit"])

@@ -14,16 +14,18 @@ def run_pixel(ctx, out):
     _u_inputWeight = U.get("inputWeight", rt.f(0.0))
     _u_fieldActive = U.get("fieldActive", rt.f(0.0))
     _u_behavior = U.get("behavior", rt.f(0.0))
-    _u_fieldTex = T["fieldTex"]
     _u_inputTex = T["inputTex"]
+    _u_heightTex = T["heightTex"]
     _u_xyzTex = T["xyzTex"]
     _u_velTex = T["velTex"]
     _u_rgbaTex = T["rgbaTex"]
     _u_diffuseTex = T["diffuseTex"]
     _u_diffuseActive = U.get("diffuseActive", rt.f(0.0))
+    _u_baseColorTex = T["baseColorTex"]
     g.outXYZ = rt.construct(4, 0.0)
     g.outVel = rt.construct(4, 0.0)
     g.outRGBA = rt.construct(4, 0.0)
+    g.outBaseColor = rt.construct(4, 0.0)
     g.TAU = rt.f(6.283185307179586)
     g.RIGHT_ANGLE = rt.f(1.5707963267948966)
     def selectedDiffuse__vec2(uv):
@@ -31,6 +33,23 @@ def run_pixel(ctx, out):
         size = rt.texture_size(_u_diffuseTex)
         pixel = rt.component_wise("clamp", rt.construct(2, rt.construct(2, rt.binary("*", rt.component_wise("clamp", uv, rt.construct(2, rt.f(0.0)), rt.construct(2, rt.f(0.999999)), width=2), rt.construct(2, size), 2, 'float')), base="int"), rt.construct(2, rt.i(0), base="int"), rt.binary("-", size, rt.i(1), 2, "int"), width=2)
         return rt.texel_fetch(_u_diffuseTex, pixel, rt.i(0))
+    def spawnColor__vec2(pos):
+        pos = rt.copy(pos, "float")
+        dims = rt.texture_size(_u_inputTex)
+        sampled = rt.texel_fetch(_u_inputTex, rt.construct(2, rt.binary("*", pos, rt.construct_raw(2, rt.construct(2, dims)), 2, 'float'), base="int"), rt.i(0))
+        return rt.construct(4, (sampled if rt.binary(">", rt.swizzle(sampled, "a"), rt.f(0.0)) else rt.construct(4, rt.f(1.0), rt.f(1.0), rt.f(1.0), rt.f(1.0))))
+    def baseColor__ivec2_vec4_vec2(coord, rgba, pos):
+        coord = rt.copy(coord, "int")
+        rgba = rt.copy(rgba, "float")
+        pos = rt.copy(pos, "float")
+        kept = rt.texel_fetch(_u_baseColorTex, coord, rt.i(0))
+        if rt.binary("==", rt.swizzle(kept, "a"), rt.f(0.0)):
+            return rgba
+        spawnDelta = rt.component_wise("abs", rt.construct(4, rt.binary("-", rt.component_wise("round", rt.binary("*", rgba, rt.f(255.0), 4, 'float'), width=4), rt.component_wise("round", rt.construct(4, rt.binary("*", rt.component_wise("clamp", spawnColor__vec2(pos), rt.f(0.0), rt.f(1.0), width=4), rt.f(255.0), 4, 'float')), width=4), 4, 'float')), width=4)
+        return rt.construct(4, (rgba if rt.component_wise("all", rt.component_wise("lessThanEqual", spawnDelta, rt.construct(4, rt.f(1.0)), width=4), width=4) else kept))
+    def keptBaseColor__vec4(base):
+        base = rt.copy(base, "float")
+        return rt.construct(4, (rt.construct(4, rt.swizzle(base, "rgb"), rt.component_wise("max", rt.swizzle(base, "a"), rt.f(0.003921568859368563), width=1)) if rt.binary(">", _u_diffuseActive, rt.f(0.5)) else rt.construct(4, rt.f(0.0), rt.f(0.0), rt.f(0.0), rt.f(0.0))))
     def hash_uint__uint(seed):
         state = rt.binary("+", rt.binary("*", seed, rt.i(747796405), 1, "uint"), rt.i(2891336453), 1, "uint")
         word = rt.binary("*", rt.binary("^", rt.binary(">>", state, rt.binary("+", rt.binary(">>", state, rt.i(28), 1, "uint"), rt.i(4), 1, "uint"), 1, "uint"), state, 1, "uint"), rt.i(277803737), 1, "uint")
@@ -99,6 +118,7 @@ def run_pixel(ctx, out):
         xyz = rt.texel_fetch(_u_xyzTex, coord, rt.i(0))
         vel = rt.texel_fetch(_u_velTex, coord, rt.i(0))
         rgba = rt.texel_fetch(_u_rgbaTex, coord, rt.i(0))
+        base = baseColor__ivec2_vec4_vec2(coord, rgba, rt.swizzle(xyz, "xy"))
         px = rt.swizzle(xyz, "x")
         py = rt.swizzle(xyz, "y")
         pz = rt.swizzle(xyz, "z")
@@ -109,11 +129,12 @@ def run_pixel(ctx, out):
             g.outXYZ[:] = xyz
             g.outVel[:] = vel
             g.outRGBA[:] = rgba
+            g.outBaseColor[:] = keptBaseColor__vec4(base)
             return
-        texSize = (rt.texture_size(_u_fieldTex) if rt.binary(">", _u_fieldActive, rt.f(0.5)) else rt.texture_size(_u_inputTex))
+        texSize = (rt.texture_size(_u_heightTex) if rt.binary(">", _u_fieldActive, rt.f(0.5)) else rt.texture_size(_u_inputTex))
         texCoord = rt.construct(2, rt.binary("*", px, rt.construct(1, rt.swizzle(texSize, "x")), 1, "float"), rt.binary("*", py, rt.construct(1, rt.swizzle(texSize, "y")), 1, "float"), base="int")
         texCoord[:] = rt.component_wise("clamp", texCoord, rt.construct(2, rt.i(0), base="int"), rt.binary("-", texSize, rt.i(1), 2, "int"), width=2)
-        texel = rt.construct(4, (rt.texel_fetch(_u_fieldTex, texCoord, rt.i(0)) if rt.binary(">", _u_fieldActive, rt.f(0.5)) else rt.texel_fetch(_u_inputTex, texCoord, rt.i(0))))
+        texel = rt.construct(4, (rt.texel_fetch(_u_heightTex, texCoord, rt.i(0)) if rt.binary(">", _u_fieldActive, rt.f(0.5)) else rt.texel_fetch(_u_inputTex, texCoord, rt.i(0))))
         inputLuma = oklab_l__vec3(rt.swizzle(texel, "rgb"))
         weightBlend = rt.component_wise("clamp", rt.binary("*", _u_inputWeight, rt.f(0.01), 1, "float"), rt.f(0.0), rt.f(1.0), width=1)
         indexValue = rt.component_wise("mix", rt.f(0.5), inputLuma, weightBlend, width=1)
@@ -134,7 +155,8 @@ def run_pixel(ctx, out):
         newY = rt.component_wise("fract", newY, width=1)
         g.outXYZ[:] = rt.construct(4, newX, newY, pz, rt.f(1.0))
         g.outVel[:] = rt.construct(4, rt.f(0.0), rt.f(0.0), rotRand, strideRand)
-        g.outRGBA[:] = (selectedDiffuse__vec2(rt.swizzle(g.outXYZ, "xy")) if rt.binary(">", _u_diffuseActive, rt.f(0.5)) else rgba)
+        g.outRGBA[:] = (selectedDiffuse__vec2(rt.swizzle(g.outXYZ, "xy")) if rt.binary(">", _u_diffuseActive, rt.f(0.5)) else base)
+        g.outBaseColor[:] = keptBaseColor__vec4(base)
     main__void()
     _c = g.outXYZ
     out[0][0] = rt.f32(_c[0]); out[0][1] = rt.f32(_c[1]); out[0][2] = rt.f32(_c[2]); out[0][3] = rt.f32(_c[3])
@@ -142,4 +164,6 @@ def run_pixel(ctx, out):
     out[1][0] = rt.f32(_c[0]); out[1][1] = rt.f32(_c[1]); out[1][2] = rt.f32(_c[2]); out[1][3] = rt.f32(_c[3])
     _c = g.outRGBA
     out[2][0] = rt.f32(_c[0]); out[2][1] = rt.f32(_c[1]); out[2][2] = rt.f32(_c[2]); out[2][3] = rt.f32(_c[3])
-run_pixel.output_names = ('outXYZ', 'outVel', 'outRGBA')
+    _c = g.outBaseColor
+    out[3][0] = rt.f32(_c[0]); out[3][1] = rt.f32(_c[1]); out[3][2] = rt.f32(_c[2]); out[3][3] = rt.f32(_c[3])
+run_pixel.output_names = ('outXYZ', 'outVel', 'outRGBA', 'outBaseColor')

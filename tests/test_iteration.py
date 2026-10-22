@@ -16,6 +16,10 @@ def test_particle_state_name_is_narrow():
     assert is_particle_state_name("global_xyz")
     assert is_particle_state_name("global_life_data")
     assert is_particle_state_name("global_points_trail")
+    # Upstream's expander scopes each behavior base_color memory into the
+    # particle pipeline; a merely global_-prefixed scratch texture stays outside.
+    assert is_particle_state_name("global_dla_base_color")
+    assert is_particle_state_name("global_flock_base_color")
     assert not is_particle_state_name("global_rd_state")
 
 

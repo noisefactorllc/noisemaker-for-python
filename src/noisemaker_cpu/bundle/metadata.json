@@ -17700,7 +17700,19 @@
           "cpuOnly": true
         }
       },
-      "textures": {},
+      "textures": {
+        "global_attractor_base_color": {
+          "width": {
+            "param": "stateSize",
+            "inherit": true
+          },
+          "height": {
+            "param": "stateSize",
+            "inherit": true
+          },
+          "format": "rgba8"
+        }
+      },
       "passes": [
         {
           "name": "agent",
@@ -17710,19 +17722,21 @@
             "xyzTex": "global_xyz",
             "velTex": "global_vel",
             "rgbaTex": "global_rgba",
-            "diffuseTex": "diffuseTex"
+            "diffuseTex": "diffuseTex",
+            "baseColorTex": "global_attractor_base_color"
           },
           "outputs": {
             "outXYZ": "global_xyz",
             "outVel": "global_vel",
-            "outRGBA": "global_rgba"
+            "outRGBA": "global_rgba",
+            "outBaseColor": "global_attractor_base_color"
           },
           "uniforms": {
             "diffuseActive": "diffuseActive",
             "attractor": "attractor",
             "speed": "speed"
           },
-          "drawBuffers": 3
+          "drawBuffers": 4
         },
         {
           "name": "passthrough",
@@ -17863,6 +17877,17 @@
             "paramDefault": 512
           },
           "format": "rgba32float"
+        },
+        "global_buddhabrot_base_color": {
+          "width": {
+            "param": "stateSize",
+            "inherit": true
+          },
+          "height": {
+            "param": "stateSize",
+            "inherit": true
+          },
+          "format": "rgba8"
         }
       },
       "passes": [
@@ -17874,12 +17899,14 @@
             "xyzTex": "global_xyz",
             "velTex": "global_vel",
             "rgbaTex": "global_rgba",
-            "diffuseTex": "diffuseTex"
+            "diffuseTex": "diffuseTex",
+            "baseColorTex": "global_buddhabrot_base_color"
           },
           "outputs": {
             "outXYZ": "global_xyz",
             "outVel": "global_vel",
-            "outRGBA": "global_rgba"
+            "outRGBA": "global_rgba",
+            "outBaseColor": "global_buddhabrot_base_color"
           },
           "uniforms": {
             "diffuseActive": "diffuseActive",
@@ -17890,7 +17917,7 @@
             "centerY": "centerY",
             "zoom": "zoom"
           },
-          "drawBuffers": 3
+          "drawBuffers": 4
         },
         {
           "name": "zWrite",
@@ -17924,7 +17951,7 @@
       "kind": "filter",
       "domain": "image",
       "params": {
-        "fieldTex": {
+        "heightTex": {
           "type": "surface",
           "default": "none",
           "colorModeUniform": "fieldActive",
@@ -18053,6 +18080,17 @@
           "width": "100%",
           "height": "100%",
           "format": "rgba16f"
+        },
+        "global_dla_base_color": {
+          "width": {
+            "param": "stateSize",
+            "inherit": true
+          },
+          "height": {
+            "param": "stateSize",
+            "inherit": true
+          },
+          "format": "rgba8"
         }
       },
       "passes": [
@@ -18092,13 +18130,15 @@
             "rgbaTex": "global_rgba",
             "gridTex": "global_dla_grid",
             "inputTex": "inputTex",
-            "fieldTex": "fieldTex",
-            "diffuseTex": "diffuseTex"
+            "heightTex": "heightTex",
+            "diffuseTex": "diffuseTex",
+            "baseColorTex": "global_dla_base_color"
           },
           "outputs": {
             "outXYZ": "global_xyz",
             "outVel": "global_vel",
-            "outRGBA": "global_rgba"
+            "outRGBA": "global_rgba",
+            "outBaseColor": "global_dla_base_color"
           },
           "uniforms": {
             "diffuseActive": "diffuseActive",
@@ -18108,7 +18148,7 @@
             "attrition": "attrition",
             "stateSize": "stateSize"
           },
-          "drawBuffers": 3
+          "drawBuffers": 4
         },
         {
           "name": "depositGrid",
@@ -18148,7 +18188,10 @@
           }
         }
       ],
-      "iterated": true
+      "iterated": true,
+      "paramAliases": {
+        "fieldTex": "heightTex"
+      }
     },
     "points/flock": {
       "namespace": "points",
@@ -18304,7 +18347,19 @@
           "cpuOnly": true
         }
       },
-      "textures": {},
+      "textures": {
+        "global_flock_base_color": {
+          "width": {
+            "param": "stateSize",
+            "inherit": true
+          },
+          "height": {
+            "param": "stateSize",
+            "inherit": true
+          },
+          "format": "rgba8"
+        }
+      },
       "passes": [
         {
           "name": "agent",
@@ -18314,12 +18369,15 @@
             "xyzTex": "global_xyz",
             "velTex": "global_vel",
             "rgbaTex": "global_rgba",
-            "diffuseTex": "diffuseTex"
+            "diffuseTex": "diffuseTex",
+            "baseColorTex": "global_flock_base_color",
+            "inputTex": "inputTex"
           },
           "outputs": {
             "outXYZ": "global_xyz",
             "outVel": "global_vel",
-            "outRGBA": "global_rgba"
+            "outRGBA": "global_rgba",
+            "outBaseColor": "global_flock_base_color"
           },
           "uniforms": {
             "diffuseActive": "diffuseActive",
@@ -18334,7 +18392,7 @@
             "wallMargin": "wallMargin",
             "noiseWeight": "noiseWeight"
           },
-          "drawBuffers": 3
+          "drawBuffers": 4
         },
         {
           "name": "passthrough",
@@ -18356,7 +18414,7 @@
       "kind": "filter",
       "domain": "image",
       "params": {
-        "fieldTex": {
+        "heightTex": {
           "type": "surface",
           "default": "none",
           "colorModeUniform": "fieldActive",
@@ -18471,7 +18529,19 @@
           "cpuOnly": true
         }
       },
-      "textures": {},
+      "textures": {
+        "global_flow_base_color": {
+          "width": {
+            "param": "stateSize",
+            "inherit": true
+          },
+          "height": {
+            "param": "stateSize",
+            "inherit": true
+          },
+          "format": "rgba8"
+        }
+      },
       "passes": [
         {
           "name": "agent",
@@ -18482,13 +18552,15 @@
             "velTex": "global_vel",
             "rgbaTex": "global_rgba",
             "inputTex": "inputTex",
-            "fieldTex": "fieldTex",
-            "diffuseTex": "diffuseTex"
+            "heightTex": "heightTex",
+            "diffuseTex": "diffuseTex",
+            "baseColorTex": "global_flow_base_color"
           },
           "outputs": {
             "outXYZ": "global_xyz",
             "outVel": "global_vel",
-            "outRGBA": "global_rgba"
+            "outRGBA": "global_rgba",
+            "outBaseColor": "global_flow_base_color"
           },
           "uniforms": {
             "diffuseActive": "diffuseActive",
@@ -18500,7 +18572,7 @@
             "quantize": "quantize",
             "inputWeight": "inputWeight"
           },
-          "drawBuffers": 3
+          "drawBuffers": 4
         },
         {
           "name": "passthrough",
@@ -18514,7 +18586,10 @@
           }
         }
       ],
-      "iterated": true
+      "iterated": true,
+      "paramAliases": {
+        "fieldTex": "heightTex"
+      }
     },
     "points/heightGrid": {
       "namespace": "points",
@@ -18694,7 +18769,19 @@
           "cpuOnly": true
         }
       },
-      "textures": {},
+      "textures": {
+        "global_hydraulic_base_color": {
+          "width": {
+            "param": "stateSize",
+            "inherit": true
+          },
+          "height": {
+            "param": "stateSize",
+            "inherit": true
+          },
+          "format": "rgba8"
+        }
+      },
       "passes": [
         {
           "name": "agent",
@@ -18706,12 +18793,14 @@
             "rgbaTex": "global_rgba",
             "inputTex": "inputTex",
             "heightTex": "heightTex",
-            "diffuseTex": "diffuseTex"
+            "diffuseTex": "diffuseTex",
+            "baseColorTex": "global_hydraulic_base_color"
           },
           "outputs": {
             "outXYZ": "global_xyz",
             "outVel": "global_vel",
-            "outRGBA": "global_rgba"
+            "outRGBA": "global_rgba",
+            "outBaseColor": "global_hydraulic_base_color"
           },
           "uniforms": {
             "diffuseActive": "diffuseActive",
@@ -18721,7 +18810,7 @@
             "inverse": "inverse",
             "inputWeight": "inputWeight"
           },
-          "drawBuffers": 3
+          "drawBuffers": 4
         },
         {
           "name": "passthrough",
@@ -18874,6 +18963,17 @@
           "width": "50%",
           "height": "50%",
           "format": "rgba16f"
+        },
+        "global_lenia_base_color": {
+          "width": {
+            "param": "stateSize",
+            "inherit": true
+          },
+          "height": {
+            "param": "stateSize",
+            "inherit": true
+          },
+          "format": "rgba8"
         }
       },
       "passes": [
@@ -18928,12 +19028,15 @@
             "velTex": "global_vel",
             "rgbaTex": "global_rgba",
             "diffuseTex": "diffuseTex",
+            "baseColorTex": "global_lenia_base_color",
+            "inputTex": "inputTex",
             "fieldTex": "global_lenia_field"
           },
           "outputs": {
             "outXYZ": "global_xyz",
             "outVel": "global_vel",
-            "outRGBA": "global_rgba"
+            "outRGBA": "global_rgba",
+            "outBaseColor": "global_lenia_base_color"
           },
           "uniforms": {
             "diffuseActive": "diffuseActive",
@@ -18942,7 +19045,7 @@
             "repulsion": "repulsion",
             "dt": "dt"
           },
-          "drawBuffers": 3
+          "drawBuffers": 4
         },
         {
           "name": "passthrough",
@@ -19222,7 +19325,7 @@
             "category": "general"
           }
         },
-        "fieldTex": {
+        "heightTex": {
           "type": "surface",
           "default": "none",
           "colorModeUniform": "fieldActive",
@@ -19345,6 +19448,17 @@
           "width": "100%",
           "height": "100%",
           "format": "rgba16f"
+        },
+        "global_physarum_base_color": {
+          "width": {
+            "param": "stateSize",
+            "inherit": true
+          },
+          "height": {
+            "param": "stateSize",
+            "inherit": true
+          },
+          "format": "rgba8"
         }
       },
       "passes": [
@@ -19373,13 +19487,15 @@
             "rgbaTex": "global_rgba",
             "trailTex": "global_physarum_pheromone",
             "inputTex": "inputTex",
-            "fieldTex": "fieldTex",
-            "diffuseTex": "diffuseTex"
+            "heightTex": "heightTex",
+            "diffuseTex": "diffuseTex",
+            "baseColorTex": "global_physarum_base_color"
           },
           "outputs": {
             "outXYZ": "global_xyz",
             "outVel": "global_vel",
-            "outRGBA": "global_rgba"
+            "outRGBA": "global_rgba",
+            "outBaseColor": "global_physarum_base_color"
           },
           "uniforms": {
             "diffuseActive": "diffuseActive",
@@ -19390,7 +19506,7 @@
             "sensorDistance": "sensorDistance",
             "inputWeight": "inputWeight"
           },
-          "drawBuffers": 3
+          "drawBuffers": 4
         },
         {
           "name": "copy",
@@ -19433,7 +19549,10 @@
           }
         }
       ],
-      "iterated": true
+      "iterated": true,
+      "paramAliases": {
+        "fieldTex": "heightTex"
+      }
     },
     "points/physical": {
       "namespace": "points",
@@ -19544,7 +19663,19 @@
           "cpuOnly": true
         }
       },
-      "textures": {},
+      "textures": {
+        "global_physical_base_color": {
+          "width": {
+            "param": "stateSize",
+            "inherit": true
+          },
+          "height": {
+            "param": "stateSize",
+            "inherit": true
+          },
+          "format": "rgba8"
+        }
+      },
       "passes": [
         {
           "name": "agent",
@@ -19554,12 +19685,15 @@
             "xyzTex": "global_xyz",
             "velTex": "global_vel",
             "rgbaTex": "global_rgba",
-            "diffuseTex": "diffuseTex"
+            "diffuseTex": "diffuseTex",
+            "baseColorTex": "global_physical_base_color",
+            "inputTex": "inputTex"
           },
           "outputs": {
             "outXYZ": "global_xyz",
             "outVel": "global_vel",
-            "outRGBA": "global_rgba"
+            "outRGBA": "global_rgba",
+            "outBaseColor": "global_physical_base_color"
           },
           "uniforms": {
             "diffuseActive": "diffuseActive",
@@ -19570,7 +19704,7 @@
             "deviation": "deviation",
             "wander": "wander"
           },
-          "drawBuffers": 3
+          "drawBuffers": 4
         },
         {
           "name": "passthrough",

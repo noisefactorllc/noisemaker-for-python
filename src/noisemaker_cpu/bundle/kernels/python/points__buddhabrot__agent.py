@@ -18,14 +18,24 @@ def run_pixel(ctx, out):
     _u_rgbaTex = T["rgbaTex"]
     _u_diffuseTex = T["diffuseTex"]
     _u_diffuseActive = U.get("diffuseActive", rt.f(0.0))
+    _u_baseColorTex = T["baseColorTex"]
     g.outXYZ = rt.construct(4, 0.0)
     g.outVel = rt.construct(4, 0.0)
     g.outRGBA = rt.construct(4, 0.0)
+    g.outBaseColor = rt.construct(4, 0.0)
     def selectedDiffuse__vec2(uv):
         uv = rt.copy(uv, "float")
         size = rt.texture_size(_u_diffuseTex)
         pixel = rt.component_wise("clamp", rt.construct(2, rt.construct(2, rt.binary("*", rt.component_wise("clamp", uv, rt.construct(2, rt.f(0.0)), rt.construct(2, rt.f(0.999999)), width=2), rt.construct(2, size), 2, 'float')), base="int"), rt.construct(2, rt.i(0), base="int"), rt.binary("-", size, rt.i(1), 2, "int"), width=2)
         return rt.texel_fetch(_u_diffuseTex, pixel, rt.i(0))
+    def baseColor__ivec2_vec4(coord, col):
+        coord = rt.copy(coord, "int")
+        col = rt.copy(col, "float")
+        kept = rt.texel_fetch(_u_baseColorTex, coord, rt.i(0))
+        return rt.construct(4, (col if rt.binary("==", rt.swizzle(kept, "a"), rt.f(0.0)) else kept))
+    def keptBaseColor__vec4(base):
+        base = rt.copy(base, "float")
+        return rt.construct(4, (rt.construct(4, rt.swizzle(base, "rgb"), rt.component_wise("max", rt.swizzle(base, "a"), rt.f(0.003921568859368563), width=1)) if rt.binary(">", _u_diffuseActive, rt.f(0.5)) else rt.construct(4, rt.f(0.0), rt.f(0.0), rt.f(0.0), rt.f(0.0))))
     def hash_uint__uint(s):
         state = rt.binary("+", rt.binary("*", s, rt.i(747796405), 1, "uint"), rt.i(2891336453), 1, "uint")
         word = rt.binary("*", rt.binary("^", rt.binary(">>", state, rt.binary("+", rt.binary(">>", state, rt.i(28), 1, "uint"), rt.i(4), 1, "uint"), 1, "uint"), state, 1, "uint"), rt.i(277803737), 1, "uint")
@@ -53,6 +63,7 @@ def run_pixel(ctx, out):
             g.outXYZ[:] = pos
             g.outVel[:] = vel
             g.outRGBA[:] = col
+            g.outBaseColor[:] = keptBaseColor__vec4(baseColor__ivec2_vec4(coord, col))
             return
         agentSeed = rt.binary("^", rt.binary("^", rt.hash_uint_lcg(rt.construct(1, rt.binary("+", rt.swizzle(coord, "x"), rt.binary("*", rt.swizzle(coord, "y"), stateSize, 1, "int"), 1, "int"), base="uint")), rt.construct(1, rt.binary("*", _u_time, rt.f(65536.0), 1, "float"), base="uint"), 1, "uint"), rt.construct(1, rt.binary("*", rt.swizzle(vel, "z"), rt.f(137.0), 1, "float"), base="uint"), 1, "uint")
         needsInit = rt.binary("<", rt.swizzle(pos, "z"), rt.f(0.25))
@@ -72,6 +83,7 @@ def run_pixel(ctx, out):
                 g.outXYZ[:] = rt.construct(4, rt.swizzle(pos, "xy"), rt.f(0.0), rt.f(0.0))
                 g.outVel[:] = vel
                 g.outRGBA[:] = rt.construct(4, rt.f(0.0), rt.f(0.0), rt.f(0.0), rt.f(0.0))
+                g.outBaseColor[:] = rt.construct(4, rt.f(0.0), rt.f(0.0), rt.f(0.0), rt.f(0.0))
                 return
             z = rt.construct(2, rt.f(0.0))
             escapeAt = rt.i(0)
@@ -107,11 +119,13 @@ def run_pixel(ctx, out):
                 g.outXYZ[:] = rt.construct(4, rt.swizzle(pos, "xy"), rt.f(0.0), rt.f(0.0))
                 g.outVel[:] = vel
                 g.outRGBA[:] = rt.construct(4, rt.f(0.0), rt.f(0.0), rt.f(0.0), rt.f(0.0))
+                g.outBaseColor[:] = rt.construct(4, rt.f(0.0), rt.f(0.0), rt.f(0.0), rt.f(0.0))
                 return
             screen = complexToScreen__vec2(rt.construct(2, cRe, cIm))
             g.outXYZ[:] = rt.construct(4, screen, rt.f(0.5), rt.f(1.0))
             g.outVel[:] = rt.construct(4, cRe, cIm, rt.f(1.0), escapeStep)
             g.outRGBA[:] = (rt.construct(4, rt.construct(3, rt.binary("*", rt.swizzle(selectedDiffuse__vec2(screen), "rgb"), brightness, 3, 'float')), rt.f(1.0)) if rt.binary(">", _u_diffuseActive, rt.f(0.5)) else rt.construct(4, brightness, brightness, brightness, rt.f(1.0)))
+            g.outBaseColor[:] = keptBaseColor__vec4(rt.construct(4, brightness, brightness, brightness, rt.f(1.0)))
             return
         cRe = rt.swizzle(vel, "x")
         cIm = rt.swizzle(vel, "y")
@@ -145,6 +159,7 @@ def run_pixel(ctx, out):
                 g.outXYZ[:] = rt.construct(4, rt.swizzle(pos, "xy"), rt.f(0.0), rt.f(0.0))
                 g.outVel[:] = rt.construct(4, rt.f(0.0), rt.f(0.0), step, rt.f(0.0))
                 g.outRGBA[:] = rt.construct(4, rt.f(0.0), rt.f(0.0), rt.f(0.0), rt.f(0.0))
+                g.outBaseColor[:] = rt.construct(4, rt.f(0.0), rt.f(0.0), rt.f(0.0), rt.f(0.0))
                 return
             zr = rt.binary("+", rt.binary("-", rt.binary("*", rt.swizzle(z, "x"), rt.swizzle(z, "x"), 1, "float"), rt.binary("*", rt.swizzle(z, "y"), rt.swizzle(z, "y"), 1, "float"), 1, "float"), cRe, 1, "float")
             zi = rt.binary("+", rt.binary("*", rt.binary("*", rt.f(2.0), rt.swizzle(z, "x"), 1, "float"), rt.swizzle(z, "y"), 1, "float"), cIm, 1, "float")
@@ -152,7 +167,9 @@ def run_pixel(ctx, out):
         screen = complexToScreen__vec2(z)
         g.outXYZ[:] = rt.construct(4, screen, rt.f(0.5), rt.f(1.0))
         g.outVel[:] = rt.construct(4, cRe, cIm, step, escapeStep)
-        g.outRGBA[:] = (rt.construct(4, rt.construct(3, rt.binary("*", rt.swizzle(selectedDiffuse__vec2(screen), "rgb"), rt.f(0.03), 3, 'float')), rt.f(1.0)) if rt.binary(">", _u_diffuseActive, rt.f(0.5)) else col)
+        base = baseColor__ivec2_vec4(coord, col)
+        g.outRGBA[:] = (rt.construct(4, rt.construct(3, rt.binary("*", rt.swizzle(selectedDiffuse__vec2(screen), "rgb"), rt.f(0.03), 3, 'float')), rt.f(1.0)) if rt.binary(">", _u_diffuseActive, rt.f(0.5)) else base)
+        g.outBaseColor[:] = keptBaseColor__vec4(base)
     main__void()
     _c = g.outXYZ
     out[0][0] = rt.f32(_c[0]); out[0][1] = rt.f32(_c[1]); out[0][2] = rt.f32(_c[2]); out[0][3] = rt.f32(_c[3])
@@ -160,4 +177,6 @@ def run_pixel(ctx, out):
     out[1][0] = rt.f32(_c[0]); out[1][1] = rt.f32(_c[1]); out[1][2] = rt.f32(_c[2]); out[1][3] = rt.f32(_c[3])
     _c = g.outRGBA
     out[2][0] = rt.f32(_c[0]); out[2][1] = rt.f32(_c[1]); out[2][2] = rt.f32(_c[2]); out[2][3] = rt.f32(_c[3])
-run_pixel.output_names = ('outXYZ', 'outVel', 'outRGBA')
+    _c = g.outBaseColor
+    out[3][0] = rt.f32(_c[0]); out[3][1] = rt.f32(_c[1]); out[3][2] = rt.f32(_c[2]); out[3][3] = rt.f32(_c[3])
+run_pixel.output_names = ('outXYZ', 'outVel', 'outRGBA', 'outBaseColor')

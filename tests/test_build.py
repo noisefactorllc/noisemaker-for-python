@@ -788,6 +788,70 @@ def test_bundled_points_agent_kernels_carry_behavior_local_texture_inputs():
     assert life.index('if rt.binary(">", _u_diffuseActive') < life.index("if _u_useTypeColor:")
 
 
+def test_bundled_points_agent_kernels_carry_base_color_memory():
+    """The 12751c78 per-behavior base-color memory: every base-color agent
+    kernel reads baseColorTex, writes outBaseColor through keptBaseColor, and
+    the dla/flow/physarum field sampler answers to the upstream heightTex
+    name."""
+    kernel_dir = Path(build_module.BUNDLE) / "kernels" / "python"
+    for name in (
+        "points__attractor__agent.py",
+        "points__buddhabrot__agent.py",
+        "points__dla__agent.py",
+        "points__flock__agent.py",
+        "points__flow__agent.py",
+        "points__hydraulic__agent.py",
+        "points__lenia__agentField.py",
+        "points__physarum__agent.py",
+        "points__physical__agent.py",
+    ):
+        kernel = (kernel_dir / name).read_text()
+        assert '_u_baseColorTex = T["baseColorTex"]' in kernel, name
+        assert "keptBaseColor__" in kernel and "baseColor__" in kernel, name
+    for name in ("points__dla__agent.py", "points__flow__agent.py", "points__physarum__agent.py"):
+        kernel = (kernel_dir / name).read_text()
+        assert "_u_fieldTex" not in kernel and '_u_heightTex = T["heightTex"]' in kernel, name
+    lenia = (kernel_dir / "points__lenia__agentField.py").read_text()
+    assert '_u_fieldTex = T["fieldTex"]' in lenia
+    life = (kernel_dir / "points__life__agent.py").read_text()
+    assert "_u_baseColorTex" not in life
+
+
+def test_bundled_points_catalog_carries_base_color_memory_contract():
+    """The 12751c78 catalog contract: each base-color behavior declares its
+    global_<behavior>_base_color memory (stateSize, inherit: true, rgba8),
+    binds it through baseColorTex/outBaseColor, and the agent pass draws to
+    four buffers."""
+    effects = json.loads((Path(build_module.BUNDLE) / "metadata.json").read_text())["effects"]
+    for eid in (
+        "points/attractor",
+        "points/buddhabrot",
+        "points/dla",
+        "points/flock",
+        "points/flow",
+        "points/hydraulic",
+        "points/lenia",
+        "points/physarum",
+        "points/physical",
+    ):
+        behavior = eid.split("/")[1]
+        memory = f"global_{behavior}_base_color"
+        effect = effects[eid]
+        assert effect["textures"][memory] == {
+            "width": {"param": "stateSize", "inherit": True},
+            "height": {"param": "stateSize", "inherit": True},
+            "format": "rgba8",
+        }, eid
+        agent = next(p for p in effect["passes"] if p["program"].startswith("agent"))
+        assert agent["inputs"]["baseColorTex"] == memory, eid
+        assert agent["outputs"]["outBaseColor"] == memory, eid
+        assert agent["drawBuffers"] == 4, eid
+    life = next(
+        p for p in effects["points/life"]["passes"] if p["program"] == "agent"
+    )
+    assert life["drawBuffers"] == 4 and "baseColorTex" not in life["inputs"]
+
+
 def test_bundled_points_catalog_carries_published_texture_param_contract():
     """The published c4f7cdd7 parameter contract: the points behaviors expose
     their diffuse/field surface params with the colorModeUniform fallback, the
@@ -809,8 +873,9 @@ def test_bundled_points_catalog_carries_published_texture_param_contract():
         assert spec["type"] == "surface" and spec["default"] == "none", eid
         assert spec["colorModeUniform"] == "diffuseActive", eid
     for eid in ("points/dla", "points/flow", "points/physarum"):
-        spec = effects[eid]["params"]["fieldTex"]
+        spec = effects[eid]["params"]["heightTex"]
         assert spec["default"] == "none" and spec["colorModeUniform"] == "fieldActive", eid
+        assert effects[eid]["paramAliases"] == {"fieldTex": "heightTex"}, eid
     spec = effects["points/hydraulic"]["params"]["heightTex"]
     assert spec["default"] == "none" and spec["colorModeUniform"] == "fieldActive"
     spec = effects["points/life"]["params"]["diffuseTex"]

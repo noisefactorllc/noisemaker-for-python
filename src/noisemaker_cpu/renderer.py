@@ -416,6 +416,21 @@ def _particle_state_dimensions(params):
     return size, size
 
 
+def _declares_inherited_state_size_textures(effect):
+    # A texture dimension spec reading the group's shared `stateSize` through the
+    # `inherit: true` flag (upstream's inherited texture dimension): it resolves
+    # against the scope's stateSize — `pointsEmit`'s value — and never the
+    # behavior's own default over it. Every particle behavior's
+    # `global_<behavior>_base_color` memory is sized this way, and several
+    # behaviors (flock, hydraulic, lenia, physarum) declare no `stateSize` global
+    # of their own.
+    for texture in (effect.get("textures") or {}).values():
+        for spec in (texture.get("width"), texture.get("height")):
+            if isinstance(spec, dict) and spec.get("inherit") is True and spec.get("param") == "stateSize":
+                return True
+    return False
+
+
 def _texture_format(effect, name):
     declared = (effect.get("textures") or {}).get(name, {})
     if "format" in declared:
@@ -1000,8 +1015,17 @@ def _run_iterated_group(group, current, surfaces, external_textures, effects, wi
         for index, step in enumerate(group["steps"]):
             effect = effects[step["effect_id"]]
             params = _inherit_volume_size(effect, dict(step["params"]), _chain_bundle(iteration_current))
-            if state_size is not None and "stateSize" in effect["params"]:
+            # A joining step sizes its state textures from the group's shared
+            # stateSize: its own `stateSize` param is overridden to the owner's
+            # value, and a behavior whose textures read the scope's stateSize
+            # through `inherit: true` (a base-color memory) sizes from the owner
+            # too — or from the shared particle fallback when no owner supplies
+            # one and the step declares no `stateSize` param of its own.
+            declares_inherited = _declares_inherited_state_size_textures(effect)
+            if state_size is not None and ("stateSize" in effect["params"] or declares_inherited):
                 params["stateSize"] = state_size
+            elif state_size is None and declares_inherited and "stateSize" not in effect["params"]:
+                params["stateSize"] = _PARTICLE_STATE_FALLBACK_SIZE
             inputs = _effect_step_inputs(step, iteration_current, surfaces, external_textures)
             attachments = {**step_attachments[index], **group_attachments}
             iteration_current = _render_effect_once(

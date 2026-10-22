@@ -5,7 +5,7 @@ from __future__ import annotations
 import re
 
 ITERATION_DELTA_TIME = 1 / 600
-_PARTICLE_STATE = re.compile(r"^global_(xyz|vel|rgba|life_data)$|^global_.*_trail$")
+_PARTICLE_STATE = re.compile(r"^global_(xyz|vel|rgba|life_data)$|^global_.*_trail$|^global_[a-z]+_base_color$")
 
 
 def is_particle_state_name(name) -> bool:

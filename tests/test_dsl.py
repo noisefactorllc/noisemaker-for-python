@@ -8,7 +8,7 @@ catalog bundle.
 import numpy as np
 import pytest
 
-from noisemaker_cpu.dsl import DslError, compile_dsl, parse_dsl, tokenize_dsl
+from noisemaker_cpu.dsl import compiler, DslError, compile_dsl, parse_dsl, tokenize_dsl
 from noisemaker_cpu.renderer import _meta, render_dsl, render_effect
 
 
@@ -373,3 +373,85 @@ def test_cpu_sync_zero_iteration_volume_io_retains_typed_empty_volume():
     )
     result = render_dsl(source, width=3, height=2)
     assert (result.width, result.height) == (3, 2)
+
+
+def test_dsl_resolves_a_deprecated_param_alias():
+    """The 12751c78 deprecated aliases: a named alias migrates its value, both
+    names present lets the canonical name win, and the alias is always
+    consumed — points/flow, points/dla and points/physarum all accept the
+    fieldTex -> heightTex alias."""
+    spec = _meta()["effects"]["points/flow"]
+    params, surfaces = compiler._normalize_effect(
+        "points/flow",
+        spec,
+        [{"name": "fieldTex", "value": "inputTex", "loc": (1, 1)}],
+    )
+    assert "heightTex" in surfaces and "fieldTex" not in surfaces
+    assert surfaces["heightTex"] == "@current"
+
+    both_params, both_surfaces = compiler._normalize_effect(
+        "points/flow",
+        spec,
+        [
+            {"name": "fieldTex", "value": "none", "loc": (1, 1)},
+            {"name": "heightTex", "value": "inputTex", "loc": (1, 1)},
+        ],
+    )
+    assert both_surfaces["heightTex"] == "@current"
+    assert "fieldTex" not in both_surfaces
+
+
+def test_dsl_alias_hits_the_real_catalog_effects():
+    for eid in ("points/flow", "points/dla", "points/physarum"):
+        spec = _meta()["effects"][eid]
+        aliased_params, aliased_surfaces = compiler._normalize_effect(
+            eid, spec, [{"name": "fieldTex", "value": "inputTex", "loc": (1, 1)}]
+        )
+        canonical_params, canonical_surfaces = compiler._normalize_effect(
+            eid, spec, [{"name": "heightTex", "value": "inputTex", "loc": (1, 1)}]
+        )
+        assert aliased_params == canonical_params and aliased_surfaces == canonical_surfaces, eid
+
+
+def test_dsl_a_repeated_alias_after_the_first_hit_is_consumed():
+    """As upstream's aliasWarned set does, only the first hit of one deprecated
+    alias name in a single call migrates its value; later repeats are consumed
+    without migrating again."""
+    spec = _meta()["effects"]["points/flow"]
+    params, surfaces = compiler._normalize_effect(
+        "points/flow",
+        spec,
+        [
+            {"name": "fieldTex", "value": "none", "loc": (1, 1)},
+            {"name": "fieldTex", "value": "inputTex", "loc": (1, 1)},
+        ],
+    )
+    assert "fieldTex" not in surfaces and "fieldTex" not in params
+    assert surfaces == {} and params == {}
+    first_params, first_surfaces = compiler._normalize_effect(
+        "points/flow", spec, [{"name": "fieldTex", "value": "none", "loc": (1, 1)}]
+    )
+    assert surfaces == first_surfaces
+
+
+def test_dsl_alias_deprecation_warns_once_per_alias(capsys):
+    """The port emits upstream's alias deprecation diagnostic on stderr for
+    the first defined hit of each alias name, once per name per call."""
+    spec = _meta()["effects"]["points/flow"]
+    compiler._normalize_effect(
+        "points/flow", spec, [{"name": "fieldTex", "value": "none", "loc": (1, 1)}]
+    )
+    err = capsys.readouterr().err
+    assert (
+        "param 'fieldTex' is deprecated, use 'heightTex' instead. "
+        "Aliases will be removed on 2027-06-01." in err
+    )
+    compiler._normalize_effect(
+        "points/flow",
+        spec,
+        [
+            {"name": "fieldTex", "value": "none", "loc": (1, 1)},
+            {"name": "fieldTex", "value": "inputTex", "loc": (1, 1)},
+        ],
+    )
+    assert capsys.readouterr().err.count("is deprecated") == 1

@@ -283,28 +283,46 @@ def _normalize_effect(effect_id, spec, args):
     """
     param_specs = spec["params"]
     param_names = list(param_specs.keys())
+    # Deprecated parameter aliases (mirroring the JS EffectDefinition): a named
+    # argument using an old name resolves to the canonical name — an alias
+    # present without its canonical name migrates the value; with both present
+    # the canonical name wins; the alias is always consumed.
+    aliases = spec.get("paramAliases") or {}
     named = len(args) > 0 and args[0]["name"] is not None
     params = {}
     surfaces = {}
     provided = set()
+    alias_migrated = set()
+    if named:
+        canonical_supplied = {arg["name"] for arg in args if arg["value"] is not _UNSUPPORTED_INPUT and arg["name"] is not None}
     for index, arg in enumerate(args):
-        # No paramAliases resolution: the bundle emits none (0/167 catalog effects
-        # define aliases). If aliases are ever added, build.py must emit them and
-        # this lookup must mirror EffectDefinition.paramAliases like the JS engine.
         supplied = arg["name"] if named else (param_names[index] if index < len(param_names) else None)
-        if not supplied or supplied not in param_specs:
+        name = aliases.get(supplied, supplied) if named else supplied
+        if not name or name not in param_specs:
             bad = supplied if supplied else f"argument {index + 1}"
             raise DslError(f'Unknown parameter "{bad}" for {effect_id}; accepted: {", ".join(param_names)}', arg["loc"])
+        if named and supplied != name:
+            # The alias is always consumed. As upstream's aliasWarned set
+            # does, only the first defined hit of an alias name warns and
+            # carries its value — a repeated alias after that hit is
+            # consumed without migrating again — and the canonical name
+            # wins when it is also supplied directly.
+            if arg["value"] is _UNSUPPORTED_INPUT or supplied in alias_migrated:
+                continue
+            alias_migrated.add(supplied)
+            print(f"param '{supplied}' is deprecated, use '{name}' instead. Aliases will be removed on 2027-06-01.", file=sys.stderr)
+            if name in canonical_supplied:
+                continue
         if arg["value"] is _UNSUPPORTED_INPUT:
             continue
-        provided.add(supplied)
-        pspec = param_specs[supplied]
+        provided.add(name)
+        pspec = param_specs[name]
         if pspec.get("type") == "surface":
-            marker = _surface_marker(arg["value"], supplied, arg["loc"])
+            marker = _surface_marker(arg["value"], name, arg["loc"])
             if marker is not None:
-                surfaces[supplied] = marker
+                surfaces[name] = marker
         else:
-            params[supplied] = arg["value"]
+            params[name] = arg["value"]
     for name, pspec in param_specs.items():
         if pspec.get("type") == "surface" and name not in provided and "default" in pspec:
             marker = _surface_marker(pspec["default"], name, None)
