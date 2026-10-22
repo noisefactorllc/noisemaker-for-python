@@ -10,6 +10,7 @@ def run_pixel(ctx, out):
     _u_frame = U.get("frame", 0)
     _u_stride = U.get("stride", rt.f(0.0))
     _u_inputWeight = U.get("inputWeight", rt.f(0.0))
+    _u_fieldActive = U.get("fieldActive", rt.f(0.0))
     _u_attrition = U.get("attrition", rt.f(0.0))
     _u_stateSize = U.get("stateSize", 0)
     _u_resetState = U.get("resetState", False)
@@ -17,10 +18,18 @@ def run_pixel(ctx, out):
     _u_velTex = T["velTex"]
     _u_rgbaTex = T["rgbaTex"]
     _u_gridTex = T["gridTex"]
+    _u_fieldTex = T["fieldTex"]
     _u_inputTex = T["inputTex"]
+    _u_diffuseTex = T["diffuseTex"]
+    _u_diffuseActive = U.get("diffuseActive", rt.f(0.0))
     g.outXYZ = rt.construct(4, 0.0)
     g.outVel = rt.construct(4, 0.0)
     g.outRGBA = rt.construct(4, 0.0)
+    def selectedDiffuse__vec2(uv):
+        uv = rt.copy(uv, "float")
+        size = rt.texture_size(_u_diffuseTex)
+        pixel = rt.component_wise("clamp", rt.construct(2, rt.construct(2, rt.binary("*", rt.component_wise("clamp", uv, rt.construct(2, rt.f(0.0)), rt.construct(2, rt.f(0.999999)), width=2), rt.construct(2, size), 2, 'float')), base="int"), rt.construct(2, rt.i(0), base="int"), rt.binary("-", size, rt.i(1), 2, "int"), width=2)
+        return rt.texel_fetch(_u_diffuseTex, pixel, rt.i(0))
     def hash_uint__uint(seed):
         state = rt.binary("+", rt.binary("*", seed, rt.i(747796405), 1, "uint"), rt.i(2891336453), 1, "uint")
         word = rt.binary("*", rt.binary("^", rt.binary(">>", state, rt.binary("+", rt.binary(">>", state, rt.i(28), 1, "uint"), rt.i(4), 1, "uint"), 1, "uint"), state, 1, "uint"), rt.i(277803737), 1, "uint")
@@ -90,9 +99,9 @@ def run_pixel(ctx, out):
         inputVal = rt.construct(4, 0.0)
         inputDir = rt.construct(2, 0.0)
         if rt.binary(">", inputW, rt.f(0.0)):
-            inputDims = rt.texture_size(_u_inputTex)
+            inputDims = (rt.texture_size(_u_fieldTex) if rt.binary(">", _u_fieldActive, rt.f(0.5)) else rt.texture_size(_u_inputTex))
             inputCoord = rt.construct(2, rt.construct(2, rt.binary("*", wrap01__vec2(pos), rt.construct(2, inputDims), 2, 'float')), base="int")
-            inputVal = rt.texel_fetch(_u_inputTex, inputCoord, rt.i(0))
+            inputVal = rt.construct(4, (rt.texel_fetch(_u_fieldTex, inputCoord, rt.i(0)) if rt.binary(">", _u_fieldActive, rt.f(0.5)) else rt.texel_fetch(_u_inputTex, inputCoord, rt.i(0))))
             inputDir = rt.construct(2, rt.binary("-", rt.binary("*", rt.swizzle(inputVal, "xy"), rt.f(2.0), 2, 'float'), rt.f(1.0), 2, 'float'))
             if rt.binary(">", rt.length(inputDir), rt.f(0.01)):
                 inputDir[:] = rt.normalize(inputDir)
@@ -113,16 +122,16 @@ def run_pixel(ctx, out):
         if stuck:
             g.outXYZ[:] = rt.construct(4, candidate, rt.f(0.0), rt.f(0.0))
             g.outVel[:] = rt.construct(4, seed, rt.f(1.0), rt.f(0.0), agentRand)
-            g.outRGBA[:] = rgba
+            g.outRGBA[:] = (selectedDiffuse__vec2(candidate) if rt.binary(">", _u_diffuseActive, rt.f(0.5)) else rgba)
         else:
             if needsRespawn:
                 g.outXYZ[:] = rt.construct(4, candidate, rt.f(0.0), rt.f(0.0))
                 g.outVel[:] = rt.construct(4, seed, rt.f(0.0), rt.f(0.0), agentRand)
-                g.outRGBA[:] = rgba
+                g.outRGBA[:] = (selectedDiffuse__vec2(candidate) if rt.binary(">", _u_diffuseActive, rt.f(0.5)) else rgba)
             else:
                 g.outXYZ[:] = rt.construct(4, candidate, rt.f(0.0), rt.f(1.0))
                 g.outVel[:] = rt.construct(4, seed, rt.f(0.0), rt.f(0.0), agentRand)
-                g.outRGBA[:] = rgba
+                g.outRGBA[:] = (selectedDiffuse__vec2(candidate) if rt.binary(">", _u_diffuseActive, rt.f(0.5)) else rgba)
     main__void()
     _c = g.outXYZ
     out[0][0] = rt.f32(_c[0]); out[0][1] = rt.f32(_c[1]); out[0][2] = rt.f32(_c[2]); out[0][3] = rt.f32(_c[3])

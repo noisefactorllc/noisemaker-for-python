@@ -753,3 +753,69 @@ def test_transpiler_mirrors_cellular_automata3d_age_state():
     with pytest.raises(ValueError, match="cellularAutomata3d state source changed"):
         changed = source.replace("fragColor = vec4(alive, alive, alive, 1.0);", "fragColor = vec4(1.0);")
         build_module._adapt_source("synth3d/cellularAutomata3d", "simulate", changed)
+
+
+def test_bundled_points_agent_kernels_carry_behavior_local_texture_inputs():
+    """The c4f7cdd7 behavior-local particle texture inputs: every points agent
+    kernel colors particles from diffuseTex through the gated selectedDiffuse
+    helper, and the field-mapped behaviors read fieldTex/heightTex gated on
+    fieldActive instead of plain inputTex."""
+    kernel_dir = Path(build_module.BUNDLE) / "kernels" / "python"
+    agents = [
+        "points__attractor__agent.py",
+        "points__buddhabrot__agent.py",
+        "points__dla__agent.py",
+        "points__flock__agent.py",
+        "points__flow__agent.py",
+        "points__hydraulic__agent.py",
+        "points__lenia__agentField.py",
+        "points__life__agent.py",
+        "points__physarum__agent.py",
+        "points__physical__agent.py",
+    ]
+    for name in agents:
+        kernel = (kernel_dir / name).read_text()
+        assert '_u_diffuseTex = T["diffuseTex"]' in kernel, name
+        assert 'U.get("diffuseActive", rt.f(0.0))' in kernel, name
+    for name in ("points__dla__agent.py", "points__flow__agent.py", "points__physarum__agent.py"):
+        kernel = (kernel_dir / name).read_text()
+        assert 'U.get("fieldActive", rt.f(0.0))' in kernel, name
+    hydraulic = (kernel_dir / "points__hydraulic__agent.py").read_text()
+    assert '_u_heightTex = T["heightTex"]' in hydraulic
+    assert 'U.get("fieldActive", rt.f(0.0))' in hydraulic
+    life = (kernel_dir / "points__life__agent.py").read_text()
+    # The diffuse branch precedes the type-color fallback the locked source had.
+    assert life.index('if rt.binary(">", _u_diffuseActive') < life.index("if _u_useTypeColor:")
+
+
+def test_bundled_points_catalog_carries_published_texture_param_contract():
+    """The published c4f7cdd7 parameter contract: the points behaviors expose
+    their diffuse/field surface params with the colorModeUniform fallback, the
+    field/height maps default to none (the kernel gates on fieldActive), and
+    pointsEmit no longer carries its dead diffuse-map param."""
+    effects = json.loads((Path(build_module.BUNDLE) / "metadata.json").read_text())["effects"]
+    for eid in (
+        "points/attractor",
+        "points/buddhabrot",
+        "points/dla",
+        "points/flock",
+        "points/flow",
+        "points/hydraulic",
+        "points/lenia",
+        "points/physarum",
+        "points/physical",
+    ):
+        spec = effects[eid]["params"]["diffuseTex"]
+        assert spec["type"] == "surface" and spec["default"] == "none", eid
+        assert spec["colorModeUniform"] == "diffuseActive", eid
+    for eid in ("points/dla", "points/flow", "points/physarum"):
+        spec = effects[eid]["params"]["fieldTex"]
+        assert spec["default"] == "none" and spec["colorModeUniform"] == "fieldActive", eid
+    spec = effects["points/hydraulic"]["params"]["heightTex"]
+    assert spec["default"] == "none" and spec["colorModeUniform"] == "fieldActive"
+    spec = effects["points/life"]["params"]["diffuseTex"]
+    assert spec["default"] == "none" and spec["colorModeUniform"] == "diffuseActive"
+    emit = effects["render/pointsEmit"]
+    assert "diffuseTex" not in emit["params"]
+    init = next(p for p in emit["passes"] if p["program"] == "init")
+    assert init["inputs"]["inputTex"] == "inputTex"

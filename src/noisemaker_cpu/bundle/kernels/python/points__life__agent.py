@@ -18,12 +18,14 @@ def run_pixel(ctx, out):
     _u_matrixSeed = U.get("matrixSeed", rt.f(0.0))
     _u_symmetricForces = U.get("symmetricForces", False)
     _u_useTypeColor = U.get("useTypeColor", False)
+    _u_diffuseActive = U.get("diffuseActive", rt.f(0.0))
     _u_xyzTex = T["xyzTex"]
     _u_velTex = T["velTex"]
     _u_rgbaTex = T["rgbaTex"]
     _u_dataTex = T["dataTex"]
     _u_forceMatrix = T["forceMatrix"]
     _u_inputTex = T["inputTex"]
+    _u_diffuseTex = T["diffuseTex"]
     g.outXYZ = rt.construct(4, 0.0)
     g.outVel = rt.construct(4, 0.0)
     g.outRGBA = rt.construct(4, 0.0)
@@ -216,10 +218,13 @@ def run_pixel(ctx, out):
         age = rt.binary("+", age, rt.f(0.016), 1, "float")
         g.outXYZ[:] = rt.construct(4, pos, rt.f(0.0), rt.f(1.0))
         g.outVel[:] = rt.construct(4, velocity, age, seed)
-        if _u_useTypeColor:
-            g.outRGBA[:] = rt.construct(4, typeColor__int_int(rt.construct(1, typeId, base="int"), _u_typeCount), rt.f(1.0))
+        if rt.binary(">", _u_diffuseActive, rt.f(0.5)):
+            g.outRGBA[:] = rt.texture(_u_diffuseTex, pos)
         else:
-            g.outRGBA[:] = rt.texture(_u_inputTex, pos)
+            if _u_useTypeColor:
+                g.outRGBA[:] = rt.construct(4, typeColor__int_int(rt.construct(1, typeId, base="int"), _u_typeCount), rt.f(1.0))
+            else:
+                g.outRGBA[:] = rt.texture(_u_inputTex, pos)
         g.outData[:] = rt.construct(4, typeId, mass, rt.f(0.0), rt.f(1.0))
     main__void()
     _c = g.outXYZ

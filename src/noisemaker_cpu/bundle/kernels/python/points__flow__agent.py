@@ -12,16 +12,25 @@ def run_pixel(ctx, out):
     _u_kink = U.get("kink", rt.f(0.0))
     _u_quantize = U.get("quantize", rt.f(0.0))
     _u_inputWeight = U.get("inputWeight", rt.f(0.0))
+    _u_fieldActive = U.get("fieldActive", rt.f(0.0))
     _u_behavior = U.get("behavior", rt.f(0.0))
+    _u_fieldTex = T["fieldTex"]
     _u_inputTex = T["inputTex"]
     _u_xyzTex = T["xyzTex"]
     _u_velTex = T["velTex"]
     _u_rgbaTex = T["rgbaTex"]
+    _u_diffuseTex = T["diffuseTex"]
+    _u_diffuseActive = U.get("diffuseActive", rt.f(0.0))
     g.outXYZ = rt.construct(4, 0.0)
     g.outVel = rt.construct(4, 0.0)
     g.outRGBA = rt.construct(4, 0.0)
     g.TAU = rt.f(6.283185307179586)
     g.RIGHT_ANGLE = rt.f(1.5707963267948966)
+    def selectedDiffuse__vec2(uv):
+        uv = rt.copy(uv, "float")
+        size = rt.texture_size(_u_diffuseTex)
+        pixel = rt.component_wise("clamp", rt.construct(2, rt.construct(2, rt.binary("*", rt.component_wise("clamp", uv, rt.construct(2, rt.f(0.0)), rt.construct(2, rt.f(0.999999)), width=2), rt.construct(2, size), 2, 'float')), base="int"), rt.construct(2, rt.i(0), base="int"), rt.binary("-", size, rt.i(1), 2, "int"), width=2)
+        return rt.texel_fetch(_u_diffuseTex, pixel, rt.i(0))
     def hash_uint__uint(seed):
         state = rt.binary("+", rt.binary("*", seed, rt.i(747796405), 1, "uint"), rt.i(2891336453), 1, "uint")
         word = rt.binary("*", rt.binary("^", rt.binary(">>", state, rt.binary("+", rt.binary(">>", state, rt.i(28), 1, "uint"), rt.i(4), 1, "uint"), 1, "uint"), state, 1, "uint"), rt.i(277803737), 1, "uint")
@@ -101,10 +110,10 @@ def run_pixel(ctx, out):
             g.outVel[:] = vel
             g.outRGBA[:] = rgba
             return
-        texSize = rt.texture_size(_u_inputTex)
+        texSize = (rt.texture_size(_u_fieldTex) if rt.binary(">", _u_fieldActive, rt.f(0.5)) else rt.texture_size(_u_inputTex))
         texCoord = rt.construct(2, rt.binary("*", px, rt.construct(1, rt.swizzle(texSize, "x")), 1, "float"), rt.binary("*", py, rt.construct(1, rt.swizzle(texSize, "y")), 1, "float"), base="int")
         texCoord[:] = rt.component_wise("clamp", texCoord, rt.construct(2, rt.i(0), base="int"), rt.binary("-", texSize, rt.i(1), 2, "int"), width=2)
-        texel = rt.texel_fetch(_u_inputTex, texCoord, rt.i(0))
+        texel = rt.construct(4, (rt.texel_fetch(_u_fieldTex, texCoord, rt.i(0)) if rt.binary(">", _u_fieldActive, rt.f(0.5)) else rt.texel_fetch(_u_inputTex, texCoord, rt.i(0))))
         inputLuma = oklab_l__vec3(rt.swizzle(texel, "rgb"))
         weightBlend = rt.component_wise("clamp", rt.binary("*", _u_inputWeight, rt.f(0.01), 1, "float"), rt.f(0.0), rt.f(1.0), width=1)
         indexValue = rt.component_wise("mix", rt.f(0.5), inputLuma, weightBlend, width=1)
@@ -125,7 +134,7 @@ def run_pixel(ctx, out):
         newY = rt.component_wise("fract", newY, width=1)
         g.outXYZ[:] = rt.construct(4, newX, newY, pz, rt.f(1.0))
         g.outVel[:] = rt.construct(4, rt.f(0.0), rt.f(0.0), rotRand, strideRand)
-        g.outRGBA[:] = rgba
+        g.outRGBA[:] = (selectedDiffuse__vec2(rt.swizzle(g.outXYZ, "xy")) if rt.binary(">", _u_diffuseActive, rt.f(0.5)) else rgba)
     main__void()
     _c = g.outXYZ
     out[0][0] = rt.f32(_c[0]); out[0][1] = rt.f32(_c[1]); out[0][2] = rt.f32(_c[2]); out[0][3] = rt.f32(_c[3])

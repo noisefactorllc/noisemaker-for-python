@@ -25,7 +25,40 @@ fi
 # The pinned current-authority oracle: noisemaker-for-cpu at CPU_PINNED_REVISION
 # (CI reads the pin from here for its weekly full-suite gate and the parity
 # summary; this quick gate does not run the oracle itself).
-CPU_PINNED_REVISION=2b0779bf3ba5dc7a2a7fa0b9c68115f153bdcbf4
-CPU_PINNED_TREE=4638d583e012e902d03dcf1d19f43378e0b95156
+CPU_PINNED_REVISION=c24b348cf654ef8653ad071c208e9d532ce9df44
+CPU_PINNED_TREE=7f1d34dcfb18ce61ee52470b07770d57129e48e4
+
+# Changed-files selection (operator rule): when the supervisor passes this
+# candidate's changed paths in NM_CHANGED_FILES (one per line), run only the
+# test files that exercise them. A test file is selected when its text names
+# any changed path's basename or its bundle-kernel basename, so kernel,
+# transpiler, and runtime changes each select their covering tests. With the
+# variable unset, the whole suite runs exactly as before.
+if [ -n "${NM_CHANGED_FILES:-}" ]; then
+    select_tests() {
+        "$VENV/bin/python" - "$NM_CHANGED_FILES" <<-'PY'
+			import pathlib, sys
+			changed = [line.strip() for line in sys.argv[1].splitlines() if line.strip()]
+			names = set()
+			for path in changed:
+			    path = path.rstrip("/")
+			    names.add(path)
+			    base = path.rsplit("/", 1)[-1]
+			    stem = base[: -len(".py")] if base.endswith(".py") else base
+			    names.update({base, stem, stem.replace("__", "/")})
+			selected = []
+			for test in sorted(pathlib.Path("tests").glob("test_*.py")):
+			    text = test.read_text(encoding="utf-8", errors="replace")
+			    if any(name and name in text for name in names):
+			        selected.append(str(test))
+			print(" ".join(selected))
+		PY
+    }
+    SELECTION=$(select_tests)
+    if [ -n "$SELECTION" ]; then
+        echo "NM_CHANGED_FILES selection: $SELECTION"
+        exec "$VENV/bin/python" -m pytest -q -m "not slow and not oracle" $SELECTION
+    fi
+fi
 
 "$VENV/bin/python" -m pytest -q -m "not slow and not oracle"

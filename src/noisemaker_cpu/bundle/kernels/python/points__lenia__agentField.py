@@ -14,10 +14,17 @@ def run_pixel(ctx, out):
     _u_sigmaG = U.get("sigmaG", rt.f(0.0))
     _u_repulsion = U.get("repulsion", rt.f(0.0))
     _u_dt = U.get("dt", rt.f(0.0))
+    _u_diffuseTex = T["diffuseTex"]
+    _u_diffuseActive = U.get("diffuseActive", rt.f(0.0))
     g.outXYZ = rt.construct(4, 0.0)
     g.outVel = rt.construct(4, 0.0)
     g.outRGBA = rt.construct(4, 0.0)
     g.EPSILON = rt.f(0.0001)
+    def selectedDiffuse__vec2(uv):
+        uv = rt.copy(uv, "float")
+        size = rt.texture_size(_u_diffuseTex)
+        pixel = rt.component_wise("clamp", rt.construct(2, rt.construct(2, rt.binary("*", rt.component_wise("clamp", uv, rt.construct(2, rt.f(0.0)), rt.construct(2, rt.f(0.999999)), width=2), rt.construct(2, size), 2, 'float')), base="int"), rt.construct(2, rt.i(0), base="int"), rt.binary("-", size, rt.i(1), 2, "int"), width=2)
+        return rt.texel_fetch(_u_diffuseTex, pixel, rt.i(0))
     def growth__float_float_float(u, mu, sigma):
         x = rt.binary("/", rt.binary("-", u, mu, 1, "float"), sigma, 1, "float")
         return rt.component_wise("exp", rt.binary("*", rt.unary("-", x), x, 1, "float"), width=1)
@@ -60,7 +67,7 @@ def run_pixel(ctx, out):
         age = rt.binary("+", rt.swizzle(vel, "z"), rt.f(0.016), 1, "float")
         g.outXYZ[:] = rt.construct(4, newPos, rt.swizzle(xyz, "z"), rt.f(1.0))
         g.outVel[:] = rt.construct(4, velocity, age, rt.swizzle(vel, "w"))
-        g.outRGBA[:] = rgba
+        g.outRGBA[:] = (selectedDiffuse__vec2(rt.swizzle(g.outXYZ, "xy")) if rt.binary(">", _u_diffuseActive, rt.f(0.5)) else rgba)
     main__void()
     _c = g.outXYZ
     out[0][0] = rt.f32(_c[0]); out[0][1] = rt.f32(_c[1]); out[0][2] = rt.f32(_c[2]); out[0][3] = rt.f32(_c[3])
