@@ -838,8 +838,8 @@ def test_bundled_points_catalog_carries_base_color_memory_contract():
         memory = f"global_{behavior}_base_color"
         effect = effects[eid]
         assert effect["textures"][memory] == {
-            "width": {"param": "stateSize", "inherit": True},
-            "height": {"param": "stateSize", "inherit": True},
+            "width": {"param": "stateSize", "inherit": True, "default": 256},
+            "height": {"param": "stateSize", "inherit": True, "default": 256},
             "format": "rgba8",
         }, eid
         agent = next(p for p in effect["passes"] if p["program"].startswith("agent"))
