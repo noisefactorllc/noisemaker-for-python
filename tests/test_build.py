@@ -298,6 +298,27 @@ def test_transpiler_applies_the_upstream_8bit_output_quantization():
     assert build_module._adapt_source("filter/crt", "depthKeys", "color = mix(base_color, color, alphaVal);") == "color = mix(base_color, color, alphaVal);"
 
 
+def test_transpiler_mirrors_the_upstream_prng_boolean_mix():
+    # Upstream Noisemaker d0ed94ae selects the prng() sign fold with a boolean
+    # mix instead of three float ternaries, so software rasterizers build the
+    # shared prelude promptly. The locked CDN build in bundle-lock.json predates
+    # that revision, so the transpiler substitutes the d0ed94ae text verbatim in
+    # every effect whose prelude carries prng().
+    source = (
+        "vec3 prng(vec3 p) {\n"
+        "    p.x = p.x >= 0.0 ? p.x * 2.0 : -p.x * 2.0 + 1.0;\n"
+        "    p.y = p.y >= 0.0 ? p.y * 2.0 : -p.y * 2.0 + 1.0;\n"
+        "    p.z = p.z >= 0.0 ? p.z * 2.0 : -p.z * 2.0 + 1.0;\n"
+        "    return vec3(pcg(uvec3(p))) / float(0xffffffffu);\n"
+        "}\n"
+    )
+    adapted = build_module._adapt_source("synth/gabor", "gabor", source)
+    assert "p = mix(-p * 2.0 + 1.0, p * 2.0, greaterThanEqual(p, vec3(0.0)));" in adapted
+    assert "p.x >= 0.0" not in adapted and "p.y >= 0.0" not in adapted and "p.z >= 0.0" not in adapted
+    # Any other source passes through without the substitution.
+    assert build_module._adapt_source("synth/solid", "solid", "fragColor = color;") == "fragColor = color;"
+
+
 def test_transpiler_mirrors_the_sibling_testPattern_digit_division_fix():
     # Mirror of the sibling's compile-glsl.js restoreIntegerDivision addition:
     # testPattern's numbered checkerboard divides its int digit accumulator in

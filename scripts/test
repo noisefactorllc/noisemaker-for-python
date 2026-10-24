@@ -25,8 +25,8 @@ fi
 # The pinned current-authority oracle: noisemaker-for-cpu at CPU_PINNED_REVISION
 # (CI reads the pin from here for its weekly full-suite gate and the parity
 # summary; this quick gate does not run the oracle itself).
-CPU_PINNED_REVISION=9b7294820eec2a0b95c66790b1dae374fa079c13
-CPU_PINNED_TREE=70ab3e225564f5f916aa032b96e05135a972c847
+CPU_PINNED_REVISION=db42f30c5c3ab711362bf5dbd4013b16637b48f5
+CPU_PINNED_TREE=ea91fb76de96f347ed653383e2277b121a334fad
 
 # Changed-files selection (operator rule): when the supervisor passes this
 # candidate's changed paths in NM_CHANGED_FILES (one per line), run only the

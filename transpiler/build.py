@@ -108,6 +108,20 @@ def _adapt_source(effect_id: str, program: str, source: str) -> str:
         # the emitted kernel.
         source = replacement["source"]
 
+    # Upstream Noisemaker d0ed94ae selects the prng() sign fold with a boolean
+    # mix instead of three float ternaries ("Select prng() sign folds with a
+    # boolean mix so software rasterizers build them promptly"). The locked CDN
+    # build in bundle-lock.json predates that revision, so the transpiler
+    # substitutes the d0ed94ae text verbatim; every prng() effect's shared
+    # prelude carries the identical three ternary lines.
+    source = source.replace(
+        "    p.x = p.x >= 0.0 ? p.x * 2.0 : -p.x * 2.0 + 1.0;\n"
+        "    p.y = p.y >= 0.0 ? p.y * 2.0 : -p.y * 2.0 + 1.0;\n"
+        "    p.z = p.z >= 0.0 ? p.z * 2.0 : -p.z * 2.0 + 1.0;\n",
+        "    // Select per component, like the WGSL select(): a software rasterizer\n"
+        "    // builds each float ternary as a branch, and loops of them build for minutes.\n"
+        "    p = mix(-p * 2.0 + 1.0, p * 2.0, greaterThanEqual(p, vec3(0.0)));\n",
+    )
     source = source.replace(
         "return fract((p3.x + p3.y) * p3.z);",
         "return fract(float(float(p3.x + p3.y) * p3.z));",
