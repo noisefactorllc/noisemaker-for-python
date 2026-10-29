@@ -11,10 +11,10 @@ venv's interpreter. When the runtime already imports, it is a no-op.
 from __future__ import annotations
 
 import os
+import shutil
 import subprocess
 import sys
 import tempfile
-import urllib.request
 
 
 def _default_venv():
@@ -28,22 +28,39 @@ def _run(cmd):
         raise SystemExit(f"parity runtime bootstrap failed ({' '.join(cmd[:2])}): {detail}")
 
 
+def _pip_works(python):
+    return subprocess.run([python, "-m", "pip", "--version"], capture_output=True).returncode == 0
+
+
 def ensure_venv(root, venv_dir):
     """Create or reuse a venv with this checkout installed. Returns the venv's
-    python path."""
+    python path. ensurepip supplies pip from its bundled wheels, so no remote
+    code executes. On distro pythons without ensurepip, uv creates the venv
+    and installs the checkout instead."""
     if os.name == "nt":
         python = os.path.join(venv_dir, "Scripts", "python.exe")
     else:
         python = os.path.join(venv_dir, "bin", "python")
     if not os.path.exists(python):
-        _run([sys.executable, "-m", "venv", "--without-pip", venv_dir])
-        get_pip = os.path.join(venv_dir, "get-pip.py")
-        try:
-            urllib.request.urlretrieve("https://bootstrap.pypa.io/get-pip.py", get_pip)
-        except OSError as fail:
-            raise SystemExit(f"parity runtime bootstrap could not fetch get-pip: {fail}") from fail
-        _run([python, get_pip])
-        os.remove(get_pip)
+        run = subprocess.run(
+            [sys.executable, "-m", "venv", venv_dir], capture_output=True, text=True
+        )
+        if run.returncode != 0:
+            uv = shutil.which("uv")
+            if uv is None:
+                detail = (run.stderr or run.stdout or "").strip()[-400:]
+                raise SystemExit(f"parity runtime bootstrap failed (python -m venv): {detail}")
+            _run([uv, "venv", "--clear", venv_dir])
+            _run([uv, "pip", "install", "-q", "-e", f"{root}[dev]", "--python", python])
+            return python
+    if not _pip_works(python):
+        uv = shutil.which("uv")
+        if uv is None:
+            raise SystemExit(
+                f"parity runtime bootstrap failed: {python} has no pip and uv is not installed"
+            )
+        _run([uv, "pip", "install", "-q", "-e", f"{root}[dev]", "--python", python])
+        return python
     _run([python, "-m", "pip", "install", "-q", "-e", f"{root}[dev]"])
     return python
 
