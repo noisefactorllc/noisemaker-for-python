@@ -8,6 +8,7 @@ Usage: .venv/bin/python scripts/parity.py [--size N] [--only id,id]
 from __future__ import annotations
 
 import os
+import shutil
 import subprocess
 import sys
 import tempfile
@@ -21,6 +22,75 @@ CPU_DIR = os.environ.get("NOISEMAKER_CPU_DIR") or os.path.normpath(
     os.path.join(os.path.dirname(__file__), "..", "..", "noisemaker-for-cpu")
 )
 CLI = os.path.join(CPU_DIR, "bin", "noisemaker-cpu.js")
+
+_PINNED_ORACLE_URL = "https://github.com/noisefactorllc/noisemaker-for-cpu.git"
+
+
+def _pinned_oracle_pin():
+    """The pinned noisemaker-for-cpu revision and tree the gates compare
+    against, read from scripts/test (CI's oracle setup reads the same
+    constants)."""
+    rev = tree = None
+    path = os.path.join(os.path.dirname(os.path.abspath(__file__)), "test")
+    with open(path, encoding="utf-8") as stream:
+        for line in stream:
+            if line.startswith("CPU_PINNED_REVISION="):
+                rev = line.split("=", 1)[1].strip()
+            elif line.startswith("CPU_PINNED_TREE="):
+                tree = line.split("=", 1)[1].strip()
+    return rev, tree
+
+
+def _git_head_and_tree(cpu_dir):
+    if not os.path.isdir(cpu_dir):
+        return None, None
+    head = subprocess.run(["git", "rev-parse", "HEAD"], cwd=cpu_dir, capture_output=True, text=True)
+    tree = subprocess.run(["git", "rev-parse", "HEAD^{tree}"], cwd=cpu_dir, capture_output=True, text=True)
+    return head.stdout.strip(), tree.stdout.strip()
+
+
+def ensure_oracle(url=_PINNED_ORACLE_URL):
+    """Resolve the pinned parity oracle for the entrypoints.
+
+    NOISEMAKER_CPU_DIR (CI) wins unchanged. Otherwise the default sibling
+    checkout is used only when it sits exactly at the pin recorded in
+    scripts/test; every other case provisions a shallow clone of the pinned
+    oracle into the oracle cache and verifies its revision and tree. A bare
+    audit container (node, python3, network, no oracle mount) then compares
+    against the pinned authority instead of failing per case or comparing
+    against an unpinned checkout.
+    """
+    global CPU_DIR, CLI
+    if os.environ.get("NOISEMAKER_CPU_DIR"):
+        return
+    rev, tree = _pinned_oracle_pin()
+    if not (rev and tree):
+        return  # no pin recorded: keep the default resolution, failures stay visible
+    if os.path.isdir(CPU_DIR) and _git_head_and_tree(CPU_DIR) == (rev, tree):
+        return
+    cache_root = os.environ.get("NOISEMAKER_ORACLE_CACHE") or os.path.expanduser(
+        os.path.join("~", ".cache", "noisemaker")
+    )
+    target = os.path.join(cache_root, "cpu-oracle-py", rev)
+    if _git_head_and_tree(target) != (rev, tree):
+        shutil.rmtree(target, ignore_errors=True)
+        os.makedirs(target, exist_ok=True)
+        for cmd in (
+            ["git", "init", "-q", target],
+            ["git", "-C", target, "remote", "add", "origin", url],
+            ["git", "-C", target, "fetch", "-q", "--depth", "1", url, rev],
+            ["git", "-C", target, "checkout", "-q", "--detach", "FETCH_HEAD"],
+        ):
+            run = subprocess.run(cmd, capture_output=True, text=True)
+            if run.returncode != 0:
+                raise RuntimeError(f"pinned oracle checkout failed ({' '.join(cmd[:2])}): {run.stderr.strip()[:200]}")
+        got_head, got_tree = _git_head_and_tree(target)
+        if (got_head, got_tree) != (rev, tree):
+            raise RuntimeError(
+                f"pinned oracle mismatch at {rev}: head {got_head or 'unknown'} tree {got_tree or 'unknown'}"
+            )
+    CPU_DIR = target
+    CLI = os.path.join(CPU_DIR, "bin", "noisemaker-cpu.js")
 
 SIZE = 8
 SEED = 1

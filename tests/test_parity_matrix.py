@@ -242,6 +242,83 @@ CPU_DIR = os.environ.get("NOISEMAKER_CPU_DIR") or os.path.normpath(
 )
 
 
+@pytest.fixture()
+def _restore_oracle_globals():
+    # ensure_oracle rebinds the parity harness module's oracle globals; give
+    # every resolution test its import-time values back.
+    saved = (_pmx._parity.CPU_DIR, _pmx._parity.CLI)
+    yield
+    _pmx._parity.CPU_DIR, _pmx._parity.CLI = saved
+
+
+def _pin_fixture_repo(tmp_path, name="oracle-fixture", marker="pinned\n"):
+    """A tiny git repository standing in for the pinned oracle."""
+    import subprocess as sp
+
+    repo = tmp_path / name
+    repo.mkdir()
+    run = lambda *cmd: sp.run(cmd, check=True, capture_output=True, text=True, cwd=repo)  # noqa: E731
+    run("git", "init", "-q", ".")
+    (repo / "marker.txt").write_text(marker, encoding="utf-8")
+    run("git", "add", "marker.txt")
+    run("git", "-c", "user.name=t", "-c", "user.email=t@example.invalid", "commit", "-qm", "pin")
+    rev = run("git", "rev-parse", "HEAD").stdout.strip()
+    tree = run("git", "rev-parse", "HEAD^{tree}").stdout.strip()
+    return repo, rev, tree
+
+
+def test_parity_oracle_env_wins(tmp_path, monkeypatch, _restore_oracle_globals):
+    before = (_pmx._parity.CPU_DIR, _pmx._parity.CLI)
+    monkeypatch.setenv("NOISEMAKER_CPU_DIR", str(tmp_path / "explicit"))
+    _pmx._parity.ensure_oracle(url=f"file://{tmp_path / 'nowhere'}")
+    assert not (tmp_path / "cache").exists()
+    resolved = (_pmx._parity.CPU_DIR, _pmx._parity.CLI)
+    assert resolved == before
+
+
+def test_parity_oracle_provisions_the_pinned_clone(tmp_path, monkeypatch, _restore_oracle_globals):
+    repo, rev, tree = _pin_fixture_repo(tmp_path)
+    monkeypatch.setattr(_pmx._parity, "_pinned_oracle_pin", lambda: (rev, tree))
+    monkeypatch.delenv("NOISEMAKER_CPU_DIR", raising=False)
+    monkeypatch.setenv("NOISEMAKER_ORACLE_CACHE", str(tmp_path / "cache"))
+    _pmx._parity.ensure_oracle(url=f"file://{repo}")
+    resolved = _pmx._parity.CPU_DIR
+    assert resolved == str(tmp_path / "cache" / "cpu-oracle-py" / rev)
+    assert _pmx._parity._git_head_and_tree(resolved) == (rev, tree)
+    resolved_cli = _pmx._parity.CLI
+    assert resolved_cli == os.path.join(resolved, "bin", "noisemaker-cpu.js")
+    # A second resolution reuses the verified clone instead of re-fetching.
+    _pmx._parity.ensure_oracle(url=f"file://{repo}")
+    reused = _pmx._parity.CPU_DIR
+    assert reused == resolved
+
+
+def test_parity_oracle_rejects_an_unpinned_sibling(tmp_path, monkeypatch, _restore_oracle_globals):
+    repo, rev, tree = _pin_fixture_repo(tmp_path)
+    # A second checkout sitting at a different revision than the pin.
+    other, _other_rev, _other_tree = _pin_fixture_repo(tmp_path, name="other-oracle", marker="other\n")
+    monkeypatch.setattr(_pmx._parity, "_pinned_oracle_pin", lambda: (rev, tree))
+    monkeypatch.delenv("NOISEMAKER_CPU_DIR", raising=False)
+    monkeypatch.setenv("NOISEMAKER_ORACLE_CACHE", str(tmp_path / "cache"))
+    monkeypatch.setattr(_pmx._parity, "CPU_DIR", str(other))
+    monkeypatch.setattr(_pmx._parity, "CLI", os.path.join(str(other), "bin", "noisemaker-cpu.js"))
+    _pmx._parity.ensure_oracle(url=f"file://{repo}")
+    resolved = _pmx._parity.CPU_DIR
+    assert resolved == str(tmp_path / "cache" / "cpu-oracle-py" / rev)
+    assert _pmx._parity._git_head_and_tree(resolved) == (rev, tree)
+
+
+def test_parity_oracle_reuses_a_sibling_at_the_pin(tmp_path, monkeypatch, _restore_oracle_globals):
+    repo, rev, tree = _pin_fixture_repo(tmp_path)
+    monkeypatch.setattr(_pmx._parity, "_pinned_oracle_pin", lambda: (rev, tree))
+    monkeypatch.delenv("NOISEMAKER_CPU_DIR", raising=False)
+    monkeypatch.setattr(_pmx._parity, "CPU_DIR", str(repo))
+    monkeypatch.setattr(_pmx._parity, "CLI", os.path.join(str(repo), "bin", "noisemaker-cpu.js"))
+    _pmx._parity.ensure_oracle(url=f"file://{tmp_path / 'nowhere'}")
+    kept = _pmx._parity.CPU_DIR
+    assert kept == str(repo)
+
+
 @pytest.mark.oracle
 @pytest.mark.slow
 @pytest.mark.skipif(

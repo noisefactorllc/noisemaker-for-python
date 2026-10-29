@@ -7,6 +7,8 @@ agreement.
 The default-parameter parity summary (scripts/parity-summary) renders the
 manifest's cases at their metadata defaults only; a codegen or rounding defect
 reachable only through a non-default parameter value stays invisible there.
+With neither NOISEMAKER_CPU_DIR nor a pinned sibling checkout, the entrypoint
+provisions the pinned oracle recorded in scripts/test into the oracle cache.
 This sweep closes that hole (GAP-011, issue #7): for every executable effect
 case it derives one variant per bindable parameter bound at the parameter's
 documented minimum and one at its documented maximum, and renders both engines
@@ -748,6 +750,9 @@ def _read_resume_log(path: str, fingerprint: str, case_ids: set) -> dict:
 
 
 def main() -> int:
+    _parity.ensure_oracle()
+    global CPU_DIR, CLI
+    CPU_DIR, CLI = _parity.CPU_DIR, _parity.CLI
     parser = argparse.ArgumentParser(add_help=False)
     parser.add_argument("--only", default=None)
     parser.add_argument("--json", default=None)

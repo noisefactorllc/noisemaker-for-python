@@ -20,7 +20,9 @@ verifies byte-exactly. An effect with no executable case counts as missing, so
 incomplete coverage fails (nonzero exit) instead of being silently skipped.
 
 The authority oracle is the sibling noisemaker-for-cpu checkout at
-NOISEMAKER_CPU_DIR (default: ../../noisemaker-for-cpu).
+NOISEMAKER_CPU_DIR (default: ../../noisemaker-for-cpu). With neither set, the
+entrypoint provisions the pinned oracle recorded in scripts/test into the
+oracle cache and verifies its revision and tree.
 
 Exit code is 0 only when expected > 0, executed == expected,
 exact + strict == expected, and near, defer, skip, fail, and missing are all
@@ -81,6 +83,7 @@ def _build_cases(effects: dict) -> dict:
 
 
 def main() -> int:
+    _parity.ensure_oracle()
     requested = [a for a in sys.argv[1:] if not a.startswith("-")]
     if any(a.startswith("-") for a in sys.argv[1:]):
         print("usage: scripts/parity-summary [case_id ...]", file=sys.stderr)
