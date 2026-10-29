@@ -237,6 +237,37 @@ def test_recorded_matrix_sample_binds_parameter_variants():
     assert len({entry["case"] for entry in matrix}) >= len(_MATRIX_SAMPLE)
 
 
+def test_matrix_cache_defaults_follow_the_oracle_cache_root(monkeypatch, tmp_path):
+    monkeypatch.delenv("NOISEMAKER_ORACLE_CACHE", raising=False)
+    assert _pmx._cache_defaults(None, None) == (None, None)
+    root = str(tmp_path / "cache")
+    monkeypatch.setenv("NOISEMAKER_ORACLE_CACHE", root)
+    assert _pmx._cache_defaults(None, None) == (
+        os.path.join(root, "matrix-oracle"),
+        os.path.join(root, "matrix-port"),
+    )
+    assert _pmx._cache_defaults("/explicit/oracle", "/explicit/port") == ("/explicit/oracle", "/explicit/port")
+
+
+def test_parity_runtime_bootstrap_is_a_noop_when_the_runtime_imports():
+    # The test interpreter has numpy and the port package, so ensure_runtime
+    # must return without re-exec or provisioning.
+    assert _pmx._boot.ensure_runtime(_ROOT) is None
+
+
+@pytest.mark.slow
+def test_venv_bootstrap_installs_the_checkout(tmp_path):
+    python = _pmx._boot.ensure_venv(_ROOT, str(tmp_path / "venv"))
+    run = subprocess.run(
+        [python, "-c", "import numpy, noisemaker_cpu; print('runtime-ok')"],
+        capture_output=True,
+        text=True,
+        timeout=120,
+    )
+    assert run.returncode == 0, run.stderr[-400:]
+    assert "runtime-ok" in run.stdout
+
+
 CPU_DIR = os.environ.get("NOISEMAKER_CPU_DIR") or os.path.normpath(
     os.path.join(_ROOT, "..", "noisemaker-for-cpu")
 )

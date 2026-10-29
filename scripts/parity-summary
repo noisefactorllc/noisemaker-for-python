@@ -38,6 +38,13 @@ import sys
 _HERE = os.path.dirname(os.path.abspath(__file__))
 _ROOT = os.path.dirname(_HERE)
 
+_boot_spec = importlib.util.spec_from_file_location(
+    "_noisemaker_parity_bootstrap", os.path.join(_HERE, "parity-bootstrap.py")
+)
+_boot = importlib.util.module_from_spec(_boot_spec)
+_boot_spec.loader.exec_module(_boot)
+_boot.ensure_runtime(_ROOT)
+
 _spec = importlib.util.spec_from_file_location("_noisemaker_parity", os.path.join(_HERE, "parity.py"))
 _parity = importlib.util.module_from_spec(_spec)
 _spec.loader.exec_module(_parity)

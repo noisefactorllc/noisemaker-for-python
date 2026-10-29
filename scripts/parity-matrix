@@ -60,6 +60,9 @@ or an oracle-side failure counts as fail and stays visible.
 Usage: scripts/parity-matrix [--only effect_id[,effect_id]] [--json out]
                             [--workers N] [--resume LOG]
                             [--oracle-cache DIR] [--port-cache DIR]
+
+Without --oracle-cache/--port-cache, both default under the declared
+NOISEMAKER_ORACLE_CACHE root so separate invocations reuse completed renders.
 """
 
 from __future__ import annotations
@@ -79,6 +82,13 @@ from concurrent.futures import ThreadPoolExecutor
 
 _HERE = os.path.dirname(os.path.abspath(__file__))
 _ROOT = os.path.dirname(_HERE)
+
+_boot_spec = importlib.util.spec_from_file_location(
+    "_noisemaker_parity_bootstrap", os.path.join(_HERE, "parity-bootstrap.py")
+)
+_boot = importlib.util.module_from_spec(_boot_spec)
+_boot_spec.loader.exec_module(_boot)
+_boot.ensure_runtime(_ROOT)
 
 _spec = importlib.util.spec_from_file_location("_noisemaker_parity", os.path.join(_HERE, "parity.py"))
 _parity = importlib.util.module_from_spec(_spec)
@@ -749,6 +759,17 @@ def _read_resume_log(path: str, fingerprint: str, case_ids: set) -> dict:
     return prior
 
 
+def _cache_defaults(oracle_cache, port_cache):
+    """Default both render caches to the declared oracle cache root
+    (NOISEMAKER_ORACLE_CACHE) so entrypoint runs reuse completed renders
+    across invocations without explicit flags. Explicit flags win."""
+    root = os.environ.get("NOISEMAKER_ORACLE_CACHE")
+    if root:
+        oracle_cache = oracle_cache or os.path.join(root, "matrix-oracle")
+        port_cache = port_cache or os.path.join(root, "matrix-port")
+    return oracle_cache, port_cache
+
+
 def main() -> int:
     _parity.ensure_oracle()
     global CPU_DIR, CLI
@@ -804,14 +825,15 @@ def main() -> int:
     # the full oracle cost per attempt. --oracle-cache persists the oracle PNG
     # renders (keyed by case id inside a directory bound to the pinned oracle
     # head) so later attempts reuse them byte-identically.
+    oracle_cache, port_cache = _cache_defaults(args.oracle_cache, args.port_cache)
     cache_dir = None
-    if args.oracle_cache:
+    if oracle_cache:
         cpu_head = (_parity._cpu_revision().get("cpuHead") or "unknown").strip()
-        cache_dir = os.path.join(args.oracle_cache, cpu_head)
+        cache_dir = os.path.join(oracle_cache, cpu_head)
         os.makedirs(cache_dir, exist_ok=True)
     global _PORT_CACHE_DIR
-    if args.port_cache:
-        _PORT_CACHE_DIR = os.path.join(args.port_cache, "port")
+    if port_cache:
+        _PORT_CACHE_DIR = os.path.join(port_cache, "port")
         os.makedirs(_PORT_CACHE_DIR, exist_ok=True)
 
     # Warm the shared fixtures before the parallel phases (they lazy-write the
