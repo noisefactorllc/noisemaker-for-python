@@ -709,6 +709,12 @@ def _render_js(entry: dict, out: str):
 
 
 def _timeout_guard(fn, seconds=_RENDER_TIMEOUT):
+    if not hasattr(signal, "SIGALRM"):
+        # Windows has no alarm(); the port render there runs without the
+        # in-process budget (the oracle's subprocess renders keep their own
+        # timeout on every platform). POSIX keeps the alarm exactly as before.
+        return fn()
+
     def handler(signum, frame):
         raise TimeoutError(f"port render exceeded {seconds}s")
 

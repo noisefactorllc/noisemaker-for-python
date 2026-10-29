@@ -1,7 +1,13 @@
-"""Binding-rule coverage for the GAP-011 parameter matrix."""
+"""Binding-rule coverage for the GAP-011 parameter matrix, plus the GAP-013
+weekly-gate sample that renders recorded matrix cases against the pinned
+oracle."""
 
 import importlib.util
+import json
 import os
+import shutil
+import subprocess
+import sys
 from importlib.machinery import SourceFileLoader
 
 import pytest
@@ -183,3 +189,92 @@ def test_resume_fingerprint_binds_case_definition(monkeypatch):
     changed = _cache_entry(params={"mode": 3})
     assert _pmx._resume_fingerprint([base]) == _pmx._resume_fingerprint([base])
     assert _pmx._resume_fingerprint([base]) != _pmx._resume_fingerprint([changed])
+
+
+# ---------------------------------------------------------------------------
+# GAP-013: an executable gate renders the parameter matrix against the pinned
+# oracle. The recorded sample binds the two filters that historically diverged
+# at parameter extremes (filter/spookyTicker, filter/osd) plus one effect of
+# every catalog family, chosen so the whole sample renders well inside the
+# weekly gate's budget. The guard test below runs in the push gate and keeps
+# the recorded sample aligned with the catalog; the oracle test runs only in
+# the weekly full gate (`pytest -q -ra`).
+_MATRIX_SAMPLE = (
+    "filter/spookyTicker",
+    "filter/osd",
+    "classicNoisedeck/composite",
+    "filter3d/palette3d",
+    "mixer/alphaMask",
+    "points/attractor",
+    "render/loopEnd",
+    "synth/roll",
+    "synth3d/heightmap3d",
+)
+_MATRIX_SUBPROCESS_TIMEOUT = 540  # ~8x the observed wall clock for the sample
+
+
+def test_recorded_matrix_sample_covers_every_family_and_the_prior_divergers():
+    effects = _pmx._parity._meta()["effects"]
+    families = {eid.split("/")[0] for eid in effects}
+    assert {eid.split("/")[0] for eid in _MATRIX_SAMPLE} == families
+    assert len(_MATRIX_SAMPLE) == len(set(_MATRIX_SAMPLE))
+    unknown = [eid for eid in _MATRIX_SAMPLE if eid not in effects]
+    assert unknown == []
+    assert "filter/spookyTicker" in _MATRIX_SAMPLE
+    assert "filter/osd" in _MATRIX_SAMPLE
+
+
+def test_recorded_matrix_sample_binds_parameter_variants():
+    # Every sampled effect must actually reach the matrix: an effect id the
+    # catalog lists but whose case the matrix cannot build would silently
+    # shrink the rendered sample. This guard uses the port's own parameter
+    # metadata so it can run in the push gate without the oracle; the oracle
+    # run below re-derives the union with the pinned oracle's records.
+    effects = _pmx._parity._meta()["effects"]
+    cases = _pmx.matrix_cases(effects)
+    matrix = _pmx.build_matrix(effects, cases, {}, set(_MATRIX_SAMPLE))
+    assert [entry["case"] for entry in matrix if entry.get("kind") == "missing"] == []
+    assert len({entry["case"] for entry in matrix}) >= len(_MATRIX_SAMPLE)
+
+
+CPU_DIR = os.environ.get("NOISEMAKER_CPU_DIR") or os.path.normpath(
+    os.path.join(_ROOT, "..", "noisemaker-for-cpu")
+)
+
+
+@pytest.mark.oracle
+@pytest.mark.slow
+@pytest.mark.skipif(
+    not (shutil.which("node") and os.path.exists(os.path.join(CPU_DIR, "bin", "noisemaker-cpu.js"))),
+    reason="JS oracle (node + noisemaker-cpu) not available",
+)
+def test_sampled_parameter_matrix_matches_the_pinned_oracle_byte_exact():
+    """Run scripts/parity-matrix --only over the recorded sample and require
+    an exact (byte-identical) verdict for every sampled case."""
+    result = subprocess.run(
+        [sys.executable, os.path.join(_ROOT, "scripts", "parity-matrix"), "--only", ",".join(_MATRIX_SAMPLE)],
+        cwd=_ROOT,
+        capture_output=True,
+        text=True,
+        timeout=_MATRIX_SUBPROCESS_TIMEOUT,
+    )
+    verdicts = {
+        line.split()[1]: line
+        for line in result.stdout.splitlines()
+        if line.startswith(("EXACT ", "FAIL "))
+    }
+    summary = next((line for line in result.stdout.splitlines() if line.startswith("PARITY-SUMMARY ")), None)
+    assert summary is not None, (
+        f"matrix produced no summary (exit {result.returncode})\n"
+        f"stdout:\n{result.stdout[-4000:]}\nstderr:\n{result.stderr[-2000:]}"
+    )
+    counts = json.loads(summary[len("PARITY-SUMMARY "):])
+    assert counts["expected"] == counts["executed"] == counts["exact"] > 0, counts
+    assert counts["fail"] == counts["near"] == counts["defer"] == counts["skip"] == counts["missing"] == 0, counts
+    assert result.returncode == 0, (
+        f"matrix exited {result.returncode}\n"
+        f"stderr:\n{result.stderr[-2000:]}"
+    )
+    failures = [text for text in verdicts.values() if text.startswith("FAIL ")]
+    assert not failures, failures[:8]
+    assert len(verdicts) == counts["expected"], counts
