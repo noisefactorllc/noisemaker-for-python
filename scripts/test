@@ -39,17 +39,26 @@ if [ -n "${NM_CHANGED_FILES:-}" ]; then
         "$VENV/bin/python" - "$NM_CHANGED_FILES" <<-'PY'
 			import pathlib, sys
 			changed = [line.strip() for line in sys.argv[1].splitlines() if line.strip()]
+			# A changed test file runs itself. Its stem must not select other
+			# test files that merely mention it (a helper function named
+			# test_<stem>_* in another file is not a test of the changed file).
+			forced = sorted(
+			    p for p in changed
+			    if p.startswith("tests/") and p.endswith(".py") and pathlib.Path(p).is_file()
+			)
 			names = set()
 			for path in changed:
 			    path = path.rstrip("/")
 			    names.add(path)
 			    base = path.rsplit("/", 1)[-1]
-			    if "." not in base:
+			    if "." not in base or path.startswith("tests/"):
 			        continue
 			    stem = base[: -len(".py")] if base.endswith(".py") else base
 			    names.update({base, stem, stem.replace("__", "/")})
-			selected = []
+			selected = list(forced)
 			for test in sorted(pathlib.Path("tests").glob("test_*.py")):
+			    if str(test) in forced:
+			        continue
 			    text = test.read_text(encoding="utf-8", errors="replace")
 			    if any(name and name in text for name in names):
 			        selected.append(str(test))
