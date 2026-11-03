@@ -19,7 +19,7 @@ from pathlib import Path
 
 import pytest
 
-RECEIPT = Path(__file__).parent / "data" / "parity-receipt-babf6b2d.json"
+RECEIPT = Path(__file__).parent / "data" / "parity-receipt-71771987.json"
 
 spec = importlib.util.spec_from_file_location("parity_harness", Path(__file__).parents[1] / "scripts" / "parity.py")
 parity_harness = importlib.util.module_from_spec(spec)
@@ -44,9 +44,11 @@ def _python_render(effect_id, effects):
 
 def test_receipt_binds_the_pinned_cpu_revision():
     doc = json.loads(RECEIPT.read_text(encoding="utf-8"))
-    assert doc["cpu"]["revision"] == "babf6b2dbb3d3bc991bfd095bcf6783c13cd9f07"
-    assert doc["cpu"]["sourceDigest"] == "7ed7eecfcaa4b11aa17e3128772e1354d66d3de508a7fd2843b14e33dee7b891"
-    assert doc["cpu"]["cpuHead"] == "f559869936dfe794595bdf4dc9fbe14645cac8ba"
+    assert doc["cpu"]["revision"] == "71771987158d6a2583b50d68ea4ded90dd461548"
+    assert doc["cpu"]["snapshotRevision"] == "71771987158d6a2583b50d68ea4ded90dd461548"
+    assert doc["cpu"]["sourceDigest"] == "6b4f7cfb3a7685dda0c8b824f479587d10a6ebf252a7031cd75f5ec0d9e54660"
+    assert doc["cpu"]["cpuHead"] == "73e3e738d43e1dd693e024c081a1f70b98ec3bf9"
+    assert doc["cpu"]["cpuTree"] == "e51eae83efb7ea844d60d8d6775ef769e3377b90"
     assert doc["settings"] == {"size": 8, "seed": 1, "time": 0.25, "tolerance": 0}
     assert doc["counts"]["diffs"] == 0
     assert doc["counts"]["runtimeErrors"] == 0
