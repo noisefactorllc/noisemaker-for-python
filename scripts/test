@@ -44,6 +44,8 @@ if [ -n "${NM_CHANGED_FILES:-}" ]; then
 			    path = path.rstrip("/")
 			    names.add(path)
 			    base = path.rsplit("/", 1)[-1]
+			    if "." not in base:
+			        continue
 			    stem = base[: -len(".py")] if base.endswith(".py") else base
 			    names.update({base, stem, stem.replace("__", "/")})
 			selected = []
