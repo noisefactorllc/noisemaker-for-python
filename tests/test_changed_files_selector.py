@@ -9,6 +9,7 @@ token that matches every test file.
 from __future__ import annotations
 
 import io
+import os
 import re
 import sys
 import textwrap
@@ -59,9 +60,9 @@ def test_dotted_paths_still_select_their_covering_tests(tmp_path, monkeypatch):
     (tests / "test_unrelated.py").write_text("unrelated\n")
 
     selected = _run_selection("kernel/render.py", tmp_path, monkeypatch)
-    assert selected == ["tests/test_kernel.py"], selected
+    assert selected == [os.path.normpath("tests/test_kernel.py")], selected
 
     # A changed test file runs itself directly; its stem does not over-select
     # other test files that merely mention it.
     selected = _run_selection("tests/test_unrelated.py", tmp_path, monkeypatch)
-    assert selected == ["tests/test_unrelated.py"], selected
+    assert selected == [os.path.normpath("tests/test_unrelated.py")], selected
