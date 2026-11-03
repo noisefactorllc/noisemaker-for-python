@@ -383,17 +383,18 @@ def _adapt_source(effect_id: str, program: str, source: str) -> str:
         )
     if effect_id == "synth/polygon" and program == "shape":
         # Upstream Noisemaker 6cb1a3c3 special-cases the degenerate
-        # smoothing=0 edge: GLSL smoothstep is undefined when edge0 == edge1,
-        # so the reference picks foreground/background by d <= radius instead
-        # of the undefined smoothstep. Same locked-build constraint as
-        # classicNoisedeck/effects above.
+        # smoothing=0 edge: GLSL smoothstep is undefined when edge0 == edge1.
+        # babf6b2d refines that case: the kernel branches on smoothing > 0.0
+        # and the hard edge picks foreground by d < radius, so a pixel exactly
+        # on the radius boundary renders background. Same locked-build
+        # constraint as classicNoisedeck/effects above.
         degenerate = "float m = smoothstep(radius, radius - smoothing, d);"
         if source.count(degenerate) != 1:
             raise ValueError("polygon degenerate smoothing source changed")
         source = source.replace(
             degenerate,
-            "float m = smoothing == 0.0 ? (d <= radius ? 1.0 : 0.0)"
-            " : smoothstep(radius, radius - smoothing, d);",
+            "float m = smoothing > 0.0 ? smoothstep(radius, radius - smoothing, d)"
+            " : float(d < radius);",
         )
     # The sibling's adaptCanonicalSource also temps matrix self-assignments
     # (`v = matN(...) * v;`) before the transpiler sees them, so the multiply

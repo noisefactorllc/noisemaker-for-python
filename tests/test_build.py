@@ -238,6 +238,20 @@ def test_bundled_flipmirror_kernel_keeps_named_vertical_half():
     assert 'rt.binary(">", rt.swizzle(warpedUV, "y"), rt.f(0.5))' in mode14[:mode14.index('rt.i(15)')]
 
 
+def test_bundled_polygon_kernel_keeps_the_hard_edge_strictly_inside_radius():
+    kernel = (
+        Path(build_module.BUNDLE) / "kernels" / "python" / "synth__polygon__shape.py"
+    ).read_text()
+
+    # Upstream babf6b2d: zero smoothing is a hard edge whose foreground test
+    # is d < radius, so a pixel exactly on the radius boundary renders
+    # background; the degenerate branch keys on smoothing > 0.0.
+    assert 'rt.binary("<", d, _u_radius)' in kernel
+    assert 'rt.binary("<=", d, _u_radius)' not in kernel
+    assert 'rt.binary(">", _u_smoothing, rt.f(0.0))' in kernel
+    assert 'rt.binary("==", _u_smoothing, rt.f(0.0))' not in kernel
+
+
 def test_bundled_glyphmap_kernel_mirrors_glyph_rows():
     kernel = (
         Path(build_module.BUNDLE) / "kernels" / "python" / "filter__glyphMap__glyphMap.py"
