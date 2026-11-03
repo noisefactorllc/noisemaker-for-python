@@ -39,6 +39,9 @@ if [ -n "${NM_CHANGED_FILES:-}" ]; then
         "$VENV/bin/python" - "$NM_CHANGED_FILES" <<-'PY'
 			import pathlib, sys
 			changed = [line.strip() for line in sys.argv[1].splitlines() if line.strip()]
+			# A changed test file runs itself. Its stem must not select other
+			# test files that merely mention it (a helper function named
+			# test_<stem>_* in another file is not a test of the changed file).
 			forced = sorted(
 			    p for p in changed
 			    if p.startswith("tests/") and p.endswith(".py") and pathlib.Path(p).is_file()
@@ -63,12 +66,10 @@ if [ -n "${NM_CHANGED_FILES:-}" ]; then
 		PY
     }
     SELECTION=$(select_tests)
-    if [ -z "$SELECTION" ]; then
-        echo "NM_CHANGED_FILES: no test file references the changed paths; nothing to run"
-        exit 0
+    if [ -n "$SELECTION" ]; then
+        echo "NM_CHANGED_FILES selection: $SELECTION"
+        exec "$VENV/bin/python" -m pytest -q -m "not slow and not oracle" $SELECTION
     fi
-    echo "NM_CHANGED_FILES selection: $SELECTION"
-    exec "$VENV/bin/python" -m pytest -q -m "not slow and not oracle" $SELECTION
 fi
 
 "$VENV/bin/python" -m pytest -q -m "not slow and not oracle"
