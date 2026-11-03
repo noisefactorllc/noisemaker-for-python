@@ -38,7 +38,7 @@ def _run_selection(changed: str, repo_root: Path, monkeypatch) -> list[str]:
     finally:
         sys.stdout = stdout
         sys.argv = argv
-    return [entry for entry in out.getvalue().strip().split(" ") if entry]
+    return [os.path.normpath(entry) for entry in out.getvalue().strip().split(" ") if entry]
 
 
 def test_dotless_basename_does_not_match_test_files(tmp_path, monkeypatch):
