@@ -66,10 +66,12 @@ if [ -n "${NM_CHANGED_FILES:-}" ]; then
 		PY
     }
     SELECTION=$(select_tests)
-    if [ -n "$SELECTION" ]; then
-        echo "NM_CHANGED_FILES selection: $SELECTION"
-        exec "$VENV/bin/python" -m pytest -q -m "not slow and not oracle" $SELECTION
+    if [ -z "$SELECTION" ]; then
+        echo "NM_CHANGED_FILES: no test file references the changed paths; nothing to run"
+        exit 0
     fi
+    echo "NM_CHANGED_FILES selection: $SELECTION"
+    exec "$VENV/bin/python" -m pytest -q -m "not slow and not oracle" $SELECTION
 fi
 
 "$VENV/bin/python" -m pytest -q -m "not slow and not oracle"
