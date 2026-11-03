@@ -252,6 +252,92 @@ def test_bundled_polygon_kernel_keeps_the_hard_edge_strictly_inside_radius():
     assert 'rt.binary("==", _u_smoothing, rt.f(0.0))' not in kernel
 
 
+def test_bundled_polygon_kernel_renders_zero_smoothing_boundary_pixel_as_background():
+    """A pixel whose d lands exactly on radius renders background at smoothing 0.
+
+    Upstream babf6b2d: the zero-smoothing hard edge picks foreground by
+    d < radius, so the boundary pixel itself is background. The test computes
+    the boundary radius with the same runtime ops the bundled kernel runs
+    (the shape.glsl d expression), renders the pass, and checks the boundary
+    pixel against the background composite and a nearer pixel against the
+    foreground composite.
+    """
+    import numpy as np
+
+    from noisemaker_cpu.kernel_loader import load_kernel
+    from noisemaker_cpu.pass_runner import Ctx, run_pass
+    from noisemaker_cpu.runtime import Runtime
+
+    rt = Runtime()
+    width = height = 8
+    f32 = np.float32
+    full_res = np.array([width, height], dtype=f32)
+    tile_offset = np.zeros(2, dtype=f32)
+    aspect = f32(1.0)
+    sides = 4
+    fx, fy = 5.5, 3.5
+
+    # Mirror of the shape.glsl d expression for this pixel, through the same
+    # runtime ops in the same order the generated kernel runs them.
+    frag = np.array([fx, fy, 0.0, 1.0], dtype=f32)
+    global_coord = rt.construct(2, rt.binary("+", rt.swizzle(frag, "xy"), tile_offset, 2, "float"))
+    st = rt.construct(2, rt.fdiv(global_coord, full_res, 2))
+    st[0] = rt.binary("*", rt.binary("-", rt.swizzle(st, "x"), rt.f(0.5), 1, "float"), rt.f(2.0), 1, "float")
+    st[1] = rt.binary("*", rt.binary("-", rt.swizzle(st, "y"), rt.f(0.5), 1, "float"), rt.f(2.0), 1, "float")
+    st = rt.assign_swizzle(st, "x", rt.binary("*", rt.swizzle(st, "x"), aspect, 1, "float"))
+    sidesF = rt.construct(1, rt.component_wise("max", sides, rt.i(3), width=1))
+    st = rt.copy(st, "float")
+    a = rt.binary("+", rt.component_wise("atan", rt.swizzle(st, "y"), rt.swizzle(st, "x"), width=1), rt.f(3.14159265), 1, "float")
+    r = rt.binary("/", rt.f(6.2831853), sidesF, 1, "float")
+    poly = rt.binary(
+        "*",
+        rt.component_wise(
+            "cos",
+            rt.binary(
+                "-",
+                rt.binary("*", rt.component_wise("floor", rt.binary("+", rt.f(0.5), rt.binary("/", a, r, 1, "float"), 1, "float"), width=1), r, 1, "float"),
+                a,
+                1,
+                "float",
+            ),
+            width=1,
+        ),
+        rt.length(st),
+        1,
+        "float",
+    )
+    d = rt.fdiv(poly, rt.component_wise("cos", rt.fdiv(rt.f(3.14159265359), sidesF, 1), width=1), 1)
+
+    kernel_path = Path(build_module.BUNDLE) / "kernels" / "python" / "synth__polygon__shape.py"
+    kernel = load_kernel(kernel_path.read_text(encoding="utf-8"))
+    uniforms = {
+        "sides": sides,
+        "radius": d,
+        "smoothing": f32(0.0),
+        "rotation": f32(0.0),
+        "fgColor": np.array([1.0, 1.0, 1.0], dtype=f32),
+        "fgAlpha": f32(1.0),
+        "bgColor": np.array([0.0, 0.0, 0.0], dtype=f32),
+        "bgAlpha": f32(1.0),
+        "resolution": np.array([width, height], dtype=f32),
+        "fullResolution": full_res,
+        "tileOffset": tile_offset,
+        "aspect": aspect,
+    }
+    ctx = Ctx(Runtime(), uniforms=uniforms, resolution=np.array([width, height], dtype=f32), time=0.25, seed=1)
+    surface = run_pass(kernel, ctx, width, height)
+
+    def pixel(fx_, fy_):
+        row = int(round(height - fy_ - 0.5))
+        col = int(round(fx_ - 0.5))
+        i = (row * width + col) * 4
+        return surface.data[i : i + 4].tolist()
+
+    # run_pass feeds bottom-left frag coords: fy = height - topDownRow - 0.5.
+    assert pixel(fx, fy) == [0.0, 0.0, 0.0, 1.0], "boundary pixel must render background"
+    assert pixel(4.5, 4.5) == [1.0, 1.0, 1.0, 1.0], "an interior pixel must render foreground"
+
+
 def test_bundled_glyphmap_kernel_mirrors_glyph_rows():
     kernel = (
         Path(build_module.BUNDLE) / "kernels" / "python" / "filter__glyphMap__glyphMap.py"
