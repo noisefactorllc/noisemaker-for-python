@@ -378,6 +378,22 @@ def test_hash_returns_take_the_sibling_float_casts_including_scatter():
     assert build_module._adapt_source("filter/scatter", "scatter", source) == adapted
 
 
+def test_bundled_scatter_kernel_hashes_the_jitter_in_integers():
+    kernel = (
+        Path(build_module.BUNDLE) / "kernels" / "python" / "filter__scatter__scatterJitter.py"
+    ).read_text()
+
+    # Upstream 7aa54b54: the jitter offset comes from a PCG3D hash of the
+    # integer pixel coordinate and seed, in 1/256 px integer steps, and the
+    # pass reads nearest texels with texelFetch. The locked build's float
+    # hash22 path is gone.
+    assert "def pcg3d__uvec3(" in kernel
+    assert "hash22" not in kernel
+    assert 'rt.texel_fetch(_u_inputTex, texel, rt.i(0))' in kernel
+    assert 'rt.texture_size(_u_inputTex)' in kernel
+    assert 'rt.binary(">>", rt.swizzle(h, "xy"), rt.construct(2, rt.i(16), base="uint"), 2, "uint")' in kernel
+
+
 def test_transpiler_applies_the_upstream_8bit_output_quantization():
     # Upstream a1a3fa2a quantizes canonical effect output to 8-bit color in
     # classicNoisedeck/glitch (before scanlines/snow) and filter/crt (before
