@@ -193,10 +193,10 @@
       "pythonRgba8Sha256": "eec68212ac4794baa76cf2d4520d0401aeb7156ee1ee28dabbc0bf0fdec54cb7"
     },
     "filter/craquelure": {
-      "oraclePngSha256": "02aea643711b59b7f35a7bb1a5719fa741fc052bff92b5e78a085c327169f9f8",
-      "oracleRgba8Sha256": "eec68212ac4794baa76cf2d4520d0401aeb7156ee1ee28dabbc0bf0fdec54cb7",
-      "pythonPngSha256": "02aea643711b59b7f35a7bb1a5719fa741fc052bff92b5e78a085c327169f9f8",
-      "pythonRgba8Sha256": "eec68212ac4794baa76cf2d4520d0401aeb7156ee1ee28dabbc0bf0fdec54cb7"
+      "oraclePngSha256": "8068d47fcfb59953b6a00bd134cd747d6967a20c4ed983b1bd426a2f33766c5a",
+      "oracleRgba8Sha256": "9e12750660f4ed6cab652d1d5b369c2d68cd72f370dbc402e969df66c29af8f8",
+      "pythonPngSha256": "8068d47fcfb59953b6a00bd134cd747d6967a20c4ed983b1bd426a2f33766c5a",
+      "pythonRgba8Sha256": "9e12750660f4ed6cab652d1d5b369c2d68cd72f370dbc402e969df66c29af8f8"
     },
     "filter/crt": {
       "oraclePngSha256": "cdefba98ae1930451c26d97e936362093aedbe0e457b3a2836a0d77f67de7493",
@@ -643,10 +643,10 @@
       "pythonRgba8Sha256": "2c893cd47b6757133987906e00c55e6dcce3c567b9df9e7f91ffecd3604cc6a6"
     },
     "filter/stipple": {
-      "oraclePngSha256": "cdb51ed0d9ca6a9ebc3d59aafcd9914263c2f5cf1731152251abaa44cd20b2f0",
-      "oracleRgba8Sha256": "45f24fe940caaeec519342190803723dbbe205cb8a2a9488b7a1abb62d7ed4aa",
-      "pythonPngSha256": "0a294ba3ab430b9aa9a703e45fb3f2eb790720acf2fcd1ec140c883eda9fa516",
-      "pythonRgba8Sha256": "45f24fe940caaeec519342190803723dbbe205cb8a2a9488b7a1abb62d7ed4aa"
+      "oraclePngSha256": "79e7ec0a4c82a9c998ff4f2cd45c4677773d90f9fbf93ad05daa496d945b2cb0",
+      "oracleRgba8Sha256": "490fd59c2c07aecd4f56c859916c8e052317d1fcdbc5f12552f13117268c806a",
+      "pythonPngSha256": "b8131a991db537d0239b84531e0c202eac1187764065c31dddc8b0325e283561",
+      "pythonRgba8Sha256": "490fd59c2c07aecd4f56c859916c8e052317d1fcdbc5f12552f13117268c806a"
     },
     "filter/strayHair": {
       "oraclePngSha256": "4d47ccb6cdb9986b93cbbcf00b46c2927e8f528c3c0ec9615a6f14803c85af52",
@@ -1042,11 +1042,11 @@
     "skipped": 38
   },
   "cpu": {
-    "cpuHead": "61f1877ec84b22bbb84e7198a438e77ed369e673",
-    "cpuTree": "9aa3e190eb33fa62d9604f2b8fa02fc4dab50a08",
-    "revision": "7aa54b54492c0a158b000a5c563e94e6e4dce3dc",
-    "snapshotRevision": "7aa54b54492c0a158b000a5c563e94e6e4dce3dc",
-    "sourceDigest": "6c6b07006a9dd4a2b95188ee090efe37b27a9f80733412c2fadb4042343e4cae"
+    "cpuHead": "0670ceace1c0c52791ef7d57493ded6e0b35a4b9",
+    "cpuTree": "7d888e8d9879a987a41efbff1a8f21ddf1e4ba67",
+    "revision": "1faed961be169863e84fd719a4ca85c27a8b1322",
+    "snapshotRevision": "1faed961be169863e84fd719a4ca85c27a8b1322",
+    "sourceDigest": "4c57e3d4e12ce49dd627fd24a47c920e1129c4366943f833488b3d2519e09179"
   },
   "diffs": [],
   "errors": {},

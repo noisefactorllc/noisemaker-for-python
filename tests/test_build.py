@@ -394,6 +394,57 @@ def test_bundled_scatter_kernel_hashes_the_jitter_in_integers():
     assert 'rt.binary(">>", rt.swizzle(h, "xy"), rt.construct(2, rt.i(16), base="uint"), 2, "uint")' in kernel
 
 
+def test_bundled_craquelure_kernel_hashes_in_integers():
+    kernel = (
+        Path(build_module.BUNDLE) / "kernels" / "python" / "filter__craquelure__craquelure.py"
+    ).read_text()
+
+    # Upstream 1faed961: craquelure's Voronoi jitter and value-noise lattice
+    # values come from a PCG3D hash of the integer cell/lattice coordinate,
+    # so the locked build's float hash12/hash22 pair is gone.
+    assert "def pcg3d__uvec3(" in kernel
+    assert "def hash12__ivec2(" in kernel
+    assert "def hash22__ivec2_int(" in kernel
+    assert "def hash12__vec2(" not in kernel
+    assert "def hash22__vec2(" not in kernel
+
+
+def test_bundled_stipple_kernel_hashes_in_integers():
+    kernel = (
+        Path(build_module.BUNDLE) / "kernels" / "python" / "filter__stipple__stipple.py"
+    ).read_text()
+
+    # Upstream 1faed961: every stipple hash, noise, distance and blend runs
+    # in unsigned integer fixed point, with texelFetch reads and an integer
+    # square root. The locked build's float hash/vnoise/fbm path is gone.
+    assert "def hash16__uvec2_uint(" in kernel
+    assert "def lum16__vec3(" in kernel
+    assert "def vnoise__uvec2_uvec2_uint(" in kernel
+    assert "def fbm__uvec2_uint_uint(" in kernel
+    assert "def isqrt__uint(" in kernel
+    assert "def inkStep__uint_uint_int(" in kernel
+    assert "def hash12__vec2(" not in kernel
+    assert "def voronoiCell__" not in kernel
+    assert "def tonemap2__" not in kernel
+    assert "def rotate2D__" not in kernel
+
+
+def test_bundled_feedback_kernel_takes_hue_shift_steps_in_exact_rounded_division():
+    kernel = (
+        Path(build_module.BUNDLE) / "kernels" / "python" / "filter__feedback__feedback.py"
+    ).read_text()
+
+    # Upstream 1faed961: the hue shift is computed on its own, in the same
+    # correctly rounded division steps as the WGSL shader, and applied with
+    # a plain fract instead of mod(). The locked build's map()-into-mod()
+    # form is gone.
+    assert "def divRound__float_float(" in kernel
+    assert "def pin__float(" in kernel
+    assert 'divRound__float_float(pin__float' in kernel
+    assert 'rt.binary("+", hsv[int(rt.i(0))], hueShift' in kernel
+    assert "map(" not in kernel
+
+
 def test_transpiler_applies_the_upstream_8bit_output_quantization():
     # Upstream a1a3fa2a quantizes canonical effect output to 8-bit color in
     # classicNoisedeck/glitch (before scanlines/snow) and filter/crt (before
