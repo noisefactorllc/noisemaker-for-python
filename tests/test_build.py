@@ -437,11 +437,17 @@ def test_bundled_feedback_kernel_takes_hue_shift_steps_in_exact_rounded_division
     # Upstream 1faed961: the hue shift is computed on its own, in the same
     # correctly rounded division steps as the WGSL shader, and applied with
     # a plain fract instead of mod(). The locked build's map()-into-mod()
-    # form is gone.
+    # form is gone. Upstream 15d7719b pins the divRound sum from outside:
+    # pin(q + pin(r / b)) instead of q + pin(r / b).
     assert "def divRound__float_float(" in kernel
     assert "def pin__float(" in kernel
     assert 'divRound__float_float(pin__float' in kernel
     assert 'rt.binary("+", hsv[int(rt.i(0))], hueShift' in kernel
+    assert (
+        'return pin__float(rt.binary("+", q, pin__float(rt.binary("/", r, b, 1, "float")), 1, "float"))'
+        in kernel
+    )
+    assert 'return rt.binary("+", q, pin__float(rt.binary("/", r, b, 1, "float")), 1, "float")' not in kernel
     assert "map(" not in kernel
 
 

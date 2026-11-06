@@ -39,7 +39,7 @@ def run_pixel(ctx, out):
         q = pin__float(rt.binary("/", a, b, 1, "float"))
         p = pin__float(rt.binary("*", q, b, 1, "float"))
         r = pin__float(rt.binary("-", pin__float(rt.binary("-", a, p, 1, "float")), productError__float_float_float(q, b, p), 1, "float"))
-        return rt.binary("+", q, pin__float(rt.binary("/", r, b, 1, "float")), 1, "float")
+        return pin__float(rt.binary("+", q, pin__float(rt.binary("/", r, b, 1, "float")), 1, "float"))
     def map__float_float_float_float_float(value, inMin, inMax, outMin, outMax):
         return rt.binary("+", outMin, rt.binary("/", rt.binary("*", rt.binary("-", outMax, outMin, 1, "float"), rt.binary("-", value, inMin, 1, "float"), 1, "float"), rt.binary("-", inMax, inMin, 1, "float"), 1, "float"), 1, "float")
     def blendOverlay__float_float(a, b):
