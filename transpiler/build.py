@@ -161,7 +161,7 @@ def _adapt_source(effect_id: str, program: str, source: str) -> str:
         source = replacement["source"]
 
     # Upstream Noisemaker 6f98d26a wraps the hue through hsv2rgb's last sector
-    # in the 18 effects below (plus filter/feedback at 8395d1da): the sector
+    # in the effects listed below (plus filter/feedback at 8395d1da): the
     # chain's final `else if (h < 1.0)` arm and its black vec3(0) fallback
     # become one unconditional else branch, so a compiler that folds hsv2rgb's
     # own fract() into the caller's renders raw h = 1.0 as the colour of

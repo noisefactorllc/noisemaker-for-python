@@ -451,8 +451,9 @@ def test_bundled_feedback_kernel_takes_hue_shift_steps_in_exact_rounded_division
 
 
 def test_bundled_kernels_wrap_the_hue_through_hsv2rgb_last_sector():
-    # Upstream 8395d1da (filter/feedback) and 6f98d26a (18 more effects) made
-    # hsv2rgb's last sector the chain's else branch: fract() returns 1.0 for a
+    # Upstream 8395d1da (filter/feedback) and 6f98d26a (the same wrap in the
+    # remaining pinned effects) made hsv2rgb's last sector the chain's else
+    # branch: fract() returns 1.0 for a
     # hue just below a whole number, and a compiler that folds the callee's
     # fract() into the caller's must render raw h = 1.0 as the colour of
     # h = 0.0 instead of black. The locked CDN build predates both revisions,
