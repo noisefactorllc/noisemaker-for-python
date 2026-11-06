@@ -1,9 +1,12 @@
 import json
+import math
+import textwrap
 from collections import Counter
 from pathlib import Path
 
 import pytest
 
+from noisemaker_cpu.runtime import Runtime
 from transpiler import build as build_module
 
 
@@ -497,6 +500,54 @@ def test_transpiler_wraps_the_hsv2rgb_last_sector_only_in_the_pinned_effects():
     assert build_module._adapt_source("filter/adjust", "adjust", guarded) == guarded
     with pytest.raises(ValueError):
         build_module._adapt_source("classicNoisedeck/coalesce", "coalesce", "vec3 rgb;")
+
+
+def test_bundled_feedback_hsv2rgb_takes_raw_h_at_the_last_sector():
+    # Mirrors the sibling's feedback-hue-wrap test: upstream 8395d1da made
+    # hsv2rgb's last sector the chain's else branch, so a compiler that folds
+    # the callee's fract() into the caller's renders raw h = 1.0 as the colour
+    # of h = 0.0 instead of black. The bundled kernel's own hsv2rgb is
+    # evaluated twice: once through the port runtime's fract, once through an
+    # identity fract that reproduces the folded-compiler case.
+    kernel = (
+        Path(build_module.BUNDLE) / "kernels" / "python" / "filter__feedback__feedback.py"
+    ).read_text()
+    start = kernel.index("    def hsv2rgb__vec3(hsv):")
+    end = kernel.index("\n    def ", start + 1)
+    source = textwrap.dedent(kernel[start:end])
+
+    rt = Runtime()
+
+    class _FoldedRt:
+        # The folded case: hsv2rgb's own fract() compiles away, as Mesa did
+        # before the fix, so the raw h reaches the sector chain unchanged.
+        def __getattr__(self, name):
+            return getattr(rt, name)
+
+        def component_wise(self, name, *args, **kwargs):
+            if name == "fract":
+                return args[0]
+            return rt.component_wise(name, *args, **kwargs)
+
+    plain_ns = {"rt": rt}
+    exec(source, plain_ns)
+    hsv2rgb = plain_ns["hsv2rgb__vec3"]
+    folded_ns = {"rt": _FoldedRt()}
+    exec(source, folded_ns)
+    hsv2rgb_folded = folded_ns["hsv2rgb__vec3"]
+    vec = lambda *comps: rt.construct(3, *comps)
+
+    # With the fold reproduced, raw h = 1.0 reaches the last sector (the else
+    # branch). There x is 0, so the colour is that of h = 0.0, not black.
+    assert hsv2rgb_folded(vec(1.0, 1.0, 1.0)).tolist() == [1.0, 0.0, 0.0]
+    assert hsv2rgb_folded(vec(1.0, 1.0, 1.0)).tolist() == hsv2rgb_folded(vec(0.0, 1.0, 1.0)).tolist()
+    assert hsv2rgb(vec(1.0, 1.0, 1.0)).tolist() == hsv2rgb(vec(0.0, 1.0, 1.0)).tolist()
+    assert hsv2rgb(vec(1.25, 1.0, 1.0)).tolist() == hsv2rgb(vec(0.25, 1.0, 1.0)).tolist()
+    # Steps of 1/256 are exact in float32 and their fract() wrap is exact too,
+    # so the wrapped and unwrapped calls must agree bit for bit.
+    for step in range(-256, 512):
+        h = step / 256
+        assert hsv2rgb(vec(h, 0.75, 1.0)).tolist() == hsv2rgb(vec(h - math.floor(h), 0.75, 1.0)).tolist(), f"h = {h}"
 
 
 def test_transpiler_applies_the_upstream_8bit_output_quantization():
