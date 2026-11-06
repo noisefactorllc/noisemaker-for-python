@@ -99,6 +99,42 @@ _LOCKED_BUILD_PROGRAM_SOURCES = {
 }
 _LOCKED_BUILD_PROGRAM_SOURCES.update(PARTICLE_TEXTURE_INPUT_SOURCES)
 
+_HSV2RGB_LAST_SECTOR_WRAP_KEYS = frozenset(
+    {
+        "classicNoisedeck/bitEffects:bitEffects",
+        "classicNoisedeck/caustic:caustic",
+        "classicNoisedeck/cellNoise:cellNoise",
+        "classicNoisedeck/cellRefract:cellRefract",
+        "classicNoisedeck/coalesce:coalesce",
+        "classicNoisedeck/colorLab:colorLab",
+        "classicNoisedeck/composite:composite",
+        "classicNoisedeck/effects:effects",
+        "classicNoisedeck/fractal:fractal",
+        "classicNoisedeck/kaleido:kaleido",
+        "classicNoisedeck/lensDistortion:lensDistortion",
+        "classicNoisedeck/moodscape:moodscape",
+        "classicNoisedeck/noise:noise",
+        "classicNoisedeck/noise3d:noise3d",
+        "classicNoisedeck/shapeMixer:shapeMixer",
+        "classicNoisedeck/shapes:shapes",
+        "classicNoisedeck/shapes3d:shapes3d",
+        "filter/feedback:feedback",
+        "filter/prismaticAberration:prismaticAberration",
+    }
+)
+_HSV2RGB_LAST_SECTOR_OLD = (
+    "    } else if (5.0/6.0 <= h && h < 1.0) {\n"
+    "        rgb = vec3(c, 0.0, x);\n"
+    "    } else {\n"
+    "        rgb = vec3(0.0, 0.0, 0.0);\n"
+    "    }"
+)
+_HSV2RGB_LAST_SECTOR_NEW = (
+    "    } else {\n"
+    "        rgb = vec3(c, 0.0, x);\n"
+    "    }"
+)
+
 
 def _adapt_source(effect_id: str, program: str, source: str) -> str:
     # Programs the locked CDN build predates. bundle-lock.json pins 1.0.286,
@@ -123,6 +159,18 @@ def _adapt_source(effect_id: str, program: str, source: str) -> str:
         # preservation as every other program, and skipping them changes
         # the emitted kernel.
         source = replacement["source"]
+
+    # Upstream Noisemaker 6f98d26a wraps the hue through hsv2rgb's last sector
+    # in the 18 effects below (plus filter/feedback at 8395d1da): the sector
+    # chain's final `else if (h < 1.0)` arm and its black vec3(0) fallback
+    # become one unconditional else branch, so a compiler that folds hsv2rgb's
+    # own fract() into the caller's renders raw h = 1.0 as the colour of
+    # h = 0.0 instead of black. The locked CDN build predates both revisions.
+    # filter/adjust's chain is written that way natively and stays untouched.
+    if f"{effect_id}:{program}" in _HSV2RGB_LAST_SECTOR_WRAP_KEYS:
+        if source.count(_HSV2RGB_LAST_SECTOR_OLD) != 1:
+            raise ValueError(f"{effect_id}:{program} hsv2rgb last-sector source changed")
+        source = source.replace(_HSV2RGB_LAST_SECTOR_OLD, _HSV2RGB_LAST_SECTOR_NEW)
 
     # Upstream Noisemaker d0ed94ae selects the prng() sign fold with a boolean
     # mix instead of three float ternaries ("Select prng() sign folds with a

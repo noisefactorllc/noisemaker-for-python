@@ -143,10 +143,7 @@ def run_pixel(ctx, out):
                         if (bool(rt.binary("<=", rt.f(0.6666666666666666), h)) and bool(rt.binary("<", h, rt.f(0.8333333333333334)))):
                             (rgb.__setitem__(0, x), rgb.__setitem__(1, rt.f(0.0)), rgb.__setitem__(2, c), rgb)[-1]
                         else:
-                            if (bool(rt.binary("<=", rt.f(0.8333333333333334), h)) and bool(rt.binary("<", h, rt.f(1.0)))):
-                                (rgb.__setitem__(0, c), rgb.__setitem__(1, rt.f(0.0)), rgb.__setitem__(2, x), rgb)[-1]
-                            else:
-                                (rgb.__setitem__(0, rt.f(0.0)), rgb.__setitem__(1, rt.f(0.0)), rgb.__setitem__(2, rt.f(0.0)), rgb)[-1]
+                            (rgb.__setitem__(0, c), rgb.__setitem__(1, rt.f(0.0)), rgb.__setitem__(2, x), rgb)[-1]
         return rt.construct(3, rt.binary("+", rgb, rt.construct_raw(3, m, m, m), 3, 'float'))
     def rgb2hsv__vec3(rgb):
         rgb = rt.copy(rgb, "float")

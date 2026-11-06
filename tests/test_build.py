@@ -450,6 +450,54 @@ def test_bundled_feedback_kernel_takes_hue_shift_steps_in_exact_rounded_division
     assert "map(" not in kernel
 
 
+def test_bundled_kernels_wrap_the_hue_through_hsv2rgb_last_sector():
+    # Upstream 8395d1da (filter/feedback) and 6f98d26a (18 more effects) made
+    # hsv2rgb's last sector the chain's else branch: fract() returns 1.0 for a
+    # hue just below a whole number, and a compiler that folds the callee's
+    # fract() into the caller's must render raw h = 1.0 as the colour of
+    # h = 0.0 instead of black. The locked CDN build predates both revisions,
+    # so the bundled kernels must not carry the guarded arm or the fallback.
+    last_sector_guard = (
+        'bool(rt.binary("<=", rt.f(0.8333333333333334), h)) and bool(rt.binary("<", h, rt.f(1.0)))'
+    )
+    black_fallback = (
+        "(rgb.__setitem__(0, rt.f(0.0)), rgb.__setitem__(1, rt.f(0.0)),"
+        " rgb.__setitem__(2, rt.f(0.0)), rgb)[-1]"
+    )
+    for key in sorted(build_module._HSV2RGB_LAST_SECTOR_WRAP_KEYS):
+        kernel = (
+            Path(build_module.BUNDLE) / "kernels" / "python" / build_module._file(key)
+        ).read_text()
+        assert last_sector_guard not in kernel, f"{key} still guards its last sector"
+        assert black_fallback not in kernel, f"{key} still carries the black fallback sector"
+    # filter/adjust's chain is written unguarded natively; upstream did not
+    # change it, and its kernel keeps the last sector it already has.
+    adjust = (Path(build_module.BUNDLE) / "kernels" / "python" / "filter__adjust__adjust.py").read_text()
+    assert 'rt.binary("<", h, rt.f(0.8333333333333334))' in adjust
+
+
+def test_transpiler_wraps_the_hsv2rgb_last_sector_only_in_the_pinned_effects():
+    # The patch fires on the locked build's guarded chain, rejects a source
+    # that no longer carries it, and leaves programs outside the pinned set
+    # (filter/adjust among them) untouched.
+    guarded = (
+        "    } else if (5.0/6.0 <= h && h < 1.0) {\n"
+        "        rgb = vec3(c, 0.0, x);\n"
+        "    } else {\n"
+        "        rgb = vec3(0.0, 0.0, 0.0);\n"
+        "    }"
+    )
+    wrapped = build_module._adapt_source("classicNoisedeck/coalesce", "coalesce", guarded)
+    assert wrapped == (
+        "    } else {\n"
+        "        rgb = vec3(c, 0.0, x);\n"
+        "    }"
+    )
+    assert build_module._adapt_source("filter/adjust", "adjust", guarded) == guarded
+    with pytest.raises(ValueError):
+        build_module._adapt_source("classicNoisedeck/coalesce", "coalesce", "vec3 rgb;")
+
+
 def test_transpiler_applies_the_upstream_8bit_output_quantization():
     # Upstream a1a3fa2a quantizes canonical effect output to 8-bit color in
     # classicNoisedeck/glitch (before scanlines/snow) and filter/crt (before
@@ -532,6 +580,11 @@ def test_transpiler_mirrors_the_sibling_tile_aware_effect_stack():
         "    sum += texture(inputTex, st + vec2(j, i) * 0.004).rgb * strength;\n"
         "        vec4 tex = texture(inputTex, st + tapB);\n"
         "    vec2 imageSize = resolution;\n"
+        "    } else if (5.0/6.0 <= h && h < 1.0) {\n"
+        "        rgb = vec3(c, 0.0, x);\n"
+        "    } else {\n"
+        "        rgb = vec3(0.0, 0.0, 0.0);\n"
+        "    }\n"
     )
     adapted = build_module._adapt_source("classicNoisedeck/effects", "effects", source)
     assert "float dx = size * (1.0 / fullResolution.x);" in adapted
