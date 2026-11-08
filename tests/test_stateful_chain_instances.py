@@ -1,18 +1,3 @@
-"""Mirror of the sibling's test/stateful-chain-instances.test.js.
-
-Each stateful effect instance in a chain keeps its own state and zoom
-size. Upstream's shaders/tests/test_stateful_instances.js covers two
-instances of one stateful effect in one chain (an inline surface argument
-or a repeated filter); this port keeps stateful state in each step's own
-attachments (src/noisemaker_cpu/renderer.py), so the same behavior is
-pinned through the existing DSL/render interface with the port's
-chain-argument convention: a chain with repeated stateful instances
-renders the same RGBA bytes as the flattened program where each instance
-runs on its own surface. The loop accumulator, by contrast, is a
-chain-scoped global shared by different effects, so a chain's second
-loop region continues the first region's feedback surface.
-"""
-
 from noisemaker_cpu.renderer import render_dsl
 
 SIZE = 8
