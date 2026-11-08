@@ -948,7 +948,7 @@ def _run_effect_step(step, current, surfaces, external_textures, width, height, 
     )
 
 
-def _run_iterated_group(group, current, surfaces, external_textures, effects, width, height, seed, time, external_inputs=None):
+def _run_iterated_group(group, current, surfaces, external_textures, effects, width, height, seed, time, external_inputs=None, chain_attachments=None):
     # The group's iteration count comes from its owner step (the authority picks
     # the first `iterated` definition in the group; a joined non-iterated step
     # only owns a group alone — the flow3d/noise3d pairing — where the rule falls
@@ -1008,6 +1008,19 @@ def _run_iterated_group(group, current, surfaces, external_textures, effects, wi
 
     group_input = current
     group_attachments = {}
+    # The loop accumulator is a chain-scoped global shared by different effects,
+    # so a second loop region in the same chain continues the first region's
+    # feedback surface instead of a zeroed one. An inherited surface of the
+    # wrong size (cannot arise in one chain's image stream, but guarded) is
+    # dropped and re-created.
+    if group.get("loop") and chain_attachments is not None:
+        inherited = chain_attachments.pop("global_accum", None)
+        if inherited is not None:
+            input_image = _chain_bundle(group_input)["image"] if group_input is not None else None
+            if input_image is not None and (inherited.width != input_image.width or inherited.height != input_image.height):
+                inherited = None
+            else:
+                group_attachments["global_accum"] = inherited
     step_attachments = [{} for _ in group["steps"]]
     previous_outputs = [None] * len(group["steps"])
     for tick in iteration_schedule(time, iteration_count):
@@ -1056,6 +1069,12 @@ def _run_iterated_group(group, current, surfaces, external_textures, effects, wi
             )
             previous_outputs[index] = _chain_bundle(iteration_current)["image"]
         current = iteration_current
+    # The accumulator is chain-scoped: hand it to the chain's next loop region
+    # instead of dropping it with the group's other scratch state.
+    if chain_attachments is not None:
+        accum = group_attachments.pop("global_accum", None)
+        if accum is not None:
+            chain_attachments["global_accum"] = accum
     return current
 
 
@@ -1070,6 +1089,11 @@ def render_dsl(source, width=512, height=512, seed=1, time=0.0, external_texture
     surfaces = dict(seed_surfaces or {})
 
     def run_chain(chain):
+        # Chain-scoped attachment map: the loop accumulator is a chain-scoped
+        # global, so the chain's next loop region continues the previous
+        # region's feedback surface. Each inline chain argument is its own
+        # chain scope (fresh map inside the recursive call).
+        chain_attachments = {}
         current = None
         for group in compute_iteration_groups(chain["steps"], effects):
             for step in group["steps"]:
@@ -1087,6 +1111,7 @@ def render_dsl(source, width=512, height=512, seed=1, time=0.0, external_texture
                     seed,
                     time,
                     external_inputs,
+                    chain_attachments,
                 )
                 continue
             for step in group["steps"]:
