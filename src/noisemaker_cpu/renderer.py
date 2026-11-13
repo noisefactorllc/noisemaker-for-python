@@ -1151,11 +1151,22 @@ def render_dsl(source, width=512, height=512, seed=1, time=0.0, external_texture
     return rendered
 
 
+def _report_sink_error(error, sink) -> None:
+    """Pass an isolated sink failure to the sink that threw it. A sink opts in
+    with an optional on_error(error) method, for example to end an output whose
+    new size it cannot send. Rendering and the other sinks continue either way."""
+    hook = getattr(sink, "on_error", None)
+    if not callable(hook):
+        hook = getattr(sink, "onError", None)
+    if callable(hook):
+        hook(error)
+
+
 class CpuRenderer:
     """Stateful renderer facade that owns output sinks and export queues."""
 
     def __init__(self, *, on_sink_error=None):
-        self.sink_manager = SinkManager(on_error=on_sink_error)
+        self.sink_manager = SinkManager(on_error=_report_sink_error if on_sink_error is None else on_sink_error)
         self._sink_descriptor = {
             "width": 0,
             "height": 0,

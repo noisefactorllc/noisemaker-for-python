@@ -278,6 +278,116 @@ def test_cpu_renderer_delegates_should_defer_render_to_sink_manager():
     assert renderer.should_defer_render() is False
 
 
+def test_cpu_renderer_passes_each_sink_its_own_isolated_configure_defer_and_submit_errors():
+    renderer = CpuRenderer()
+    configure_error = RuntimeError("configure failed")
+    defer_error = RuntimeError("defer probe failed")
+    submit_error = RuntimeError("submit failed")
+    reported = []
+    failing = [False]
+
+    class FailingSink(RecordingSink):
+        def configure(self, descriptor):
+            self.events.append(("configure", dict(descriptor)))
+            if failing[0]:
+                raise configure_error
+
+        def defer_render(self):
+            self.events.append(("defer_render",))
+            if failing[0]:
+                raise defer_error
+            return False
+
+        def submit(self, frame, timestamp):
+            self.events.append(("submit", frame, timestamp))
+            if failing[0]:
+                raise submit_error
+            return True
+
+        def on_error(self, error):
+            reported.append(("failed", error))
+
+    class SilentSink(RecordingSink):
+        def configure(self, descriptor):
+            self.events.append(("configure", dict(descriptor)))
+            if failing[0]:
+                raise RuntimeError("silent configure failed")
+
+        def submit(self, frame, timestamp):
+            self.events.append(("submit", frame, timestamp))
+            if failing[0]:
+                raise RuntimeError("silent submit failed")
+            return True
+
+    class ThrowingReporterSink(RecordingSink):
+        def __init__(self):
+            super().__init__()
+            self.reporter_calls = 0
+
+        def configure(self, descriptor):
+            self.events.append(("configure", dict(descriptor)))
+            if failing[0]:
+                raise RuntimeError("configure failed again")
+
+        def submit(self, frame, timestamp):
+            self.events.append(("submit", frame, timestamp))
+            return True
+
+        def on_error(self, error):
+            self.reporter_calls += 1
+            raise RuntimeError("reporter failed")
+
+    healthy_calls = []
+
+    class HealthySink(RecordingSink):
+        def configure(self, descriptor):
+            healthy_calls.append(("configure", descriptor["width"], descriptor["height"]))
+
+        def defer_render(self):
+            healthy_calls.append(("defer_render",))
+            return False
+
+        def submit(self, frame, timestamp):
+            healthy_calls.append(("submit", timestamp))
+            return True
+
+        def on_error(self, error):
+            reported.append(("healthy", error))
+
+    failing_sink = FailingSink()
+    silent_sink = SilentSink()
+    throwing_reporter = ThrowingReporterSink()
+    healthy_sink = HealthySink()
+    renderer.add_sink(failing_sink)
+    renderer.add_sink(silent_sink)
+    renderer.add_sink(throwing_reporter)
+    renderer.add_sink(healthy_sink)
+    failing[0] = True
+
+    frame = renderer.render(
+        "search synth\nsolid(color: [0.2, 0.4, 0.6]).write(o0)\nrender(o0)",
+        width=2,
+        height=1,
+        presentation_timestamp=7,
+    )
+    deferred = renderer.should_defer_render()
+
+    assert deferred is False
+    assert reported == [
+        ("failed", configure_error),
+        ("failed", submit_error),
+        ("failed", defer_error),
+    ]
+    assert throwing_reporter.reporter_calls == 1
+    assert healthy_calls == [("configure", 2, 1), ("submit", 7), ("defer_render",)]
+    assert renderer.sink_manager.stats.get(failing_sink) == {"accepted": 0, "dropped": 0, "failed": 3}
+    assert renderer.sink_manager.stats.get(silent_sink) == {"accepted": 0, "dropped": 0, "failed": 2}
+    assert renderer.sink_manager.stats.get(throwing_reporter) == {"accepted": 1, "dropped": 0, "failed": 1}
+    assert renderer.sink_manager.stats.get(healthy_sink) == {"accepted": 1, "dropped": 0, "failed": 0}
+    assert frame.width == 2
+    assert frame.height == 1
+
+
 def test_frame_export_queue_validates_adapter_and_bounded_slot_count():
     with pytest.raises(TypeError, match="adapter"):
         FrameExportQueue(object())
