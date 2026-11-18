@@ -499,6 +499,12 @@ class Runtime:
                         arr = arr.astype(F32)
                     ivals.extend(uintmath._int_operand(x) for x in arr.ravel())
             ivals = [(v & _U32) if base == "uint" else _s32(v) for v in ivals]
+            # A short argument list zero-fills to the declared width: the
+            # oracle fills its pooled integer result in place and any
+            # component past the supplied ones reads `?? 0`
+            # (glsl-runtime.js #integerVector).
+            if len(ivals) < width:
+                ivals = ivals + [0] * (width - len(ivals))
             if width == 1:
                 return ivals[0]
             if base == "uint" and self.js_uvec_numbers:

@@ -42,6 +42,48 @@ def test_construct_integer_vectors_coerce_non_finite_components_to_zero():
     )
 
 
+def test_construct_integer_vectors_broadcast_one_scalar_and_fill_left_to_right():
+    # Mirrors the oracle's constructor pin (test/glsl-runtime.test.js,
+    # bee1eb7): one scalar broadcasts; otherwise components fill left to
+    # right and a short argument list zero-fills to the declared width.
+    runtime = Runtime()
+    floats = np.array([1.5, -2.25, 3000, 65536.7], dtype=np.float32)
+    np.testing.assert_array_equal(
+        runtime.construct(4, floats, base="int"),
+        np.array([1, -2, 3000, 65536], dtype=np.int64),
+    )
+    np.testing.assert_array_equal(
+        runtime.construct(4, floats, base="uint"),
+        np.array([1, 0xFFFFFFFE, 3000, 65536], dtype=np.int64),
+    )
+    np.testing.assert_array_equal(
+        runtime.construct(3, runtime.construct(2, 7, 9, base="uint"), 5, base="uint"),
+        np.array([7, 9, 5], dtype=np.int64),
+    )
+    np.testing.assert_array_equal(
+        runtime.construct(4, np.array([1, 2]), np.array([3, 4]), base="uint"),
+        np.array([1, 2, 3, 4], dtype=np.int64),
+    )
+    np.testing.assert_array_equal(
+        runtime.construct(3, np.array([-4, 5]), base="int"),
+        np.array([-4, 5, 0], dtype=np.int64),
+    )
+    np.testing.assert_array_equal(
+        runtime.construct(2, np.array([6, 7, 8, 9]), base="int"),
+        np.array([6, 7], dtype=np.int64),
+    )
+    np.testing.assert_array_equal(
+        runtime.construct(2, 3.9, base="int"), np.array([3, 3], dtype=np.int64)
+    )
+    np.testing.assert_array_equal(
+        runtime.construct(3, -1, base="uint"),
+        np.array([0xFFFFFFFF, 0xFFFFFFFF, 0xFFFFFFFF], dtype=np.int64),
+    )
+    np.testing.assert_array_equal(
+        runtime.construct(3, base="uint"), np.zeros(3, dtype=np.int64)
+    )
+
+
 def test_isnan_returns_glsl_boolean_scalar_and_vector_results():
     runtime = Runtime()
 

@@ -47,8 +47,8 @@ def test_receipt_binds_the_pinned_cpu_revision():
     assert doc["cpu"]["revision"] == "b631fc2c37d75f4cedbdc5e760486f7ecd3a2ca8"
     assert doc["cpu"]["snapshotRevision"] == "b631fc2c37d75f4cedbdc5e760486f7ecd3a2ca8"
     assert doc["cpu"]["sourceDigest"] == "fe3de11f8c4c0627024fb281e0cab112d4f017647be4b9e979535fdfb1088e39"
-    assert doc["cpu"]["cpuHead"] == "8da893e14207172d43581805d6b89fe321506f67"
-    assert doc["cpu"]["cpuTree"] == "54495ce96013322603ea8fc3f0b1f9dc3657303d"
+    assert doc["cpu"]["cpuHead"] == "bee1eb78b28820554e621cbae862605f8e31d92e"
+    assert doc["cpu"]["cpuTree"] == "bde09119b44fbff1f2d5c1db819d30cbb9ca0d32"
     assert doc["settings"] == {"size": 8, "seed": 1, "time": 0.25, "tolerance": 0}
     assert doc["counts"]["diffs"] == 0
     assert doc["counts"]["runtimeErrors"] == 0
