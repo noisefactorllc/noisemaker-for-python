@@ -55,14 +55,12 @@ Replace `program.dsl` with a Noisemaker program that uses only the supported eff
 
 {{NM_EFFECT_LIST}}
 
-## What this port cannot render
+## Effects that react to host input
 
-This port cannot render five effects from the upstream catalog:
-
-- `synth/roll`, `synth/scope` and `synth/spectrum` react to live audio.
-- `render/meshLoader` and `render/meshRender` need a mesh pipeline.
-
-Everything else in the catalog renders here.
+`synth/roll`, `synth/scope` and `synth/spectrum` react to MIDI or audio input, and
+`render/meshLoader` and `render/meshRender` draw a mesh. `run.py` binds no MIDI,
+audio or mesh input, so these effects render with zero MIDI and audio state and
+an empty mesh.
 `engine/noisemaker_cpu/bundle/metadata.json` lists exactly which effects this engine contains.
 
 To check an edited `program.dsl` against a different build of this port:

@@ -22,7 +22,7 @@ Effect kernels are **transpiled directly from the upstream GLSL** served by the
 - Screen-space derivatives.
 - Bit-exact uint32/PCG hashing.
 
-**The bundle contains all 210 catalog effects**, transpiled from published engine `1.0.286` (Noisemaker `a3d96b66`). `scripts/parity-summary` renders every one of them and compares it with the pinned `noisemaker-for-cpu` oracle at zero byte tolerance: 210 of 210 are byte-identical (8×8, seed 1, time 0.25). Single-frame effects render through the `effect` CLI path; iterated, typed-chain, volume and loop effects through DSL programs; and the five reactive/mesh effects (`synth/roll`, `synth/scope`, `synth/spectrum`, `render/meshLoader`, `render/meshRender`) through deterministic MIDI, audio and mesh fixtures synced from the oracle's own parity fixtures. These cases cover the catalog, not every parameter, resolution or animation.
+**The bundle contains all 210 catalog effects**, transpiled from published engine `1.0.286` (Noisemaker `7aa5cab6`). `scripts/parity-summary` renders every one of them and compares it with the pinned `noisemaker-for-cpu` oracle at zero byte tolerance: 210 of 210 are byte-identical (8×8, seed 1, time 0.25). Single-frame effects render through the `effect` CLI path; iterated, typed-chain, volume and loop effects through DSL programs; and the five reactive/mesh effects (`synth/roll`, `synth/scope`, `synth/spectrum`, `render/meshLoader`, `render/meshRender`) through deterministic MIDI, audio and mesh fixtures synced from the oracle's own parity fixtures. These cases cover the catalog, not every parameter, resolution or animation.
 Iterated effects default to `iterationCount: 60`. Particle pipelines share state from `pointsEmit()` through their point and render steps.
 
 ## Install
@@ -87,14 +87,15 @@ pytest
 ```
 
 `pytest -m "not slow and not oracle"` is the quick, node-free subset that CI runs
-on every push. `scripts/test` is the full gate, which CI runs weekly: it clones
-`noisemaker-for-cpu` at the pinned revision, runs every test against it with
-Node, and then runs `scripts/parity-summary` and audits the logged run with
-`scripts/parity/release_gate.py` — the release gate (mirroring the oracle's
-`scripts/parity/release-gate.js`) requires every authority case reported exactly
-once, zero missing, skipped, near, deferred or failed cases, and a
+on every push, and `scripts/test` runs the same selection. The full gate runs in
+CI's weekly and manually dispatched runs of `.github/workflows/tests.yml`: it
+loads `noisemaker-for-cpu` at the revision pinned in `scripts/test`, runs every
+test against it with Node and refuses a run with any skipped or failed test, and
+then runs `scripts/parity-summary`. `scripts/parity/release_gate.py` can audit a
+logged `scripts/parity-summary` run: it requires every authority case reported
+exactly once, zero missing, skipped, near, deferred or failed cases, and a
 `PARITY-SUMMARY` line that agrees with the per-case verdicts. A kit is released
-only after that full gate passes. `tests/data/parity-receipt-<revision>.json`
+only after a full-gate run passes. `tests/data/parity-receipt-<revision>.json`
 records the
 oracle's output hashes for the single-frame and reactive/mesh effects, so the
 `slow` receipt test checks byte parity without Node.
