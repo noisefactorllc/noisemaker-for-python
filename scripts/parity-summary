@@ -89,6 +89,23 @@ def _build_cases(effects: dict) -> dict:
     return cases
 
 
+def _register_declared_variants(effects: dict, cases: dict) -> dict:
+    """Register every declared settings variant as an executable case.
+
+    A ":"-suffixed VOLUME_DSL_CASES id is a declared settings variant of the
+    same effect, an executable case in its own right: it renders and counts
+    under its full case id when requested explicitly. Only main() registers
+    them: _build_cases stays one-case-per-effect-id, so the whole-catalog run
+    iterates effect ids only and the parameter matrix's case set (one case per
+    effect id) keeps its contract.
+    """
+    for case_id, program, width, _height in _tp.VOLUME_DSL_CASES:
+        base = case_id.split(":")[0]
+        if base in effects and case_id not in cases:
+            cases[case_id] = ("dsl", program, width)
+    return cases
+
+
 def main() -> int:
     _parity.ensure_oracle()
     requested = [a for a in sys.argv[1:] if not a.startswith("-")]
@@ -97,13 +114,13 @@ def main() -> int:
         return 2
 
     effects = _parity._meta()["effects"]
-    cases = _build_cases(effects)
+    cases = _register_declared_variants(effects, _build_cases(effects))
 
     if requested:
-        unknown = [i for i in requested if i not in effects]
+        unknown = [i for i in requested if i not in cases]
         if unknown:
             print(f"UNKNOWN EFFECTS: {sorted(unknown)}")
-        selected = [i for i in effects if i in set(requested)]
+        selected = [i for i in cases if i in set(requested)]
         expected = len(requested)
     else:
         selected = list(effects)
@@ -225,7 +242,7 @@ def main() -> int:
                 from noisemaker_cpu.renderer import render_dsl
 
                 _, program, width = case
-                if effects[eid].get("externalTexture"):
+                if effects[eid.split(":")[0]].get("externalTexture"):
                     raise RuntimeError("external-texture effect needs an effect-path case")
                 py = render_dsl(program, width=width, height=width, seed=_parity.SEED, time=_parity.TIME)
         except Exception as e:

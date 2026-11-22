@@ -42,6 +42,24 @@ def test_build_matrix_excludes_resource_sizing_variants():
     assert [item["case"] for item in matrix] == ["test/effect#alpha@min", "test/effect#alpha@max"]
 
 
+def test_summary_registers_declared_volume_case_variants():
+    # A ":"-suffixed VOLUME_DSL_CASES id is a declared settings variant, an
+    # executable case in its own right: the summary registers it under its
+    # full id, so an explicit case-id argument renders and counts it, while
+    # _build_cases keeps its one-case-per-effect-id contract for the
+    # whole-catalog run and the parameter matrix.
+    effects = _pmx._parity._meta()["effects"]
+    base_cases = _pmx._ps._build_cases(effects)
+    assert set(base_cases) == set(effects)
+    cases = _pmx._ps._register_declared_variants(effects, dict(base_cases))
+    variants = [case_id for case_id in cases if case_id not in effects]
+    declared = [case_id for case_id, *_ in _pmx._ps._tp.VOLUME_DSL_CASES if case_id not in effects]
+    assert sorted(variants) == sorted(declared)
+    landscape = cases["render/renderLandscape3d:voxel"]
+    assert landscape[0] == "dsl" and landscape[2] == 8
+    assert "filtering: 1" in landscape[1]
+
+
 def test_matrix_renders_every_case_at_8x8():
     effects = _pmx._parity._meta()["effects"]
     cases = _pmx.matrix_cases(effects)
