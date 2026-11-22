@@ -134,6 +134,26 @@ def run_pixel(ctx, out):
         if rt.binary(">", rt.dot(gradient, gradient), rt.f(1e-12)):
             return rt.normalize(gradient)
         return fallback
+    def voxelOccupied__ivec3(cell):
+        cell = rt.copy(cell, "int")
+        if (bool(rt.component_wise("any", rt.component_wise("lessThan", cell, rt.construct(3, rt.i(0), base="int"), width=3), width=3)) or bool(rt.component_wise("any", rt.component_wise("greaterThanEqual", cell, rt.construct(3, _u_volumeSize, base="int"), width=3), width=3))):
+            return False
+        density = rt.swizzle(rt.texel_fetch(_u_analyticalGeo, rt.construct(2, rt.swizzle(cell, "x"), rt.binary("+", rt.swizzle(cell, "y"), rt.binary("*", rt.swizzle(cell, "z"), _u_volumeSize, 1, "int"), 1, "int"), base="int"), rt.i(0)), "a")
+        return (bool(rt.binary(">", density, rt.f(0.0))) and bool(rt.binary(">=", density, _u_threshold)))
+    def exposedFace__ivec3_bvec3_ivec3_vec3(cell, crossed, toward, normal):
+        cell = rt.copy(cell, "int")
+        crossed = rt.copy(crossed, "bool")
+        toward = rt.copy(toward, "int")
+        normal = rt.copy(normal, "float")
+        if rt.binary("<", rt.binary("+", rt.binary("+", rt.construct(1, rt.swizzle(crossed, "x"), base="int"), rt.construct(1, rt.swizzle(crossed, "y"), base="int"), 1, "int"), rt.construct(1, rt.swizzle(crossed, "z"), base="int"), 1, "int"), rt.i(2)):
+            return normal
+        if (bool(rt.swizzle(crossed, "y")) and bool((not (voxelOccupied__ivec3(rt.binary("-", cell, rt.construct(3, rt.i(0), rt.swizzle(toward, "y"), rt.i(0), base="int"), 3, "int")))))):
+            return rt.construct(3, rt.f(0.0), rt.unary("-", rt.construct(1, rt.swizzle(toward, "y"))), rt.f(0.0))
+        if (bool(rt.swizzle(crossed, "x")) and bool((not (voxelOccupied__ivec3(rt.binary("-", cell, rt.construct(3, rt.swizzle(toward, "x"), rt.i(0), rt.i(0), base="int"), 3, "int")))))):
+            return rt.construct(3, rt.unary("-", rt.construct(1, rt.swizzle(toward, "x"))), rt.f(0.0), rt.f(0.0))
+        if (bool(rt.swizzle(crossed, "z")) and bool((not (voxelOccupied__ivec3(rt.binary("-", cell, rt.construct(3, rt.i(0), rt.i(0), rt.swizzle(toward, "z"), base="int"), 3, "int")))))):
+            return rt.construct(3, rt.f(0.0), rt.f(0.0), rt.unary("-", rt.construct(1, rt.swizzle(toward, "z"))))
+        return normal
     def inverseRotation__vec3(p):
         p = rt.copy(p, "float")
         c = rt.component_wise("cos", rt.construct(3, _u_rotateX, _u_rotateY, _u_rotateZ), width=3)
@@ -228,6 +248,7 @@ def run_pixel(ctx, out):
             g.fragColor[:] = rt.construct(4, lighting__vec3_vec3_vec3(rt.swizzle(sampleAtlasCoords__sampler2D_struct1_bool(_u_volumeCache, hit[2], True), "rgb"), worldNormal, viewDirection), rt.f(1.0))
             g.geoOut[:] = rt.construct(4, rt.binary("+", rt.binary("*", worldNormal, rt.f(0.5), 3, 'float'), rt.f(0.5), 3, 'float'), rt.component_wise("clamp", rt.binary("/", hit[0], rt.f(320.0), 1, "float"), rt.f(0.0), rt.f(1.0), width=1))
             return
+        crossed = rt.construct(3, False)
         step = rt.i(0)
         _for4_first = True
         for _for4 in range(1048576):
@@ -241,12 +262,12 @@ def run_pixel(ctx, out):
             atlas = rt.construct(2, rt.swizzle(cell, "x"), rt.binary("+", rt.swizzle(cell, "y"), rt.binary("*", rt.swizzle(cell, "z"), _u_volumeSize, 1, "int"), 1, "int"), base="int")
             density = rt.swizzle(rt.texel_fetch(_u_analyticalGeo, atlas, rt.i(0)), "a")
             if (bool(rt.binary(">", density, rt.f(0.0))) and bool(rt.binary(">=", density, _u_threshold))):
-                worldNormal = forwardRotation__vec3(normal)
+                worldNormal = forwardRotation__vec3(exposedFace__ivec3_bvec3_ivec3_vec3(cell, crossed, stepDir, normal))
                 g.fragColor[:] = rt.construct(4, lighting__vec3_vec3_vec3(rt.swizzle(rt.texel_fetch(_u_volumeCache, atlas, rt.i(0)), "rgb"), worldNormal, viewDirection), rt.f(1.0))
                 g.geoOut[:] = rt.construct(4, rt.binary("+", rt.binary("*", worldNormal, rt.f(0.5), 3, 'float'), rt.f(0.5), 3, 'float'), rt.component_wise("clamp", rt.binary("/", distance, rt.f(320.0), 1, "float"), rt.f(0.0), rt.f(1.0), width=1))
                 return
             distance = rt.component_wise("min", rt.component_wise("min", rt.swizzle(nextT, "x"), rt.swizzle(nextT, "y"), width=1), rt.swizzle(nextT, "z"), width=1)
-            crossed = rt.component_wise("lessThanEqual", nextT, rt.construct(3, distance), width=3)
+            crossed[:] = rt.component_wise("lessThanEqual", nextT, rt.construct(3, distance), width=3)
             normal[:] = rt.construct(3, rt.f(0.0))
             if rt.swizzle(crossed, "y"):
                 normal = rt.assign_swizzle(normal, "y", rt.unary("-", rt.construct(1, rt.swizzle(stepDir, "y"))))
@@ -275,6 +296,7 @@ def run_pixel(ctx, out):
         cell = rt.construct(3, 0.0, base="int")
         nextT = rt.construct(3, 0.0)
         normal = rt.construct(3, 0.0)
+        crossed = rt.construct(3, 0.0)
         if rt.binary("==", _u_VIEW_MODE, rt.i(2)):
             renderPerspective__vec2(uv)
         else:
@@ -310,6 +332,7 @@ def run_pixel(ctx, out):
                 g.fragColor[:] = rt.construct(4, lighting__vec3_vec3_vec3(rt.swizzle(sampleAtlasCoords__sampler2D_struct1_bool(_u_volumeCache, hit[2], True), "rgb"), normal, rt.construct(3, rt.f(0.5773502692))), rt.f(1.0))
                 g.geoOut[:] = rt.construct(4, rt.binary("+", rt.binary("*", normal, rt.f(0.5), 3, 'float'), rt.f(0.5), 3, 'float'), rt.component_wise("clamp", rt.fdiv(hit[0], rt.binary("*", size, rt.f(4.0), 1, "float"), 1), rt.f(0.0), rt.f(1.0), width=1))
                 return
+            crossed = rt.construct(3, False)
             step = rt.i(0)
             _for5_first = True
             for _for5 in range(1048576):
@@ -324,12 +347,13 @@ def run_pixel(ctx, out):
                 density = rt.swizzle(rt.texel_fetch(_u_analyticalGeo, atlas, rt.i(0)), "a")
                 color = rt.construct(3, 0.0)
                 if (bool(rt.binary(">", density, rt.f(0.0))) and bool(rt.binary(">=", density, _u_threshold))):
+                    normal[:] = exposedFace__ivec3_bvec3_ivec3_vec3(cell, crossed, rt.construct(3, rt.unary("-", rt.i(1)), base="int"), normal)
                     color = rt.swizzle(rt.texel_fetch(_u_volumeCache, atlas, rt.i(0)), "rgb")
                     g.fragColor[:] = rt.construct(4, lighting__vec3_vec3_vec3(color, normal, rt.construct(3, rt.f(0.5773502692))), rt.f(1.0))
                     g.geoOut[:] = rt.construct(4, rt.binary("+", rt.binary("*", normal, rt.f(0.5), 3, 'float'), rt.f(0.5), 3, 'float'), rt.component_wise("clamp", rt.fdiv(distance, rt.binary("*", size, rt.f(4.0), 1, "float"), 1), rt.f(0.0), rt.f(1.0), width=1))
                     return
                 distance = rt.component_wise("min", rt.component_wise("min", rt.swizzle(nextT, "x"), rt.swizzle(nextT, "y"), width=1), rt.swizzle(nextT, "z"), width=1)
-                crossed = rt.component_wise("lessThanEqual", nextT, rt.construct(3, distance), width=3)
+                crossed[:] = rt.component_wise("lessThanEqual", nextT, rt.construct(3, distance), width=3)
                 if rt.swizzle(crossed, "y"):
                     (normal.__setitem__(0, rt.f(0.0)), normal.__setitem__(1, rt.f(1.0)), normal.__setitem__(2, rt.f(0.0)), normal)[-1]
                 else:

@@ -455,6 +455,93 @@ def _adapt_source(effect_id: str, program: str, source: str) -> str:
             "float m = smoothing > 0.0 ? smoothstep(radius, radius - smoothing, d)"
             " : float(d < radius);",
         )
+    if effect_id == "render/renderLandscape3d" and program == "landscape":
+        # Upstream Noisemaker 7f3721e9 breaks voxel edge ties by exposure: a
+        # DDA step that crosses two boundaries at one distance enters the cell
+        # beyond the edge, where the old fixed y/x/z priority could show a
+        # face the neighboring voxel covers. voxelOccupied()/exposedFace()
+        # show the first face the neighbors leave exposed, in the billboard
+        # pass (toward = the ray's stepDir) and the fixed-light pass (toward
+        # = ivec3(-1)). The locked CDN build in bundle-lock.json predates
+        # that revision; same locked-build constraint as
+        # classicNoisedeck/effects above.
+        helpers = (
+            "// A voxel that stops the voxel ray. Cells outside the volume are empty.\n"
+            "bool voxelOccupied(ivec3 cell) {\n"
+            "    if (any(lessThan(cell, ivec3(0))) || any(greaterThanEqual(cell, ivec3(volumeSize)))) return false;\n"
+            "    float density = texelFetch(analyticalGeo, ivec2(cell.x, cell.y + cell.z * volumeSize), 0).a;\n"
+            "    return density > 0.0 && density >= threshold;\n"
+            "}\n"
+            "\n"
+            "// A ray through a voxel edge crosses two boundaries at one distance and enters\n"
+            "// the cell beyond the edge, where two of its faces meet. Rounding decides\n"
+            "// whether the crossings compare equal. Where a neighboring voxel covers one of\n"
+            "// those faces, the rays on either side of the edge show the other one, so the\n"
+            "// cell shows the first face that its neighbors leave exposed. `toward` is the\n"
+            "// ray's step along each axis, and `normal` the face of the first crossed axis\n"
+            "// in y, x, z order.\n"
+            "vec3 exposedFace(ivec3 cell, bvec3 crossed, ivec3 toward, vec3 normal) {\n"
+            "    if (int(crossed.x) + int(crossed.y) + int(crossed.z) < 2) return normal;\n"
+            "    if (crossed.y && !voxelOccupied(cell - ivec3(0, toward.y, 0))) return vec3(0.0, -float(toward.y), 0.0);\n"
+            "    if (crossed.x && !voxelOccupied(cell - ivec3(toward.x, 0, 0))) return vec3(-float(toward.x), 0.0, 0.0);\n"
+            "    if (crossed.z && !voxelOccupied(cell - ivec3(0, 0, toward.z))) return vec3(0.0, 0.0, -float(toward.z));\n"
+            "    return normal;\n"
+            "}\n"
+            "\n"
+        )
+        replacements = [
+            (
+                "    return fallback;\n}\n\n#if VIEW_MODE == 2\n",
+                "    return fallback;\n}\n\n" + helpers + "#if VIEW_MODE == 2\n",
+            ),
+            (
+                "    }\n    for (int step = 0; step < volumeSize * 3; step++) {\n"
+                "        if (any(lessThan(cell, ivec3(0))) || any(greaterThanEqual(cell, ivec3(volumeSize))) || distance >= leave) break;",
+                "    }\n    bvec3 crossed = bvec3(false);\n"
+                "    for (int step = 0; step < volumeSize * 3; step++) {\n"
+                "        if (any(lessThan(cell, ivec3(0))) || any(greaterThanEqual(cell, ivec3(volumeSize))) || distance >= leave) break;",
+            ),
+            (
+                "        if (density > 0.0 && density >= threshold) {\n"
+                "            vec3 worldNormal = forwardRotation(normal);\n"
+                "            fragColor = vec4(lighting(texelFetch(volumeCache, atlas, 0).rgb, worldNormal, viewDirection), 1.0);",
+                "        if (density > 0.0 && density >= threshold) {\n"
+                "            vec3 worldNormal = forwardRotation(exposedFace(cell, crossed, stepDir, normal));\n"
+                "            fragColor = vec4(lighting(texelFetch(volumeCache, atlas, 0).rgb, worldNormal, viewDirection), 1.0);",
+            ),
+            (
+                "        distance = min(min(nextT.x, nextT.y), nextT.z);\n"
+                "        bvec3 crossed = lessThanEqual(nextT, vec3(distance));\n"
+                "        normal = vec3(0.0);\n",
+                "        distance = min(min(nextT.x, nextT.y), nextT.z);\n"
+                "        crossed = lessThanEqual(nextT, vec3(distance));\n"
+                "        normal = vec3(0.0);\n",
+            ),
+            (
+                "    // A ray crosses at most 3*N cells, including tied boundaries.\n"
+                "    for (int step = 0; step < volumeSize * 3; step++) {\n",
+                "    // A ray crosses at most 3*N cells, including tied boundaries.\n"
+                "    bvec3 crossed = bvec3(false);\n"
+                "    for (int step = 0; step < volumeSize * 3; step++) {\n",
+            ),
+            (
+                "        if (density > 0.0 && density >= threshold) {\n"
+                "            vec3 color = texelFetch(volumeCache, atlas, 0).rgb;",
+                "        if (density > 0.0 && density >= threshold) {\n"
+                "            normal = exposedFace(cell, crossed, ivec3(-1), normal);\n"
+                "            vec3 color = texelFetch(volumeCache, atlas, 0).rgb;",
+            ),
+            (
+                "        // Advance every tied axis so edge-only contacts cannot create stray voxels.\n"
+                "        bvec3 crossed = lessThanEqual(nextT, vec3(distance));",
+                "        // Advance every tied axis so edge-only contacts cannot create stray voxels.\n"
+                "        crossed = lessThanEqual(nextT, vec3(distance));",
+            ),
+        ]
+        for old, new in replacements:
+            if source.count(old) != 1:
+                raise ValueError("renderLandscape3d exposed-face source changed")
+            source = source.replace(old, new)
     # The sibling's adaptCanonicalSource also temps matrix self-assignments
     # (`v = matN(...) * v;`) before the transpiler sees them, so the multiply
     # reads the pre-assignment vector.

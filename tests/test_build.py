@@ -733,6 +733,81 @@ def test_bundled_glyphmap_kernel_detects_tiling_from_the_full_resolution():
     assert "rt.length(_u_tileOffset)" not in kernel
 
 
+def test_transpiler_mirrors_the_landscape_exposed_face_tie_break():
+    # Upstream Noisemaker 7f3721e9 breaks the landscape voxel ray's edge ties
+    # by exposure: a DDA step that crosses two boundaries at one distance
+    # enters the cell beyond the edge, and the face the neighboring voxels
+    # leave exposed wins over the fixed y/x/z priority, in the billboard pass
+    # (toward = the ray's stepDir) and the fixed-light pass (toward =
+    # ivec3(-1)). The locked CDN build in bundle-lock.json predates that
+    # revision, so the transpiler applies the same statements here.
+    source = (
+        "    return fallback;\n"
+        "}\n"
+        "\n"
+        "#if VIEW_MODE == 2\n"
+        "    }\n"
+        "    for (int step = 0; step < volumeSize * 3; step++) {\n"
+        "        if (any(lessThan(cell, ivec3(0))) || any(greaterThanEqual(cell, ivec3(volumeSize))) || distance >= leave) break;\n"
+        "        if (density > 0.0 && density >= threshold) {\n"
+        "            vec3 worldNormal = forwardRotation(normal);\n"
+        "            fragColor = vec4(lighting(texelFetch(volumeCache, atlas, 0).rgb, worldNormal, viewDirection), 1.0);\n"
+        "        distance = min(min(nextT.x, nextT.y), nextT.z);\n"
+        "        bvec3 crossed = lessThanEqual(nextT, vec3(distance));\n"
+        "        normal = vec3(0.0);\n"
+        "    // A ray crosses at most 3*N cells, including tied boundaries.\n"
+        "    for (int step = 0; step < volumeSize * 3; step++) {\n"
+        "        if (any(lessThan(cell, ivec3(0))) || distance >= leave) break;\n"
+        "        if (density > 0.0 && density >= threshold) {\n"
+        "            vec3 color = texelFetch(volumeCache, atlas, 0).rgb;\n"
+        "        // Advance every tied axis so edge-only contacts cannot create stray voxels.\n"
+        "        bvec3 crossed = lessThanEqual(nextT, vec3(distance));\n"
+    )
+    adapted = build_module._adapt_source("render/renderLandscape3d", "landscape", source)
+    assert "bool voxelOccupied(ivec3 cell) {" in adapted
+    assert "vec3 exposedFace(ivec3 cell, bvec3 crossed, ivec3 toward, vec3 normal) {" in adapted
+    assert "vec3 worldNormal = forwardRotation(exposedFace(cell, crossed, stepDir, normal));" in adapted
+    assert "normal = exposedFace(cell, crossed, ivec3(-1), normal);" in adapted
+    # crossed lives across the loop so the hit branch sees the previous
+    # step's crossing flags; both loops reassign it in place.
+    assert adapted.count("bvec3 crossed = bvec3(false);") == 2
+    assert adapted.count("crossed = lessThanEqual(nextT, vec3(distance));") == 2
+    assert "bvec3 crossed = lessThanEqual(nextT, vec3(distance));" not in adapted
+    # Guards: a changed canonical source raises instead of skipping.
+    import pytest
+
+    with pytest.raises(ValueError, match="renderLandscape3d exposed-face source changed"):
+        build_module._adapt_source(
+            "render/renderLandscape3d", "landscape", "    return fallback;\n}\n\n#if VIEW_MODE == 2\n"
+        )
+    # Other effects keep the raw form.
+    assert build_module._adapt_source("render/renderLit3d", "renderLit3d", source) == source
+
+
+def test_bundled_landscape_kernel_breaks_edge_ties_by_exposure():
+    kernel = (
+        Path(build_module.BUNDLE) / "kernels" / "python" / "render__renderLandscape3d__landscape.py"
+    ).read_text()
+
+    # Upstream 7f3721e9: a voxel edge tie shows the exposed face, not the
+    # fixed y/x/z priority, in both landscape raymarch passes.
+    assert "def voxelOccupied__ivec3(" in kernel
+    assert "def exposedFace__ivec3_bvec3_ivec3_vec3(" in kernel
+    assert (
+        "worldNormal = forwardRotation__vec3(exposedFace__ivec3_bvec3_ivec3_vec3(cell, crossed, stepDir, normal))"
+        in kernel
+    )
+    assert (
+        'normal[:] = exposedFace__ivec3_bvec3_ivec3_vec3(cell, crossed,'
+        ' rt.construct(3, rt.unary("-", rt.i(1)), base="int"), normal)'
+        in kernel
+    )
+    # crossed lives across each loop so the hit branch sees the previous
+    # step's crossing flags, and the loop updates it in place.
+    assert kernel.count("crossed = rt.construct(3, False)") == 2
+    assert kernel.count('crossed[:] = rt.component_wise("lessThanEqual", nextT') == 2
+
+
 def test_bundled_artifact_sets_match():
     bundle_dir = Path(build_module.BUNDLE)
     metadata = json.loads((bundle_dir / "metadata.json").read_text())
