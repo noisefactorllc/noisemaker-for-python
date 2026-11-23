@@ -222,9 +222,58 @@ def test_bundled_heightgrid_kernel_carries_top_row_negative_z():
         Path(build_module.BUNDLE) / "kernels" / "python" / "points__heightGrid__agent.py"
     ).read_text()
 
-    # outXYZ[2] maps uv.y to Z as (0.5 - uv.y) * gridScale, not (uv.y - 0.5).
-    assert 'rt.binary("*", rt.binary("-", rt.f(0.5), rt.swizzle(uv, "y"), 1, "float"), _u_gridScale, 1, "float")' in kernel
-    assert 'rt.binary("*", rt.binary("-", rt.swizzle(uv, "y"), rt.f(0.5), 1, "float"), _u_gridScale, 1, "float")' not in kernel
+    # outXYZ[2] maps uv.y to Z as (0.5 - uv.y) * gridDepth, not (uv.y - 0.5).
+    assert 'rt.binary("*", rt.binary("-", rt.f(0.5), rt.swizzle(uv, "y"), 1, "float"), gridDepth, 1, "float")' in kernel
+    assert 'rt.binary("*", rt.binary("-", rt.swizzle(uv, "y"), rt.f(0.5), 1, "float"), gridDepth, 1, "float")' not in kernel
+
+
+def test_transpiler_mirrors_the_heightgrid_frame_proportion_depth():
+    # Upstream Noisemaker 75027859 keeps the height grid's depth in the
+    # frame's proportions: gridDepth = gridScale * aspectInv scales the Z
+    # coordinate by the frame's aspect reciprocal, so a non-square frame's
+    # grid cells stay square in world space. The locked CDN build in
+    # bundle-lock.json predates that revision, so the transpiler applies
+    # the same statements here.
+    source = (
+        "uniform float gridScale;\n"
+        "uniform float heightScale;\n"
+        "uniform float heightOffset;\n"
+        "\n"
+        "void main() {\n"
+        "    float elevation = dot(heightColor, vec3(0.2126, 0.7152, 0.0722));\n"
+        "    outXYZ = vec4((uv.x - 0.5) * gridScale,\n"
+        "        elevation * heightScale + heightOffset,\n"
+        "        (0.5 - uv.y) * gridScale, 1.0);\n"
+        "}\n"
+    )
+    adapted = build_module._adapt_source("points/heightGrid", "agent", source)
+    assert "uniform float aspectInv;" in adapted
+    assert "float gridDepth = gridScale * aspectInv;" in adapted
+    assert "(0.5 - uv.y) * gridDepth, 1.0);" in adapted
+    assert "(0.5 - uv.y) * gridScale" not in adapted
+    # Guards: a changed canonical source raises instead of skipping.
+    import pytest
+
+    with pytest.raises(ValueError, match="heightGrid aspect source changed"):
+        build_module._adapt_source(
+            "points/heightGrid",
+            "agent",
+            source.replace("uniform float heightOffset;\n", "uniform float heightScale2;\n"),
+        )
+    # Other programs keep the raw form.
+    assert build_module._adapt_source("points/heightGrid", "passthrough", source) == source
+
+
+def test_bundled_heightgrid_kernel_keeps_the_frame_proportion_depth():
+    kernel = (
+        Path(build_module.BUNDLE) / "kernels" / "python" / "points__heightGrid__agent.py"
+    ).read_text()
+
+    # Upstream 75027859: the Z coordinate scales by gridDepth, the frame
+    # aspect reciprocal product, not by gridScale alone.
+    assert '_u_aspectInv = U.get("aspectInv", rt.f(0.0))' in kernel
+    assert 'gridDepth = rt.binary("*", _u_gridScale, _u_aspectInv, 1, "float")' in kernel
+    assert 'rt.binary("*", rt.binary("-", rt.f(0.5), rt.swizzle(uv, "y"), 1, "float"), _u_gridScale, 1, "float")' not in kernel
 
 
 def test_bundled_flipmirror_kernel_keeps_named_vertical_half():

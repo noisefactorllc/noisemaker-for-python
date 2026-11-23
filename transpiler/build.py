@@ -542,6 +542,33 @@ def _adapt_source(effect_id: str, program: str, source: str) -> str:
             if source.count(old) != 1:
                 raise ValueError("renderLandscape3d exposed-face source changed")
             source = source.replace(old, new)
+    if effect_id == "points/heightGrid" and program == "agent":
+        # Upstream Noisemaker 75027859 keeps the height grid's depth in the
+        # frame's proportions: the Z coordinate scales by the frame's aspect
+        # reciprocal through gridDepth = gridScale * aspectInv, not by
+        # gridScale alone, so a non-square frame's grid cells stay square in
+        # world space. The locked CDN build in bundle-lock.json predates
+        # that revision; same locked-build constraint as
+        # classicNoisedeck/effects above.
+        replacements = [
+            (
+                "uniform float heightOffset;\n",
+                "uniform float heightOffset;\nuniform float aspectInv;\n",
+            ),
+            (
+                "    float elevation = dot(heightColor, vec3(0.2126, 0.7152, 0.0722));\n",
+                "    float elevation = dot(heightColor, vec3(0.2126, 0.7152, 0.0722));\n"
+                "    float gridDepth = gridScale * aspectInv;\n",
+            ),
+            (
+                "        (0.5 - uv.y) * gridScale, 1.0);",
+                "        (0.5 - uv.y) * gridDepth, 1.0);",
+            ),
+        ]
+        for old, new in replacements:
+            if source.count(old) != 1:
+                raise ValueError("heightGrid aspect source changed")
+            source = source.replace(old, new)
     # The sibling's adaptCanonicalSource also temps matrix self-assignments
     # (`v = matN(...) * v;`) before the transpiler sees them, so the multiply
     # reads the pre-assignment vector.
