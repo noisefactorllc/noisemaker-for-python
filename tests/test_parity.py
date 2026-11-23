@@ -291,6 +291,48 @@ def test_iterated_effect_byte_parity(oracle_batch, effect_id, program):
     assert _max_diff(js, py) == 0
 
 
+@pytest.mark.oracle
+@pytest.mark.skipif(
+    not (shutil.which("node") and os.path.exists(CLI)),
+    reason="JS oracle (node + noisemaker-cpu) not available",
+)
+def test_heightgrid_frame_proportion_byte_parity_at_a_non_square_frame(tmp_path):
+    # Upstream 75027859 scales heightGrid's Z by the frame's aspect reciprocal
+    # (gridDepth = gridScale * aspectInv). The declared chain case above
+    # renders square, where aspectInv is 1 and the change is invisible; this
+    # non-square frame exercises it, so the render must match the pinned
+    # oracle byte-for-byte where the pre-change kernel diverges.
+    program = ITERATED_PROGRAMS["points/heightGrid"]
+    out = tmp_path / "heightgrid-proportion.png"
+    subprocess.run(
+        [
+            "node",
+            CLI,
+            "render",
+            "-",
+            "--width",
+            "24",
+            "--height",
+            "14",
+            "--seed",
+            "1",
+            "--time",
+            "0.25",
+            "--output",
+            str(out),
+        ],
+        cwd=CPU_DIR,
+        input=program,
+        text=True,
+        capture_output=True,
+        check=True,
+    )
+    js = decode_png(out.read_bytes())
+    py = render_dsl(program, width=24, height=14, seed=1, time=0.25)
+
+    assert _max_diff(js, py) == 0
+
+
 @pytest.mark.parametrize(
     ("effect_id", "row"), WIDE_IMAGE_CHAINS.items(), ids=WIDE_IMAGE_CHAINS
 )
