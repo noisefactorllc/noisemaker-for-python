@@ -74,18 +74,21 @@ if [ -n "${NM_CHANGED_FILES:-}" ]; then
     echo "NM_CHANGED_FILES selection: $SELECTION"
     if "$VENV/bin/python" -m pytest -q -m "not slow and not oracle" $SELECTION; then
         exit 0
+    else
+        status=$?
+        # Exit 5 means the selection collected no quick-gate-runnable test:
+        # every test those files contain carries the oracle or slow mark, the
+        # two marks this quick gate excludes by design (the gate header
+        # above). CI's full-suite jobs run them; nothing here is runnable
+        # without the oracle harness, so report that instead of failing the
+        # gate on an artifact. Every other status, including a real test
+        # failure, leaves through the same exit.
+        if [ "$status" -eq 5 ]; then
+            echo "NM_CHANGED_FILES: every selected test is oracle- or slow-marked; CI's full-suite job runs them"
+            exit 0
+        fi
+        exit "$status"
     fi
-    status=$?
-    # Exit 5 means the selection collected no quick-gate-runnable test: every
-    # test those files contain carries the oracle or slow mark, the two marks
-    # this quick gate excludes by design (the gate header above). CI's
-    # full-suite jobs run them; nothing here is runnable without the oracle
-    # harness, so report that instead of failing the gate on an artifact.
-    if [ "$status" -eq 5 ]; then
-        echo "NM_CHANGED_FILES: every selected test is oracle- or slow-marked; CI's full-suite job runs them"
-        exit 0
-    fi
-    exit "$status"
 fi
 
 "$VENV/bin/python" -m pytest -q -m "not slow and not oracle"
