@@ -12,15 +12,26 @@
 set -eu
 cd "$(dirname "$0")/.."
 VENV="${TMPDIR:-/tmp}/noisemaker-py-test-venv"
-if [ ! -x "$VENV/bin/python" ]; then
+# Windows venvs lay out Scripts/ instead of bin/; resolve whichever exists so
+# the gate runs there too (CI's Windows job drives this script's pytest).
+if [ -x "$VENV/bin/python" ]; then
+    VBIN="$VENV/bin"
+elif [ -x "$VENV/Scripts/python" ]; then
+    VBIN="$VENV/Scripts"
+else
     # Some minimal distros ship python3 without ensurepip (no python3-venv
     # package); create the venv without pip and bootstrap pip from the network.
     python3 -m venv --without-pip "$VENV"
+    if [ -x "$VENV/Scripts/python" ]; then
+        VBIN="$VENV/Scripts"
+    else
+        VBIN="$VENV/bin"
+    fi
     curl -fsSL https://bootstrap.pypa.io/get-pip.py -o "$VENV/get-pip.py"
-    "$VENV/bin/python" "$VENV/get-pip.py" >/dev/null
+    "$VBIN/python" "$VENV/get-pip.py" >/dev/null
     rm -f "$VENV/get-pip.py"
 fi
-"$VENV/bin/pip" install -q -e '.[dev,build]'
+"$VBIN/pip" install -q -e '.[dev,build]'
 
 # The pinned current-authority oracle: noisemaker-for-cpu at CPU_PINNED_REVISION
 # (CI reads the pin from here for its weekly full-suite gate and the parity
@@ -36,7 +47,7 @@ CPU_PINNED_TREE=49e51eee811e5530f17fc6e5dd21b0f169d7984f
 # variable unset, the whole suite runs exactly as before.
 if [ -n "${NM_CHANGED_FILES:-}" ]; then
     select_tests() {
-        "$VENV/bin/python" - "$NM_CHANGED_FILES" <<-'PY'
+        "$VBIN/python" - "$NM_CHANGED_FILES" <<-'PY'
 			import pathlib, sys
 			changed = [line.strip() for line in sys.argv[1].splitlines() if line.strip()]
 			# A changed test file runs itself. Its stem must not select other
@@ -72,7 +83,7 @@ if [ -n "${NM_CHANGED_FILES:-}" ]; then
         exit 0
     fi
     echo "NM_CHANGED_FILES selection: $SELECTION"
-    if "$VENV/bin/python" -m pytest -q -m "not slow and not oracle" $SELECTION; then
+    if "$VBIN/python" -m pytest -q -m "not slow and not oracle" $SELECTION; then
         exit 0
     else
         status=$?
@@ -91,4 +102,4 @@ if [ -n "${NM_CHANGED_FILES:-}" ]; then
     fi
 fi
 
-"$VENV/bin/python" -m pytest -q -m "not slow and not oracle"
+"$VBIN/python" -m pytest -q -m "not slow and not oracle"
