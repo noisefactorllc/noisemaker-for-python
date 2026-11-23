@@ -276,6 +276,73 @@ def test_bundled_heightgrid_kernel_keeps_the_frame_proportion_depth():
     assert 'rt.binary("*", rt.binary("-", rt.f(0.5), rt.swizzle(uv, "y"), 1, "float"), _u_gridScale, 1, "float")' not in kernel
 
 
+def test_transpiler_mirrors_the_heightmap3d_terrain_frame_proportions():
+    # Upstream Noisemaker 478f94ea keeps the terrain in the frame's
+    # proportions: terrainSpan maps the volume's column lattice onto the
+    # image's aspect box, terrainColumn re-centers the sampled column in
+    # that box, imageTexel samples over the span, and columns outside the
+    # box render empty (columnHeight returns 0 before sampling). The locked
+    # CDN build in bundle-lock.json predates that revision, so the
+    # transpiler applies the same statements here.
+    source = (
+        "uniform int volumeSize;\n"
+        "uniform float heightScale;\n"
+        "uniform float baseHeight;\n"
+        "\n"
+        "ivec2 imageTexel(ivec2 column, ivec2 size) {\n"
+        "    ivec2 image = ivec2(column.x, volumeSize - 1 - column.y);\n"
+        "    return clamp(((image * 2 + 1) * size) / (volumeSize * 2), ivec2(0), size - 1);\n"
+        "}\n"
+        "\n"
+        "float columnHeight(ivec2 column) {\n"
+        "    vec3 rgb = texelFetch(heightTex, imageTexel(column, textureSize(heightTex, 0)), 0).rgb;\n"
+        "}\n"
+    )
+    adapted = build_module._adapt_source("synth3d/heightmap3d", "precompute", source)
+    assert "uniform float aspect;\n" in adapted
+    assert "uniform float aspectInv;\n" in adapted
+    assert "aspect < 1.0 ? max(2, 2 * int(floor(halfSize * aspect + 0.5))) : volumeSize" in adapted
+    assert "aspectInv < 1.0 ? max(2, 2 * int(floor(halfSize * aspectInv + 0.5))) : volumeSize" in adapted
+    assert "return ivec2(column.x, volumeSize - 1 - column.y) - (volumeSize - terrainSpan()) / 2;" in adapted
+    assert "return all(greaterThanEqual(image, ivec2(0))) && all(lessThan(image, terrainSpan()));" in adapted
+    assert "return clamp(((terrainColumn(column) * 2 + 1) * size) / (terrainSpan() * 2), ivec2(0), size - 1);" in adapted
+    assert "if (!inTerrain(column)) return 0.0;" in adapted
+    # Guards: a changed canonical source raises instead of skipping.
+    import pytest
+
+    with pytest.raises(ValueError, match="heightmap3d terrain aspect source changed"):
+        build_module._adapt_source(
+            "synth3d/heightmap3d",
+            "precompute",
+            source.replace("uniform float baseHeight;\n", "uniform float baseHeight2;\n"),
+        )
+    # Other programs keep the raw form.
+    assert build_module._adapt_source("synth3d/heightmap3d", "render", source) == source
+
+
+def test_bundled_heightmap3d_kernel_carries_the_terrain_frame_proportions():
+    kernel = (
+        Path(build_module.BUNDLE)
+        / "kernels"
+        / "python"
+        / "synth3d__heightmap3d__precompute.py"
+    ).read_text()
+
+    # Upstream 478f94ea: the terrain span reads the frame's aspect pair, the
+    # sampled column is re-centered in the span, and columns outside the
+    # terrain are empty before any heightTex fetch.
+    assert '_u_aspect = U.get("aspect", rt.f(0.0))' in kernel
+    assert '_u_aspectInv = U.get("aspectInv", rt.f(0.0))' in kernel
+    assert "def terrainSpan" in kernel
+    assert "def terrainColumn" in kernel
+    assert "def inTerrain" in kernel
+    assert 'rt.component_wise("floor", rt.binary("+", rt.binary("*", halfSize, _u_aspect, 1, "float"), rt.f(0.5), 1, "float"), width=1)' in kernel
+    assert 'rt.binary("-", _u_volumeSize, terrainSpan__void(), 2, "int")' in kernel
+    assert "if (not (inTerrain__ivec2(column))):" in kernel
+    # The pre-span imageTexel body is gone.
+    assert 'rt.binary("*", _u_volumeSize, rt.i(2), 1, "int")' not in kernel
+
+
 def test_bundled_flipmirror_kernel_keeps_named_vertical_half():
     kernel = (
         Path(build_module.BUNDLE) / "kernels" / "python" / "filter__flipMirror__flipMirror.py"

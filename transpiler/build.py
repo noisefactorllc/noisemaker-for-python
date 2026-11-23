@@ -569,6 +569,56 @@ def _adapt_source(effect_id: str, program: str, source: str) -> str:
             if source.count(old) != 1:
                 raise ValueError("heightGrid aspect source changed")
             source = source.replace(old, new)
+    if effect_id == "synth3d/heightmap3d" and program == "precompute":
+        # Upstream Noisemaker 478f94ea keeps the terrain in the frame's
+        # proportions: the volume's column lattice maps onto the image's
+        # aspect box through terrainSpan, terrainColumn re-centers the
+        # sampled column in that box, and columns outside it render empty
+        # (columnHeight returns 0 before sampling). The locked CDN build in
+        # bundle-lock.json predates that revision; same locked-build
+        # constraint as classicNoisedeck/effects above.
+        replacements = [
+            (
+                "uniform float baseHeight;\n",
+                "uniform float baseHeight;\nuniform float aspect;\nuniform float aspectInv;\n",
+            ),
+            (
+                "ivec2 imageTexel(ivec2 column, ivec2 size) {\n"
+                "    ivec2 image = ivec2(column.x, volumeSize - 1 - column.y);\n"
+                "    return clamp(((image * 2 + 1) * size) / (volumeSize * 2), ivec2(0), size - 1);\n"
+                "}\n"
+                "\n"
+                "float columnHeight(ivec2 column) {\n"
+                "    vec3 rgb = texelFetch(",
+                "ivec2 terrainSpan() {\n"
+                "    float halfSize = float(volumeSize) * 0.5;\n"
+                "    return ivec2(\n"
+                "        aspect < 1.0 ? max(2, 2 * int(floor(halfSize * aspect + 0.5))) : volumeSize,\n"
+                "        aspectInv < 1.0 ? max(2, 2 * int(floor(halfSize * aspectInv + 0.5))) : volumeSize);\n"
+                "}\n"
+                "\n"
+                "ivec2 terrainColumn(ivec2 column) {\n"
+                "    return ivec2(column.x, volumeSize - 1 - column.y) - (volumeSize - terrainSpan()) / 2;\n"
+                "}\n"
+                "\n"
+                "bool inTerrain(ivec2 column) {\n"
+                "    ivec2 image = terrainColumn(column);\n"
+                "    return all(greaterThanEqual(image, ivec2(0))) && all(lessThan(image, terrainSpan()));\n"
+                "}\n"
+                "\n"
+                "ivec2 imageTexel(ivec2 column, ivec2 size) {\n"
+                "    return clamp(((terrainColumn(column) * 2 + 1) * size) / (terrainSpan() * 2), ivec2(0), size - 1);\n"
+                "}\n"
+                "\n"
+                "float columnHeight(ivec2 column) {\n"
+                "    if (!inTerrain(column)) return 0.0;\n"
+                "    vec3 rgb = texelFetch(",
+            ),
+        ]
+        for old, new in replacements:
+            if source.count(old) != 1:
+                raise ValueError("heightmap3d terrain aspect source changed")
+            source = source.replace(old, new)
     # The sibling's adaptCanonicalSource also temps matrix self-assignments
     # (`v = matN(...) * v;`) before the transpiler sees them, so the multiply
     # reads the pre-assignment vector.

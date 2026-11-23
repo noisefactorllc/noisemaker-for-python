@@ -333,6 +333,58 @@ def test_heightgrid_frame_proportion_byte_parity_at_a_non_square_frame(tmp_path)
     assert _max_diff(js, py) == 0
 
 
+@pytest.mark.oracle
+@pytest.mark.skipif(
+    not (shutil.which("node") and os.path.exists(CLI)),
+    reason="JS oracle (node + noisemaker-cpu) not available",
+)
+def test_heightmap3d_terrain_proportion_byte_parity_at_the_authority_case(tmp_path):
+    # Upstream 478f94ea maps the terrain's column lattice onto the image's
+    # aspect box (terrainSpan/terrainColumn), so a non-square frame renders a
+    # proportional terrain with empty columns outside the box. The declared
+    # volume case above renders square, where aspect and aspectInv are 1 and
+    # the change is invisible. This is the authority's own declared
+    # heightmap3d chain at its declared 96x80 non-square frame, where the
+    # pre-change kernel diverges, so the render must match the pinned oracle
+    # byte-for-byte.
+    program = (
+        "search synth, synth3d, render\n"
+        "heightmap3d(heightTex: testPattern(pattern: gradient), "
+        "tex: testPattern(pattern: colorBars), volumeSize: x32, "
+        "heightScale: 0.6, baseHeight: 0.1).renderLandscape3d(filtering: isosurface, "
+        "viewMode: perspective, rotateX: 0.62, rotateY: 0.5, posY: 12).write(o0)\n"
+        "render(o0)\n"
+    )
+    out = tmp_path / "heightmap3d-proportion.png"
+    subprocess.run(
+        [
+            "node",
+            CLI,
+            "render",
+            "-",
+            "--width",
+            "96",
+            "--height",
+            "80",
+            "--seed",
+            "1",
+            "--time",
+            "0.25",
+            "--output",
+            str(out),
+        ],
+        cwd=CPU_DIR,
+        input=program,
+        text=True,
+        capture_output=True,
+        check=True,
+    )
+    js = decode_png(out.read_bytes())
+    py = render_dsl(program, width=96, height=80, seed=1, time=0.25)
+
+    assert _max_diff(js, py) == 0
+
+
 @pytest.mark.parametrize(
     ("effect_id", "row"), WIDE_IMAGE_CHAINS.items(), ids=WIDE_IMAGE_CHAINS
 )

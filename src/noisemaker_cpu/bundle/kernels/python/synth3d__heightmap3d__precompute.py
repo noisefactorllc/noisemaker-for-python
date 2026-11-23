@@ -10,15 +10,28 @@ def run_pixel(ctx, out):
     _u_volumeSize = U.get("volumeSize", 0)
     _u_heightScale = U.get("heightScale", rt.f(0.0))
     _u_baseHeight = U.get("baseHeight", rt.f(0.0))
+    _u_aspect = U.get("aspect", rt.f(0.0))
+    _u_aspectInv = U.get("aspectInv", rt.f(0.0))
     g.fragColor = rt.construct(4, 0.0)
     g.geoOut = rt.construct(4, 0.0)
+    def terrainSpan__void():
+        halfSize = rt.binary("*", rt.construct(1, _u_volumeSize), rt.f(0.5), 1, "float")
+        return rt.construct(2, (rt.component_wise("max", rt.i(2), rt.binary("*", rt.i(2), rt.construct(1, rt.component_wise("floor", rt.binary("+", rt.binary("*", halfSize, _u_aspect, 1, "float"), rt.f(0.5), 1, "float"), width=1), base="int"), 1, "int"), width=1) if rt.binary("<", _u_aspect, rt.f(1.0)) else _u_volumeSize), (rt.component_wise("max", rt.i(2), rt.binary("*", rt.i(2), rt.construct(1, rt.component_wise("floor", rt.binary("+", rt.binary("*", halfSize, _u_aspectInv, 1, "float"), rt.f(0.5), 1, "float"), width=1), base="int"), 1, "int"), width=1) if rt.binary("<", _u_aspectInv, rt.f(1.0)) else _u_volumeSize), base="int")
+    def terrainColumn__ivec2(column):
+        column = rt.copy(column, "int")
+        return rt.binary("-", rt.construct(2, rt.swizzle(column, "x"), rt.binary("-", rt.binary("-", _u_volumeSize, rt.i(1), 1, "int"), rt.swizzle(column, "y"), 1, "int"), base="int"), rt.binary("/", rt.binary("-", _u_volumeSize, terrainSpan__void(), 2, "int"), rt.i(2), 2, "int"), 2, "int")
+    def inTerrain__ivec2(column):
+        column = rt.copy(column, "int")
+        image = terrainColumn__ivec2(column)
+        return (bool(rt.component_wise("all", rt.component_wise("greaterThanEqual", image, rt.construct(2, rt.i(0), base="int"), width=2), width=2)) and bool(rt.component_wise("all", rt.component_wise("lessThan", image, terrainSpan__void(), width=2), width=2)))
     def imageTexel__ivec2_ivec2(column, size):
         column = rt.copy(column, "int")
         size = rt.copy(size, "int")
-        image = rt.construct(2, rt.swizzle(column, "x"), rt.binary("-", rt.binary("-", _u_volumeSize, rt.i(1), 1, "int"), rt.swizzle(column, "y"), 1, "int"), base="int")
-        return rt.component_wise("clamp", rt.binary("/", rt.binary("*", rt.binary("+", rt.binary("*", image, rt.i(2), 2, "int"), rt.i(1), 2, "int"), size, 2, "int"), rt.binary("*", _u_volumeSize, rt.i(2), 1, "int"), 2, "int"), rt.construct(2, rt.i(0), base="int"), rt.binary("-", size, rt.i(1), 2, "int"), width=2)
+        return rt.component_wise("clamp", rt.binary("/", rt.binary("*", rt.binary("+", rt.binary("*", terrainColumn__ivec2(column), rt.i(2), 2, "int"), rt.i(1), 2, "int"), size, 2, "int"), rt.binary("*", terrainSpan__void(), rt.i(2), 2, "int"), 2, "int"), rt.construct(2, rt.i(0), base="int"), rt.binary("-", size, rt.i(1), 2, "int"), width=2)
     def columnHeight__ivec2(column):
         column = rt.copy(column, "int")
+        if (not (inTerrain__ivec2(column))):
+            return rt.f(0.0)
         rgb = rt.swizzle(rt.texel_fetch(_u_heightTex, imageTexel__ivec2_ivec2(column, rt.texture_size(_u_heightTex)), rt.i(0)), "rgb")
         luminance = rt.dot(rgb, rt.construct(3, rt.f(0.2126), rt.f(0.7152), rt.f(0.0722)))
         return rt.component_wise("floor", rt.binary("+", rt.binary("*", rt.component_wise("clamp", rt.binary("+", rt.binary("*", luminance, _u_heightScale, 1, "float"), _u_baseHeight, 1, "float"), rt.f(0.0), rt.f(1.0), width=1), rt.construct(1, _u_volumeSize), 1, "float"), rt.f(0.5), 1, "float"), width=1)
