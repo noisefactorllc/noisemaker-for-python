@@ -493,3 +493,15 @@ def test_particle_emitter_after_named_read_starts_fresh_state(monkeypatch):
         },
     )
     assert render("first().write(o1)\nread(o1).emit().reader()").to_rgba8() == bytes([191]) * 16
+
+
+@pytest.mark.parametrize("effect_id", ["filter/warp", "classicNoisedeck/glitch", "synth/media", "filter/text"])
+def test_standalone_effect_with_no_source_image_renders_transparent(effect_id):
+    frame = renderer.render_effect(effect_id, width=8, height=8, seed=1)
+    assert frame.to_rgba8() == bytes(8 * 8 * 4)
+
+
+def test_standalone_filter_uses_last_pass_when_source_image_is_absent(monkeypatch):
+    render_probes(monkeypatch, {"filter": effect(fill("temp", 0.25), pixel("copy", src="inputTex"))})
+    frame = renderer.render_effect("probe/filter", width=2, height=2)
+    assert frame.to_rgba8() == bytes([64]) * 16

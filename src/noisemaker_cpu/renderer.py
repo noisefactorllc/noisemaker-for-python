@@ -838,6 +838,8 @@ def _render_effect_once(
                     if surf is None and not chain_state:
                         # The standalone API also accepts explicit shader sampler bindings.
                         surf = _texture_surface(inputs.get(sampler_name))
+                        if surf is None and source in ("inputTex", external_tex):
+                            surf = result if result is not None else blank
                 if surf is None:
                     raise ValueError(f'{effect_id} pass "{p["name"]}" requires texture "{source}"')
                 surf.filter = "linear" if sampler_name == external_tex else "nearest"
