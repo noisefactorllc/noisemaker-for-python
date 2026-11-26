@@ -71,9 +71,8 @@ def test_matrix_renders_every_case_at_8x8():
 
 
 def test_oracle_record_binds_parameters_the_port_metadata_omits():
-    # synth/remap's per-zone parameters live only in the oracle's records:
-    # the union still binds them (both engines thread the uniform), while
-    # surface-typed zone inputs stay excluded as resources.
+    # This reduced remap fixture omits per-zone parameters. The matrix takes
+    # them from the oracle record and excludes surface-typed inputs.
     effects = {"synth/remap": {"params": {
         "zoneCount": {"type": "int", "min": 0, "max": 8},
     }}}

@@ -30,6 +30,7 @@ JS code leaves a value unrounded (the barycentric edge-function division into
 from __future__ import annotations
 
 import math
+from numbers import Real
 
 import numpy as np
 
@@ -165,7 +166,7 @@ def get_mesh_op(effect_id, program):
     return mesh_render_triangles_draw if f"{effect_id}:{program}" in MESH_DRAW_OPS else None
 
 
-def mesh_render_triangles_draw(inputs, destination, uniforms, _render_pass, external_inputs=None):
+def mesh_render_triangles_draw(inputs, destination, uniforms, render_pass, external_inputs=None):
     # With no meshData, draw the zero mesh the upstream pipeline samples before
     # an upload (noisemaker-for-cpu mesh-render.js emptyMeshData).
     mesh_data = (external_inputs or {}).get("meshData")
@@ -175,8 +176,6 @@ def mesh_render_triangles_draw(inputs, destination, uniforms, _render_pass, exte
     if positions is None:
         positions = mesh_data["positionData"]
     normals = mesh_data["normalData"]
-    tex_width = mesh_data["texWidth"]
-    tex_height = mesh_data["texHeight"]
     width = destination.width
     height = destination.height
     data = destination.data
@@ -193,16 +192,21 @@ def mesh_render_triangles_draw(inputs, destination, uniforms, _render_pass, exte
     # Per-pixel depth buffer cleared to 1.0 (gl.clear(DEPTH_BUFFER_BIT) each pass).
     depth = np.ones(width * height, dtype=np.float32)
     covered = 0
-    vertex_count = tex_width * tex_height
-    triangle_count = vertex_count // 3
+    vertex_count = uniforms.get(render_pass.get("countUniform"))
+    if isinstance(vertex_count, bool) or not isinstance(vertex_count, Real) or not vertex_count > 0:
+        vertex_count = render_pass.get("count") or 3
+    if vertex_count in ("auto", "input", "screen"):
+        mesh_texture = inputs.get("meshPositions") or inputs.get("inputTex")
+        vertex_count = mesh_texture.width * mesh_texture.height if mesh_texture is not None else 3
+    try:
+        triangle_count = int(min(len(positions) // 4, max(0, float(vertex_count)))) // 3
+    except (TypeError, ValueError):
+        triangle_count = 0
     for tri in range(triangle_count):
         verts = []
         all_invalid = True
         for v in range(3):
-            texel = tri * 3 + v
-            x = texel % tex_width
-            y = texel // tex_width
-            pi = (y * tex_width + x) * 4
+            pi = (tri * 3 + v) * 4
             pos_data = [positions[pi], positions[pi + 1], positions[pi + 2], positions[pi + 3]]
             normal_data = [normals[pi], normals[pi + 1], normals[pi + 2], normals[pi + 3]]
             if pos_data[3] != 0:

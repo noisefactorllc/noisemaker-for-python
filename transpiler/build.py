@@ -16,12 +16,26 @@ import shutil
 import sys
 import tempfile
 
-from .cdn import CDN_BASE, CDN_VERSION, eligible_ids, fetch_effect
+from . import cdn
+from .cdn import CDN_BASE, CDN_VERSION, OUTPUT_TEXTURE_FIELDS, eligible_ids
 from .codegen import emit_python
 from .locked_particle_texture_sources import PARTICLE_TEXTURE_INPUT_SOURCES
 from .parser import parse
 from .preprocess import normalize
 from .shared_enums import SHARED_ENUMS
+
+
+# The catalog follows the CPU oracle. Kernel source stays at the exact version
+# recorded in bundle-lock.json, with the source adaptations below.
+DEFINITION_VERSION = "1.5.17" if CDN_VERSION == "1.0.286" else CDN_VERSION
+
+
+def fetch_effect(effect_id: str) -> dict:
+    locked = cdn.fetch_effect(effect_id, CDN_VERSION)
+    if DEFINITION_VERSION == CDN_VERSION:
+        return locked
+    definition = cdn.fetch_effect(effect_id, DEFINITION_VERSION)
+    return {**definition, "programs": locked["programs"]}
 
 
 def _resolve_shared_enums(params: dict) -> None:
@@ -756,6 +770,7 @@ _PASS_EXECUTION_KEYS = (
     "type",
     "entryPoint",
     "drawBuffers",
+    "storageTextures",
     "conditions",
     "viewport",
     "defines",
@@ -765,7 +780,7 @@ _PASS_EXECUTION_KEYS = (
 def _pass_metadata(render_pass: dict, key: str | None) -> dict:
     outputs = {
         ("fragColor" if render_pass.get("drawBuffers", 0) >= 2 and name == "color" else name): texture
-        for name, texture in (render_pass.get("outputs") or {}).items()
+        for name, texture in (render_pass.get("outputs") or render_pass.get("storageTextures") or {}).items()
     }
     metadata = {
         "name": render_pass["name"],
@@ -831,7 +846,7 @@ def build(ids, out_dir=BUNDLE, update_lock=False):
     drift = []
     failures = []
     bundle = {
-        "provenance": {"source": "shaders.noisedeck.app CDN", "version": CDN_VERSION, "base": CDN_BASE},
+        "provenance": {"source": "shaders.noisedeck.app CDN", "version": DEFINITION_VERSION, "base": CDN_BASE},
         "effects": {},
     }
     n_ok = 0
@@ -908,9 +923,16 @@ def build(ids, out_dir=BUNDLE, update_lock=False):
             }
             if eff["params"].get("iterationCount", {}).get("cpuOnly"):
                 bundle["effects"][eid]["iterated"] = True
-            for field in ("outputTex", "outputTex3d", "outputGeo", "loopRole"):
-                if eff.get(field) is not None:
-                    bundle["effects"][eid][field] = eff[field]
+            for field in OUTPUT_TEXTURE_FIELDS:
+                if field in eff:
+                    name = eff[field]
+                    if not isinstance(name, str) or not name.strip():
+                        raise ValueError(f"{eid}: {field} must be a non-empty string")
+                    bundle["effects"][eid][field] = name
+            if eff.get("paramAliases"):
+                bundle["effects"][eid]["paramAliases"] = eff["paramAliases"]
+            if eff.get("loopRole") is not None:
+                bundle["effects"][eid]["loopRole"] = eff["loopRole"]
             if eff.get("externalTexture"):
                 bundle["effects"][eid]["externalTexture"] = eff["externalTexture"]
         if failures:
@@ -933,13 +955,16 @@ def build(ids, out_dir=BUNDLE, update_lock=False):
     finally:
         if staged_dir is not None and os.path.exists(staged_dir):
             shutil.rmtree(staged_dir)
-    print(f"wrote {len(bundle['effects'])} effect(s) ({n_ok} programs, 0 skipped) from CDN {CDN_VERSION}")
+    print(
+        f"wrote {len(bundle['effects'])} effect(s) ({n_ok} programs, 0 skipped) "
+        f"with CDN definitions {DEFINITION_VERSION} and kernels {CDN_VERSION}"
+    )
 
 
 def main(argv=None):
     argv = sys.argv[1:] if argv is None else argv
     if "--all" in argv:
-        ids = eligible_ids()
+        ids = eligible_ids(DEFINITION_VERSION)
     elif "--only" in argv:
         ids = argv[argv.index("--only") + 1].split(",")
     else:

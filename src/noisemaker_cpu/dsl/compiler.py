@@ -12,11 +12,12 @@ param's own default ("inputTex"/"none") exactly as the JS engine does.
 from __future__ import annotations
 
 import math
+import re
 import sys
 
 from ..automation import MAX_AUTOMATION_DEPTH, is_automation_value
 from .error import DslError
-from .parser import parse_dsl
+from .parser import _HexColor, parse_dsl
 
 
 def _is_number(value):
@@ -195,8 +196,35 @@ def _evaluate_value(value, bindings, osc_depth=0, resolving=None):
     raise DslError(f"Unsupported DSL value {kind}", value.get("loc"))
 
 
-def _resolve_args(args, bindings):
-    return [{**arg, "value": _evaluate_value(arg["value"], bindings)} for arg in args]
+def _bound_expression(value, bindings):
+    """Follow value aliases without evaluating unused values or compiling chains."""
+    seen = set()
+    while isinstance(value, dict) and value.get("kind") == "identifier":
+        name = value["name"]
+        binding = bindings.get(name)
+        if name in seen or not binding or binding["kind"] != "value":
+            break
+        seen.add(name)
+        value = binding["expr"]
+    return value
+
+
+def _resolve_args(args, bindings, call, spec):
+    resolved = []
+    for index, arg in enumerate(args):
+        value = _bound_expression(arg["value"], bindings)
+        if (
+            spec and isinstance(value, dict) and value.get("kind") == "Chain"
+            and any(entry["kind"] != "Call" or entry["name"] in {"read", "read3d"} for entry in value["calls"])
+        ):
+            name = arg["name"] or list(spec["params"])[index]
+            name = (spec.get("paramAliases") or {}).get(name, name)
+            raise DslError(
+                f"Chain for argument '{name}' in {call['name']}() may contain only effect calls",
+                value["loc"], "S001",
+            )
+        resolved.append({**arg, "value": _evaluate_value(arg["value"], bindings)})
+    return resolved
 
 
 def _merge_args(stored, call):
@@ -204,14 +232,18 @@ def _merge_args(stored, call):
         return {**call, "name": stored["name"]}
     if not call["argMode"]:
         return {**stored, "loc": call["loc"]}
-    if stored["argMode"] != call["argMode"]:
-        raise DslError("Partial and call arguments must use the same named or positional form", call["loc"])
-    if stored["argMode"] == "positional":
-        return {**call, "name": stored["name"], "args": [*stored["args"], *call["args"]]}
-    merged = {arg["name"]: arg for arg in stored["args"]}
-    for arg in call["args"]:
-        merged[arg["name"]] = arg
-    return {**call, "name": stored["name"], "args": list(merged.values()), "argMode": "named"}
+    args = [*stored["args"], *call["args"]]
+    if stored["argMode"] == call["argMode"] == "positional":
+        return {**call, "name": stored["name"], "args": args}
+    positional = [arg for arg in args if arg["name"] is None]
+    named = {arg["name"]: arg for arg in args if arg["name"] is not None}
+    merged = {**call, "name": stored["name"], "args": [*positional, *named.values()],
+              "argMode": "merged" if positional else "named"}
+    # A keyword in the partial limits hex expansion to its earlier positional
+    # slots. Metadata has no parameter slot and imposes no such limit.
+    if positional and any(arg["name"] not in {None, "_id", "_skip"} for arg in stored["args"]):
+        merged["colorSplatLimit"] = stored.get("colorSplatLimit", sum(arg["name"] is None for arg in stored["args"]))
+    return merged
 
 
 def _merge_partial(stored, call):
@@ -253,6 +285,53 @@ def _resolve_effect(func, search, effects):
         if effect_id in effects:
             return effect_id
     return None
+
+
+def _call_metadata(call):
+    metadata = {}
+    parameters = []
+    for arg in call["args"]:
+        name, value = arg["name"], arg["value"]
+        if name == "_id":
+            if isinstance(value, str) and re.fullmatch(r"[A-Za-z][A-Za-z0-9_]*", value):
+                metadata["_id"] = value
+            else:
+                metadata.pop("_id", None)
+        elif name == "_skip" and call["name"] in {"read", "read3d"}:
+            if value is True:
+                metadata["_skip"] = True
+            else:
+                metadata.pop("_skip", None)
+        elif name != "_skip" or value is not False:
+            parameters.append(arg)
+    return {**call, "args": parameters}, metadata
+
+
+def _effect_arguments(call, spec, bindings):
+    """Assign positional slots before resolving expressions or compiling chains."""
+    names = list(spec["params"])
+    positional = [arg for arg in call["args"] if arg["name"] is None]
+    named = [arg for arg in call["args"] if arg["name"] is not None]
+    if len(positional) > len(names):
+        func = call["name"]
+        print(f"Too many positional arguments for {func}(): '{func}' takes {len(names)}", file=sys.stderr)
+        positional = positional[:len(names)]
+    if "r" in names:
+        index = names.index("r")
+        if (index < len(positional) and index < call.get("colorSplatLimit", math.inf)
+                and spec["params"]["r"]["type"] != "color" and names[index:index + 3] == ["r", "g", "b"]):
+            arg = positional[index]
+            color = _bound_expression(arg["value"], bindings)
+            if isinstance(color, _HexColor):
+                # g and b consume their own indexed slots, even with a fourth argument.
+                positional[index:index + 3] = [{**arg, "value": value} for value in color[:3]]
+    if call["argMode"] == "merged":
+        aliases = spec.get("paramAliases") or {}
+        overridden = {aliases.get(arg["name"], arg["name"]) for arg in named}
+        positional = [
+            {**arg, "name": name} for name, arg in zip(names, positional, strict=False) if name not in overridden
+        ]
+    return [*positional, *named]
 
 
 def _surface_marker(value, name, loc):
@@ -317,6 +396,10 @@ def _normalize_effect(effect_id, spec, args):
             continue
         provided.add(name)
         pspec = param_specs[name]
+        if name == "r" and pspec.get("type") == "float" and isinstance(arg["value"], list):
+            index_r = param_names.index("r")
+            if param_names[index_r:index_r + 3] == ["r", "g", "b"]:
+                raise DslError('Parameter "r" must be a finite number', arg["loc"])
         if pspec.get("type") == "surface":
             marker = _surface_marker(arg["value"], name, arg["loc"])
             if marker is not None:
@@ -352,17 +435,22 @@ def _compile_chain(chain, bindings, search, effects, inline=False):
                 call = _merge_partial(binding["call"], call)
             else:
                 raise DslError(f'Binding "{call["name"]}" is not callable', call["loc"])
+        call, metadata = _call_metadata(call)
+        namespaces = [call["namespace"]] if call.get("namespace") else search
+        effect_id = _resolve_effect(call["name"], namespaces, effects)
+        spec = effects.get(effect_id)
+        raw_args = _effect_arguments(call, spec, bindings) if spec else call["args"]
         outer_pending = bindings.pending
         bindings.pending = []
         try:
-            args = _resolve_args(call["args"], bindings)
+            args = _resolve_args(raw_args, bindings, call, spec)
         finally:
             inline_chains = bindings.pending
             bindings.pending = outer_pending
         if call["name"] == "read":
             if index != 0 or len(args) != 1 or not _is_surface(args[0]["value"]):
                 raise DslError("read(surface) must begin a chain", call["loc"])
-            steps.append({"kind": "read", "surface": args[0]["value"]["name"], "loc": call["loc"]})
+            steps.append({"kind": "read", **metadata, "surface": args[0]["value"]["name"], "loc": call["loc"]})
             has_image = True
             continue
         if call["name"] == "write":
@@ -370,7 +458,7 @@ def _compile_chain(chain, bindings, search, effects, inline=False):
                 raise DslError("loopBegin must be closed by loopEnd before write", call["loc"])
             if not has_image or len(args) != 1 or not _is_surface(args[0]["value"]):
                 raise DslError("write(surface) requires a current image", call["loc"])
-            steps.append({"kind": "write", "surface": args[0]["value"]["name"], "loc": call["loc"]})
+            steps.append({"kind": "write", **metadata, "surface": args[0]["value"]["name"], "loc": call["loc"]})
             continue
         if call["name"] == "write3d":
             if index == 0:
@@ -380,18 +468,19 @@ def _compile_chain(chain, bindings, search, effects, inline=False):
             references = _volume_references(call)
             if not references:
                 raise DslError("Expected surface reference", call["loc"])
-            steps.append({"kind": "write3d", "volume": references[0], "geometry": references[1], "loc": call["loc"]})
+            steps.append({
+                "kind": "write3d", **metadata, "volume": references[0], "geometry": references[1], "loc": call["loc"],
+            })
             continue
         references = _read3d_references(call) if call["name"] == "read3d" and index == 0 else None
         if references:
-            steps.append({"kind": "read3d", "volume": references[0], "geometry": references[1], "loc": call["loc"]})
+            steps.append({
+                "kind": "read3d", **metadata, "volume": references[0], "geometry": references[1], "loc": call["loc"],
+            })
             has_volume = True
             continue
-        namespaces = [call["namespace"]] if call.get("namespace") else search
-        effect_id = _resolve_effect(call["name"], namespaces, effects)
         if effect_id is None:
             raise DslError(f'Unknown effect "{call["name"]}" in search namespaces {", ".join(namespaces)}', call["loc"])
-        spec = effects[effect_id]
         domain = spec.get("domain", "image")
         if domain == "volume-generator":
             if index != 0 and not (spec.get("iterated") and has_volume):
@@ -432,7 +521,10 @@ def _compile_chain(chain, bindings, search, effects, inline=False):
                 )
             has_image = True
         params, surfaces = _normalize_effect(effect_id, spec, args)
-        step = {"kind": "effect", "effect_id": effect_id, "params": params, "surfaces": surfaces, "loc": call["loc"]}
+        step = {
+            "kind": "effect", **metadata, "effect_id": effect_id, "params": params,
+            "surfaces": surfaces, "loc": call["loc"],
+        }
         if inline_chains:
             step["inlineChains"] = inline_chains
         steps.append(step)
@@ -454,16 +546,31 @@ def _alias_binding(value, bindings):
     return None
 
 
+def _capture_hex_colors(value, bindings):
+    if isinstance(value, dict):
+        if value.get("kind") == "Call":
+            return {**value, "args": [
+                {**arg, "value": _capture_hex_colors(arg["value"], bindings)} for arg in value["args"]
+            ]}
+        if value.get("kind") == "Chain":
+            return {**value, "calls": [_capture_hex_colors(call, bindings) for call in value["calls"]]}
+    resolved = _bound_expression(value, bindings)
+    return resolved if isinstance(resolved, _HexColor) else value
+
+
 def _declare_binding(binding, bindings):
     """Declares one let. Statement order (upstream 9cc041d0): a chain sees only the
     lets declared at or before its own statement index; a later `let` of the same
     name reassigns it for later statements; reading a pending name reports S003.
     A bare identifier value must name something resolvable now (an earlier
     binding, an alias, or an effect), as upstream's declareVar requires."""
-    value = binding["value"]
+    value = _capture_hex_colors(binding["value"], bindings)
     if isinstance(value, dict) and value.get("kind") == "Call" and value.get("name") not in _VALUE_CALLS:
-        # A partial keeps its call unresolved. Its arguments resolve where it is
-        # called, as upstream's validator substitutes a symbol at each use.
+        previous = bindings.get(value["name"])
+        if previous and previous["kind"] == "partial":
+            value = _merge_partial(previous["call"], value)
+        elif previous and previous["kind"] == "alias":
+            value = {**value, "name": previous["name"]}
         bindings[binding["name"]] = {"kind": "partial", "call": value}
         return
     alias = _alias_binding(value, bindings)

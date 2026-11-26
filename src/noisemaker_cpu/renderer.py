@@ -24,11 +24,11 @@ from .dsl import compile_dsl
 from .external_input import empty_mesh_data
 from .external_textures import external_data_surface
 from .frame_export import CpuFrameExportAdapter, FrameExportQueue
-from .iteration import compute_iteration_groups, is_particle_state_name, iteration_schedule
+from .iteration import AGENT_TEXTURE_FIELDS, compute_iteration_groups, is_particle_state_name, iteration_schedule
 from .kernel_loader import KernelCache
 from .mesh_render import get_mesh_op
 from .overlay_gen import OVERLAY_EFFECTS, render_worm_overlay
-from .pass_runner import Ctx, run_pass, run_pass_deriv, run_pass_mrt
+from .pass_runner import Ctx, blend_pass_output, run_pass, run_pass_deriv, run_pass_mrt
 from .runtime import F32, Runtime, f32, _oracle_pass_repeat_clamp
 from .sink import SinkManager
 from .surface import Surface
@@ -43,6 +43,7 @@ _PARTICLE_STATE_FORMATS = {
     "global_rgba": "rgba8",
     "global_life_data": "rgba16f",
 }
+_OUTPUT_TEXTURE_FIELDS = ("outputTex", "outputTex3d", "outputGeo", *AGENT_TEXTURE_FIELDS.values())
 
 
 def _is_chain_bundle(value):
@@ -55,10 +56,65 @@ def _chain_bundle(value):
     return {"image": value, "volume": None, "geometry": None, "volumeSize": None}
 
 
+class _TextureBinding:
+    """A published target keeps its identity as writes replace its underlying Surface."""
+
+    def __init__(self, surface=None):
+        self.surface = surface
+
+
+def _texture_surface(resource):
+    return resource.surface if isinstance(resource, _TextureBinding) else resource
+
+
+def _pass_outputs(render_pass):
+    return render_pass.get("outputs") or render_pass.get("storageTextures") or {}
+
+
 def _bundle_output(name, input_surface, resources):
-    if not name or name in {"inputTex", "inputTex3d", "inputGeo"}:
+    if not name or name in {"inputTex3d", "inputGeo"}:
         return input_surface
     return resources.get(name)
+
+
+def _output_name(effect, field, attachments):
+    configured = effect.get(field)
+    if field in attachments and (
+        (field == "outputTex" and not configured)
+        or any(field in _pass_outputs(p).values() for p in effect["passes"])
+    ):
+        return field
+    return configured
+
+
+def _shared_storage(steps, effects):
+    """Find global storage targets used by distinct definitions in this chain."""
+    writers = {}
+    effect_steps = [step for step in steps if step["kind"] == "effect"]
+    for step in effect_steps:
+        for render_pass in effects[step["effect_id"]]["passes"]:
+            for name in (render_pass.get("storageTextures") or {}).values():
+                if name.startswith("global_") and not is_particle_state_name(name) and name != "global_accum":
+                    writers[name] = step
+
+    by_effect = {}
+    for name, owner in writers.items():
+        users = {owner["effect_id"]}
+        for step in effect_steps:
+            effect_id = step["effect_id"]
+            effect = effects[effect_id]
+            if name in (effect.get("textures") or {}):
+                owner = step
+                users.add(effect_id)
+            elif any(effect.get(field) == name for field in _OUTPUT_TEXTURE_FIELDS) or any(
+                name in (p.get("inputs") or {}).values() or name in _pass_outputs(p).values() for p in effect["passes"]
+            ):
+                users.add(effect_id)
+        if len(users) > 1:
+            binding = _TextureBinding()
+            for effect_id in users:
+                by_effect.setdefault(effect_id, {})[name] = (owner, binding)
+    return by_effect
 
 
 def _inherit_volume_size(effect, params, bundle):
@@ -200,7 +256,7 @@ def _check_param_range(spec: dict, name: str | None, value) -> None:
         raise ParameterRangeError(f'Parameter "{name}" must be at most {_bound_text(declared_max)}')
 
 
-def _coerce(spec: dict, value, name: str | None = None):
+def _coerce(spec: dict, value, name: str | None = None, *, vector_dtype=F32):
     t = spec["type"]
     if value is None:
         value = spec.get("default")
@@ -215,11 +271,11 @@ def _coerce(spec: dict, value, name: str | None = None):
     if t == "color":
         if isinstance(value, str):
             value = _parse_hex(value)
-        return np.array(value, dtype=F32)
+        return np.array(value, dtype=vector_dtype)
     if t in ("vec2", "vec3", "vec4", "mat3"):
         if isinstance(value, str):  # CLI --param: "0.1,0.2,0.3"
             value = [float(x) for x in value.split(",")]
-        return np.array(value, dtype=F32)
+        return np.array(value, dtype=vector_dtype)
     if t == "float":
         if isinstance(value, str):
             choices = spec.get("choices") or {}
@@ -369,7 +425,7 @@ def _size_component(spec, params, full_size, resources=None, axis="width"):
     if isinstance(spec, dict):
         input_override = spec.get("inputOverride")
         if input_override and resources and resources.get(input_override) is not None:
-            surface = resources[input_override]
+            surface = _texture_surface(resources[input_override])
             return surface.width if axis == "width" else surface.height
         if "param" in spec:
             # Mirrors noisemaker-for-cpu textureDimension's `{ param }` form:
@@ -416,6 +472,28 @@ def _particle_state_dimensions(params):
     return size, size
 
 
+def _destination_spec(effect, render_pass, name, params, width, height, attachments, particle_targets):
+    textures = effect.get("textures") or {}
+    target = attachments.get(name)
+    if particle_targets is not None and is_particle_state_name(name):
+        if name in particle_targets:
+            texture, owner_params = particle_targets[name]
+            return _texture_dimensions(texture, owner_params, width, height), texture.get("format", "rgba16f")
+        return _particle_state_dimensions(params), _PARTICLE_STATE_FORMATS.get(name, "rgba16f")
+    if isinstance(target, _TextureBinding):
+        return (target.surface.width, target.surface.height), target.surface.format or "rgba16f"
+    texture = textures.get(name, {})
+    viewport = render_pass.get("viewport") or {}
+    size = tuple(
+        _size_component(
+            viewport.get(axis[0], viewport.get(axis, texture.get(axis[0], texture.get(axis)))),
+            params, full_size, attachments, axis,
+        )
+        for axis, full_size in (("width", width), ("height", height))
+    )
+    return size, texture.get("format", "rgba16f")
+
+
 def _declares_inherited_state_size_textures(effect):
     # A texture dimension spec reading the group's shared `stateSize` through the
     # `inherit: true` flag (upstream's inherited texture dimension): it resolves
@@ -433,11 +511,7 @@ def _declares_inherited_state_size_textures(effect):
 
 def _texture_format(effect, name):
     declared = (effect.get("textures") or {}).get(name, {})
-    if "format" in declared:
-        return declared["format"]
-    if is_particle_state_name(name):
-        return _PARTICLE_STATE_FORMATS.get(name, "rgba16f")
-    return "rgba16f"
+    return declared.get("format", "rgba16f")
 
 
 def _pass_enabled(render_pass, uniforms):
@@ -516,7 +590,11 @@ def _render_effect_once(
     delta_time=0,
     external_inputs=None,
     validate_implicit_seed=True,
-) -> Surface:
+    chain_state=False,
+    shared_storage=None,
+    particle_targets=None,
+    particle_owner_params=None,
+):
     params = params or {}
     inputs = inputs or {}
     eff = _meta()["effects"][effect_id]
@@ -536,6 +614,8 @@ def _render_effect_once(
 
     effect_uniforms = {}
     param_values = {}
+    # Remap's CPU polygon tests compare authored coordinates to pixel centers in double precision.
+    vector_dtype = np.float64 if effect_id == "synth/remap" else F32
     surface_params = {}  # sampler-name -> provided Surface (or None)
     for pname, spec in eff["params"].items():
         if spec.get("type") == "surface":
@@ -564,12 +644,18 @@ def _render_effect_once(
                 spec,
                 params.get(pname),
                 None if _is_automation_value(raw_params.get(pname)) else pname,
+                vector_dtype=vector_dtype,
             )
         param_values[pname] = val
         if spec.get("uniform") is not None:
             effect_uniforms[spec["uniform"]] = val
         if spec.get("define") is not None:
             effect_uniforms[spec["define"]] = val
+
+    # A particle behavior can inherit the emitter's texture size without
+    # declaring a stateSize shader uniform of its own.
+    if "stateSize" in params and "stateSize" not in param_values and _declares_inherited_state_size_textures(eff):
+        param_values["stateSize"] = params["stateSize"]
 
     # classicNoisedeck palette presets: a `palette`-type param > 0 selects
     # cosine-palette coefficients from the shared table, overriding the
@@ -596,9 +682,34 @@ def _render_effect_once(
 
     rt = Runtime()
     result = None
-    output_result = None
+    persistent_attachments = attachments is not None
+    if particle_owner_params is not None:
+        particle_owner_params.update(param_values)
+    if persistent_attachments and particle_targets is None:
+        particle_targets = {
+            name: (texture, param_values) for name, texture in (eff.get("textures") or {}).items()
+            if is_particle_state_name(name)
+        }
     if attachments is None:
         attachments = {}
+    attachments.update(inputs)
+    for sampler, resource in surface_params.items():
+        attachments[sampler] = resource if resource is not None else blank
+    for name in AGENT_TEXTURE_FIELDS:
+        if name not in inputs or "global_xyz" in (eff.get("textures") or {}):
+            attachments.pop(name, None)
+    for name, (owner, binding) in (shared_storage or {}).get(effect_id, {}).items():
+        if binding.surface is None:
+            owner_effect = _meta()["effects"][owner["effect_id"]]
+            if owner_effect is eff:
+                size_params = param_values
+            else:
+                resolved = _resolve_effect_automation(owner_effect, owner["params"], time)
+                size_params = {key: _coerce(spec, resolved.get(key)) for key, spec in owner_effect["params"].items()}
+            spec = (owner_effect.get("textures") or {}).get(name)
+            binding.surface = Surface(*_texture_dimensions(spec, size_params, width, height, attachments))
+            binding.surface.format = _texture_format(owner_effect, name)
+        attachments[name] = binding
 
     for pname, spec in eff["params"].items():
         param_type = spec.get("type")
@@ -642,7 +753,24 @@ def _render_effect_once(
                         )
                 attachments[tname] = render_worm_overlay(effect_id, width, height, gen)
 
+    # Ordinary passes create their outputs on write. Only consumed underscore
+    # scratch starts clear. Iterated state is allocated before the first tick.
+    reserved_on_write = set()
+    if not persistent_attachments:
+        outputs = {name for p in eff["passes"] for name in _pass_outputs(p).values()}
+        scratch_inputs = {
+            name for p in eff["passes"] for name in (p.get("inputs") or {}).values() if name.startswith("_")
+        }
+        if not chain_state:
+            # Standalone render_effect starts the first repeat of a declared
+            # self-reading target clear, preserving its direct-call contract.
+            for p in eff["passes"]:
+                if p.get("repeat"):
+                    scratch_inputs.update(set((p.get("inputs") or {}).values()) & set(_pass_outputs(p).values()))
+        reserved_on_write = outputs - scratch_inputs
     for texture_name, texture_spec in (eff.get("textures") or {}).items():
+        if texture_name in reserved_on_write or (persistent_attachments and is_particle_state_name(texture_name)):
+            continue
         if texture_name not in attachments:
             texture_width, texture_height = _texture_dimensions(
                 texture_spec,
@@ -651,7 +779,9 @@ def _render_effect_once(
                 height,
                 {**inputs, **attachments},
             )
-            attachments[texture_name] = Surface(texture_width, texture_height)
+            surface = Surface(texture_width, texture_height)
+            surface.format = _texture_format(eff, texture_name)
+            attachments[texture_name] = surface
 
     # Texture filtering must match the JS oracle: it sets filter='linear' ONLY on
     # the declared external texture (renderer.js buildBindings); every pooled
@@ -689,42 +819,45 @@ def _render_effect_once(
             continue
         for _ in range(_repeat_count(p, pass_uniforms)):
             textures = _DefaultTex(blank)
-            for sampler, surf in surface_params.items():
+            for sampler, resource in surface_params.items():
+                surf = _texture_surface(resource)
                 if surf is not None:
                     surf.filter = "linear" if sampler == external_tex else "nearest"
                     textures[sampler] = surf
             for sampler_name, source in (p.get("inputs") or {}).items():
                 if source in {"selfTex", "feedback"}:
-                    surf = previous_output
-                elif source == "inputTex" and inputs.get("inputTex") is not None:
-                    surf = inputs["inputTex"]
+                    surf = previous_output if previous_output is not None else blank
                 else:
-                    surf = attachments.get(source) or inputs.get(source) or inputs.get(sampler_name) or result
-                if surf is None and is_particle_state_name(source):
-                    particle_width, particle_height = _particle_state_dimensions(param_values)
-                    surf = Surface(particle_width, particle_height)
-                    attachments[source] = surf
-                if surf is not None:
-                    surf.filter = "linear" if sampler_name == external_tex else "nearest"
-                    textures[sampler_name] = surf
+                    surf = _texture_surface(attachments.get(source))
+                    if surf is None and particle_targets is not None and is_particle_state_name(source):
+                        size, fmt = _destination_spec(eff, p, source, param_values, width, height,
+                                                      attachments, particle_targets)
+                        surf = Surface(*size)
+                        surf.format = fmt
+                        attachments[source] = surf
+                    if surf is None and not chain_state:
+                        # The standalone API also accepts explicit shader sampler bindings.
+                        surf = _texture_surface(inputs.get(sampler_name))
+                if surf is None:
+                    raise ValueError(f'{effect_id} pass "{p["name"]}" requires texture "{source}"')
+                surf.filter = "linear" if sampler_name == external_tex else "nearest"
+                textures[sampler_name] = surf
 
-            outputs = p.get("outputs") or {}
+            outputs = _pass_outputs(p)
             out_names = list(outputs.values())
-            texture_spec = (eff.get("textures") or {}).get(out_names[0], {}) if out_names else {}
-            dimension_spec = p.get("viewport") or texture_spec
-            prior_output = attachments.get(out_names[0]) if out_names else None
-            if prior_output is not None and out_names[0] not in (eff.get("textures") or {}):
-                pass_width, pass_height = prior_output.width, prior_output.height
-            elif out_names and is_particle_state_name(out_names[0]) and out_names[0] not in (eff.get("textures") or {}):
-                pass_width, pass_height = _particle_state_dimensions(param_values)
-            else:
-                pass_width, pass_height = _texture_dimensions(
-                    dimension_spec,
-                    param_values,
-                    width,
-                    height,
-                    {**inputs, **attachments},
-                )
+            target = attachments.get(out_names[0]) if out_names else None
+            prior_output = _texture_surface(target)
+            destinations = {
+                name: _destination_spec(eff, p, name, param_values, width, height, attachments, particle_targets)
+                for name in out_names
+            }
+            if not out_names:
+                raise ValueError(f'{effect_id} pass "{p["name"]}" has no fragment output')
+            pass_size, pass_format = destinations[out_names[0]]
+            if any(size != pass_size for size, _fmt in destinations.values()):
+                dimensions = ", ".join(f"{n} ({w}x{h})" for n, ((w, h), _fmt) in destinations.items())
+                raise ValueError(f'{effect_id} pass "{p["name"]}" MRT destinations must share dimensions: {dimensions}')
+            pass_width, pass_height = pass_size
             # MRT shader uniforms use the canvas resolution; pixel contexts
             # retain the destination resolution. Single-output uniforms also
             # use the destination resolution, as in the CPU authority.
@@ -736,19 +869,19 @@ def _render_effect_once(
             produced = []
             if mesh_op is not None:
                 destination = Surface(pass_width, pass_height)
-                prior = attachments.get(out_names[0]) if out_names else None
+                prior = prior_output
                 if prior is not None and prior.data.shape == destination.data.shape:
                     destination.data[:] = prior.data
                 mesh_op(textures, destination, pass_uniforms, p, external_inputs=external_inputs)
                 produced = [destination]
             elif draw_op is not None:
                 destination = Surface(pass_width, pass_height)
-                prior = attachments.get(out_names[0]) if out_names else None
+                prior = prior_output
                 if prior is not None and prior.data.shape == destination.data.shape:
                     destination.data[:] = prior.data
                 # The adapter sees the attachment's declared format like the
                 # sibling's destination.format (set at surface creation).
-                destination.format = _texture_format(eff, out_names[0]) if out_names else "rgba16f"
+                destination.format = pass_format
                 draw_op(textures, destination, pass_uniforms, p)
                 produced = [destination]
             else:
@@ -765,25 +898,33 @@ def _render_effect_once(
                 if adapter is not None:
                     kernel = adapter(rt, kernel)
                 if len(out_names) > 1:
+                    out_names = [outputs[name] for name in kernel.output_names]
                     produced = run_pass_mrt(kernel, ctx, pass_width, pass_height)
                 else:
                     runner = run_pass_deriv if getattr(kernel, "uses_derivatives", False) else run_pass
                     produced = [runner(kernel, ctx, pass_width, pass_height)]
             for attach_name, surface in zip(out_names, produced, strict=True):
-                quantize_texture(surface, _texture_format(eff, attach_name))
-                attachments[attach_name] = surface
-                if attach_name == "outputTex":
-                    output_result = surface
+                target = attachments.get(attach_name)
+                prior = _texture_surface(target)
+                blend = p.get("blend")
+                if draw_op is None and (isinstance(blend, (list, tuple)) or blend):
+                    blend_pass_output(blend, surface, prior)
+                surface.format = destinations[attach_name][1]
+                quantize_texture(surface, surface.format)
+                if isinstance(target, _TextureBinding):
+                    target.surface = surface
+                else:
+                    attachments[attach_name] = surface
             if produced:
-                result = produced[0]
+                result = produced[-1]
     is_volume_domain = domain in {"volume-generator", "volume-filter", "volume-renderer"}
-    image = (
-        _bundle_output(eff.get("outputTex"), input_bundle["image"], attachments)
-        if eff.get("outputTex")
-        else (attachments.get("outputTex") or (input_bundle["image"] if is_volume_domain else result))
+    image = _bundle_output(
+        _output_name(eff, "outputTex", attachments),
+        input_bundle["image"] if eff.get("outputTex") or is_volume_domain else result,
+        attachments,
     )
-    volume = _bundle_output(eff.get("outputTex3d"), input_bundle["volume"], attachments)
-    geometry = _bundle_output(eff.get("outputGeo"), input_bundle["geometry"], attachments)
+    volume = _texture_surface(_bundle_output(eff.get("outputTex3d"), input_bundle["volume"], attachments))
+    geometry = _texture_surface(_bundle_output(eff.get("outputGeo"), input_bundle["geometry"], attachments))
     volume_size = (
         param_values.get("volumeSize", volume.width if volume is not None else None)
         if domain == "volume-generator"
@@ -805,9 +946,22 @@ def _render_effect_once(
             )
     if image is None and domain not in {"volume-generator", "volume-filter"}:
         raise ValueError(f"{effect_id} did not produce outputTex")
+    bundle = {"image": image, "volume": volume, "geometry": geometry, "volumeSize": volume_size}
+    if chain_state:
+        for alias, field in AGENT_TEXTURE_FIELDS.items():
+            name = _output_name(eff, field, attachments) or alias
+            resource = attachments.get(name)
+            if resource is not None:
+                if not isinstance(resource, _TextureBinding):
+                    attachments[name] = _TextureBinding(resource)
+                bundle[alias] = attachments[name]
+                if resource is image:
+                    bundle["image"] = attachments[name]
+        if isinstance(image, _TextureBinding) or any(alias in bundle for alias in AGENT_TEXTURE_FIELDS):
+            return bundle
     if input_was_bundle or is_volume_domain:
-        return {"image": image, "volume": volume, "geometry": geometry, "volumeSize": volume_size}
-    return output_result if output_result is not None else image
+        return bundle
+    return _texture_surface(image)
 
 
 def render_effect(
@@ -928,27 +1082,35 @@ def _effect_step_inputs(step, current, surfaces, external_textures):
         inputs["inputTex3d"] = bundle["volume"]
     if bundle["geometry"] is not None:
         inputs["inputGeo"] = bundle["geometry"]
+    for name in AGENT_TEXTURE_FIELDS:
+        if name in bundle:
+            inputs[name] = bundle[name]
     for pname, marker in step["surfaces"].items():
         surf = _resolve_surface_marker(marker, current, surfaces)
+        if isinstance(bundle["image"], _TextureBinding) and surf is bundle["image"].surface:
+            surf = bundle["image"]
         if surf is not None:
             inputs[pname] = surf
     return inputs
 
 
-def _run_effect_step(step, current, surfaces, external_textures, width, height, seed, time, external_inputs=None):
+def _run_effect_step(
+    step, current, surfaces, external_textures, width, height, seed, time, external_inputs, shared_storage
+):
     inputs = _effect_step_inputs(step, current, surfaces, external_textures)
     effect = _meta()["effects"][step["effect_id"]]
     params = _inherit_volume_size(effect, step["params"], _chain_bundle(current))
     # The DSL's implicit render-seed threading is unvalidated, matching
     # runtime/renderer.js (explicit DSL assignments still go through the range
     # check inside render_effect).
-    return render_effect(
+    return _render_effect_once(
         step["effect_id"], params, inputs, width=width, height=height, seed=seed, time=time,
-        external_inputs=external_inputs, validate_implicit_seed=False,
+        external_inputs=external_inputs, validate_implicit_seed=False, chain_state=True, shared_storage=shared_storage,
     )
 
 
-def _run_iterated_group(group, current, surfaces, external_textures, effects, width, height, seed, time, external_inputs=None, chain_attachments=None):
+def _run_iterated_group(group, current, surfaces, external_textures, effects, width, height, seed, time,
+                        external_inputs=None, chain_attachments=None, shared_storage=None):
     # The group's iteration count comes from its owner step (the authority picks
     # the first `iterated` definition in the group; a joined non-iterated step
     # only owns a group alone — the flow3d/noise3d pairing — where the rule falls
@@ -981,7 +1143,8 @@ def _run_iterated_group(group, current, surfaces, external_textures, effects, wi
     if iteration_count <= 0:
         if _is_chain_bundle(current):
             return {
-                "image": current["image"].clone() if current["image"] is not None else None,
+                **current,
+                "image": _texture_surface(current["image"]).clone() if current["image"] is not None else None,
                 "volume": current["volume"].clone() if current["volume"] is not None else None,
                 "geometry": current["geometry"].clone() if current["geometry"] is not None else None,
                 "volumeSize": current["volumeSize"],
@@ -1013,32 +1176,50 @@ def _run_iterated_group(group, current, surfaces, external_textures, effects, wi
     # feedback surface instead of a zeroed one. An inherited surface of the
     # wrong size (cannot arise in one chain's image stream, but guarded) is
     # dropped and re-created.
-    if group.get("loop") and chain_attachments is not None:
-        inherited = chain_attachments.pop("global_accum", None)
-        if inherited is not None:
-            input_image = _chain_bundle(group_input)["image"] if group_input is not None else None
-            if input_image is not None and (inherited.width != input_image.width or inherited.height != input_image.height):
-                inherited = None
-            else:
-                group_attachments["global_accum"] = inherited
+    if group.get("loop"):
+        inherited = chain_attachments.pop("global_accum", None) if chain_attachments is not None else None
+        input_image = _texture_surface(_chain_bundle(group_input)["image"])
+        size = (input_image.width, input_image.height)
+        if inherited is None or (inherited.width, inherited.height) != size:
+            inherited = Surface(*size)
+            inherited.format = input_image.format or "rgba16f"
+        group_attachments["global_accum"] = inherited
     step_attachments = [{} for _ in group["steps"]]
     previous_outputs = [None] * len(group["steps"])
+    # Each target uses the first declaration anywhere in the group, including
+    # when an earlier step reads or writes it before that owner first executes.
+    particle_targets = {}
+    particle_owner_params = []
+    step_params = []
+    for step in group["steps"]:
+        definition = effects[step["effect_id"]]
+        params = dict(step["params"])
+        inherits_size = _declares_inherited_state_size_textures(definition)
+        if state_size is not None and ("stateSize" in definition["params"] or inherits_size):
+            params["stateSize"] = state_size
+        elif inherits_size and "stateSize" not in definition["params"]:
+            params["stateSize"] = _PARTICLE_STATE_FALLBACK_SIZE
+        step_params.append(params)
+        owned_textures = {
+            name: spec for name, spec in (definition.get("textures") or {}).items()
+            if is_particle_state_name(name) and name not in particle_targets
+        }
+        if not owned_textures:
+            particle_owner_params.append(None)
+            continue
+        initial = _resolve_effect_automation(definition, params, time)
+        size_params = {
+            name: _coerce(spec, initial.get(name)) for name, spec in definition["params"].items()
+        }
+        if "stateSize" in params:
+            size_params.setdefault("stateSize", params["stateSize"])
+        particle_owner_params.append(size_params)
+        particle_targets.update({name: (spec, size_params) for name, spec in owned_textures.items()})
     for tick in iteration_schedule(time, iteration_count):
         iteration_current = group_input
         for index, step in enumerate(group["steps"]):
             effect = effects[step["effect_id"]]
-            params = _inherit_volume_size(effect, dict(step["params"]), _chain_bundle(iteration_current))
-            # A joining step sizes its state textures from the group's shared
-            # stateSize: its own `stateSize` param is overridden to the owner's
-            # value, and a behavior whose textures read the scope's stateSize
-            # through `inherit: true` (a base-color memory) sizes from the owner
-            # too — or from the shared particle fallback when no owner supplies
-            # one and the step declares no `stateSize` param of its own.
-            declares_inherited = _declares_inherited_state_size_textures(effect)
-            if state_size is not None and ("stateSize" in effect["params"] or declares_inherited):
-                params["stateSize"] = state_size
-            elif state_size is None and declares_inherited and "stateSize" not in effect["params"]:
-                params["stateSize"] = _PARTICLE_STATE_FALLBACK_SIZE
+            params = _inherit_volume_size(effect, step_params[index], _chain_bundle(iteration_current))
             inputs = _effect_step_inputs(step, iteration_current, surfaces, external_textures)
             attachments = {**step_attachments[index], **group_attachments}
             iteration_current = _render_effect_once(
@@ -1054,6 +1235,10 @@ def _run_iterated_group(group, current, surfaces, external_textures, effects, wi
                 frame=tick["frame"],
                 delta_time=tick["delta_time"],
                 validate_implicit_seed=False,
+                chain_state=True,
+                shared_storage=shared_storage,
+                particle_targets=particle_targets,
+                particle_owner_params=particle_owner_params[index],
             )
             step_attachments[index] = {
                 name: surface
@@ -1067,7 +1252,7 @@ def _run_iterated_group(group, current, surfaces, external_textures, effects, wi
                     if name == "global_accum" or is_particle_state_name(name)
                 }
             )
-            previous_outputs[index] = _chain_bundle(iteration_current)["image"]
+            previous_outputs[index] = _texture_surface(_chain_bundle(iteration_current)["image"])
         current = iteration_current
     # The accumulator is chain-scoped: hand it to the chain's next loop region
     # instead of dropping it with the group's other scratch state.
@@ -1094,11 +1279,12 @@ def render_dsl(source, width=512, height=512, seed=1, time=0.0, external_texture
         # region's feedback surface. Each inline chain argument is its own
         # chain scope (fresh map inside the recursive call).
         chain_attachments = {}
+        shared_storage = _shared_storage(chain["steps"], effects)
         current = None
         for group in compute_iteration_groups(chain["steps"], effects):
             for step in group["steps"]:
                 for inline in step.get("inlineChains", []):
-                    surfaces[inline["surface"]] = _chain_bundle(run_chain(inline["chain"]))["image"]
+                    surfaces[inline["surface"]] = _texture_surface(_chain_bundle(run_chain(inline["chain"]))["image"])
             if group["iterated"]:
                 current = _run_iterated_group(
                     group,
@@ -1112,6 +1298,7 @@ def render_dsl(source, width=512, height=512, seed=1, time=0.0, external_texture
                     time,
                     external_inputs,
                     chain_attachments,
+                    shared_storage,
                 )
                 continue
             for step in group["steps"]:
@@ -1121,7 +1308,7 @@ def render_dsl(source, width=512, height=512, seed=1, time=0.0, external_texture
                     if current is None:
                         raise ValueError(f"Surface {step['surface']} has not been written")
                 elif kind == "write":
-                    surfaces[step["surface"]] = _chain_bundle(current)["image"]
+                    surfaces[step["surface"]] = _texture_surface(_chain_bundle(current)["image"])
                 elif kind == "write3d":
                     bundle = _chain_bundle(current)
                     for name, channel in ((step["volume"], "volume"), (step["geometry"], "geometry")):
@@ -1139,7 +1326,8 @@ def render_dsl(source, width=512, height=512, seed=1, time=0.0, external_texture
                     }
                 else:
                     current = _run_effect_step(
-                        step, current, surfaces, external_textures, width, height, seed, time, external_inputs
+                        step, current, surfaces, external_textures, width, height, seed, time, external_inputs,
+                        shared_storage,
                     )
         return current
 

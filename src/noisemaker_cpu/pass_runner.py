@@ -42,6 +42,51 @@ def f32_or(x):
     return float(np.float32(x))
 
 
+def _blend_weight(factor, src, dst):
+    if isinstance(factor, str):
+        factor = factor.lower().replace("_", "-")
+    if isinstance(factor, bool):
+        return 1.0
+    match factor:
+        case 0 | "zero":
+            return 0.0
+        case 0x0300 | "src-color" | "src":
+            return src
+        case 0x0301 | "one-minus-src-color" | "one-minus-src":
+            return 1.0 - src
+        case 0x0302 | "src-alpha":
+            return src[:, 3:4]
+        case 0x0303 | "one-minus-src-alpha":
+            return 1.0 - src[:, 3:4]
+        case 0x0304 | "dst-alpha":
+            return dst[:, 3:4]
+        case 0x0305 | "one-minus-dst-alpha":
+            return 1.0 - dst[:, 3:4]
+        case 0x0306 | "dst-color" | "dst":
+            return dst
+        case 0x0307 | "one-minus-dst-color" | "one-minus-dst":
+            return 1.0 - dst
+        case _:
+            return 1.0
+
+
+def blend_pass_output(blend, destination: Surface, previous: Surface | None):
+    """Combine the fragment output with the previous attachment before format quantization."""
+    factors = iter(blend) if isinstance(blend, (list, tuple)) else iter(())
+    src_factor = next(factors, None)
+    dst_factor = next(factors, None)
+    rows = destination.data.reshape(destination.height, destination.width, 4)
+    backdrop = None
+    if previous is not None and (previous.width, previous.height) == (destination.width, destination.height):
+        backdrop = previous.data.reshape(rows.shape)
+    transparent = np.zeros((1, 4), dtype=np.float64)
+    for y, row in enumerate(rows):
+        # Match JS scalar arithmetic, rounding once on float32 storage. Widen a row at a time.
+        src = row.astype(np.float64)
+        dst = backdrop[y].astype(np.float64) if backdrop is not None else transparent
+        row[:] = src * _blend_weight(src_factor, src, dst) + dst * _blend_weight(dst_factor, src, dst)
+
+
 def run_pass_deriv(kernel, ctx: Ctx, width: int, height: int) -> Surface:
     """Pass runner for kernels using dFdx/dFdy/fwidth. Mirrors the reference
     engine's wrapDerivatives: derivatives are computed in bottom-left pixel space

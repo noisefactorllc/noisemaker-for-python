@@ -6,6 +6,7 @@ import re
 
 ITERATION_DELTA_TIME = 1 / 600
 _PARTICLE_STATE = re.compile(r"^global_(xyz|vel|rgba|life_data)$|^global_.*_trail$|^global_[a-z]+_base_color$")
+AGENT_TEXTURE_FIELDS = {"inputXyz": "outputXyz", "inputVel": "outputVel", "inputRgba": "outputRgba"}
 
 
 def is_particle_state_name(name) -> bool:
@@ -20,13 +21,16 @@ def _declares_xyz(step, effects):
 def _references_particle_state(step, effects):
     definition = effects[step["effect_id"]]
     for render_pass in definition.get("passes") or []:
-        values = [*(render_pass.get("inputs") or {}).values(), *(render_pass.get("outputs") or {}).values()]
-        if any(is_particle_state_name(value) for value in values):
+        outputs = render_pass.get("outputs") or render_pass.get("storageTextures") or {}
+        values = [*(render_pass.get("inputs") or {}).values(), *outputs.values()]
+        if any(value in AGENT_TEXTURE_FIELDS or is_particle_state_name(value) for value in values):
             return True
     return False
 
 
 def _is_animated_image_generator(step, effects):
+    if step["kind"] != "effect":
+        return False
     definition = effects[step["effect_id"]]
     params = {name: spec.get("default") for name, spec in definition.get("params", {}).items()}
     params.update(step.get("params", {}))

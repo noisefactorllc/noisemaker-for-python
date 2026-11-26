@@ -68,9 +68,9 @@ with open("curl.png", "wb") as f:
 
 ## Regenerating the bundle
 
-The vendored kernels + metadata under `src/noisemaker_cpu/bundle/` are generated
-from the CDN at the exact engine version recorded in `bundle-lock.json`. To rebuild
-them (requires `json5`):
+The kernel source version is recorded in `src/noisemaker_cpu/bundle/bundle-lock.json`.
+The catalog definitions come from engine `1.5.17`, matching the CPU oracle.
+To rebuild both from the CDN, install `json5` and run the transpiler.
 
 ```bash
 pip install -e ".[build]"

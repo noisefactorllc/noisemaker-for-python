@@ -6,9 +6,9 @@ only the definition (params/passes) is reproduced here, faithful to the JS.
 - mixer/mashup: `d()` generates layer0_tex..layer7_tex surface params (max 8),
   each with a `layerN_active` colorModeUniform; `c` wires them plus `source`
   into the single render pass's inputs.
-- synth/remap: `f()` generates zone0_tex..zone7_tex surface params (max 8), each
-  with a `zoneN_active` colorModeUniform; the std140 `data` block is packed from
-  the params at render time by renderer._remap_uniform_data.
+- synth/remap: each of eight zones declares its surface, vertex count, alpha,
+  bounds and 32 packed vertex pairs in positional argument order. The renderer
+  packs these parameters into the std140 `data` block.
 - render/pointsBillboardRender: the reference definition's `.flatMap()` clones
   its deposit/depthKeys/depthMerge passes per compile-time viewMode/blendMode/
   blurLayer variant (reference 0ed489ec, the perspective+depth-sort+defocus
@@ -23,6 +23,7 @@ from __future__ import annotations
 
 _MASHUP_LAYERS = 8
 _REMAP_ZONES = 8
+_REMAP_VERTICES_PER_ZONE = 64
 
 
 def _mashup():
@@ -48,15 +49,24 @@ def _mashup():
 
 def _remap():
     params = {
-        "zoneCount": {"type": "int", "default": 0, "uniform": "zoneCount"},
+        "zoneCount": {"type": "int", "default": 0, "uniform": "zoneCount", "min": 0, "max": _REMAP_ZONES},
         "bgColor": {"type": "color", "default": [0, 0, 0], "uniform": "bgColor"},
-        "bgAlpha": {"type": "float", "default": 1, "uniform": "bgAlpha"},
-        "smoothEdge": {"type": "float", "default": 0.04, "uniform": "smoothEdge"},
+        "bgAlpha": {"type": "float", "default": 1, "uniform": "bgAlpha", "min": 0, "max": 1},
+        "smoothEdge": {"type": "float", "default": 0.04, "uniform": "smoothEdge", "min": 0, "max": 1},
     }
     inputs = {}
-    for z in range(_REMAP_ZONES):
-        params[f"zone{z}_tex"] = {"type": "surface", "default": "none", "colorModeUniform": f"zone{z}_active"}
-        inputs[f"zone{z}_tex"] = f"zone{z}_tex"
+    for index in range(_REMAP_ZONES):
+        zone = f"zone{index}"
+        texture = f"{zone}_tex"
+        params[texture] = {"type": "surface", "default": "none", "colorModeUniform": f"{zone}_active"}
+        inputs[texture] = texture
+        count, alpha, bounds = f"{zone}_count", f"{zone}_alpha", f"{zone}_bounds"
+        params[count] = {"type": "int", "default": 0, "uniform": count, "min": 0, "max": _REMAP_VERTICES_PER_ZONE}
+        params[alpha] = {"type": "float", "default": 1, "uniform": alpha, "min": 0, "max": 1}
+        params[bounds] = {"type": "vec4", "default": [0, 0, 1, 1], "uniform": bounds}
+        for pair in range(_REMAP_VERTICES_PER_ZONE // 2):
+            vertices = f"{zone}_v{pair}"
+            params[vertices] = {"type": "vec4", "default": [0, 0, 0, 0], "uniform": vertices}
     passes = [{"name": "render", "program": "remap", "inputs": inputs, "outputs": {"fragColor": "outputTex"}}]
     return {
         "namespace": "synth",

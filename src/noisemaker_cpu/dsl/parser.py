@@ -33,11 +33,15 @@ def _location(token):
     }
 
 
+class _HexColor(list):
+    """Hex literal with the public list representation of an RGB(A) value."""
+
+
 def _parse_color(lexeme):
     hexit = lexeme[1:]
     if len(hexit) == 3:
         hexit = "".join(char + char for char in hexit)
-    values = [int(hexit[offset : offset + 2], 16) / 255 for offset in (0, 2, 4)]
+    values = _HexColor(int(hexit[offset : offset + 2], 16) / 255 for offset in (0, 2, 4))
     if len(hexit) == 8:
         values.append(int(hexit[6:8], 16) / 255)
     return values
@@ -130,6 +134,8 @@ class _Parser:
         self.consume("=")
         if self.peek()["type"] == "identifier" and self.peek(1)["lexeme"] == "(":
             value = self.parse_call()
+            if value["name"] in {"read", "read3d"} and self.is_punctuation("."):
+                value = self.parse_expression_chain(value)
         else:
             value = self.parse_value_expression()
         self.match(";")
@@ -169,14 +175,26 @@ class _Parser:
         volume = reference()
         self.consume(",")
         geometry = reference()
+        args = [{"name": None, "value": value, "loc": value["loc"]} for value in (volume, geometry)]
+        self.parse_io_element_id(args)
         self.consume(")")
         return {
             "kind": "Call",
             "name": "write3d",
-            "args": [{"name": None, "value": value, "loc": value["loc"]} for value in (volume, geometry)],
+            "args": args,
             "argMode": "positional",
             "loc": _location(name),
         }
+
+    def parse_io_element_id(self, args):
+        if not (self.check(",") and self.peek(1)["type"] == "identifier"
+                and self.peek(1)["lexeme"] == "_id" and self.peek(2)["type"] == "punctuation"
+                and self.peek(2)["lexeme"] == ":"):
+            return False
+        self.current += 3
+        start = self.peek()
+        args.append({"name": "_id", "value": self.parse_value_expression(), "loc": _location(start)})
+        return True
 
     def parse_expression_chain(self, first):
         calls = [first]
@@ -257,6 +275,8 @@ class _Parser:
         if not self.check(")"):
             while True:
                 is_named = self.peek()["type"] == "identifier" and self.peek(1)["lexeme"] == ":"
+                if name["lexeme"] == "write" and is_named and self.check("_id"):
+                    raise DslError("write() requires a positional surface before _id", _location(self.peek()))
                 next_mode = "named" if is_named else "positional"
                 if mode and mode != next_mode and name["lexeme"] not in ("midi", "audio"):
                     raise DslError("Cannot mix positional and named arguments", _location(self.peek()))
@@ -267,7 +287,13 @@ class _Parser:
                     self.consume(":")
                 start = self.peek()
                 args.append({"name": arg_name, "value": self.parse_value_expression(), "loc": _location(start)})
-                if not self.match(","):
+                if mode == "positional" and name["lexeme"] == "write":
+                    self.parse_io_element_id(args)
+                    break
+                if mode == "positional" and name["lexeme"] in {"read", "read3d"} and self.parse_io_element_id(args):
+                    self.match(",")
+                    break
+                if not self.match(",") or self.check(")"):
                     break
         self.consume(")")
         call = {"kind": "Call", "name": name["lexeme"], "args": args, "argMode": mode, "loc": _location(name)}
@@ -299,6 +325,15 @@ class _Parser:
             }
         return self.parse_value_primary()
 
+    def parse_value_list(self, closing):
+        values = []
+        while not self.check(closing):
+            values.append(self.parse_value_expression())
+            if not self.match(","):
+                break
+        self.consume(closing)
+        return values
+
     def parse_value_primary(self):
         token = self.peek()
         if token["type"] == "number":
@@ -316,14 +351,7 @@ class _Parser:
         if token["type"] == "surface":
             return self.parse_surface()
         if self.match("["):
-            values = []
-            if not self.check("]"):
-                while True:
-                    values.append(self.parse_value_expression())
-                    if not self.match(","):
-                        break
-            self.consume("]")
-            return values
+            return self.parse_value_list("]")
         if self.match("("):
             value = self.parse_value_expression()
             self.consume(")")
@@ -339,45 +367,24 @@ class _Parser:
             ):
                 self.current += 2
                 return math.pi
-            if name == "read3d" and self.is_punctuation("("):
+            if name in {"read", "read3d"} and self.is_punctuation("("):
                 self.current -= 1
                 call = self.parse_call()
-                if (
-                    len(call["args"]) == 1
-                    and isinstance(call["args"][0]["value"], dict)
-                    and call["args"][0]["value"].get("kind") == "identifier"
-                ):
-                    return call["args"][0]["value"]
-                return self.parse_expression_chain(call)
-            if name == "read" and self.match("("):
-                if self.peek()["type"] == "identifier" and self.peek(1)["lexeme"] == ":":
-                    argument_name = self.identifier()["lexeme"]
-                    if argument_name not in ("surface", "tex"):
-                        raise DslError(
-                            'read() surface argument must be named "surface" or "tex"',
-                            _location(self.previous()),
-                        )
-                    self.consume(":")
-                surface = self.parse_surface()
-                self.consume(")")
                 if self.is_punctuation("."):
-                    call = {
-                        "kind": "Call",
-                        "name": "read",
-                        "args": [{"name": None, "value": surface, "loc": surface["loc"]}],
-                        "argMode": "positional",
-                        "loc": _location(token),
-                    }
                     return self.parse_expression_chain(call)
-                return surface
+                targets = [arg for arg in call["args"] if arg["name"] not in {"_id", "_skip"}]
+                target = targets[0]["value"] if len(targets) == 1 else None
+                if name == "read3d":
+                    if isinstance(target, dict) and target.get("kind") == "identifier":
+                        return target
+                    return self.parse_expression_chain(call)
+                if not isinstance(target, dict) or target.get("kind") != "surface":
+                    raise DslError("Expected surface reference", call["loc"])
+                if targets[0]["name"] not in {None, "surface", "tex"}:
+                    raise DslError('read() surface argument must be named "surface" or "tex"', targets[0]["loc"])
+                return target
             if name in ("vec2", "vec3", "vec4") and self.match("("):
-                values = []
-                if not self.check(")"):
-                    while True:
-                        values.append(self.parse_value_expression())
-                        if not self.match(","):
-                            break
-                self.consume(")")
+                values = self.parse_value_list(")")
                 return {"kind": "vector", "width": int(name[-1]), "values": values, "loc": _location(token)}
             # Parse MIDI/audio calls only to warn and omit unsupported input.
             if name in ("osc", "midi", "audio") and self.peek()["lexeme"] == "(":

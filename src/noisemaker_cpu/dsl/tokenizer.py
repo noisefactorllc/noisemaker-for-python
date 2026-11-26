@@ -98,14 +98,16 @@ def tokenize_dsl(source, options=None):
                 advance()
             push("string", value, location, value)
             continue
-        if char == '"':
-            advance()
+        if char in ('"', "'"):
+            quote = advance()
             value = ""
-            while state["index"] < length and source[state["index"]] != '"':
+            while state["index"] < length and source[state["index"]] != quote:
                 if source[state["index"]] == "\n":
                     raise DslError("Unterminated string", location)
                 if source[state["index"]] == "\\":
                     advance()
+                    if state["index"] >= length:
+                        raise DslError("Unterminated string", location)
                     escaped = advance()
                     value += "\n" if escaped == "n" else "\t" if escaped == "t" else escaped
                 else:

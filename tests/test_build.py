@@ -1373,3 +1373,56 @@ def test_bundled_points_catalog_carries_published_texture_param_contract():
     assert "diffuseTex" not in emit["params"]
     init = next(p for p in emit["passes"] if p["program"] == "init")
     assert init["inputs"]["inputTex"] == "inputTex"
+
+
+def test_build_keeps_handed_on_textures_and_falls_back_to_storage_outputs(tmp_path, monkeypatch):
+    effect = _simple_effect()
+    targets = {"outputXyz": "positions", "outputVel": "velocities", "outputRgba": "colors"}
+    effect.update(targets)
+    render_pass = effect["passes"][0]
+    render_pass["outputs"] = {}
+    render_pass["storageTextures"] = {"fragColor": "positions"}
+    effect["passes"].append(dict(render_pass, name="copy", outputs={"fragColor": "screen"}))
+    monkeypatch.setattr(build_module, "fetch_effect", lambda _: effect)
+    build_module.build([effect["id"]], out_dir=tmp_path)
+    built = json.loads((tmp_path / "metadata.json").read_text())["effects"][effect["id"]]
+    assert {name: built.get(name) for name in targets} == targets
+    first, second = built["passes"]
+    assert first["outputs"] == first["storageTextures"] == {"fragColor": "positions"}
+    assert second["outputs"] == {"fragColor": "screen"}
+
+
+@pytest.mark.parametrize("field", ["outputTex", "outputGeo", "outputTex3d", "outputXyz", "outputVel", "outputRgba"])
+@pytest.mark.parametrize("value", ["  ", 3, None])
+def test_build_rejects_invalid_handed_on_texture_name(tmp_path, monkeypatch, field, value):
+    effect = _simple_effect()
+    effect[field] = value
+    monkeypatch.setattr(build_module, "fetch_effect", lambda _: effect)
+    with pytest.raises(ValueError, match=field):
+        build_module.build([effect["id"]], out_dir=tmp_path)
+
+
+def test_bundled_volume_passes_match_the_current_shader_inputs_and_viewports():
+    effects = json.loads((Path(build_module.BUNDLE) / "metadata.json").read_text())["effects"]
+    for name in ("render3d", "renderLit3d", "renderCubemap3d", "renderCubemapSurface"):
+        assert effects[f"render/{name}"]["passes"][0]["inputs"] == {"volumeCache": "inputTex3d"}
+    for name in ("flow3d", "palette3d"):
+        for render_pass in effects[f"filter3d/{name}"]["passes"]:
+            for dimension in render_pass.get("viewport", {}).values():
+                assert "inputOverride" not in dimension
+
+
+def test_build_reads_current_definitions_and_reproduces_locked_kernels(monkeypatch):
+    from transpiler import cdn
+
+    def source(effect_id, version):
+        return {
+            "id": effect_id,
+            "params": {"generation": {"default": version}},
+            "programs": {"render": version},
+        }
+
+    monkeypatch.setattr(cdn, "fetch_effect", source)
+    effect = build_module.fetch_effect("points/flow")
+    assert effect["params"]["generation"]["default"] == "1.5.17"
+    assert effect["programs"] == {"render": "1.0.286"}

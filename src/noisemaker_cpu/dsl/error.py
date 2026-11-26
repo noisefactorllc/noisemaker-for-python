@@ -8,12 +8,14 @@ from __future__ import annotations
 
 
 class DslError(SyntaxError):
-    def __init__(self, message: str, location: dict | None = None):
+    def __init__(self, message: str, location: dict | None = None, code: str | None = None):
         location = location or {}
         source_name = location.get("sourceName", "<dsl>")
         line = location.get("line", 1)
         column = location.get("column", 1)
         super().__init__(f"{source_name}:{line}:{column}: {message}")
+        if code is not None:
+            self.code = code
         self.source_name = source_name
         self.line = line
         self.column = column

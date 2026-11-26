@@ -204,3 +204,40 @@ def test_effect_identity_falls_back_to_manifest_id_when_cdn_fields_are_missing()
 
     assert normalized["namespace"] == "synth"
     assert normalized["func"] == "cellularAutomata"
+
+
+def test_particle_handoffs_are_extracted_when_rebuilding_an_older_cache(tmp_path, monkeypatch):
+    from json import dumps
+
+    monkeypatch.setattr(cdn, "_CACHE_ROOT", tmp_path)
+    old_cache = tmp_path / "1.0.286" / "effects" / "points" / "flow.json"
+    old_cache.parent.mkdir(parents=True)
+    old_cache.write_text(dumps({"id": "points/flow", "passes": [], "params": {}}))
+    source = 'new Effect({namespace:"points",func:"flow",outputXyz:"p",outputVel:"v",outputRgba:"c",passes:[]})'
+    monkeypatch.setattr(cdn, "_fetch_text", lambda _: source)
+
+    result = cdn.fetch_effect("points/flow", "1.0.286")
+    assert [result.get(field) for field in ("outputXyz", "outputVel", "outputRgba")] == ["p", "v", "c"]
+    assert cdn.fetch_effect("points/flow", "1.0.286") == result
+
+
+@pytest.mark.parametrize("source", [
+    'new Effect({"outputXyz":"positions",passes:[]})',
+    'class E extends Base { constructor(){ super(); set(this, "outputXyz", "positions") } }',
+])
+def test_extracts_quoted_particle_output_declarations(tmp_path, monkeypatch, source):
+    monkeypatch.setattr(cdn, "_CACHE_ROOT", tmp_path)
+    monkeypatch.setattr(cdn, "_fetch_text", lambda _: source)
+    assert cdn.fetch_effect("points/flow")["outputXyz"] == "positions"
+
+
+def test_cached_remap_program_uses_the_installed_computed_definition(tmp_path, monkeypatch):
+    import json
+
+    monkeypatch.setattr(cdn, "_CACHE_ROOT", tmp_path)
+    path = tmp_path / "1.5.17" / "effects-v2" / "synth" / "remap.json"
+    path.parent.mkdir(parents=True)
+    path.write_text(json.dumps({"id": "synth/remap", "params": {}, "programs": {"remap": "shader source"}}))
+    result = cdn.fetch_effect("synth/remap", "1.5.17")
+    assert result["params"]["zone0_bounds"] == cdn.COMPUTED_DEFS["synth/remap"]["params"]["zone0_bounds"]
+    assert result["programs"] == {"remap": "shader source"}

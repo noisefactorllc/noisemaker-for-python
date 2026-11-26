@@ -80,6 +80,7 @@ def _locked_version() -> str:
 # run with NM_SHADER_VERSION=<exact version> and --update-lock.
 CDN_VERSION = os.environ.get("NM_SHADER_VERSION") or _locked_version()
 _CACHE_ROOT = _HERE / ".cdn-cache"
+OUTPUT_TEXTURE_FIELDS = ("outputTex", "outputTex3d", "outputGeo", "outputXyz", "outputVel", "outputRgba")
 _USER_AGENT = "noisemaker-python-transpiler (+https://noisedeck.app)"
 
 # Mesh and live audio/MIDI effects remain outside the CPU catalog. Stateful,
@@ -428,11 +429,11 @@ def fetch_effect(effect_id: str, version: str = CDN_VERSION) -> dict:
     """
     # Cache the EXTRACTED data as JSON (never write the raw CDN .js to disk, so
     # no JavaScript files ever live in this Python project).
-    cache_file = _cache_dir(version) / "effects" / f"{effect_id}.json"
+    cache_file = _cache_dir(version) / "effects-v2" / f"{effect_id}.json"
     if cache_file.exists():
-        cached = _normalize_effect(effect_id, json.loads(cache_file.read_text(encoding="utf-8")))
-        if cached["domain"] in {"image", "loop-begin", "loop-end"} or cached.get("outputTex3d"):
-            return cached
+        cached = json.loads(cache_file.read_text(encoding="utf-8"))
+        cached.update(COMPUTED_DEFS.get(effect_id, {}))
+        return _normalize_effect(effect_id, cached)
 
     bundle = _fetch_text(f"{CDN_BASE}/{version}/effects/{effect_id}.js")
     region = _definition_region(bundle)
@@ -448,9 +449,6 @@ def fetch_effect(effect_id: str, version: str = CDN_VERSION) -> dict:
             "passes": override["passes"],
             "textures": override.get("textures", {}),
             "externalTexture": override.get("externalTexture"),
-            "outputTex": override.get("outputTex"),
-            "outputTex3d": override.get("outputTex3d"),
-            "outputGeo": override.get("outputGeo"),
             "programs": _extract_programs(bundle),
         }
     else:
@@ -462,11 +460,22 @@ def fetch_effect(effect_id: str, version: str = CDN_VERSION) -> dict:
             "passes": _parse_field(region, effect_id, "passes", []),
             "textures": _parse_field(region, effect_id, "textures", {}),
             "externalTexture": _parse_field(region, effect_id, "externalTexture", None),
-            "outputTex": _parse_field(region, effect_id, "outputTex", None),
-            "outputTex3d": _parse_field(region, effect_id, "outputTex3d", None),
-            "outputGeo": _parse_field(region, effect_id, "outputGeo", None),
             "programs": _extract_programs(bundle),
         }
+    for field in OUTPUT_TEXTURE_FIELDS:
+        if override is not None and field in override:
+            result[field] = override[field]
+            continue
+        # A name used as an input or output string can also precede a comma.
+        # Only a declaration in the object or lowered class field names the handoff.
+        quoted = rf"""["']{field}["']"""
+        declaration = rf"(?:\b{field}\b\s*:|{quoted}\s*:|\(\s*this\s*,\s*{quoted}\s*,)\s*"
+        match = re.search(declaration, region)
+        if match:
+            result[field] = _read_literal(region, match.end())
+    aliases = (override or {}).get("paramAliases") or _parse_field(region, effect_id, "paramAliases", {})
+    if aliases:
+        result["paramAliases"] = aliases
     _normalize_effect(effect_id, result)
     cache_file.parent.mkdir(parents=True, exist_ok=True)
     cache_file.write_text(json.dumps(result), encoding="utf-8")
