@@ -505,3 +505,69 @@ def test_standalone_filter_uses_last_pass_when_source_image_is_absent(monkeypatc
     render_probes(monkeypatch, {"filter": effect(fill("temp", 0.25), pixel("copy", src="inputTex"))})
     frame = renderer.render_effect("probe/filter", width=2, height=2)
     assert frame.to_rgba8() == bytes([64]) * 16
+
+
+@pytest.mark.parametrize("source", ["global_xyz", "global_vel", "unbound"])
+@pytest.mark.parametrize("binding", ["clear", "last-pass", "explicit-sampler", "explicit-source"])
+@pytest.mark.parametrize("iterated", [False, True])
+@pytest.mark.parametrize("declared", [False, True])
+def test_standalone_texture_binding_order(monkeypatch, source, binding, iterated, declared):
+    inputs = {}
+    passes = []
+    if binding != "clear":
+        passes.append(fill("temp", 0.25))
+    if binding == "explicit-sampler":
+        inputs["src"] = renderer.Surface(4, 1)
+        inputs["src"].data[:] = 0.5
+    if binding == "explicit-source":
+        inputs[source] = renderer.Surface(1, 4)
+        inputs[source].data[:] = 0.75
+
+    observed = set()
+
+    def inspect_source(ctx, out):
+        texture = ctx.textures["src"]
+        observed.add((texture.width, texture.height, float(texture.data[0])))
+        out[:] = texture.data[:4]
+
+    passes.append(pixel("inspect", src=source))
+    if declared:
+        passes.append(fill(source, 0))
+    probe = effect(*passes, iterated=iterated)
+    if declared:
+        probe["textures"] = {source: {"width": 2, "height": 4}}
+    probe["params"]["stateSize"] = {"type": "int", "default": 3}
+    render_probes(monkeypatch, {"filter": probe}, inspect=inspect_source)
+    renderer.render_effect("probe/filter", inputs=inputs, width=2, height=2)
+    expected = {
+        "clear": (1, 1, 0.0) if source == "unbound" else (3, 3, 0.0),
+        "last-pass": (2, 2, 0.25),
+        "explicit-sampler": (4, 1, 0.5),
+        "explicit-source": (1, 4, 0.75),
+    }
+    assert observed == {(2, 4, 0.0) if declared else expected[binding]}
+
+
+@pytest.mark.parametrize("source,expected", [("work", [0.25, 0.5, 0.5, 0.5]), ("inputTex", [0.25] * 4)])
+def test_standalone_inputs_and_writes_across_ticks(monkeypatch, source, expected):
+    observed = []
+
+    def inspect_source(ctx, out):
+        observed.append(float(ctx.textures["src"].data[0]))
+        out[:] = [0.0] * 4
+
+    read = pixel("inspect", src=source)
+    render_probes(monkeypatch, {"filter": effect(read, fill(source, 0.5), read, iterated=True)}, inspect=inspect_source)
+    supplied = renderer.Surface(1, 1)
+    supplied.data[:] = 0.25
+    renderer.render_effect("probe/filter", inputs={source: supplied}, width=1, height=1)
+    assert observed == expected
+
+
+@pytest.mark.parametrize("destination", ["aux", "inputTex"])
+def test_standalone_can_publish_its_original_input(monkeypatch, destination):
+    render_probes(monkeypatch, {"filter": effect(fill(destination, 0.5), outputTex="inputTex")})
+    supplied = renderer.Surface(2, 1)
+    supplied.data[:] = 0.25
+    frame = renderer.render_effect("probe/filter", inputs={"inputTex": supplied}, width=1, height=1)
+    assert frame is supplied

@@ -11,6 +11,7 @@ import json
 import math
 import os
 import time as _clock
+from collections import ChainMap
 
 import numpy as np
 
@@ -692,12 +693,15 @@ def _render_effect_once(
         }
     if attachments is None:
         attachments = {}
-    attachments.update(inputs)
-    for sampler, resource in surface_params.items():
-        attachments[sampler] = resource if resource is not None else blank
-    for name in AGENT_TEXTURE_FIELDS:
-        if name not in inputs or "global_xyz" in (eff.get("textures") or {}):
-            attachments.pop(name, None)
+    if chain_state:
+        attachments.update(inputs)
+        for sampler, resource in surface_params.items():
+            attachments[sampler] = resource if resource is not None else blank
+        for name in AGENT_TEXTURE_FIELDS:
+            if name not in inputs or "global_xyz" in (eff.get("textures") or {}):
+                attachments.pop(name, None)
+    # Direct calls keep caller inputs separate from textures the effect owns across ticks.
+    resources = attachments if chain_state else ChainMap(attachments, inputs)
     for name, (owner, binding) in (shared_storage or {}).get(effect_id, {}).items():
         if binding.surface is None:
             owner_effect = _meta()["effects"][owner["effect_id"]]
@@ -753,23 +757,19 @@ def _render_effect_once(
                         )
                 attachments[tname] = render_worm_overlay(effect_id, width, height, gen)
 
-    # Ordinary passes create their outputs on write. Only consumed underscore
-    # scratch starts clear. Iterated state is allocated before the first tick.
+    # Standalone calls start with their declared textures. Ordinary DSL
+    # passes create outputs on write, except for consumed underscore scratch.
     reserved_on_write = set()
-    if not persistent_attachments:
+    if chain_state and not persistent_attachments:
         outputs = {name for p in eff["passes"] for name in _pass_outputs(p).values()}
         scratch_inputs = {
             name for p in eff["passes"] for name in (p.get("inputs") or {}).values() if name.startswith("_")
         }
-        if not chain_state:
-            # Standalone render_effect starts the first repeat of a declared
-            # self-reading target clear, preserving its direct-call contract.
-            for p in eff["passes"]:
-                if p.get("repeat"):
-                    scratch_inputs.update(set((p.get("inputs") or {}).values()) & set(_pass_outputs(p).values()))
         reserved_on_write = outputs - scratch_inputs
     for texture_name, texture_spec in (eff.get("textures") or {}).items():
-        if texture_name in reserved_on_write or (persistent_attachments and is_particle_state_name(texture_name)):
+        if texture_name in reserved_on_write or (
+            chain_state and persistent_attachments and is_particle_state_name(texture_name)
+        ):
             continue
         if texture_name not in attachments:
             texture_width, texture_height = _texture_dimensions(
@@ -827,19 +827,24 @@ def _render_effect_once(
             for sampler_name, source in (p.get("inputs") or {}).items():
                 if source in {"selfTex", "feedback"}:
                     surf = previous_output if previous_output is not None else blank
+                elif not chain_state and source == "inputTex" and inputs.get("inputTex") is not None:
+                    surf = _texture_surface(inputs["inputTex"])
                 else:
-                    surf = _texture_surface(attachments.get(source))
-                    if surf is None and particle_targets is not None and is_particle_state_name(source):
+                    surf = _texture_surface(resources.get(source))
+                    if surf is None and not chain_state:
+                        # Direct effect calls can bind a sampler by name or read the preceding pass.
+                        surf = _texture_surface(inputs.get(sampler_name)) or result
+                        if surf is None and is_particle_state_name(source):
+                            surf = Surface(*_particle_state_dimensions(param_values))
+                            attachments[source] = surf
+                        if surf is None:
+                            surf = blank
+                    elif surf is None and particle_targets is not None and is_particle_state_name(source):
                         size, fmt = _destination_spec(eff, p, source, param_values, width, height,
                                                       attachments, particle_targets)
                         surf = Surface(*size)
                         surf.format = fmt
                         attachments[source] = surf
-                    if surf is None and not chain_state:
-                        # The standalone API also accepts explicit shader sampler bindings.
-                        surf = _texture_surface(inputs.get(sampler_name))
-                        if surf is None and source in ("inputTex", external_tex):
-                            surf = result if result is not None else blank
                 if surf is None:
                     raise ValueError(f'{effect_id} pass "{p["name"]}" requires texture "{source}"')
                 surf.filter = "linear" if sampler_name == external_tex else "nearest"
@@ -850,7 +855,7 @@ def _render_effect_once(
             target = attachments.get(out_names[0]) if out_names else None
             prior_output = _texture_surface(target)
             destinations = {
-                name: _destination_spec(eff, p, name, param_values, width, height, attachments, particle_targets)
+                name: _destination_spec(eff, p, name, param_values, width, height, resources, particle_targets)
                 for name in out_names
             }
             if not out_names:
@@ -920,11 +925,15 @@ def _render_effect_once(
             if produced:
                 result = produced[-1]
     is_volume_domain = domain in {"volume-generator", "volume-filter", "volume-renderer"}
-    image = _bundle_output(
-        _output_name(eff, "outputTex", attachments),
-        input_bundle["image"] if eff.get("outputTex") or is_volume_domain else result,
-        attachments,
-    )
+    image_source = _output_name(eff, "outputTex", attachments)
+    if not chain_state and image_source == "inputTex":
+        image = input_bundle["image"]
+    else:
+        image = _bundle_output(
+            image_source,
+            input_bundle["image"] if eff.get("outputTex") or is_volume_domain else result,
+            attachments,
+        )
     volume = _texture_surface(_bundle_output(eff.get("outputTex3d"), input_bundle["volume"], attachments))
     geometry = _texture_surface(_bundle_output(eff.get("outputGeo"), input_bundle["geometry"], attachments))
     volume_size = (
