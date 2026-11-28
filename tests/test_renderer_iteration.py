@@ -411,3 +411,80 @@ def test_base_color_memory_textures_read_the_inherited_state_size():
         assert _declares_inherited_state_size_textures(effects[eid]), eid
     assert not _declares_inherited_state_size_textures(effects["points/life"])
     assert not _declares_inherited_state_size_textures(effects["render/pointsEmit"])
+
+
+def _self_tex_dimension_probe_effect(*, iterated: bool, source_token: str = "selfTex"):
+    return {
+        "namespace": "synth",
+        "kind": "generator",
+        "iterated": iterated,
+        "params": {"iterationCount": {"type": "int", "default": 1, "cpuOnly": True}},
+        "textures": {"outputTex": {"width": 2, "height": 3, "format": "rgba32f"}},
+        "passes": [
+            {
+                "name": "probe",
+                "program": "probe",
+                "key": "synth/probe:probe",
+                "inputs": {"previous": source_token},
+                "outputs": {"fragColor": "outputTex"},
+            }
+        ],
+    }
+
+
+def test_first_iterated_pass_binds_declared_output_dimensions_for_self_tex(monkeypatch):
+    seen_formats = []
+
+    def kernel(ctx, out):
+        prev = ctx.textures["previous"]
+        seen_formats.append(prev.format)
+        out[:] = [float(prev.width), float(prev.height), float(prev.data[0]), 1.0]
+
+    iterated_effect = _self_tex_dimension_probe_effect(iterated=True)
+    monkeypatch.setattr(renderer, "_meta", lambda: {"effects": {"synth/probe": iterated_effect}})
+    monkeypatch.setattr(renderer, "_kernel_for", lambda _key: kernel)
+
+    iterated_surface = renderer.render_effect("synth/probe", {"iterationCount": 1}, width=5, height=7)
+    assert (iterated_surface.width, iterated_surface.height) == (2, 3)
+    assert tuple(iterated_surface.data[:4]) == (2.0, 3.0, 0.0, 1.0)
+    assert seen_formats == ["rgba32f"] * 6
+
+    ordinary_effect = _self_tex_dimension_probe_effect(iterated=False)
+    monkeypatch.setattr(renderer, "_meta", lambda: {"effects": {"synth/probe": ordinary_effect}})
+
+    ordinary_surface = renderer.render_effect("synth/probe", width=5, height=7)
+    assert (ordinary_surface.width, ordinary_surface.height) == (2, 3)
+    assert tuple(ordinary_surface.data[:4]) == (1.0, 1.0, 0.0, 1.0)
+
+
+@pytest.mark.parametrize("source_token", ["selfTex", "feedback"])
+def test_dsl_iterated_group_first_pass_binds_declared_output_dimensions_for_self_tex(monkeypatch, source_token):
+    effect = _self_tex_dimension_probe_effect(iterated=True, source_token=source_token)
+    plan = {
+        "chains": [
+            {
+                "steps": [
+                    {
+                        "kind": "effect",
+                        "effect_id": "synth/probe",
+                        "params": {"iterationCount": 1},
+                        "surfaces": {},
+                    },
+                    {"kind": "write", "surface": "o0"},
+                ]
+            }
+        ],
+        "render_surface": "o0",
+    }
+
+    def kernel(ctx, out):
+        prev = ctx.textures["previous"]
+        out[:] = [float(prev.width), float(prev.height), float(prev.data[0]), 1.0]
+
+    monkeypatch.setattr(renderer, "_meta", lambda: {"effects": {"synth/probe": effect}})
+    monkeypatch.setattr(renderer, "compile_dsl", lambda _source, _effects: plan)
+    monkeypatch.setattr(renderer, "_kernel_for", lambda _key: kernel)
+
+    surface = renderer.render_dsl("ignored", width=5, height=7)
+    assert (surface.width, surface.height) == (2, 3)
+    assert tuple(surface.data[:4]) == (2.0, 3.0, 0.0, 1.0)

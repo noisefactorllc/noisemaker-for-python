@@ -515,6 +515,39 @@ def _texture_format(effect, name):
     return declared.get("format", "rgba16f")
 
 
+def _uses_self_tex(effect) -> bool:
+    return any(
+        source in {"selfTex", "feedback"}
+        for render_pass in effect.get("passes", [])
+        for source in (render_pass.get("inputs") or {}).values()
+    )
+
+
+def _initial_self_tex(effect, params, width, height, seed, time, *, validate_implicit_seed=True):
+    if not _uses_self_tex(effect):
+        return None
+    resolved = _resolve_effect_automation(effect, params, time)
+    param_values = {}
+    for pname, spec in effect["params"].items():
+        if spec.get("type") == "surface":
+            continue
+        if pname == "seed" and "seed" not in resolved:
+            param_values[pname] = _coerce(spec, seed, pname if validate_implicit_seed else None)
+        else:
+            param_values[pname] = _coerce(
+                spec,
+                resolved.get(pname),
+                None if _is_automation_value(params.get(pname)) else pname,
+            )
+    if "stateSize" in resolved and "stateSize" not in param_values and _declares_inherited_state_size_textures(effect):
+        param_values["stateSize"] = resolved["stateSize"]
+    output_spec = (effect.get("textures") or {}).get("outputTex", {})
+    out_width, out_height = _texture_dimensions(output_spec, param_values, width, height)
+    surface = Surface(out_width, out_height)
+    surface.format = _texture_format(effect, "outputTex")
+    return surface
+
+
 def _pass_enabled(render_pass, uniforms):
     conditions = render_pass.get("conditions") or {}
     for condition in conditions.get("runIf", []):
@@ -1048,7 +1081,9 @@ def render_effect(
             }
         return Surface(width, height)
     attachments = {}
-    previous_output = None
+    previous_output = _initial_self_tex(
+        effect, params, width, height, seed, time, validate_implicit_seed=validate_implicit_seed
+    )
     result = None
     for tick in iteration_schedule(time, iteration_count):
         result = _render_effect_once(
@@ -1196,7 +1231,7 @@ def _run_iterated_group(group, current, surfaces, external_textures, effects, wi
             inherited.format = input_image.format or "rgba16f"
         group_attachments["global_accum"] = inherited
     step_attachments = [{} for _ in group["steps"]]
-    previous_outputs = [None] * len(group["steps"])
+    previous_outputs = []
     # Each target uses the first declaration anywhere in the group, including
     # when an earlier step reads or writes it before that owner first executes.
     particle_targets = {}
@@ -1211,6 +1246,10 @@ def _run_iterated_group(group, current, surfaces, external_textures, effects, wi
         elif inherits_size and "stateSize" not in definition["params"]:
             params["stateSize"] = _PARTICLE_STATE_FALLBACK_SIZE
         step_params.append(params)
+        init_step_params = _inherit_volume_size(definition, params, _chain_bundle(group_input))
+        previous_outputs.append(
+            _initial_self_tex(definition, init_step_params, width, height, seed, time, validate_implicit_seed=False)
+        )
         owned_textures = {
             name: spec for name, spec in (definition.get("textures") or {}).items()
             if is_particle_state_name(name) and name not in particle_targets
