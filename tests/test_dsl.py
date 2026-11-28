@@ -29,6 +29,21 @@ def test_tokenize_classifies_lexemes():
     assert color["type"] == "color" and color["lexeme"] == "#3af"
 
 
+def test_prototype_property_names_lex_as_identifiers_and_bind_as_variables():
+    # Mirrors the -cpu lexer fix (upstream e9b37133, keyword lookup limited to
+    # own properties): a lexeme named like an Object prototype property must
+    # lex as an identifier and bind as a let variable, not as a keyword.
+    for name in ["toString", "valueOf", "constructor", "hasOwnProperty", "__proto__"]:
+        assert tokenize_dsl(name)[0]["type"] == "identifier"
+    assert [t["type"] for t in tokenize_dsl("scale.toString")] == ["identifier", "punctuation", "identifier", "eof"]
+
+    plan = compile_dsl(
+        "search synth\nlet constructor = 2\nnoise(scaleX: constructor).write(o0)\nrender(o0)",
+        _effects(),
+    )
+    assert plan["chains"][0]["steps"][0]["params"]["scaleX"] == 2
+
+
 def test_parse_program_shape():
     ast = parse_dsl("search synth, filter\nsolid(color: #336699).invert().write(o0)\nrender(o0)")
     assert ast["search"] == ["synth", "filter"]
